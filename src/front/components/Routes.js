@@ -21,14 +21,24 @@ export default function Routes() {
                 {
                     className: "flex flex-col items-center",
                 },
+                ce(
+                    "div",
+                    {
+                        className: "w-3/5 border border-smoke-100 mb-28 mt-8 sm:mt-16",
+                    },
                     ce(
                         Link,
                         {
                             to: "/lobby",
-                            className: "border border-blue-300 w-3/5 h-64 mb-28 font-luck decay-mask text-6xl",
+                            className:
+                                "block font-luck decay-mask text-6xl leading-12rem sm:text-8xl sm:leading-12rem",
                         },
                         "ENTER"
-                    ),
+                    )
+                ),
+                ce(
+                    "div",
+                    null,
                     ce(
                         Link,
                         {
@@ -36,6 +46,7 @@ export default function Routes() {
                         },
                         "Leaderboards"
                     )
+                )
             )
         ),
         ce(

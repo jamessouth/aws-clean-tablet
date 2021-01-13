@@ -12,6 +12,12 @@ module.exports = {
         'arch': 'Architects Daughter, cursive',
         'luck': 'Luckiest Guy, cursive',
       },
+      height: {
+        // '40vh': '40vh',
+      },
+      lineHeight: {
+        '12rem': '12rem',
+      },
     },
   },
   variants: {
