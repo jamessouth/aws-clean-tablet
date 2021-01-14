@@ -31,7 +31,7 @@ export default function Routes() {
                         {
                             to: "/lobby",
                             className:
-                                "block font-perm decay-mask text-6xl leading-12rem sm:text-8xl sm:leading-12rem",
+                                "block font-fred decay-mask text-6xl leading-12rem sm:text-8xl sm:leading-12rem",
                         },
                         "ENTER"
                     )

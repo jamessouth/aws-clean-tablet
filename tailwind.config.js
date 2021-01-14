@@ -10,6 +10,7 @@ module.exports = {
       },
       fontFamily: {
         'arch': 'Architects Daughter, cursive',
+        'fred': 'Fredericka the Great, cursive',
         'luck': 'Luckiest Guy, cursive',
         'perm': 'Permanent Marker, cursive',
       },
