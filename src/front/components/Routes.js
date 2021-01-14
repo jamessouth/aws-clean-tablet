@@ -24,25 +24,29 @@ export default function Routes() {
                 ce(
                     "div",
                     {
-                        className: "w-3/5 border border-smoke-100 mb-28 mt-8 sm:mt-16",
+                        className: "w-3/5 border border-smoke-100 mt-8 sm:mt-16",
                     },
                     ce(
                         Link,
                         {
                             to: "/lobby",
                             className:
-                                "block font-luck decay-mask text-6xl leading-12rem sm:text-8xl sm:leading-12rem",
+                                "block font-perm decay-mask text-6xl leading-12rem sm:text-8xl sm:leading-12rem",
                         },
                         "ENTER"
                     )
                 ),
                 ce(
                     "div",
-                    null,
+                    {
+                        className: "w-3/5 border border-smoke-100 mb-28 mt-10 sm:mt-16",
+                    },
                     ce(
                         Link,
                         {
                             to: "/leaderboards",
+                            className:
+                                "block text-xl sm:text-2xl",
                         },
                         "Leaderboards"
                     )

@@ -11,6 +11,7 @@ module.exports = {
       fontFamily: {
         'arch': 'Architects Daughter, cursive',
         'luck': 'Luckiest Guy, cursive',
+        'perm': 'Permanent Marker, cursive',
       },
       height: {
         // '40vh': '40vh',
