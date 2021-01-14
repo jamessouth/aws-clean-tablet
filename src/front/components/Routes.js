@@ -22,34 +22,22 @@ export default function Routes() {
                     className: "flex flex-col items-center",
                 },
                 ce(
-                    "div",
+                    Link,
                     {
-                        className: "w-3/5 border border-smoke-100 mt-8 sm:mt-16",
+                        to: "/lobby",
+                        className:
+                            "w-3/5 border border-smoke-100 block font-fred decay-mask text-5xl leading-12rem sm:mt-16 sm:text-8xl sm:leading-12rem",
                     },
-                    ce(
-                        Link,
-                        {
-                            to: "/lobby",
-                            className:
-                                "block font-fred decay-mask text-6xl leading-12rem sm:text-8xl sm:leading-12rem",
-                        },
-                        "ENTER"
-                    )
+                    "ENTER"
                 ),
                 ce(
-                    "div",
+                    Link,
                     {
-                        className: "w-3/5 border border-smoke-100 mb-28 mt-10 sm:mt-16",
+                        to: "/leaderboards",
+                        className:
+                            "w-3/5 border border-smoke-100 mb-28 mt-10 block text-xl sm:mt-16 sm:text-2xl",
                     },
-                    ce(
-                        Link,
-                        {
-                            to: "/leaderboards",
-                            className:
-                                "block text-xl sm:text-2xl",
-                        },
-                        "Leaderboards"
-                    )
+                    "Leaderboards"
                 )
             )
         ),
