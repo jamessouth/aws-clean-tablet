@@ -3,6 +3,7 @@ import { Switch, Route, Link, useLocation } from "react-router-dom";
 import LoginPage from "./LoginPage";
 import Comp from "./Comp";
 import PrivateRoute from "./PrivateRoute";
+import Lobby from "./Lobby";
 
 const ce = React.createElement;
 
@@ -53,7 +54,7 @@ export default function Routes() {
             {
                 path: "/login",
             },
-            ce(LoginPage, null)
+            ce(LoginPage)
         ),
         ce(
             PrivateRoute,
@@ -63,7 +64,7 @@ export default function Routes() {
             ce(
                 "h3",
                 null,
-                "Games",
+                ce(Lobby),
                 ce(
                     Link,
                     {
