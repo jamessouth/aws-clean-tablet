@@ -16,7 +16,7 @@ export default function Lobby() {
     console.log("lobbbbbbbb ", connected);
 
     useEffect(() => {
-        const ws = new WebSocket(process.env.CT_WS);
+        const ws = new WebSocket(`${process.env.CT_WS}?auth=gotime`);
         console.log("pojoihuh", Date.now());
 
         ws.addEventListener(
