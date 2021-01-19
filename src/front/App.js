@@ -34,7 +34,7 @@ export default function App() {
                 {
                     className: "mt-8",
                 },
-                ce(AuthButton, null),
+                ce(AuthButton),
                 ce(Routes)
             )
         )

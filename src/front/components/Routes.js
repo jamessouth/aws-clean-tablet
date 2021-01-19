@@ -1,13 +1,16 @@
-import React from "react";
-import { Switch, Route, Link, useLocation } from "react-router-dom";
+import React, { useContext } from "react";
+import { Switch, Route, Redirect, Link, useLocation } from "react-router-dom";
 import LoginPage from "./LoginPage";
 import Comp from "./Comp";
 import PrivateRoute from "./PrivateRoute";
 import Lobby from "./Lobby";
+import { authContext } from "../App";
 
 const ce = React.createElement;
 
 export default function Routes() {
+    let auth = useContext(authContext);
+
     return ce(
         Switch,
         null,
@@ -17,7 +20,7 @@ export default function Routes() {
                 path: "/",
                 exact: true,
             },
-            ce(
+            auth.user ? ce(Redirect, {to: "/lobby"}) : ce(
                 "div",
                 {
                     className: "flex flex-col items-center",
@@ -62,7 +65,7 @@ export default function Routes() {
                 path: "/lobby",
             },
             ce(
-                "h3",
+                "div",
                 null,
                 ce(Lobby),
                 ce(

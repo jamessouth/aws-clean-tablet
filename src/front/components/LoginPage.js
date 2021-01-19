@@ -31,6 +31,7 @@ export default function LoginPage() {
 
         if (authState === AuthState.SignedIn) {
             auth.setUser(userData.username);
+            localStorage.setItem("user", userData.username);
         }
 
         return history.replace(from);
