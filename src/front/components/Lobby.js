@@ -1,28 +1,31 @@
 import React, { useEffect, useState } from "react";
-// import {
-//     withAuthenticator,
-//     AmplifyAuthenticator,
-//     AmplifySignOut,
-//     AmplifyAuthFields,
-//     AmplifySignUp,
-// } from "@aws-amplify/ui-react";
-// import { useHistory } from "react-router-dom";
+import { Auth } from "@aws-amplify/auth";
 
 const ce = React.createElement;
-
 export default function Lobby() {
-    const [connected, setConnected] = useState(false);
+    const [connectedWS, setConnectedWS] = useState(false);
     // const [error, setError] = useState("");
-    console.log("lobbbbbbbb ", connected);
+    console.log("lobbbbbbbb ", connectedWS);
 
     useEffect(() => {
+        async function getUser() {
+            const user = await Auth.currentUserPoolUser();
+            const {
+                signInUserSession: {
+                    accessToken: { jwtToken },
+                },
+            } = user;
+            console.log("nnnn: ", jwtToken);
+        }
+        getUser();
+
         const ws = new WebSocket(`${process.env.CT_WS}?auth=gotime`);
         console.log("pojoihuh", Date.now());
 
         ws.addEventListener(
             "open",
             function (e) {
-                setConnected(true);
+                setConnectedWS(true);
                 console.log(e, Date.now());
             },
             false
@@ -31,7 +34,7 @@ export default function Lobby() {
         ws.addEventListener(
             "error",
             function (e) {
-                // setConnected(false);
+                // setConnectedWS(false);
                 // console.log('eeee: ', e);
                 // setError(e.message);
                 console.log(e, Date.now());
@@ -42,7 +45,7 @@ export default function Lobby() {
         ws.addEventListener(
             "close",
             function (e) {
-                setConnected(false);
+                setConnectedWS(false);
                 // setError(false);
                 console.log(e, Date.now());
             },
@@ -51,16 +54,16 @@ export default function Lobby() {
 
         return function cleanup() {
             console.log("cleanup");
-            setConnected(false);
+            setConnectedWS(false);
             // setError("");
             ws.close(1000);
         };
     }, []);
 
     // error
-        // ? ce("p", null, "connection error, please try again")
-        // : 
-    return connected
+    // ? ce("p", null, "connection error, please try again")
+    // :
+    return connectedWS
         ? ce(
               React.Fragment,
               null,
