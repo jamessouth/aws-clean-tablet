@@ -42,16 +42,15 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 		jwt.WithKeySet(keyset),
 		jwt.WithValidate(true),
 		jwt.WithIssuer("https://cognito-idp."+region+".amazonaws.com/"+userPoolID),
-		jwt.WithAudience(appClientID),
+		jwt.WithClaimValue("client_id", appClientID),
+		jwt.WithClaimValue("token_use", "access"),
 	)
 	if err != nil {
-
+		fmt.Println(err)
 	}
 
-	// fmt.Println(parsedToken.Audience())
+	fmt.Println(parsedToken)
 	fmt.Println(parsedToken.Subject())
-	// fmt.Println(parsedToken.Issuer())
-	// fmt.Println(parsedToken.IssuedAt())
 
 	return events.APIGatewayCustomAuthorizerResponse{
 		PrincipalID:    "koko",
