@@ -49,18 +49,24 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 		fmt.Println(err)
 	}
 
-	fmt.Println(parsedToken)
-	fmt.Println(parsedToken.Subject())
+	fmt.Println(parsedToken, req.Headers["Origin"] == "http://localhost:4200")
+	for i, c := range req.Headers {
+		fmt.Println(i, c)
+	}
+	subject := parsedToken.Subject()
+	username := parsedToken.PrivateClaims()["username"]
 
-	return events.APIGatewayCustomAuthorizerResponse{
-		PrincipalID:    "koko",
+	allow := events.APIGatewayCustomAuthorizerResponse{
+		PrincipalID:    subject,
 		PolicyDocument: events.APIGatewayCustomAuthorizerPolicy{Version: "2012-10-17", Statement: []events.IAMPolicyStatement{{Effect: "Allow", Action: []string{"execute-api:Invoke"}, Resource: []string{req.MethodArn}}}},
 		Context: map[string]interface{}{
-			"a": 1,
-			"b": 2,
+			"username": username,
+			"b":        2,
 		},
 		UsageIdentifierKey: "",
-	}, nil
+	}
+
+	return allow, nil
 }
 
 func main() {
