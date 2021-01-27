@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -18,57 +19,99 @@ import (
 func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
 
 	// fmt.Printf("%s: %+v\n", "request", req.QueryStringParameters["auth"])
+	if req.Headers["Origin"] != "http://localhost:4200" {
+		return events.APIGatewayCustomAuthorizerResponse{}, errors.New("header error - request from wrong domain")
+	}
 
-	token := []byte(req.QueryStringParameters["auth"])
+	if len(req.Headers["User-Agent"]) < 10 {
+		return events.APIGatewayCustomAuthorizerResponse{}, errors.New("header error - request from wrong client")
+	}
 
 	userPoolID, ok := os.LookupEnv("userPoolID")
 	if !ok {
-		panic("cannot find user pool id")
+		return events.APIGatewayCustomAuthorizerResponse{}, errors.New("internal error - cannot find user pool id")
 	}
+
 	appClientID, ok := os.LookupEnv("appClientID")
 	if !ok {
-		panic("cannot find app client id")
+		return events.APIGatewayCustomAuthorizerResponse{}, errors.New("internal error - cannot find app client id")
 	}
 
 	region := strings.Split(req.MethodArn, ":")[3]
 
 	keyset, err := jwk.Fetch("https://cognito-idp." + region + ".amazonaws.com/" + userPoolID + "/.well-known/jwks.json")
 	if err != nil {
-
+		return events.APIGatewayCustomAuthorizerResponse{}, errors.New("fetch error - cannot find keyset")
 	}
+
+	token := []byte(req.QueryStringParameters["auth"])
 
 	parsedToken, err := jwt.Parse(
 		bytes.NewReader(token),
 		jwt.WithKeySet(keyset),
 		jwt.WithValidate(true),
 		jwt.WithIssuer("https://cognito-idp."+region+".amazonaws.com/"+userPoolID),
-		jwt.WithClaimValue("client_id", appClientID),
+		jwt.WithClaimValue("client_id", appClientID+"p"),
 		jwt.WithClaimValue("token_use", "access"),
 	)
 	if err != nil {
-		fmt.Println(err)
+		return createPolicy(
+			req.MethodArn,
+			"Deny",
+			"ID",
+			map[string]interface{}{
+				"error": getErrorMsg(err),
+			},
+		), nil
 	}
 
-	fmt.Println(parsedToken, req.Headers["Origin"] == "http://localhost:4200")
-	for i, c := range req.Headers {
-		fmt.Println(i, c)
-	}
-	subject := parsedToken.Subject()
-	username := parsedToken.PrivateClaims()["username"]
+	fmt.Println(parsedToken)
+	// for i, c := range req.Headers {
+	// 	fmt.Println(i, c)
+	// }
+	// subject := parsedToken
+	// username := parsedToken
 
-	allow := events.APIGatewayCustomAuthorizerResponse{
-		PrincipalID:    subject,
-		PolicyDocument: events.APIGatewayCustomAuthorizerPolicy{Version: "2012-10-17", Statement: []events.IAMPolicyStatement{{Effect: "Allow", Action: []string{"execute-api:Invoke"}, Resource: []string{req.MethodArn}}}},
-		Context: map[string]interface{}{
-			"username": username,
-			"b":        2,
+	return createPolicy(
+		req.MethodArn,
+		"Allow",
+		parsedToken.Subject(),
+		map[string]interface{}{
+			"username": parsedToken.PrivateClaims()["username"].(string),
 		},
-		UsageIdentifierKey: "",
-	}
-
-	return allow, nil
+	), nil
 }
 
 func main() {
 	lambda.Start(handler)
+}
+
+func getErrorMsg(e error) string {
+	clause := " not satisfied"
+	switch e.Error() {
+	case "exp" + clause:
+		return "Token expired"
+	case "iss" + clause:
+		return "Wrong issuer"
+	default:
+		return e.Error()
+	}
+}
+
+func createPolicy(arn, effect, pID string, context map[string]interface{}) (p events.APIGatewayCustomAuthorizerResponse) {
+	p.PrincipalID = pID
+	p.PolicyDocument = events.APIGatewayCustomAuthorizerPolicy{
+		Version: "2012-10-17",
+		Statement: []events.IAMPolicyStatement{
+			{
+				Effect:   effect,
+				Action:   []string{"execute-api:Invoke"},
+				Resource: []string{arn},
+			},
+		},
+	}
+	p.Context = context
+	p.UsageIdentifierKey = ""
+
+	return
 }
