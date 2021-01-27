@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	"strings"
 
@@ -51,7 +50,7 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 		jwt.WithKeySet(keyset),
 		jwt.WithValidate(true),
 		jwt.WithIssuer("https://cognito-idp."+region+".amazonaws.com/"+userPoolID),
-		jwt.WithClaimValue("client_id", appClientID+"p"),
+		jwt.WithClaimValue("client_id", appClientID),
 		jwt.WithClaimValue("token_use", "access"),
 	)
 	if err != nil {
@@ -65,12 +64,7 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 		), nil
 	}
 
-	fmt.Println(parsedToken)
-	// for i, c := range req.Headers {
-	// 	fmt.Println(i, c)
-	// }
-	// subject := parsedToken
-	// username := parsedToken
+	// fmt.Println(parsedToken)
 
 	return createPolicy(
 		req.MethodArn,
@@ -93,6 +87,10 @@ func getErrorMsg(e error) string {
 		return "Token expired"
 	case "iss" + clause:
 		return "Wrong issuer"
+	case "client_id" + clause:
+		return "Wrong app client ID"
+	case "token_use" + clause:
+		return "Wrong token type"
 	default:
 		return e.Error()
 	}
