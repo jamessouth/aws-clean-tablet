@@ -45,6 +45,16 @@ export default function Lobby() {
                 },
                 false
             );
+            ws.addEventListener(
+                "message",
+                function (e) {
+                    // setConnectedWS(false);
+                    // console.log('eeee: ', e);
+                    // setError(e.message);
+                    console.log("mmmm", e);
+                },
+                false
+            );
 
             ws.addEventListener(
                 "close",
