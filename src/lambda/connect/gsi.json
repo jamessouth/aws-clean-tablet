@@ -1,0 +1,18 @@
+[
+    {
+        "IndexName": "GSI1",
+        "KeySchema": [
+            {
+                "AttributeName": "gsi1pk",
+                "KeyType": "HASH"
+            },
+            {
+                "AttributeName": "gsi1sk",
+                "KeyType": "RANGE"
+            }
+        ],
+        "Projection": {
+            "ProjectionType": "ALL"
+        }
+    }
+]
