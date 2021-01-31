@@ -18,8 +18,11 @@ import (
 
 // Item holds values to be put in db
 type Item struct {
-	Pk string `json:"pk"`
-	Sk string `json:"sk"`
+	Pk     string `json:"pk"`
+	Sk     string `json:"sk"`
+	GSI1Pk string `json:"gsi1pk"`
+	GSI1Sk string `json:"gsi1sk"`
+	ConnID string `json:"connid"`
 }
 
 func handler(req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -40,11 +43,14 @@ func handler(req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxy
 	// svc.Handlers.Send.PushFront(func(r *request.Request) {
 	// 	r.HTTPRequest.Header.Set("CustomHeader", fmt.Sprintf("%d", 10))
 	// })
-	fmt.Printf("%+v\n", req)
+	auth := req.RequestContext.Authorizer.(map[string]interface{})
 
 	i, err := dynamodbattribute.MarshalMap(Item{
-		Pk: "CURRENTUSER#" + req.RequestContext.ConnectionID,
-		Sk: "CURRENTUSER#" + req.RequestContext.ConnectionID,
+		Pk:     auth["principalId"].(string),
+		Sk:     "GAME#",
+		GSI1Pk: auth["username"].(string),
+		GSI1Sk: "STATS#",
+		ConnID: req.RequestContext.ConnectionID,
 	})
 	if err != nil {
 		panic(fmt.Sprintf("failed to marshal Record, %v", err))
