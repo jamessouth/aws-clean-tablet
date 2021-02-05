@@ -16,14 +16,17 @@ import (
 
 // $env:GOOS = "linux" / $env:CGO_ENABLED = "0" / $env:GOARCH = "amd64" / go build -o main main.go / build-lambda-zip.exe -o main.zip main / sam local invoke ConnectFunction -e ../event.json
 
-// Item holds values to be put in db
-type Item struct {
-	Pk     string `json:"pk"`
-	Sk     string `json:"sk"`
-	GSI1Pk string `json:"gsi1pk"`
-	GSI1Sk string `json:"gsi1sk"`
-	ConnID string `json:"connid"`
+// ConnItem holds values to be put in db
+type ConnItem struct {
+	Pk string `json:"pk"`
+	Sk string `json:"sk"`
 }
+
+// PlayerItem holds values to be put in db
+// type PlayerItem struct {
+// 	Pk     string `json:"pk"`
+// 	Sk     string `json:"sk"`
+// }
 
 func handler(req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
@@ -43,14 +46,14 @@ func handler(req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxy
 	// svc.Handlers.Send.PushFront(func(r *request.Request) {
 	// 	r.HTTPRequest.Header.Set("CustomHeader", fmt.Sprintf("%d", 10))
 	// })
-	auth := req.RequestContext.Authorizer.(map[string]interface{})
+	// auth := req.RequestContext.Authorizer.(map[string]interface{})
 
-	i, err := dynamodbattribute.MarshalMap(Item{
-		Pk:     auth["principalId"].(string),
-		Sk:     "GAME#",
-		GSI1Pk: auth["username"].(string),
-		GSI1Sk: "STATS#",
-		ConnID: req.RequestContext.ConnectionID,
+	// auth["principalId"].(string)
+	// auth["username"].(string)
+
+	i, err := dynamodbattribute.MarshalMap(ConnItem{
+		Pk: "CONN#" + req.RequestContext.ConnectionID,
+		Sk: "CONN#" + req.RequestContext.ConnectionID,
 	})
 	if err != nil {
 		panic(fmt.Sprintf("failed to marshal Record, %v", err))
