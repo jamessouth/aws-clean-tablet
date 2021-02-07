@@ -8,13 +8,12 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 )
 
-// $env:GOOS = "linux" / $env:CGO_ENABLED = "0" / $env:GOARCH = "amd64" / go build -o main main.go / build-lambda-zip.exe -o main.zip main / sam local invoke ConnectFunction -e ../event.json
+// $env:GOOS = "linux" / $env:CGO_ENABLED = "0" / $env:GOARCH = "amd64" / go build -o main main.go / build-lambda-zip.exe -o main.zip main / sam local invoke ConnectFunction -e ./event.json
 
 // ConnItem holds values to be put in db
 type ConnItem struct {
@@ -34,14 +33,16 @@ func handler(req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxy
 	if err != nil {
 		fmt.Println("session init error")
 	}
-	logger := aws.NewDefaultLogger()
+	// logger := aws.NewDefaultLogger()
 
-	sess.Handlers.Send.PushFront(func(r *request.Request) {
-		logger.Log(fmt.Sprintf("Request: %s /%v, Payload: %s",
-			r.ClientInfo.ServiceName, r.Operation, r.Params))
-	})
+	// sess.Handlers.Send.PushFront(func(r *request.Request) {
+	// 	logger.Log(fmt.Sprintf("Request: %s /%v, Payload: %s",
+	// 		r.ClientInfo.ServiceName, r.Operation, r.Params))
+	// })
 
-	svc := dynamodb.New(sess, aws.NewConfig().WithLogLevel(aws.LogDebugWithHTTPBody).WithEndpoint("http://192.168.4.27:8000"))
+	// .WithLogLevel(aws.LogDebugWithHTTPBody)
+
+	svc := dynamodb.New(sess, aws.NewConfig().WithEndpoint("http://192.168.4.27:8000"))
 
 	// svc.Handlers.Send.PushFront(func(r *request.Request) {
 	// 	r.HTTPRequest.Header.Set("CustomHeader", fmt.Sprintf("%d", 10))
@@ -69,7 +70,7 @@ func handler(req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxy
 		Item:                   i,
 		ReturnConsumedCapacity: aws.String("TOTAL"),
 	})
-	fmt.Println("op", op)
+	// fmt.Println("op", op)
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			switch aerr.Code() {
