@@ -28,7 +28,9 @@ func handler(req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxy
 		fmt.Println("session init error")
 	}
 
-	svc := dynamodb.New(sess, aws.NewConfig().WithEndpoint("http://192.168.4.27:8000"))
+	// .WithEndpoint("http://192.168.4.27:8000")
+
+	svc := dynamodb.New(sess, aws.NewConfig())
 
 	k, err := dynamodbattribute.MarshalMap(ConnItem{
 		Pk: "CONN#" + req.RequestContext.ConnectionID,

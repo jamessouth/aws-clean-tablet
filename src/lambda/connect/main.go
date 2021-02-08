@@ -42,7 +42,9 @@ func handler(req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxy
 
 	// .WithLogLevel(aws.LogDebugWithHTTPBody)
 
-	svc := dynamodb.New(sess, aws.NewConfig().WithEndpoint("http://192.168.4.27:8000"))
+	// .WithEndpoint("http://192.168.4.27:8000")
+
+	svc := dynamodb.New(sess, aws.NewConfig())
 
 	// svc.Handlers.Send.PushFront(func(r *request.Request) {
 	// 	r.HTTPRequest.Header.Set("CustomHeader", fmt.Sprintf("%d", 10))
