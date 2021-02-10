@@ -5,7 +5,8 @@ const ce = React.createElement;
 export default function Lobby() {
     const [connectedWS, setConnectedWS] = useState(false);
     const [token, setToken] = useState("");
-    console.log("lobbbbbbbb ", connectedWS);
+    const [wsError, setWSError] = useState();
+    console.log("lobbbbbbbb ", connectedWS, wsError, token[0]);
 
     useEffect(() => {
         async function getToken() {
@@ -40,7 +41,7 @@ export default function Lobby() {
                 function (e) {
                     // setConnectedWS(false);
                     // console.log('eeee: ', e);
-                    // setError(e.message);
+                    setWSError(e);
                     console.log(e, Date.now());
                 },
                 false
@@ -68,17 +69,22 @@ export default function Lobby() {
             return function cleanup() {
                 console.log("cleanup");
                 setConnectedWS(false);
-                // setError("");
+                setWSError(null);
+                setToken("");
                 ws.close(1000);
             };
         }
     }, [token]);
 
-    // error
-    // ? ce("p", null, "connection error, please try again")
-    // :
-    return connectedWS
+    return !connectedWS && !wsError
         ? ce(
+            "p",
+            null,
+            "loading..."
+        )
+        : wsError
+        ? ce("p", null, "not connected: connection error")
+        : ce(
               React.Fragment,
               null,
               ce(
@@ -119,6 +125,5 @@ export default function Lobby() {
                       "join"
                   )
               )
-          )
-        : ce("p", null, "not connected: connection error");
+          );
 }
