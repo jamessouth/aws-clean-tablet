@@ -1,16 +1,42 @@
 package main
 
 import (
-	"context"
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
-func handler(ctx context.Context, req events.DynamoDBEvent) {
-	fmt.Printf("%s: %+v\n", "cont", ctx)
-	fmt.Printf("%s: %+v\n", "request", req)
+func handler(req events.DynamoDBEvent) {
+
+	for _, rec := range req.Records {
+
+		if rec.EventName == "INSERT" || rec.EventName == "MODIFY" {
+
+			for k, v := range rec.Change.NewImage {
+
+				fmt.Printf("%s - %v: %v - %s\n", "k v", k, v, rec.EventName)
+				if k == "pk" {
+					if strings.HasPrefix(v.String(), "GAME") {
+						fmt.Println("game")
+					} else {
+						fmt.Println("other")
+
+					}
+				}
+			}
+		} else {
+			for k, v := range rec.Change.Keys {
+
+				fmt.Printf("%s - %v: %v - %s\n", "k v", k, v, rec.EventName)
+
+			}
+
+		}
+
+	}
+
 }
 
 func main() {

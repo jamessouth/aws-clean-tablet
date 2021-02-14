@@ -85,45 +85,26 @@ export default function Lobby() {
         : wsError
         ? ce("p", null, "not connected: connection error")
         : ce(
-              React.Fragment,
-              null,
-              ce(
-                  "div",
-                  {
-                      className: "flex flex-col mt-8",
-                  },
-                  ce(
-                      "button",
-                      {
-                          className:
-                              "mx-auto mb-8 h-40 w-1/2 bg-smoke-100 text-gray-700",
-                      },
-                      "start a new game"
-                  ),
-                  ce(
-                      "button",
-                      {
-                          className:
-                              "mx-auto mb-8 h-40 w-1/2 bg-gray-100 text-gray-700",
-                      },
-                      "join"
-                  ),
-                  ce(
-                      "button",
-                      {
-                          className:
-                              "mx-auto mb-8 h-40 w-1/2 bg-gray-100 text-gray-700",
-                      },
-                      "join"
-                  ),
-                  ce(
-                      "button",
-                      {
-                          className:
-                              "mx-auto mb-8 h-40 w-1/2 bg-gray-100 text-gray-700",
-                      },
-                      "join"
-                  )
-              )
-          );
+            "div",
+                {
+                    className: "flex flex-col mt-8",
+                },
+                ce(
+                    "button",
+                    {
+                        className:
+                            "mx-auto mb-8 h-40 w-1/2 bg-smoke-100 text-gray-700",
+                    },
+                    "start a new game"
+                )
+            );
 }
+
+// ce(
+//     "button",
+//     {
+//         className:
+//             "mx-auto mb-8 h-40 w-1/2 bg-gray-100 text-gray-700",
+//     },
+//     "join"
+// )
