@@ -88,7 +88,7 @@ export default function Lobby() {
         //   setSubmitSignal(false);
         //   setShowSVGTimer(false);
           ws.send(JSON.stringify({
-            action: text,
+            answer: text,
           }));
         // }
       }
@@ -112,7 +112,7 @@ export default function Lobby() {
                         className:
                             "mx-auto mb-8 h-40 w-1/2 bg-smoke-100 text-gray-700",
                         type: "button",
-                        onClick: () => send("lobby"),
+                        onClick: () => send("game-to-play"),
                     },
                     "start a new game"
                 )
