@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Auth } from "@aws-amplify/auth";
 
 const ce = React.createElement;
+let ws;
+
 export default function Lobby() {
     const [connectedWS, setConnectedWS] = useState(false);
     const [token, setToken] = useState("");
@@ -24,7 +26,7 @@ export default function Lobby() {
     
     useEffect(() => {
         if (token) {
-            const ws = new WebSocket(`${process.env.CT_WS}?auth=${token}`);
+            ws = new WebSocket(`${process.env.CT_WS}?auth=${token}`);
             console.log("pojoihuh", token[0]);
 
             ws.addEventListener(
@@ -76,6 +78,21 @@ export default function Lobby() {
         }
     }, [token]);
 
+    function send(text) {
+        // if (!hasJoined) {
+        //   ws.send(JSON.stringify({
+        //     name: text,
+        //   }));
+        // } else {
+        //   setAnswered(true);
+        //   setSubmitSignal(false);
+        //   setShowSVGTimer(false);
+          ws.send(JSON.stringify({
+            answer: text,
+          }));
+        // }
+      }
+
     return !connectedWS && !wsError
         ? ce(
             "p",
@@ -94,6 +111,8 @@ export default function Lobby() {
                     {
                         className:
                             "mx-auto mb-8 h-40 w-1/2 bg-smoke-100 text-gray-700",
+                        type: "button",
+                        onClick: () => send("game-to-play"),
                     },
                     "start a new game"
                 )
