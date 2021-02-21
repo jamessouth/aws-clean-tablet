@@ -23,10 +23,10 @@ export default function Lobby() {
         }
         getToken();
     }, []);
-    
+
     useEffect(() => {
         if (token) {
-            ws = new WebSocket(`${process.env.CT_WS}?auth=${token}`);
+            ws = new WebSocket(`wss://${process.env.CT_APIID}.execute-api.${process.env.CT_REGION}.amazonaws.com/${process.env.CT_STAGE}?auth=${token}`);
             console.log("pojoihuh", token[0]);
 
             ws.addEventListener(

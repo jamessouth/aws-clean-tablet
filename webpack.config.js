@@ -18,7 +18,9 @@ module.exports = env => {
   const plugins = [
     new webpack.DefinePlugin(envObj),
     new webpack.DefinePlugin({
-      'process.env.CT_WS': JSON.stringify(process.env.CT_WS)
+      'process.env.CT_APIID': JSON.stringify(process.env.CT_APIID),
+      'process.env.CT_REGION': JSON.stringify(process.env.CT_REGION),
+      'process.env.CT_STAGE': JSON.stringify(process.env.CT_STAGE),
     }),
     new CleanWebpackPlugin(),
     new MiniCssExtractPlugin({
