@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -8,16 +9,12 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/apigatewaymanagementapi"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
 )
 
-var (
-	sess = session.Must(session.NewSession())
-)
-
-func handler(req events.DynamoDBEvent) {
+func handler(ctx context.Context, req events.DynamoDBEvent) {
 
 	for _, rec := range req.Records {
 		// || rec.EventName == "MODIFY"
@@ -38,34 +35,54 @@ func handler(req events.DynamoDBEvent) {
 				if !ok {
 					panic(fmt.Sprintf("%v", "can't find stage"))
 				}
-
-				svc := apigatewaymanagementapi.New(sess, &aws.Config{
-					Region:   aws.String(rec.AWSRegion),
-					Endpoint: aws.String(apiid + ".execute-api." + rec.AWSRegion + ".amazonaws.com/" + stage + "/@connections/"),
+				str := "https://" + apiid + ".execute-api." + rec.AWSRegion + ".amazonaws.com/" + stage + "/@connections/"
+				customResolver := aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
+					if service == apigatewaymanagementapi.ServiceID && region == rec.AWSRegion {
+						return aws.Endpoint{
+							PartitionID:   "aws",
+							URL:           str,
+							SigningRegion: rec.AWSRegion,
+						}, nil
+					}
+					return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested")
 				})
+
+				cfg, err := config.LoadDefaultConfig(ctx,
+					config.WithRegion(rec.AWSRegion),
+					config.WithEndpointResolver(customResolver),
+				)
+				if err != nil {
+					fmt.Println("cfg err")
+				}
+
+				// , &aws.Config{
+				// 	Region:   aws.String(),
+				// 	Endpoint: aws.String(apiid + ".execute-api." + rec.AWSRegion + ".amazonaws.com/" + stage + "/@connections/"),
+				// }
+
+				svc := apigatewaymanagementapi.NewFromConfig(cfg)
+
 				fmt.Println("game")
-
-				var conn apigatewaymanagementapi.PostToConnectionInput
-
-				conn.SetConnectionId(item["sk"].String())
 
 				b, err := json.Marshal("{a: 19894, b: 74156}")
 				if err != nil {
 					fmt.Println("error marshalling", err)
 				}
+				conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(item["sk"].String()), Data: b}
 
-				conn.SetData(b)
+				// conn.SetConnectionId()
 
-				er := conn.Validate()
-				if er != nil {
-					fmt.Println("val err", er)
-				}
+				// conn.SetData(b)
+
+				// er := conn.Validate()
+				// if er != nil {
+				// 	fmt.Println("val err", er)
+				// }
 
 				// fmt.Println("defff", defaults.Get())
 				// fmt.Println("defff2222", defaults.Config())
 
-				o, e := svc.PostToConnection(&conn)
-				fmt.Println("ooo", o.GoString())
+				_, e := svc.PostToConnection(ctx, &conn)
 				if e != nil {
 					fmt.Println("errrr", e)
 				}
