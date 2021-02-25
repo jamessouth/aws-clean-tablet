@@ -1,42 +1,52 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"os"
+	"strings"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/smithy-go"
 )
 
 // GameItem holds values to be put in db
 type GameItem struct {
-	Pk string `json:"pk"`
-	Sk string `json:"sk"`
+	Pk   string `dynamodbav:"pk"`
+	Sk   string `dynamodbav:"sk"`
+	Name string `dynamodbav:"name"`
 }
 
-func handler(req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
+func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
 	fmt.Printf("%s: %+v\n", "lobbbbbby", req)
 
-	sess, err := session.NewSession()
+	reg := strings.Split(req.RequestContext.DomainName, ".")[2]
+
+	cfg, err := config.LoadDefaultConfig(ctx,
+		config.WithRegion(reg),
+	)
 	if err != nil {
-		fmt.Println("session init error")
+		fmt.Println("cfg err")
 	}
 
 	// .WithEndpoint("http://192.168.4.27:8000")
 
-	svc := dynamodb.New(sess, aws.NewConfig())
+	svc := dynamodb.NewFromConfig(cfg)
 
 	gameno := fmt.Sprintf("%d", time.Now().UnixNano())
 
 	auth := req.RequestContext.Authorizer.(map[string]interface{})
 
-	g, err := dynamodbattribute.MarshalMap(GameItem{
+	g, err := attributevalue.MarshalMap(GameItem{
 		Pk:   "GAME#" + gameno,
 		Sk:   req.RequestContext.ConnectionID,
 		Name: auth["username"].(string),
@@ -50,26 +60,40 @@ func handler(req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxy
 		panic(fmt.Sprintf("%v", "cant find table name"))
 	}
 
-	op, err := svc.PutItem(&dynamodb.PutItemInput{
+	op, err := svc.PutItem(ctx, &dynamodb.PutItemInput{
 		TableName:              aws.String(tableName),
 		Item:                   g,
-		ReturnConsumedCapacity: aws.String("TOTAL"),
+		ReturnConsumedCapacity: types.ReturnConsumedCapacityTotal,
 	})
 	// fmt.Println("op", op)
 	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			switch aerr.Code() {
-			case dynamodb.ErrCodeInternalServerError:
-				fmt.Println(dynamodb.ErrCodeInternalServerError, aerr.Error())
-			default:
-				fmt.Println(aerr.Error())
-			}
-		} else {
-			// Print the error, cast err to awserr.Error to get the Code and
-			// Message from an error.
-			fmt.Println(err.Error())
-		}
+		// if aerr, ok := err.(awserr.Error); ok {
+		// 	switch aerr.Code() {
+		// 	case dynamodb.ErrCodeInternalServerError:
+		// 		fmt.Println(dynamodb.ErrCodeInternalServerError, aerr.Error())
+		// 	default:
+		// 		fmt.Println(aerr.Error())
+		// 	}
+		// } else {
+		// 	// Print the error, cast err to awserr.Error to get the Code and
+		// 	// Message from an error.
+		// 	fmt.Println(err.Error())
+		// }
 		// return
+
+		var intServErr *types.InternalServerError
+		if errors.As(err, &intServErr) {
+			fmt.Printf("put item error, %v",
+				intServErr.ErrorMessage())
+		}
+
+		// To get any API error
+		var apiErr smithy.APIError
+		if errors.As(err, &apiErr) {
+			fmt.Printf("db error, Code: %v, Message: %v",
+				apiErr.ErrorCode(), apiErr.ErrorMessage())
+		}
+
 	}
 
 	return events.APIGatewayProxyResponse{

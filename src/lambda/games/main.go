@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 
@@ -14,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
 )
 
-func handler(ctx context.Context, req events.DynamoDBEvent) {
+func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayProxyResponse, error) {
 
 	for _, rec := range req.Records {
 		// || rec.EventName == "MODIFY"
@@ -82,9 +83,10 @@ func handler(ctx context.Context, req events.DynamoDBEvent) {
 				// fmt.Println("defff", defaults.Get())
 				// fmt.Println("defff2222", defaults.Config())
 
-				_, e := svc.PostToConnection(ctx, &conn)
+				o, e := svc.PostToConnection(ctx, &conn)
+				fmt.Println("opopopo", o)
 				if e != nil {
-					fmt.Println("errrr", e)
+					fmt.Println("errrr", e, e.Error())
 				}
 			} else {
 				fmt.Println("other")
@@ -102,7 +104,14 @@ func handler(ctx context.Context, req events.DynamoDBEvent) {
 		}
 
 	}
-
+	fmt.Println("returrrrn")
+	return events.APIGatewayProxyResponse{
+		StatusCode:        http.StatusOK,
+		Headers:           map[string]string{"Content-Type": "application/json"},
+		MultiValueHeaders: map[string][]string{},
+		Body:              "",
+		IsBase64Encoded:   false,
+	}, nil
 }
 
 func main() {
