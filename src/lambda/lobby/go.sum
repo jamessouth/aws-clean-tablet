@@ -11,8 +11,6 @@ github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.0.2 h1:Lii+DAkH/
 github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.0.2/go.mod h1:L5YMsCINxFbyXwRIbAzg+hNJFsDYhMaspDVcTHl9aDI=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.0.2 h1:EtEU7WRaWliitZh2nmuxEXrN0Cb8EgPUFGIoTMeqbzI=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.0.2/go.mod h1:3hGg3PpiEjHnrkrlasTfxFqUsZ2GCk/fMUn4CbKgSkM=
-github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi v1.1.1 h1:4gxPUHsfujzxlPX45vD1AOf73+blFKZSVnAMIAbRsaA=
-github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi v1.1.1/go.mod h1:p5iM5qgXgHrnaTmq3idDTqe2LXi/boD9vNUONK8oiuc=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.1.1 h1:rs3qt8vsrOXgm3qfVdjVkwnPiBXI2M7qN1nExoZmJfI=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.1.1/go.mod h1:0xGVqnX5hK8bd/Qnqklpdellx5/6KPSPV7vfno3i1Sk=
 github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.1.1 h1:sG4o2ak7oynkN11KkdwIrl4VAzef+kRoZotJJh0dBmM=

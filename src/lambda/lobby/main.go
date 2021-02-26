@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -97,10 +98,10 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	return events.APIGatewayProxyResponse{
-		StatusCode:        200,
+		StatusCode:        http.StatusOK,
 		Headers:           map[string]string{"Content-Type": "application/json"},
 		MultiValueHeaders: map[string][]string{},
-		Body:              fmt.Sprintf("cap used: %v", op.ConsumedCapacity),
+		Body:              fmt.Sprintf("cap used: %v", op.ConsumedCapacity.CapacityUnits),
 		IsBase64Encoded:   false,
 	}, nil
 }

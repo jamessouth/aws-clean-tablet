@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -13,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
+	"github.com/aws/smithy-go"
 )
 
 func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayProxyResponse, error) {
@@ -36,7 +38,10 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				if !ok {
 					panic(fmt.Sprintf("%v", "can't find stage"))
 				}
-				str := "https://" + apiid + ".execute-api." + rec.AWSRegion + ".amazonaws.com/" + stage + "/@connections/"
+				str := "https://" + apiid + ".execute-api." + rec.AWSRegion + ".amazonaws.com/" + stage
+
+				fmt.Println(str)
+
 				customResolver := aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
 					if service == apigatewaymanagementapi.ServiceID && region == rec.AWSRegion {
 						return aws.Endpoint{
@@ -69,6 +74,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				if err != nil {
 					fmt.Println("error marshalling", err)
 				}
+				fmt.Println(b, item["sk"].String())
 				conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(item["sk"].String()), Data: b}
 
 				// conn.SetConnectionId()
@@ -86,7 +92,14 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				o, e := svc.PostToConnection(ctx, &conn)
 				fmt.Println("opopopo", o)
 				if e != nil {
-					fmt.Println("errrr", e, e.Error())
+					fmt.Println("errrr", e)
+
+					// To get any API error
+					var apiErr smithy.APIError
+					if errors.As(err, &apiErr) {
+						fmt.Printf("db error, Code: %v, Message: %v",
+							apiErr.ErrorCode(), apiErr.ErrorMessage())
+					}
 				}
 			} else {
 				fmt.Println("other")
