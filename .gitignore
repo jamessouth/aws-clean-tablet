@@ -132,5 +132,5 @@ src/front/styles/main.css
 src/lambda/*/event.json
 src/lambda/*/results.json
 src/lambda/*/main
-src/lambda/*/main.zip
+src/lambda/*/*.zip
 src/lambda/authorizer/template.yaml
