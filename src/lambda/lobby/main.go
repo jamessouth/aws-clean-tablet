@@ -21,14 +21,15 @@ import (
 
 // GameItem holds values to be put in db
 type GameItem struct {
-	Pk   string `dynamodbav:"pk"`
-	Sk   string `dynamodbav:"sk"`
-	Name string `dynamodbav:"name"`
+	Pk     string `dynamodbav:"pk"` //'GAME'
+	Sk     string `dynamodbav:"sk"` //game no
+	Name   string `dynamodbav:"name"`
+	ConnID string `dynamodbav:"connid"`
 }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
-	fmt.Printf("%s: %+v\n", "lobbbbbby", req)
+	// fmt.Printf("%s: %+v\n", "lobbbbbby", req)
 
 	reg := strings.Split(req.RequestContext.DomainName, ".")[2]
 
@@ -48,9 +49,10 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	auth := req.RequestContext.Authorizer.(map[string]interface{})
 
 	g, err := attributevalue.MarshalMap(GameItem{
-		Pk:   "GAME#" + gameno,
-		Sk:   req.RequestContext.ConnectionID,
-		Name: auth["username"].(string),
+		Pk:     "GAME",
+		Sk:     gameno,
+		Name:   auth["username"].(string),
+		ConnID: req.RequestContext.ConnectionID,
 	})
 	if err != nil {
 		panic(fmt.Sprintf("failed to marshal Record, %v", err))
@@ -58,7 +60,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	tableName, ok := os.LookupEnv("tableName")
 	if !ok {
-		panic(fmt.Sprintf("%v", "cant find table name"))
+		panic(fmt.Sprintf("%v", "can't find table name"))
 	}
 
 	op, err := svc.PutItem(ctx, &dynamodb.PutItemInput{
@@ -68,19 +70,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	})
 	// fmt.Println("op", op)
 	if err != nil {
-		// if aerr, ok := err.(awserr.Error); ok {
-		// 	switch aerr.Code() {
-		// 	case dynamodb.ErrCodeInternalServerError:
-		// 		fmt.Println(dynamodb.ErrCodeInternalServerError, aerr.Error())
-		// 	default:
-		// 		fmt.Println(aerr.Error())
-		// 	}
-		// } else {
-		// 	// Print the error, cast err to awserr.Error to get the Code and
-		// 	// Message from an error.
-		// 	fmt.Println(err.Error())
-		// }
-		// return
 
 		var intServErr *types.InternalServerError
 		if errors.As(err, &intServErr) {

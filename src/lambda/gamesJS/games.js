@@ -1,6 +1,9 @@
 "use strict";
 // const AWS = require("aws-sdk");
 const ApiGatewayManagementApi = require("aws-sdk/clients/apigatewaymanagementapi");
+const DynamoDB = require("aws-sdk/clients/dynamodb");
+
+let res;
 
 exports.handler = (req, ctx, cb) => {
 
@@ -11,23 +14,45 @@ exports.handler = (req, ctx, cb) => {
                 const apiid = process.env.CT_APIID;
                 const stage = process.env.CT_STAGE;
                 const endpoint =
-                    "https://" +
-                    apiid +
-                    ".execute-api." +
-                    rec.awsRegion +
-                    ".amazonaws.com/" +
-                    stage;
+                    `https://${apiid}.execute-api.${rec.awsRegion}.amazonaws.com/${stage}`;
 
-                const conn = new ApiGatewayManagementApi({
+                const apigw = new ApiGatewayManagementApi({
                     apiVersion: "2018-11-29",
+                    region: rec.AWSRegion,
                     endpoint,
+                });
+
+                const dyndb = new DynamoDB({
+                    apiVersion: "2012-08-10",
                     region: rec.AWSRegion,
                 });
+
+                const dbParams = {
+                    TableName: rec.eventSourceARN.split("/", 2)[1],
+                    KeyConditionExpression: "pk = :gm", 
+                    ExpressionAttributeValues: {
+                     ":gm": {
+                       S: "GAME"
+                      }
+                    },
+                };
+
                 try {
-                    await conn
+                    res = await dyndb
+                            .query(dbParams)
+                            .promise();
+                } catch (err) {
+                    console.log("db error: ", err);
+                }
+                res.type = "games";
+                res.data = res.Items;
+                console.log('data: ', res);
+
+                try {
+                    await apigw
                         .postToConnection({
-                            ConnectionId: item.sk.S,
-                            Data: JSON.stringify({ a: 19894, b: 74156 }),
+                            ConnectionId: item.connid.S,
+                            Data: JSON.stringify(res),
                         })
                         .promise();
                 } catch (err) {

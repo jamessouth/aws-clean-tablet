@@ -51,10 +51,16 @@ export default function Lobby() {
             ws.addEventListener(
                 "message",
                 function (e) {
-                    // setConnectedWS(false);
-                    // console.log('eeee: ', e);
-                    // setError(e.message);
-                    console.log("mmmm", e);
+                    const {
+                        type,
+                        data
+                        // players,
+                        // time,
+                        // winners,
+                        // word
+                    } = JSON.parse(e.data);
+
+                    console.log("mmmm", type, data);
                 },
                 false
             );
