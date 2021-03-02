@@ -6,6 +6,8 @@ let ws;
 
 export default function Lobby() {
     const [connectedWS, setConnectedWS] = useState(false);
+    const [games, setGames] = useState([]);
+    const [startedNewGame, setStartedNewGame] = useState(false);
     const [token, setToken] = useState("");
     const [wsError, setWSError] = useState();
     console.log("lobbbbbbbb ", connectedWS, wsError, token[0]);
@@ -61,6 +63,14 @@ export default function Lobby() {
                     } = JSON.parse(e.data);
 
                     console.log("mmmm", type, data);
+
+                    switch (type) {
+                        case "games":
+                            setGames(data);
+                            break;
+                        default:
+                            console.log('no case found: ', data);
+                    }
                 },
                 false
             );
@@ -107,22 +117,37 @@ export default function Lobby() {
         )
         : wsError
         ? ce("p", null, "not connected: connection error")
-        : ce(
+        : !startedNewGame
+        ? ce(
             "div",
+            {
+                className: "flex flex-col mt-8",
+            },
+            ce(
+                "button",
                 {
-                    className: "flex flex-col mt-8",
-                },
-                ce(
-                    "button",
-                    {
-                        className:
-                            "mx-auto mb-8 h-40 w-1/2 bg-smoke-100 text-gray-700",
-                        type: "button",
-                        onClick: () => send("game-to-play"),
+                    className:
+                        "mx-auto mb-8 h-40 w-1/2 bg-smoke-100 text-gray-700",
+                    type: "button",
+                    onClick: () => {
+                        setStartedNewGame(true);
+                        send("lobby");
                     },
-                    "start a new game"
-                )
-            );
+                },
+                "start a new game"
+            )
+        )
+        : games.length < 1
+        ? ce(
+            "p",
+            null,
+            "loading games..."
+        )
+        : ce(
+            "p",
+            null,
+            "games"
+        );
 }
 
 // ce(
