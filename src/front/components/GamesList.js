@@ -26,14 +26,27 @@ console.log('gamesss: ', Array.isArray(games));
 
     return ce(
         "ul",
-        null,
+        {
+            className: "m-auto w-10/12"
+        },
         games.map(g => ce(
             "li",
-            {key: g.conn},
+            {
+                key: g.conn,
+                className: "mb-8",
+            },
             ce(
                 "button",
-                null,
-                ce("p", null, `${g.type}#${g.no}`),
+                {
+                    className: "w-full h-full"
+                },
+                ce(
+                    "p",
+                    {
+                        className: "text-xs"
+                    },
+                    `${g.type}#${g.no}`
+                ),
                 ce("p", null, g.name)
             )
         ))
