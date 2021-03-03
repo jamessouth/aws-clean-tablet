@@ -33,8 +33,8 @@ func handler(req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxy
 	svc := dynamodb.New(sess, aws.NewConfig())
 
 	k, err := dynamodbattribute.MarshalMap(ConnItem{
-		Pk: "CONN#" + req.RequestContext.ConnectionID,
-		Sk: "CONN#" + req.RequestContext.ConnectionID,
+		Pk: "CONN",
+		Sk: req.RequestContext.ConnectionID,
 	})
 	if err != nil {
 		panic(fmt.Sprintf("failed to marshal Record, %v", err))

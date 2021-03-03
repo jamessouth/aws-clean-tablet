@@ -10,7 +10,7 @@ exports.handler = (req, ctx, cb) => {
     req.Records.forEach(async (rec) => {
         if (rec.eventName === "INSERT") {
             const item = rec.dynamodb.NewImage;
-            if (item.pk.S.startsWith("GAME")) {
+            if (item.pk.S === "CONN") {
                 const apiid = process.env.CT_APIID;
                 const stage = process.env.CT_STAGE;
                 const endpoint =
@@ -44,15 +44,18 @@ exports.handler = (req, ctx, cb) => {
                 } catch (err) {
                     console.log("db error: ", err);
                 }
-                res.type = "games";
-                res.data = res.Items;
-                console.log('data: ', res);
+                const payload = {
+                    data: res.Items,
+                    type: "games",
+                };
+
+                console.log('data: ', payload);
 
                 try {
                     await apigw
                         .postToConnection({
-                            ConnectionId: item.connid.S,
-                            Data: JSON.stringify(res),
+                            ConnectionId: item.sk.S,
+                            Data: JSON.stringify(payload),
                         })
                         .promise();
                 } catch (err) {

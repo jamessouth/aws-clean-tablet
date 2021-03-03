@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import GamesList from "./GamesList";
 import { Auth } from "@aws-amplify/auth";
 
 const ce = React.createElement;
@@ -6,7 +7,7 @@ let ws;
 
 export default function Lobby() {
     const [connectedWS, setConnectedWS] = useState(false);
-    const [games, setGames] = useState([]);
+    const [games, setGames] = useState(null);
     const [startedNewGame, setStartedNewGame] = useState(false);
     const [token, setToken] = useState("");
     const [wsError, setWSError] = useState();
@@ -109,21 +110,21 @@ export default function Lobby() {
         // }
       }
 
-    return !connectedWS && !wsError
+    return wsError
+        ? ce("p", null, "not connected: connection error")
+        : !connectedWS || !games
         ? ce(
             "p",
             null,
-            "loading..."
+            "loading games..."
         )
-        : wsError
-        ? ce("p", null, "not connected: connection error")
-        : !startedNewGame
-        ? ce(
+        : ce(
             "div",
             {
                 className: "flex flex-col mt-8",
             },
-            ce(
+            !startedNewGame
+            ? ce(
                 "button",
                 {
                     className:
@@ -136,25 +137,16 @@ export default function Lobby() {
                 },
                 "start a new game"
             )
-        )
-        : games.length < 1
-        ? ce(
-            "p",
-            null,
-            "loading games..."
-        )
-        : ce(
-            "p",
-            null,
-            "games"
+            : null,
+            games.length < 1
+            ? ce(
+                "p",
+                null,
+                "no games found. start a new one!"
+            )
+            : ce(
+                GamesList,
+                {games}
+            )
         );
 }
-
-// ce(
-//     "button",
-//     {
-//         className:
-//             "mx-auto mb-8 h-40 w-1/2 bg-gray-100 text-gray-700",
-//     },
-//     "join"
-// )
