@@ -40,10 +40,7 @@ console.log('gamesss: ', Array.isArray(games));
             ce(
                 "button",
                 {
-                    className: "w-full h-full",
-                    onClick: () => {
-                        send("lobby");
-                    },
+                    className: "w-full h-full"
                 },
                 ce(
                     "p",
