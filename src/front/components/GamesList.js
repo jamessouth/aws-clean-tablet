@@ -29,12 +29,12 @@ console.log('gamesss: ', Array.isArray(games));
         null,
         games.map(g => ce(
             "li",
-            {key: g.sk.S},
+            {key: g.conn},
             ce(
                 "button",
                 null,
-                ce("p", null, g.sk.S),
-                ce("p", null, g.name.S)
+                ce("p", null, `${g.type}#${g.no}`),
+                ce("p", null, g.name)
             )
         ))
     );
