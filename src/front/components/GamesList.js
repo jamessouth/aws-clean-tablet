@@ -20,9 +20,11 @@ console.log('gamesss: ', Array.isArray(games));
 
     // }, []);
 
-    // function send() {
-
-    //   }
+    function send(text) {
+        ws.send(JSON.stringify({
+            action: text,
+        }));
+    }
 
     return ce(
         "ul",
@@ -38,7 +40,10 @@ console.log('gamesss: ', Array.isArray(games));
             ce(
                 "button",
                 {
-                    className: "w-full h-full"
+                    className: "w-full h-full",
+                    onClick: () => {
+                        send("lobby");
+                    },
                 },
                 ce(
                     "p",
