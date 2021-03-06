@@ -11,7 +11,7 @@ export default function GamesList({games}) {
     // const [token, setToken] = useState("");
     // const [wsError, setWSError] = useState();
     
-console.log('gamesss: ', Array.isArray(games));
+// console.log('gamesss: ', Array.isArray(games));
     // useEffect(() => {
 
     // }, []);

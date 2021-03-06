@@ -22,19 +22,20 @@ import (
 
 // GameItem holds values to be put in db
 type GameItem struct {
-	Pk     string `dynamodbav:"pk"` //'GAME'
-	Sk     string `dynamodbav:"sk"` //game no
-	Name   string `dynamodbav:"name"`
+	Pk     string `dynamodbav:"pk"` //GAME#game no
+	Sk     string `dynamodbav:"sk"` //name
 	ConnID string `dynamodbav:"connid"`
+	GSI1PK string `dynamodbav:"gsi1pk"` //GAME
+	GSI1SK string `dynamodbav:"gsi1sk"` //game no
 }
 
 type body struct {
-	game string
+	Game string
 }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
-	fmt.Printf("%s: %+v\n", "lobbbbbby", req.Body)
+	fmt.Println("lobbbbbby", req.Body, string(req.Body))
 
 	reg := strings.Split(req.RequestContext.DomainName, ".")[2]
 
@@ -57,19 +58,20 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		fmt.Println("unmarshal err")
 	}
 
-	if body.game == "new" {
+	if body.Game == "new" {
 		gameno = fmt.Sprintf("%d", time.Now().UnixNano())
 	} else {
-		gameno = body.game
+		gameno = body.Game
 	}
 
 	auth := req.RequestContext.Authorizer.(map[string]interface{})
 
 	g, err := attributevalue.MarshalMap(GameItem{
-		Pk:     "GAME",
-		Sk:     gameno,
-		Name:   auth["username"].(string),
+		Pk:     "GAME#" + gameno,
+		Sk:     auth["username"].(string),
 		ConnID: req.RequestContext.ConnectionID,
+		GSI1PK: "GAME",
+		GSI1SK: gameno,
 	})
 	if err != nil {
 		panic(fmt.Sprintf("failed to marshal Record, %v", err))

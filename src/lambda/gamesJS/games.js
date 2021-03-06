@@ -11,6 +11,7 @@ exports.handler = (req, ctx, cb) => {
         if (rec.eventName === "INSERT") {
             const tableName = rec.eventSourceARN.split("/", 2)[1];
             const item = rec.dynamodb.NewImage;
+            console.log('item: ', item);
             const apiid = process.env.CT_APIID;
             const stage = process.env.CT_STAGE;
             const endpoint = `https://${apiid}.execute-api.${rec.awsRegion}.amazonaws.com/${stage}`;
@@ -28,7 +29,8 @@ exports.handler = (req, ctx, cb) => {
 
             const gamesParams = {
                 TableName: tableName,
-                KeyConditionExpression: "pk = :gm",
+                IndexName: "Players",
+                KeyConditionExpression: "gsi1pk = :gm",
                 ExpressionAttributeValues: {
                     ":gm": {
                         S: "GAME",
@@ -41,29 +43,28 @@ exports.handler = (req, ctx, cb) => {
                 console.log("db error: ", err);
             }
             const payload = {
-                data: gamesResults.Items.map(({ sk, pk, name, connid }) => ({
-                    no: sk.S,
-                    name: name.S,
+                data: gamesResults.Items.map(({ pk, sk, connid }) => ({
+                    no: pk.S,
+                    name: sk.S,
                     conn: connid.S,
-                    type: pk.S,
                 })),
                 type: "games",
             };
 
             console.log("data: ", payload);
 
-            if (item.pk.S === "CONN") {
+            if (item.pk.S.startsWith("CONN")) {
                 try {
                     await apigw
                         .postToConnection({
-                            ConnectionId: item.sk.S,
+                            ConnectionId: item.connid.S,
                             Data: JSON.stringify(payload),
                         })
                         .promise();
                 } catch (err) {
                     console.log("post error: ", err);
                 }
-            } else if (item.pk.S === "GAME") {
+            } else if (item.pk.S.startsWith("GAME")) {
                 const connsParams = {
                     TableName: tableName,
                     KeyConditionExpression: "pk = :cn",
