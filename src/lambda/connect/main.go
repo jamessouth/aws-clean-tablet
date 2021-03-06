@@ -17,8 +17,8 @@ import (
 
 // ConnItem holds values to be put in db
 type ConnItem struct {
-	Pk string `json:"pk"`
-	Sk string `json:"sk"`
+	Pk string `json:"pk"` //'CONN'
+	Sk string `json:"sk"` //conn id
 }
 
 // PlayerItem holds values to be put in db

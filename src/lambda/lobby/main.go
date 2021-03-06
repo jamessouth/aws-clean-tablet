@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -27,9 +28,13 @@ type GameItem struct {
 	ConnID string `dynamodbav:"connid"`
 }
 
+type body struct {
+	game string
+}
+
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
-	// fmt.Printf("%s: %+v\n", "lobbbbbby", req)
+	fmt.Printf("%s: %+v\n", "lobbbbbby", req.Body)
 
 	reg := strings.Split(req.RequestContext.DomainName, ".")[2]
 
@@ -44,7 +49,19 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	svc := dynamodb.NewFromConfig(cfg)
 
-	gameno := fmt.Sprintf("%d", time.Now().UnixNano())
+	var gameno string
+	var body body
+
+	err = json.Unmarshal([]byte(req.Body), &body)
+	if err != nil {
+		fmt.Println("unmarshal err")
+	}
+
+	if body.game == "new" {
+		gameno = fmt.Sprintf("%d", time.Now().UnixNano())
+	} else {
+		gameno = body.game
+	}
 
 	auth := req.RequestContext.Authorizer.(map[string]interface{})
 
