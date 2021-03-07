@@ -30,7 +30,7 @@ exports.handler = (req, ctx, cb) => {
             const gamesParams = {
                 TableName: tableName,
                 IndexName: "Players",
-                KeyConditionExpression: "gsi1pk = :gm",
+                KeyConditionExpression: "GSI1PK = :gm",
                 ExpressionAttributeValues: {
                     ":gm": {
                         S: "GAME",
@@ -57,7 +57,7 @@ exports.handler = (req, ctx, cb) => {
                 try {
                     await apigw
                         .postToConnection({
-                            ConnectionId: item.connid.S,
+                            ConnectionId: item.sk.S,
                             Data: JSON.stringify(payload),
                         })
                         .promise();
