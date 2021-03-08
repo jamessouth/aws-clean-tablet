@@ -20,13 +20,21 @@ import (
 	"github.com/aws/smithy-go"
 )
 
-// GameItem holds values to be put in db
-type GameItem struct {
-	Pk     string `dynamodbav:"pk"` //GAME#game no
-	Sk     string `dynamodbav:"sk"` //name
+// Player for player info
+type Player struct {
+	Name   string `dynamodbav:"name"`
 	ConnID string `dynamodbav:"connid"`
-	GSI1PK string `dynamodbav:"gsi1pk"` //GAME
-	GSI1SK string `dynamodbav:"gsi1sk"` //game no
+}
+
+// GameItemKey holds values to be put in db
+type GameItemKey struct {
+	Pk string `dynamodbav:"pk"` //GAME
+	Sk string `dynamodbav:"sk"` //game no
+}
+
+// GameItemAttrs holds values to be put in db
+type GameItemAttrs struct {
+	Players []Player `dynamodbav:":p"`
 }
 
 type body struct {
@@ -35,7 +43,7 @@ type body struct {
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
-	fmt.Println("lobbbbbby", req.Body, string(req.Body))
+	fmt.Println("lobbbbbby", req.Body)
 
 	reg := strings.Split(req.RequestContext.DomainName, ".")[2]
 
@@ -58,34 +66,64 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		fmt.Println("unmarshal err")
 	}
 
-	if body.Game == "new" {
-		gameno = fmt.Sprintf("%d", time.Now().UnixNano())
-	} else {
-		gameno = body.Game
-	}
+	fmt.Printf("body: %v\n", body.Game)
 
 	auth := req.RequestContext.Authorizer.(map[string]interface{})
-
-	g, err := attributevalue.MarshalMap(GameItem{
-		Pk:     "GAME#" + gameno,
-		Sk:     auth["username"].(string),
-		ConnID: req.RequestContext.ConnectionID,
-		GSI1PK: "GAME",
-		GSI1SK: gameno,
-	})
-	if err != nil {
-		panic(fmt.Sprintf("failed to marshal Record, %v", err))
-	}
 
 	tableName, ok := os.LookupEnv("tableName")
 	if !ok {
 		panic(fmt.Sprintf("%v", "can't find table name"))
 	}
 
-	op, err := svc.PutItem(ctx, &dynamodb.PutItemInput{
-		TableName:              aws.String(tableName),
-		Item:                   g,
-		ReturnConsumedCapacity: types.ReturnConsumedCapacityTotal,
+	if body.Game == "new" {
+		gameno = fmt.Sprintf("%d", time.Now().UnixNano())
+	} else {
+		gameno = body.Game
+	}
+
+	g, err := attributevalue.MarshalMap(GameItemKey{
+		Pk: "GAME",
+		Sk: gameno,
+		// Players: []Player{
+		// 	{
+		// 		Name:   auth["username"].(string),
+		// 		ConnID: req.RequestContext.ConnectionID,
+		// 	},
+		// },
+	})
+	if err != nil {
+		panic(fmt.Sprintf("failed to marshal Record, %v", err))
+	}
+	g2, err := attributevalue.MarshalMap(GameItemAttrs{
+		// Pk: "GAME",
+		// Sk: gameno,
+		Players: []Player{
+			{
+				Name:   auth["username"].(string),
+				ConnID: req.RequestContext.ConnectionID,
+			},
+		},
+	})
+	if err != nil {
+		panic(fmt.Sprintf("failed to marshal Record 2, %v", err))
+	}
+
+	for k, v := range g2 {
+
+		fmt.Println("g2", k, v)
+	}
+
+	op, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		Key:       g,
+		TableName: aws.String(tableName),
+
+		ExpressionAttributeNames: map[string]string{
+			"#PL": "Players",
+		},
+		ExpressionAttributeValues: g2,
+		ReturnConsumedCapacity:    types.ReturnConsumedCapacityTotal,
+
+		UpdateExpression: aws.String("SET #PL = :p"),
 	})
 	// fmt.Println("op", op)
 	if err != nil {
