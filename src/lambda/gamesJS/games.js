@@ -8,7 +8,7 @@ let connsResults;
 
 exports.handler = (req, ctx, cb) => {
     req.Records.forEach(async (rec) => {
-        if (rec.eventName === "INSERT") {
+        if (rec.eventName === "INSERT" || rec.eventName === "MODIFY") {
             const tableName = rec.eventSourceARN.split("/", 2)[1];
             const item = rec.dynamodb.NewImage;
             console.log('item: ', item);
@@ -29,8 +29,7 @@ exports.handler = (req, ctx, cb) => {
 
             const gamesParams = {
                 TableName: tableName,
-                IndexName: "Players",
-                KeyConditionExpression: "GSI1PK = :gm",
+                KeyConditionExpression: "pk = :gm",
                 ExpressionAttributeValues: {
                     ":gm": {
                         S: "GAME",
@@ -43,10 +42,9 @@ exports.handler = (req, ctx, cb) => {
                 console.log("db error: ", err);
             }
             const payload = {
-                data: gamesResults.Items.map(({ pk, sk, connid }) => ({
-                    no: pk.S,
-                    name: sk.S,
-                    conn: connid.S,
+                data: gamesResults.Items.map(({ sk, players: { SS } }) => ({
+                    no: sk.S,
+                    players: SS,
                 })),
                 type: "games",
             };
@@ -95,6 +93,8 @@ exports.handler = (req, ctx, cb) => {
             } else {
                 console.log("other: ");
             }
+        // } else if (rec.eventName === "MODIFY") {
+        //     console.log("modd", rec);
         } else {
             console.log("keys", rec.dynamodb.Keys);
         }

@@ -21,10 +21,10 @@ import (
 )
 
 // Player for player info
-type Player struct {
-	Name   string `dynamodbav:"name"`
-	ConnID string `dynamodbav:"connid"`
-}
+// type Player struct {
+// 	Name   string `dynamodbav:"name"`
+// 	ConnID string `dynamodbav:"connid"`
+// }
 
 // GameItemKey holds values to be put in db
 type GameItemKey struct {
@@ -34,7 +34,7 @@ type GameItemKey struct {
 
 // GameItemAttrs holds values to be put in db
 type GameItemAttrs struct {
-	Players []Player `dynamodbav:":p"`
+	Players []string `dynamodbav:":p,stringset"` //name + connid
 }
 
 type body struct {
@@ -60,6 +60,8 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	var gameno string
 	var body body
+	// var ga map[string]types.AttributeValue
+	// var ue string
 
 	err = json.Unmarshal([]byte(req.Body), &body)
 	if err != nil {
@@ -77,53 +79,52 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	if body.Game == "new" {
 		gameno = fmt.Sprintf("%d", time.Now().UnixNano())
+		// ga, err = attributevalue.MarshalMap(GameItemAttrs{
+		// 	Players: []string{
+		// 		auth["username"].(string) + "#" + req.RequestContext.ConnectionID,
+		// 	},
+		// })
+		// if err != nil {
+		// 	panic(fmt.Sprintf("failed to marshal Record 2, %v", err))
+		// }
+		// ue = "SET #PL = :p"
 	} else {
 		gameno = body.Game
 	}
-
-	g, err := attributevalue.MarshalMap(GameItemKey{
-		Pk: "GAME",
-		Sk: gameno,
-		// Players: []Player{
-		// 	{
-		// 		Name:   auth["username"].(string),
-		// 		ConnID: req.RequestContext.ConnectionID,
-		// 	},
-		// },
-	})
-	if err != nil {
-		panic(fmt.Sprintf("failed to marshal Record, %v", err))
-	}
-	g2, err := attributevalue.MarshalMap(GameItemAttrs{
-		// Pk: "GAME",
-		// Sk: gameno,
-		Players: []Player{
-			{
-				Name:   auth["username"].(string),
-				ConnID: req.RequestContext.ConnectionID,
-			},
+	ga, err := attributevalue.MarshalMap(GameItemAttrs{
+		Players: []string{
+			auth["username"].(string) + "#" + req.RequestContext.ConnectionID,
 		},
 	})
 	if err != nil {
 		panic(fmt.Sprintf("failed to marshal Record 2, %v", err))
 	}
+	ue := "ADD #PL :p"
 
-	for k, v := range g2 {
-
-		fmt.Println("g2", k, v)
+	gk, err := attributevalue.MarshalMap(GameItemKey{
+		Pk: "GAME",
+		Sk: gameno,
+	})
+	if err != nil {
+		panic(fmt.Sprintf("failed to marshal Record, %v", err))
 	}
 
-	op, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-		Key:       g,
-		TableName: aws.String(tableName),
+	// for k, v := range ga {
 
+	// 	fmt.Println("ga", k, v)
+	// }
+
+	op, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		Key:       gk,
+		TableName: aws.String(tableName),
+		// ConditionExpression: aws.String("contains(Color, :v_sub)"),
 		ExpressionAttributeNames: map[string]string{
-			"#PL": "Players",
+			"#PL": "players",
 		},
-		ExpressionAttributeValues: g2,
+		ExpressionAttributeValues: ga,
 		ReturnConsumedCapacity:    types.ReturnConsumedCapacityTotal,
 
-		UpdateExpression: aws.String("SET #PL = :p"),
+		UpdateExpression: aws.String(ue),
 	})
 	// fmt.Println("op", op)
 	if err != nil {

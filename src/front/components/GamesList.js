@@ -55,7 +55,14 @@ export default function GamesList({games}) {
                     },
                     `${g.no}`
                 ),
-                ce("p", null, g.name)
+                g.players.map(s => ce(
+                    "p",
+                    {
+                        key: s,
+                        // className: "mb-8",
+                    },
+                    s.split("#", 1)[0]
+                ))
             )
         ))
     );
