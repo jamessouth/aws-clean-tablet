@@ -20,14 +20,8 @@ import (
 	"github.com/aws/smithy-go"
 )
 
-// Player for player info
-// type Player struct {
-// 	Name   string `dynamodbav:"name"`
-// 	ConnID string `dynamodbav:"connid"`
-// }
-
-// GameItemKey holds values to be put in db
-type GameItemKey struct {
+// Key holds values to be put in db
+type Key struct {
 	Pk string `dynamodbav:"pk"` //GAME
 	Sk string `dynamodbav:"sk"` //game no
 }
@@ -41,9 +35,15 @@ type body struct {
 	Game string
 }
 
+type connItem struct {
+	Pk     string `dynamodbav:"pk"`
+	Sk     string `dynamodbav:"sk"`
+	InGame bool   `dynamodbav:"ingame"`
+}
+
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
-	fmt.Println("lobbbbbby", req.Body)
+	// fmt.Println("lobbbbbby", req.Body)
 
 	reg := strings.Split(req.RequestContext.DomainName, ".")[2]
 
@@ -54,9 +54,64 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		fmt.Println("cfg err")
 	}
 
+	tableName, ok := os.LookupEnv("tableName")
+	if !ok {
+		panic(fmt.Sprintf("%v", "can't find table name"))
+	}
+
 	// .WithEndpoint("http://192.168.4.27:8000")
 
 	svc := dynamodb.NewFromConfig(cfg)
+
+	connItemKey, err := attributevalue.MarshalMap(Key{
+		Pk: "CONN",
+		Sk: req.RequestContext.ConnectionID,
+	})
+	if err != nil {
+		panic(fmt.Sprintf("failed to marshal Record 3, %v", err))
+	}
+
+	op3, err := svc.GetItem(ctx, &dynamodb.GetItemInput{
+		Key:       connItemKey,
+		TableName: aws.String(tableName),
+
+		// ConsistentRead:           new(bool),
+		// ExpressionAttributeNames: map[string]string{"#PL": "players"},
+		// ProjectionExpression:     new(string),
+		ReturnConsumedCapacity: types.ReturnConsumedCapacityTotal,
+	})
+	// fmt.Println("op", op)
+	if err != nil {
+
+		var intServErr *types.InternalServerError
+		if errors.As(err, &intServErr) {
+			fmt.Printf("get item error, %v",
+				intServErr.ErrorMessage())
+		}
+
+		// To get any API error
+		var apiErr smithy.APIError
+		if errors.As(err, &apiErr) {
+			fmt.Printf("db error, Code: %v, Message: %v",
+				apiErr.ErrorCode(), apiErr.ErrorMessage())
+		}
+
+	}
+	var connItem connItem
+	err = attributevalue.UnmarshalMap(op3.Item, &connItem)
+	if err != nil {
+		fmt.Println("get item unmarshal err")
+	}
+
+	if connItem.InGame {
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusOK,
+			Headers:    map[string]string{"Content-Type": "application/json"},
+
+			Body:            fmt.Sprintf("cap used: %v", op3.ConsumedCapacity.CapacityUnits),
+			IsBase64Encoded: false,
+		}, nil
+	}
 
 	var gameno string
 	var body body
@@ -68,29 +123,16 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		fmt.Println("unmarshal err")
 	}
 
-	fmt.Printf("body: %v\n", body.Game)
-
-	auth := req.RequestContext.Authorizer.(map[string]interface{})
-
-	tableName, ok := os.LookupEnv("tableName")
-	if !ok {
-		panic(fmt.Sprintf("%v", "can't find table name"))
-	}
+	// fmt.Printf("body: %v\n", body.Game)
 
 	if body.Game == "new" {
 		gameno = fmt.Sprintf("%d", time.Now().UnixNano())
-		// ga, err = attributevalue.MarshalMap(GameItemAttrs{
-		// 	Players: []string{
-		// 		auth["username"].(string) + "#" + req.RequestContext.ConnectionID,
-		// 	},
-		// })
-		// if err != nil {
-		// 	panic(fmt.Sprintf("failed to marshal Record 2, %v", err))
-		// }
-		// ue = "SET #PL = :p"
 	} else {
 		gameno = body.Game
 	}
+
+	auth := req.RequestContext.Authorizer.(map[string]interface{})
+
 	ga, err := attributevalue.MarshalMap(GameItemAttrs{
 		Players: []string{
 			auth["username"].(string) + "#" + req.RequestContext.ConnectionID,
@@ -99,20 +141,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	if err != nil {
 		panic(fmt.Sprintf("failed to marshal Record 2, %v", err))
 	}
-	ue := "ADD #PL :p"
 
-	gk, err := attributevalue.MarshalMap(GameItemKey{
+	gk, err := attributevalue.MarshalMap(Key{
 		Pk: "GAME",
 		Sk: gameno,
 	})
 	if err != nil {
 		panic(fmt.Sprintf("failed to marshal Record, %v", err))
 	}
-
-	// for k, v := range ga {
-
-	// 	fmt.Println("ga", k, v)
-	// }
 
 	op, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 		Key:       gk,
@@ -124,7 +160,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		ExpressionAttributeValues: ga,
 		ReturnConsumedCapacity:    types.ReturnConsumedCapacityTotal,
 
-		UpdateExpression: aws.String(ue),
+		UpdateExpression: aws.String("ADD #PL :p"),
 	})
 	// fmt.Println("op", op)
 	if err != nil {
@@ -145,11 +181,11 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	return events.APIGatewayProxyResponse{
-		StatusCode:        http.StatusOK,
-		Headers:           map[string]string{"Content-Type": "application/json"},
-		MultiValueHeaders: map[string][]string{},
-		Body:              fmt.Sprintf("cap used: %v", op.ConsumedCapacity.CapacityUnits),
-		IsBase64Encoded:   false,
+		StatusCode: http.StatusOK,
+		Headers:    map[string]string{"Content-Type": "application/json"},
+
+		Body:            fmt.Sprintf("cap used: %v", op.ConsumedCapacity.CapacityUnits),
+		IsBase64Encoded: false,
 	}, nil
 }
 

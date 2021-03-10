@@ -1,38 +1,47 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"os"
+	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/smithy-go"
 )
 
 // ConnItem holds values to be put in db
 type ConnItem struct {
-	Pk string `json:"pk"`
-	Sk string `json:"sk"`
+	Pk string `dynamodbav:"pk"`
+	Sk string `dynamodbav:"sk"`
 }
 
-func handler(req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
+func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
-	fmt.Printf("%s: %+v\n", "request", req)
+	// fmt.Printf("%s: %+v\n", "request", req)
 
-	sess, err := session.NewSession()
+	reg := strings.Split(req.RequestContext.DomainName, ".")[2]
+
+	cfg, err := config.LoadDefaultConfig(ctx,
+		config.WithRegion(reg),
+	)
 	if err != nil {
-		fmt.Println("session init error")
+		fmt.Println("cfg err")
 	}
 
 	// .WithEndpoint("http://192.168.4.27:8000")
 
-	svc := dynamodb.New(sess, aws.NewConfig())
+	svc := dynamodb.NewFromConfig(cfg)
 
-	k, err := dynamodbattribute.MarshalMap(ConnItem{
+	k, err := attributevalue.MarshalMap(ConnItem{
 		Pk: "CONN",
 		Sk: req.RequestContext.ConnectionID,
 	})
@@ -45,33 +54,34 @@ func handler(req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxy
 		panic(fmt.Sprintf("%v", "cant find table name"))
 	}
 
-	op, err := svc.DeleteItem(&dynamodb.DeleteItemInput{
+	op, err := svc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
 		TableName:              aws.String(tableName),
 		Key:                    k,
-		ReturnConsumedCapacity: aws.String("TOTAL"),
+		ReturnConsumedCapacity: types.ReturnConsumedCapacityTotal,
 	})
 	// fmt.Println("op", op)
 	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			switch aerr.Code() {
-			case dynamodb.ErrCodeInternalServerError:
-				fmt.Println(dynamodb.ErrCodeInternalServerError, aerr.Error())
-			default:
-				fmt.Println(aerr.Error())
-			}
-		} else {
-			// Print the error, cast err to awserr.Error to get the Code and
-			// Message from an error.
-			fmt.Println(err.Error())
+
+		var intServErr *types.InternalServerError
+		if errors.As(err, &intServErr) {
+			fmt.Printf("put item error, %v",
+				intServErr.ErrorMessage())
 		}
-		// return
+
+		// To get any API error
+		var apiErr smithy.APIError
+		if errors.As(err, &apiErr) {
+			fmt.Printf("db error, Code: %v, Message: %v",
+				apiErr.ErrorCode(), apiErr.ErrorMessage())
+		}
+
 	}
 
 	return events.APIGatewayProxyResponse{
-		StatusCode:        200,
+		StatusCode:        http.StatusOK,
 		Headers:           map[string]string{"Content-Type": "application/json"},
 		MultiValueHeaders: map[string][]string{},
-		Body:              fmt.Sprintf("cap used: %v", op.ConsumedCapacity),
+		Body:              fmt.Sprintf("cap used: %v", op.ConsumedCapacity.CapacityUnits),
 		IsBase64Encoded:   false,
 	}, nil
 }
