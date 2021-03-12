@@ -22,8 +22,8 @@ import (
 
 // Key holds values to be put in db
 type Key struct {
-	Pk string `dynamodbav:"pk"` //GAME
-	Sk string `dynamodbav:"sk"` //game no
+	Pk string `dynamodbav:"pk"`
+	Sk string `dynamodbav:"sk"`
 }
 
 // GameItemAttrs holds values to be put in db
@@ -132,7 +132,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	auth := req.RequestContext.Authorizer.(map[string]interface{})
 
-	ga, err := attributevalue.MarshalMap(GameItemAttrs{
+	gameAttrs, err := attributevalue.MarshalMap(GameItemAttrs{
 		Players: []string{
 			auth["username"].(string) + "#" + req.RequestContext.ConnectionID,
 		},
@@ -141,14 +141,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		panic(fmt.Sprintf("failed to marshal Record 2, %v", err))
 	}
 
-	ca, err := attributevalue.MarshalMap(ConnItemAttrs{
-		InGame: true,
+	connAttrs, err := attributevalue.MarshalMap(ConnItemAttrs{
+		Game: gameno,
 	})
 	if err != nil {
 		panic(fmt.Sprintf("failed to marshal Record 4, %v", err))
 	}
 
-	gk, err := attributevalue.MarshalMap(Key{
+	gameKey, err := attributevalue.MarshalMap(Key{
 		Pk: "GAME",
 		Sk: gameno,
 	})
@@ -156,7 +156,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		panic(fmt.Sprintf("failed to marshal Record, %v", err))
 	}
 
-	ck, err := attributevalue.MarshalMap(Key{
+	connKey, err := attributevalue.MarshalMap(Key{
 		Pk: "CONN",
 		Sk: req.RequestContext.ConnectionID,
 	})
@@ -170,13 +170,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			{
 				Update: &types.Update{
 
-					Key:       gk,
+					Key:       gameKey,
 					TableName: aws.String(tableName),
 					// ConditionExpression: aws.String("contains(Color, :v_sub)"),
 					ExpressionAttributeNames: map[string]string{
 						"#PL": "players",
 					},
-					ExpressionAttributeValues: ga,
+					ExpressionAttributeValues: gameAttrs,
 
 					UpdateExpression: aws.String("ADD #PL :p"),
 				},
@@ -184,15 +184,15 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			{
 				Update: &types.Update{
 
-					Key:       ck,
+					Key:       connKey,
 					TableName: aws.String(tableName),
 					// ConditionExpression: aws.String("contains(Color, :v_sub)"),
 					ExpressionAttributeNames: map[string]string{
-						"#IG": "ingame",
+						"#IG": "game",
 					},
-					ExpressionAttributeValues: ca,
+					ExpressionAttributeValues: connAttrs,
 
-					UpdateExpression: aws.String("SET #IG = :ig"),
+					UpdateExpression: aws.String("SET #IG = :g"),
 				},
 			},
 		},
