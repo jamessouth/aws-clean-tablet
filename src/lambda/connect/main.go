@@ -22,9 +22,9 @@ import (
 
 // ConnItem holds values to be put in db
 type ConnItem struct {
-	Pk     string `dynamodbav:"pk"` //'CONN'
-	Sk     string `dynamodbav:"sk"` //conn id
-	InGame bool   `dynamodbav:"ingame"`
+	Pk   string `dynamodbav:"pk"`   //'CONN'
+	Sk   string `dynamodbav:"sk"`   //conn id
+	Game string `dynamodbav:"game"` //game no or blank
 }
 
 // StatItem holds values to be put in db
@@ -69,16 +69,23 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	auth := req.RequestContext.Authorizer.(map[string]interface{})
 
 	connItem, err := attributevalue.MarshalMap(ConnItem{
-		Pk:     "CONN",
-		Sk:     req.RequestContext.ConnectionID,
-		InGame: false,
+		Pk:   "CONN",
+		Sk:   req.RequestContext.ConnectionID,
+		Game: "",
 	})
 	if err != nil {
 		panic(fmt.Sprintf("failed to marshal Record, %v", err))
 	}
 
+	id := auth["principalId"].(string)
+
+	mid, err := attributevalue.Marshal(id)
+	if err != nil {
+		panic(fmt.Sprintf("failed to marshal Record 6, %v", err))
+	}
+
 	statItem, err := attributevalue.MarshalMap(StatItem{
-		Pk:     auth["principalId"].(string),
+		Pk:     id,
 		Sk:     auth["username"].(string),
 		GSI1PK: "STAT",
 		GSI1SK: 0,
@@ -114,25 +121,42 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		}
 
 	}
-	op2, err := svc.PutItem(ctx, &dynamodb.PutItemInput{
-		TableName:              aws.String(tableName),
-		Item:                   statItem,
+	pii := dynamodb.PutItemInput{
+		TableName: aws.String(tableName),
+		Item:      statItem,
+		// ExpressionAttributeNames: map[string]string,
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":id": mid,
+		},
+		ConditionExpression:    aws.String(":id <> pk"),
 		ReturnConsumedCapacity: types.ReturnConsumedCapacityTotal,
-	})
+	}
+
+	err = panicProtectedPut(ctx, svc, &pii)
 
 	if err != nil {
+		// fmt.Println("poi", err)
+		var condCheckErr *types.ConditionalCheckFailedException
+		if errors.As(err, &condCheckErr) {
+			fmt.Printf("item with this pk exists, not putting, %v\n", condCheckErr.ErrorMessage())
 
-		var intServErr *types.InternalServerError
-		if errors.As(err, &intServErr) {
-			fmt.Printf("put item error, %v",
-				intServErr.ErrorMessage())
-		}
+		} else {
 
-		// To get any API error
-		var apiErr smithy.APIError
-		if errors.As(err, &apiErr) {
-			fmt.Printf("db error, Code: %v, Message: %v",
-				apiErr.ErrorCode(), apiErr.ErrorMessage())
+			// To get any API error
+			var apiErr smithy.APIError
+			if errors.As(err, &apiErr) {
+				fmt.Printf("db error, Code: %v, Message: %v",
+					apiErr.ErrorCode(), apiErr.ErrorMessage())
+			}
+
+			return events.APIGatewayProxyResponse{
+				StatusCode:        http.StatusBadRequest,
+				Headers:           map[string]string{"Content-Type": "application/json"},
+				MultiValueHeaders: map[string][]string{},
+				Body:              fmt.Sprintf("cap used: %v, %v", &op.ConsumedCapacity.CapacityUnits, &op.ConsumedCapacity.CapacityUnits),
+				IsBase64Encoded:   false,
+			}, err
+
 		}
 
 	}
@@ -141,9 +165,19 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		StatusCode:        http.StatusOK,
 		Headers:           map[string]string{"Content-Type": "application/json"},
 		MultiValueHeaders: map[string][]string{},
-		Body:              fmt.Sprintf("cap used: %v, %v", op.ConsumedCapacity.CapacityUnits, op2.ConsumedCapacity.CapacityUnits),
+		Body:              fmt.Sprintf("cap used: %v, %v", &op.ConsumedCapacity.CapacityUnits, &op.ConsumedCapacity.CapacityUnits),
 		IsBase64Encoded:   false,
 	}, nil
+}
+
+func panicProtectedPut(ctx context.Context, svc *dynamodb.Client, pii *dynamodb.PutItemInput) error {
+	fmt.Println("panicProtectedPut called")
+	defer func() {
+		recover()
+	}()
+	_, err := svc.PutItem(ctx, pii)
+
+	return err
 }
 
 func main() {

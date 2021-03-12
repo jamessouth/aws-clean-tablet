@@ -35,10 +35,9 @@ type body struct {
 	Game string
 }
 
-type connItem struct {
-	Pk     string `dynamodbav:"pk"`
-	Sk     string `dynamodbav:"sk"`
-	InGame bool   `dynamodbav:"ingame"`
+// ConnItemAttrs holds vals for db
+type ConnItemAttrs struct {
+	Game string `dynamodbav:":g"`
 }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -97,18 +96,18 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		}
 
 	}
-	var connItem connItem
+	var connItem ConnItemAttrs
 	err = attributevalue.UnmarshalMap(op3.Item, &connItem)
 	if err != nil {
 		fmt.Println("get item unmarshal err")
 	}
 
-	if connItem.InGame {
+	if len(connItem.Game) > 0 {
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusOK,
 			Headers:    map[string]string{"Content-Type": "application/json"},
 
-			Body:            fmt.Sprintf("cap used: %v", op3.ConsumedCapacity.CapacityUnits),
+			Body:            fmt.Sprintf("cap used: %v", &op3.ConsumedCapacity.CapacityUnits),
 			IsBase64Encoded: false,
 		}, nil
 	}
@@ -142,6 +141,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		panic(fmt.Sprintf("failed to marshal Record 2, %v", err))
 	}
 
+	ca, err := attributevalue.MarshalMap(ConnItemAttrs{
+		InGame: true,
+	})
+	if err != nil {
+		panic(fmt.Sprintf("failed to marshal Record 4, %v", err))
+	}
+
 	gk, err := attributevalue.MarshalMap(Key{
 		Pk: "GAME",
 		Sk: gameno,
@@ -150,17 +156,47 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		panic(fmt.Sprintf("failed to marshal Record, %v", err))
 	}
 
-	op, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-		Key:       gk,
-		TableName: aws.String(tableName),
-		// ConditionExpression: aws.String("contains(Color, :v_sub)"),
-		ExpressionAttributeNames: map[string]string{
-			"#PL": "players",
-		},
-		ExpressionAttributeValues: ga,
-		ReturnConsumedCapacity:    types.ReturnConsumedCapacityTotal,
+	ck, err := attributevalue.MarshalMap(Key{
+		Pk: "CONN",
+		Sk: req.RequestContext.ConnectionID,
+	})
+	if err != nil {
+		panic(fmt.Sprintf("failed to marshal Record 5, %v", err))
+	}
 
-		UpdateExpression: aws.String("ADD #PL :p"),
+	op, err := svc.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{
+
+		TransactItems: []types.TransactWriteItem{
+			{
+				Update: &types.Update{
+
+					Key:       gk,
+					TableName: aws.String(tableName),
+					// ConditionExpression: aws.String("contains(Color, :v_sub)"),
+					ExpressionAttributeNames: map[string]string{
+						"#PL": "players",
+					},
+					ExpressionAttributeValues: ga,
+
+					UpdateExpression: aws.String("ADD #PL :p"),
+				},
+			},
+			{
+				Update: &types.Update{
+
+					Key:       ck,
+					TableName: aws.String(tableName),
+					// ConditionExpression: aws.String("contains(Color, :v_sub)"),
+					ExpressionAttributeNames: map[string]string{
+						"#IG": "ingame",
+					},
+					ExpressionAttributeValues: ca,
+
+					UpdateExpression: aws.String("SET #IG = :ig"),
+				},
+			},
+		},
+		ReturnConsumedCapacity: types.ReturnConsumedCapacityTotal,
 	})
 	// fmt.Println("op", op)
 	if err != nil {
@@ -184,7 +220,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		StatusCode: http.StatusOK,
 		Headers:    map[string]string{"Content-Type": "application/json"},
 
-		Body:            fmt.Sprintf("cap used: %v", op.ConsumedCapacity.CapacityUnits),
+		Body:            fmt.Sprintf("cap used: %v", &op.ConsumedCapacity),
 		IsBase64Encoded: false,
 	}, nil
 }

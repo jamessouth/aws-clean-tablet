@@ -11,7 +11,7 @@ export default function Lobby() {
     const [startedNewGame, setStartedNewGame] = useState(false);
     const [token, setToken] = useState("");
     const [wsError, setWSError] = useState();
-    console.log("lobbbbbbbb ", connectedWS, wsError, token[0]);
+    console.log("lobbbbbbbb ", games, startedNewGame);
 
     useEffect(() => {
         async function getToken() {

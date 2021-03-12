@@ -81,7 +81,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		StatusCode:        http.StatusOK,
 		Headers:           map[string]string{"Content-Type": "application/json"},
 		MultiValueHeaders: map[string][]string{},
-		Body:              fmt.Sprintf("cap used: %v", op.ConsumedCapacity.CapacityUnits),
+		Body:              fmt.Sprintf("cap used: %v", &op.ConsumedCapacity.CapacityUnits),
 		IsBase64Encoded:   false,
 	}, nil
 }
