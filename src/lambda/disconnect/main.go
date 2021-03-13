@@ -26,7 +26,7 @@ type Key struct {
 
 // ConnItemAttrs holds vals for db
 type ConnItemAttrs struct {
-	Game string `dynamodbav:":g"`
+	Game string `dynamodbav:"game"`
 }
 
 // GameItemAttrs holds values to be put in db
@@ -94,15 +94,18 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	}
 
-	var connItem ConnItemAttrs
-	err = attributevalue.Unmarshal(op.Attributes["game"], &connItem)
+	connItem := ConnItemAttrs{}
+	err = attributevalue.UnmarshalMap(op.Attributes, &connItem)
 	if err != nil {
-		fmt.Println("del item unmarshal err")
+		fmt.Println("del item unmarshal err", err)
 	}
 
-	fmt.Println("op", connItem.Game)
+	fmt.Printf("conn item: %v\n", connItem)
+	fmt.Printf("conn item2: %v\n", &connItem)
+	// fmt.Println("join unmr2", connItem, &connItem, *connItem)
 
 	if len(connItem.Game) > 0 {
+		fmt.Printf("conn item: %v\n", connItem)
 		gameKey, err := attributevalue.MarshalMap(Key{
 			Pk: "GAME",
 			Sk: connItem.Game,

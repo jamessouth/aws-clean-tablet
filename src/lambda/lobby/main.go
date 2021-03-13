@@ -96,11 +96,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		}
 
 	}
-	var connItem ConnItemAttrs
+	connItem := ConnItemAttrs{}
 	err = attributevalue.UnmarshalMap(op3.Item, &connItem)
 	if err != nil {
-		fmt.Println("get item unmarshal err")
+		fmt.Println("get item unmarshal err", err)
 	}
+
+	fmt.Println("join unmr", connItem, &connItem)
 
 	if len(connItem.Game) > 0 {
 		return events.APIGatewayProxyResponse{
