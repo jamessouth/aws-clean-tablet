@@ -42,9 +42,9 @@ exports.handler = (req, ctx, cb) => {
                 console.log("db error: ", err);
             }
             const payload = {
-                data: gamesResults.Items.map(({ sk, players: { SS } }) => ({
-                    no: sk.S,
-                    players: SS,
+                data: gamesResults.Items.map(g => ({
+                    no: g.sk.S,
+                    players: g.players && g.players.SS || [],
                 })),
                 type: "games",
             };
