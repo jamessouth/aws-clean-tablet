@@ -5,27 +5,29 @@ const DynamoDB = require("aws-sdk/clients/dynamodb");
 
 let gamesResults;
 let connsResults;
+const apiid = process.env.CT_APIID;
+const stage = process.env.CT_STAGE;
 
 exports.handler = (req, ctx, cb) => {
     req.Records.forEach(async (rec) => {
-        if (rec.eventName === "INSERT" || rec.eventName === "MODIFY") {
-            const tableName = rec.eventSourceARN.split("/", 2)[1];
-            const item = rec.dynamodb.NewImage;
-            console.log('item: ', item);
-            const apiid = process.env.CT_APIID;
-            const stage = process.env.CT_STAGE;
-            const endpoint = `https://${apiid}.execute-api.${rec.awsRegion}.amazonaws.com/${stage}`;
+        const tableName = rec.eventSourceARN.split("/", 2)[1];
+        const item = rec.dynamodb.NewImage;
+        console.log('item: ', item);
+        const endpoint = `https://${apiid}.execute-api.${rec.awsRegion}.amazonaws.com/${stage}`;
 
-            const apigw = new ApiGatewayManagementApi({
-                apiVersion: "2018-11-29",
-                region: rec.AWSRegion,
-                endpoint,
-            });
+        const apigw = new ApiGatewayManagementApi({
+            apiVersion: "2018-11-29",
+            region: rec.AWSRegion,
+            endpoint,
+        });
 
-            const dyndb = new DynamoDB({
-                apiVersion: "2012-08-10",
-                region: rec.AWSRegion,
-            });
+        const dyndb = new DynamoDB({
+            apiVersion: "2012-08-10",
+            region: rec.AWSRegion,
+        });
+
+        if (rec.eventName === "INSERT" || (rec.eventName === "MODIFY" && item.pk.S.startsWith("GAME"))) {
+
 
             const gamesParams = {
                 TableName: tableName,
@@ -42,7 +44,7 @@ exports.handler = (req, ctx, cb) => {
                 console.log("db error: ", err);
             }
             const payload = {
-                data: gamesResults.Items.map(g => ({
+                games: gamesResults.Items.map(g => ({
                     no: g.sk.S,
                     players: g.players && g.players.SS || [],
                 })),
@@ -93,8 +95,27 @@ exports.handler = (req, ctx, cb) => {
             } else {
                 console.log("other: ");
             }
-        // } else if (rec.eventName === "MODIFY") {
-        //     console.log("modd", rec);
+
+        } else if (rec.eventName === "MODIFY" && item.pk.S.startsWith("CONN")) {
+            const payload = {
+                ingame: !!item.game.S,
+                type: "user",
+            };
+
+            console.log("data: ", payload);
+            try {
+                await apigw
+                    .postToConnection({
+                        ConnectionId: item.sk.S,
+                        Data: JSON.stringify(payload),
+                    })
+                    .promise();
+            } catch (err) {
+                console.log("post error: ", err);
+            }
+
+
+
         } else {
             console.log("keys", rec.dynamodb.Keys);
         }

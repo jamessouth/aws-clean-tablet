@@ -8,10 +8,11 @@ let ws;
 export default function Lobby() {
     const [connectedWS, setConnectedWS] = useState(false);
     const [games, setGames] = useState(null);
-    const [startedNewGame, setStartedNewGame] = useState(false);
+    const [ingame, setInGame] = useState(false);
+    // const [startedNewGame, setStartedNewGame] = useState(false);
     const [token, setToken] = useState("");
     const [wsError, setWSError] = useState();
-    console.log("lobbbbbbbb ", games, startedNewGame);
+    console.log("lobbbbbbbb ", games, ingame);
 
     useEffect(() => {
         async function getToken() {
@@ -56,21 +57,24 @@ export default function Lobby() {
                 function (e) {
                     const {
                         type,
-                        data
-                        // players,
+                        games,
+                        ingame,
                         // time,
                         // winners,
                         // word
                     } = JSON.parse(e.data);
 
-                    console.log("mmmm", type, data);
+                    console.log("mmmm", type, games, ingame);
 
                     switch (type) {
                         case "games":
-                            setGames(data);
+                            setGames(games);
+                            break;
+                        case "user":
+                            setInGame(ingame);
                             break;
                         default:
-                            console.log('no case found: ', data);
+                            console.log('no case found: ', e.data);
                     }
                 },
                 false
@@ -123,7 +127,7 @@ export default function Lobby() {
             {
                 className: "flex flex-col mt-8",
             },
-            !startedNewGame
+            !ingame
             ? ce(
                 "button",
                 {
@@ -131,8 +135,11 @@ export default function Lobby() {
                         "mx-auto mb-8 h-40 w-1/2 bg-smoke-100 text-gray-700",
                     type: "button",
                     onClick: () => {
-                        setStartedNewGame(true);
-                        send("lobby");
+                        // setStartedNewGame(true);
+                        send({
+                            action: "lobby",
+                            game: "new",
+                        });
                     },
                 },
                 "start a new game"
