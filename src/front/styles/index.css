@@ -1,0 +1,122 @@
+@tailwind base;
+@tailwind components;
+@layer components{
+
+  .decay-mask{
+    -webkit-mask-image: url('../../assets/decaying.png');
+    mask-image: url('../../assets/decaying.png');
+  }
+}
+@tailwind utilities;
+
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  list-style-type: none;
+  outline: none;
+  text-align: center;
+  font-family: 'Anonymous Pro', monospace;
+  color: var(--amplify-smoke-white);
+}
+:root{
+  --amplify-background-color: var(--amplify-smoke-white);
+  --amplify-secondary-color: var(--amplify-primary-color);
+
+  
+  --amplify-primary-color: #444444;
+  --amplify-primary-shade: var(--amplify-primary-color);
+  --amplify-primary-tint: var(--amplify-primary-color);
+  /* --amplify-primary-shade: #008000; */
+  
+}
+amplify-authenticator{
+  --container-height: 80vh;
+  --border-radius: 0;
+  --box-shadow: none;
+  --margin-bottom: 0;
+}
+
+
+
+
+[slot="sign-out"] {
+  --amplify-primary-color: var(--amplify-smoke-white);
+  /* width: 20px; */
+  position: absolute;
+  top: 1px;
+  /* height: 3rem; */
+  /* background-color: red; */
+}
+
+
+
+body{
+  /* background: url('../../assets/mob.jpg') no-repeat top/cover; */
+  background-image: paint(bod);
+}
+/* button{
+  font-size: 1.375rem;
+  color: #4c4952;
+  background-color: #f0f0f0;
+  height: 28px;
+  width: 70%;
+  max-width: 250px;
+  cursor: pointer;
+  border: none;
+}
+button:disabled{
+  cursor: not-allowed;
+  filter: contrast(0.25);
+}
+button:focus,
+button:hover{
+  outline: 2px dashed #ffee58;
+  outline-offset: 4px;
+} */
+.div{
+  height: 240px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+}
+footer{
+  margin: 1em 0 6px;
+}
+footer a{
+  font-size: 1.125em;
+  padding: 4px;
+}
+footer a:focus,
+footer a:hover{
+  border: 2px solid #ffee58;
+}
+.winner{
+  font-size: 3rem;
+  font-family: 'Luckiest Guy', cursive;
+  color: transparent;
+  background-clip: text;
+  -webkit-background-clip: text;
+  filter: hue-rotate(0deg);
+  background-image: linear-gradient(#ffee58, #ffee58);
+  animation: rotate 5s ease-in-out infinite;
+}
+@keyframes rotate {
+  to {
+      filter: hue-rotate(360deg);
+  }
+}
+@media screen and (min-width: 768px){
+  /* body{
+    background: url('../../assets/tab.jpg') no-repeat top/cover;
+  } */
+  .h1{
+    font-size: 3.5rem;
+  }
+}
+@media screen and (min-width: 1440px){
+  body{
+    background: url('../../assets/big.jpg') no-repeat top/cover;
+  }
+}

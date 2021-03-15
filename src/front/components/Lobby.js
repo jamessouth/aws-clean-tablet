@@ -132,7 +132,7 @@ export default function Lobby() {
                 "button",
                 {
                     className:
-                        "mx-auto mb-8 h-40 w-1/2 bg-smoke-100 text-gray-700",
+                        "mx-auto mb-8 w-1/2 bg-smoke-100 text-gray-700",
                     type: "button",
                     onClick: () => {
                         // setStartedNewGame(true);

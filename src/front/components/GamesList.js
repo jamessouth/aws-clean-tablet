@@ -29,14 +29,29 @@ export default function GamesList({games}) {
     return ce(
         "ul",
         {
-            className: "m-auto w-10/12"
+            className: "mx-auto mb-10 w-10/12"
         },
         games.map(g => ce(
             "li",
             {
                 key: g.no,
-                className: "mb-8",
+                className: "mb-8 w-10/12 mx-auto",
             },
+            ce(
+                "p",
+                {
+                    className: "text-xs"
+                },
+                `${g.no}`
+            ),
+            g.players.map(s => ce(
+                "p",
+                {
+                    key: s,
+                    className: "text-right",
+                },
+                s.split("#", 1)[0]
+            )),
             ce(
                 "button",
                 {
@@ -48,21 +63,7 @@ export default function GamesList({games}) {
                           });
                     },
                 },
-                ce(
-                    "p",
-                    {
-                        className: "text-xs"
-                    },
-                    `${g.no}`
-                ),
-                g.players.map(s => ce(
-                    "p",
-                    {
-                        key: s,
-                        // className: "mb-8",
-                    },
-                    s.split("#", 1)[0]
-                ))
+                "join"
             )
         ))
     );

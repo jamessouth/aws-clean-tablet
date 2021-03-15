@@ -4,6 +4,10 @@ import App from "./App";
 
 import "./styles/index.css";
 
+if (CSS.paintWorklet) {
+    CSS.paintWorklet.addModule('../../paint.js');
+}
+
 const ce = React.createElement;
 
 ReactDOM.render(
