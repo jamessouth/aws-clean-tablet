@@ -49,11 +49,13 @@ amplify-authenticator{
   /* background-color: red; */
 }
 
-
+ul li{
+  background-image: paint(bod);
+  height: 200px;
+}
 
 body{
-  /* background: url('../../assets/mob.jpg') no-repeat top/cover; */
-  background-image: paint(bod);
+  background: url('../../assets/mob.jpg') no-repeat top/cover;
 }
 /* button{
   font-size: 1.375rem;
@@ -108,9 +110,10 @@ footer a:hover{
   }
 }
 @media screen and (min-width: 768px){
-  /* body{
+  body{
+    /* background-image: paint(bod); */
     background: url('../../assets/tab.jpg') no-repeat top/cover;
-  } */
+  }
   .h1{
     font-size: 3.5rem;
   }
