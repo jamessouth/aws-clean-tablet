@@ -51,7 +51,7 @@ amplify-authenticator{
 
 ul li{
   background-image: paint(bod);
-  height: 200px;
+  /* height: 200px; */
 }
 
 body{

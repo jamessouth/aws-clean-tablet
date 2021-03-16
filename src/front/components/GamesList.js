@@ -35,27 +35,36 @@ export default function GamesList({games}) {
             "li",
             {
                 key: g.no,
-                className: "mb-8 w-10/12 mx-auto",
+                className: "mb-8 w-10/12 mx-auto grid grid-cols-2 grid-rows-6 relative pb-6",
             },
             ce(
                 "p",
                 {
-                    className: "text-xs"
+                    className: "text-xs col-span-2"
                 },
                 `${g.no}`
             ),
-            g.players.map(s => ce(
+            ce(
+                "p",
+                {
+                    className: "text-xs col-span-2"
+                },
+                "players"
+            ),
+            // g.players
+            ["aaa", "bbb", "ccc", "ddd", "fff", "zzz", "ooo", "ttt"].map(s => ce(
                 "p",
                 {
                     key: s,
-                    className: "text-right",
+                    // className: "text-right",
                 },
-                s.split("#", 1)[0]
+                s
+                // .split("#", 1)[0]
             )),
             ce(
                 "button",
                 {
-                    className: "w-full h-full",
+                    className: "w-full absolute pt-36",
                     onClick: () => {
                         send({
                             action: "lobby",
