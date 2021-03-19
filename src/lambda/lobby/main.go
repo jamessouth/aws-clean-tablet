@@ -29,6 +29,7 @@ type Key struct {
 // GameItemAttrs holds values to be put in db
 type GameItemAttrs struct {
 	Players []string `dynamodbav:":p,stringset"` //name + connid
+	MaxSize int      `dynamodbav:":maxsize"`
 }
 
 type body struct {
@@ -135,9 +136,8 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	auth := req.RequestContext.Authorizer.(map[string]interface{})
 
 	gameAttrs, err := attributevalue.MarshalMap(GameItemAttrs{
-		Players: []string{
-			auth["username"].(string) + "#" + req.RequestContext.ConnectionID,
-		},
+		Players: []string{auth["username"].(string) + "#" + req.RequestContext.ConnectionID},
+		MaxSize: 8,
 	})
 	if err != nil {
 		panic(fmt.Sprintf("failed to marshal Record 2, %v", err))
@@ -172,9 +172,9 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			{
 				Update: &types.Update{
 
-					Key:       gameKey,
-					TableName: aws.String(tableName),
-					// ConditionExpression: aws.String("contains(Color, :v_sub)"),
+					Key:                 gameKey,
+					TableName:           aws.String(tableName),
+					ConditionExpression: aws.String("size (#PL) < :maxsize"),
 					ExpressionAttributeNames: map[string]string{
 						"#PL": "players",
 					},

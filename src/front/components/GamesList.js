@@ -35,7 +35,7 @@ export default function GamesList({games}) {
             "li",
             {
                 key: g.no,
-                className: "mb-8 w-10/12 mx-auto grid grid-cols-2 grid-rows-6 relative pb-6",
+                className: "mb-8 w-10/12 mx-auto grid grid-cols-2 grid-rows-gamebox relative pb-6",
             },
             ce(
                 "p",
@@ -51,15 +51,14 @@ export default function GamesList({games}) {
                 },
                 "players"
             ),
-            // g.players
-            ["aaa", "bbb", "ccc", "ddd", "fff", "zzz", "ooo", "ttt"].map(s => ce(
+            g.players.map(s => ce(
+            // ["aaa", "bbb", "ccc", "ddd", "fff", "zzz", "ooo", "ttt"]
                 "p",
                 {
                     key: s,
                     // className: "text-right",
                 },
-                s
-                // .split("#", 1)[0]
+                s.split("#", 1)[0]
             )),
             ce(
                 "button",

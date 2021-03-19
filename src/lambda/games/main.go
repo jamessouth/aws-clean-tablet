@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -15,7 +18,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
 	"github.com/aws/smithy-go"
+	"github.com/aws/smithy-go/logging"
 )
+
+var buffer bytes.Buffer
 
 func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayProxyResponse, error) {
 
@@ -26,9 +32,9 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			// for k, v := range rec.Change.NewImage {
 			item := rec.Change.NewImage
 
-			fmt.Printf("%s: %+v\n", "new db item", item)
+			// fmt.Printf("%s: %+v\n", "new db item", item)
 			// if k == "pk" {
-			if strings.HasPrefix(item["pk"].String(), "GAME") {
+			if strings.HasPrefix(item["pk"].String(), "CONN") {
 				apiid, ok := os.LookupEnv("CT_APIID")
 				if !ok {
 					panic(fmt.Sprintf("%v", "can't find api id"))
@@ -40,7 +46,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				}
 				str := "https://" + apiid + ".execute-api." + rec.AWSRegion + ".amazonaws.com/" + stage
 
-				fmt.Println(str)
+				// fmt.Println(str)
 
 				customResolver := aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
 					if service == apigatewaymanagementapi.ServiceID && region == rec.AWSRegion {
@@ -53,8 +59,12 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 					return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested")
 				})
 
+				logger := logging.NewStandardLogger(&buffer)
+				logger.Logf(logging.Debug, "time to %s", "log")
+
 				cfg, err := config.LoadDefaultConfig(ctx,
 					config.WithRegion(rec.AWSRegion),
+					config.WithLogger(logger),
 					config.WithEndpointResolver(customResolver),
 				)
 				if err != nil {
@@ -66,15 +76,17 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				// 	Endpoint: aws.String(apiid + ".execute-api." + rec.AWSRegion + ".amazonaws.com/" + stage + "/@connections/"),
 				// }
 
-				svc := apigatewaymanagementapi.NewFromConfig(cfg)
+				svc := apigatewaymanagementapi.NewFromConfig(cfg, func(o *apigatewaymanagementapi.Options) {
+					o.ClientLogMode = aws.LogSigning | aws.LogRequest | aws.LogResponseWithBody
+				})
 
-				fmt.Println("game")
+				// fmt.Println("game")
 
 				b, err := json.Marshal("{a: 19894, b: 74156}")
 				if err != nil {
 					fmt.Println("error marshalling", err)
 				}
-				fmt.Println(b, item["sk"].String())
+				// fmt.Println(b, item["sk"].String())
 				conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(item["sk"].String()), Data: b}
 
 				// conn.SetConnectionId()
@@ -89,8 +101,8 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				// fmt.Println("defff", defaults.Get())
 				// fmt.Println("defff2222", defaults.Config())
 
-				o, e := svc.PostToConnection(ctx, &conn)
-				fmt.Println("opopopo", o)
+				_, e := svc.PostToConnection(ctx, &conn)
+				// fmt.Println("opopopo", o)
 				if e != nil {
 					fmt.Println("errrr", e)
 
@@ -101,23 +113,32 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 							apiErr.ErrorCode(), apiErr.ErrorMessage())
 					}
 				}
-			} else {
-				fmt.Println("other")
-
 			}
 			// }
 			// }
-		} else {
-			for k, v := range rec.Change.Keys {
-
-				fmt.Printf("%s - %v: %v - %s\n", "k v", k, v, rec.EventName)
-
-			}
-
 		}
 
 	}
-	fmt.Println("returrrrn")
+	r := bufio.NewReader(&buffer)
+	log := make([]byte, 0, 1024)
+	for {
+		n, err := io.ReadFull(r, log[:cap(log)])
+		log = log[:n]
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			if err != io.ErrUnexpectedEOF {
+				fmt.Fprintln(os.Stderr, err)
+				break
+			}
+		}
+
+		fmt.Printf("read %d bytes: ", n)
+
+		fmt.Println(string(log))
+	}
+
 	return events.APIGatewayProxyResponse{
 		StatusCode:        http.StatusOK,
 		Headers:           map[string]string{"Content-Type": "application/json"},

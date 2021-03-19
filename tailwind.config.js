@@ -14,6 +14,9 @@ module.exports = {
         'luck': 'Luckiest Guy, cursive',
         'perm': 'Permanent Marker, cursive',
       },
+      gridTemplateRows: {
+        'gamebox': 'repeat(6, minmax(1.5rem, 1fr))',
+      },
       height: {
         // '40vh': '40vh',
       },
