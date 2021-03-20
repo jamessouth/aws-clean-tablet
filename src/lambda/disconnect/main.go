@@ -51,7 +51,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	id := auth["principalId"].(string)
 	name := auth["username"].(string)
 
-	k, err := attributevalue.MarshalMap(Key{
+	connItemKey, err := attributevalue.MarshalMap(Key{
 		Pk: "CONN#" + id,
 		Sk: name,
 	})
@@ -67,7 +67,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	// auth := req.RequestContext.Authorizer.(map[string]interface{})
 
 	op, err := svc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
-		Key:       k,
+		Key:       connItemKey,
 		TableName: aws.String(tableName),
 
 		// ExpressionAttributeNames:  map[string]string{},
@@ -94,21 +94,17 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	}
 
-	var connItem string
-	err = attributevalue.Unmarshal(op.Attributes["game"], &connItem)
+	var game string
+	err = attributevalue.Unmarshal(op.Attributes["game"], &game)
 	if err != nil {
 		fmt.Println("del item unmarshal err", err)
 	}
 
-	// fmt.Printf("conn item: %v\n", connItem)
-	// fmt.Printf("conn item2: %v\n", &connItem)
-	// fmt.Println("join unmr2", connItem, &connItem, *connItem)
+	if len(game) > 0 {
 
-	if len(connItem) > 0 {
-		// fmt.Printf("conn item: %v\n", connItem)
-		gameKey, err := attributevalue.MarshalMap(Key{
+		gameItemKey, err := attributevalue.MarshalMap(Key{
 			Pk: "GAME",
-			Sk: connItem,
+			Sk: game,
 		})
 		if err != nil {
 			panic(fmt.Sprintf("failed to marshal Record 7, %v", err))
@@ -125,7 +121,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 
-			Key:       gameKey,
+			Key:       gameItemKey,
 			TableName: aws.String(tableName),
 			// ConditionExpression: aws.String("contains(Color, :v_sub)"),
 			ExpressionAttributeNames: map[string]string{

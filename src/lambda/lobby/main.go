@@ -20,6 +20,8 @@ import (
 	"github.com/aws/smithy-go"
 )
 
+const maxPlayersPerGame = 8
+
 // Key holds values to be put in db
 type Key struct {
 	Pk string `dynamodbav:"pk"`
@@ -63,9 +65,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	svc := dynamodb.NewFromConfig(cfg)
 
+	auth := req.RequestContext.Authorizer.(map[string]interface{})
+
+	id := auth["principalId"].(string)
+	name := auth["username"].(string)
+
 	connItemKey, err := attributevalue.MarshalMap(Key{
-		Pk: "CONN",
-		Sk: req.RequestContext.ConnectionID,
+		Pk: "CONN#" + id,
+		Sk: name,
 	})
 	if err != nil {
 		panic(fmt.Sprintf("failed to marshal Record 3, %v", err))
@@ -78,7 +85,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		// ConsistentRead:           new(bool),
 		// ExpressionAttributeNames: map[string]string{"#PL": "players"},
 		// ProjectionExpression:     new(string),
-		ReturnConsumedCapacity: types.ReturnConsumedCapacityTotal,
+		// ReturnConsumedCapacity: types.ReturnConsumedCapacityTotal,
 	})
 	// fmt.Println("op", op)
 	if err != nil {
@@ -97,20 +104,18 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		}
 
 	}
-	var connItem string
-	err = attributevalue.Unmarshal(op3.Item["game"], &connItem)
+	var game string
+	err = attributevalue.Unmarshal(op3.Item["game"], &game)
 	if err != nil {
 		fmt.Println("get item unmarshal err", err)
 	}
 
-	fmt.Println("join unmr", connItem)
-
-	if len(connItem) > 0 {
+	if len(game) > 0 {
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusOK,
 			Headers:    map[string]string{"Content-Type": "application/json"},
 
-			Body:            fmt.Sprintf("cap used: %v", &op3.ConsumedCapacity.CapacityUnits),
+			Body:            "",
 			IsBase64Encoded: false,
 		}, nil
 	}
@@ -133,11 +138,9 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		gameno = body.Game
 	}
 
-	auth := req.RequestContext.Authorizer.(map[string]interface{})
-
 	gameAttrs, err := attributevalue.MarshalMap(GameItemAttrs{
 		Players: []string{auth["username"].(string) + "#" + req.RequestContext.ConnectionID},
-		MaxSize: 8,
+		MaxSize: maxPlayersPerGame,
 	})
 	if err != nil {
 		panic(fmt.Sprintf("failed to marshal Record 2, %v", err))
@@ -150,7 +153,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		panic(fmt.Sprintf("failed to marshal Record 4, %v", err))
 	}
 
-	gameKey, err := attributevalue.MarshalMap(Key{
+	gameItemKey, err := attributevalue.MarshalMap(Key{
 		Pk: "GAME",
 		Sk: gameno,
 	})
@@ -158,21 +161,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		panic(fmt.Sprintf("failed to marshal Record, %v", err))
 	}
 
-	connKey, err := attributevalue.MarshalMap(Key{
-		Pk: "CONN",
-		Sk: req.RequestContext.ConnectionID,
-	})
-	if err != nil {
-		panic(fmt.Sprintf("failed to marshal Record 5, %v", err))
-	}
-
-	op, err := svc.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{
+	_, err = svc.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{
 
 		TransactItems: []types.TransactWriteItem{
 			{
 				Update: &types.Update{
 
-					Key:                 gameKey,
+					Key:                 gameItemKey,
 					TableName:           aws.String(tableName),
 					ConditionExpression: aws.String("size (#PL) < :maxsize"),
 					ExpressionAttributeNames: map[string]string{
@@ -186,7 +181,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			{
 				Update: &types.Update{
 
-					Key:       connKey,
+					Key:       connItemKey,
 					TableName: aws.String(tableName),
 					// ConditionExpression: aws.String("contains(Color, :v_sub)"),
 					ExpressionAttributeNames: map[string]string{
@@ -198,7 +193,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 				},
 			},
 		},
-		ReturnConsumedCapacity: types.ReturnConsumedCapacityTotal,
+		// ReturnConsumedCapacity: types.ReturnConsumedCapacityTotal,
 	})
 	// fmt.Println("op", op)
 	if err != nil {
@@ -222,7 +217,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		StatusCode: http.StatusOK,
 		Headers:    map[string]string{"Content-Type": "application/json"},
 
-		Body:            fmt.Sprintf("cap used: %v", &op.ConsumedCapacity),
+		Body:            "",
 		IsBase64Encoded: false,
 	}, nil
 }

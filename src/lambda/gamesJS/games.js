@@ -57,7 +57,7 @@ exports.handler = (req, ctx, cb) => {
                 try {
                     await apigw
                         .postToConnection({
-                            ConnectionId: item.sk.S,
+                            ConnectionId: item.GSI1SK.S,
                             Data: JSON.stringify(payload),
                         })
                         .promise();
@@ -67,7 +67,8 @@ exports.handler = (req, ctx, cb) => {
             } else if (item.pk.S.startsWith("GAME")) {
                 const connsParams = {
                     TableName: tableName,
-                    KeyConditionExpression: "pk = :cn",
+                    IndexName: "GSI1",
+                    KeyConditionExpression: "GSI1PK = :cn",
                     ExpressionAttributeValues: {
                         ":cn": {
                             S: "CONN",
@@ -81,10 +82,10 @@ exports.handler = (req, ctx, cb) => {
                 }
 
                 try {
-                    connsResults.Items.forEach(async ({ sk }) => {
+                    connsResults.Items.forEach(async ({ GSI1SK }) => {
                         await apigw
                             .postToConnection({
-                                ConnectionId: sk.S,
+                                ConnectionId: GSI1SK.S,
                                 Data: JSON.stringify(payload),
                             })
                             .promise();
@@ -106,7 +107,7 @@ exports.handler = (req, ctx, cb) => {
             try {
                 await apigw
                     .postToConnection({
-                        ConnectionId: item.sk.S,
+                        ConnectionId: item.GSI1SK.S,
                         Data: JSON.stringify(payload),
                     })
                     .promise();
