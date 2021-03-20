@@ -46,9 +46,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	svc := dynamodb.NewFromConfig(cfg)
 
+	auth := req.RequestContext.Authorizer.(map[string]interface{})
+
+	id := auth["principalId"].(string)
+	name := auth["username"].(string)
+
 	k, err := attributevalue.MarshalMap(Key{
-		Pk: "CONN",
-		Sk: req.RequestContext.ConnectionID,
+		Pk: "CONN#" + id,
+		Sk: name,
 	})
 	if err != nil {
 		panic(fmt.Sprintf("failed to marshal Record, %v", err))
@@ -59,7 +64,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		panic(fmt.Sprintf("%v", "cant find table name"))
 	}
 
-	auth := req.RequestContext.Authorizer.(map[string]interface{})
+	// auth := req.RequestContext.Authorizer.(map[string]interface{})
 
 	op, err := svc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
 		Key:       k,
@@ -67,7 +72,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		// ExpressionAttributeNames:  map[string]string{},
 		// ExpressionAttributeValues: map[string]types.AttributeValue{},
-		ReturnConsumedCapacity: types.ReturnConsumedCapacityTotal,
+		// ReturnConsumedCapacity: types.ReturnConsumedCapacityTotal,
 
 		ReturnValues: types.ReturnValueAllOld,
 	})
@@ -76,7 +81,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		var intServErr *types.InternalServerError
 		if errors.As(err, &intServErr) {
-			fmt.Printf("put item error, %v",
+			fmt.Printf("delete item error, %v",
 				intServErr.ErrorMessage())
 		}
 
