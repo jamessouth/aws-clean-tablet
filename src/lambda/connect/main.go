@@ -84,15 +84,15 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		panic(fmt.Sprintf("failed to marshal Record, %v", err))
 	}
 
-	connid, err := attributevalue.Marshal("CONN#" + id)
-	if err != nil {
-		panic(fmt.Sprintf("failed to marshal Record 10, %v", err))
-	}
+	// connid, err := attributevalue.Marshal("CONN#" + id)
+	// if err != nil {
+	// 	panic(fmt.Sprintf("failed to marshal Record 10, %v", err))
+	// }
 
-	statid, err := attributevalue.Marshal("STAT#" + id)
-	if err != nil {
-		panic(fmt.Sprintf("failed to marshal Record 11, %v", err))
-	}
+	// statid, err := attributevalue.Marshal("STAT#" + id)
+	// if err != nil {
+	// 	panic(fmt.Sprintf("failed to marshal Record 11, %v", err))
+	// }
 
 	statItem, err := attributevalue.MarshalMap(StatItem{
 		Pk:     "STAT#" + id,
@@ -112,10 +112,10 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	connItemInput := dynamodb.PutItemInput{
 		TableName: aws.String(tableName),
 		Item:      connItem,
-		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":id": connid,
-		},
-		ConditionExpression: aws.String(":id <> pk"),
+		// ExpressionAttributeValues: map[string]types.AttributeValue{
+		// 	":id": connid,
+		// },
+		ConditionExpression: aws.String("attribute_not_exists(pk)"),
 	}
 
 	err = panicProtectedPut(ctx, svc, &connItemInput)
@@ -149,10 +149,10 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		TableName: aws.String(tableName),
 		Item:      statItem,
 		// ExpressionAttributeNames: map[string]string,
-		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":id": statid,
-		},
-		ConditionExpression: aws.String(":id <> pk"),
+		// ExpressionAttributeValues: map[string]types.AttributeValue{
+		// 	":id": statid,
+		// },
+		ConditionExpression: aws.String("attribute_not_exists(pk)"),
 	}
 
 	err = panicProtectedPut(ctx, svc, &statItemInput)

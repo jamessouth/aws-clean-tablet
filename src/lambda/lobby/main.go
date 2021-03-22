@@ -35,12 +35,13 @@ type GameItemAttrs struct {
 }
 
 type body struct {
-	Game string
+	Game, Type string
 }
 
 // ConnItemAttrs holds vals for db
 type ConnItemAttrs struct {
 	Game string `dynamodbav:":g"`
+	Zero int    `dynamodbav:":zero"`
 }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -70,147 +71,188 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	id := auth["principalId"].(string)
 	name := auth["username"].(string)
 
-	connItemKey, err := attributevalue.MarshalMap(Key{
-		Pk: "CONN#" + id,
-		Sk: name,
-	})
-	if err != nil {
-		panic(fmt.Sprintf("failed to marshal Record 3, %v", err))
-	}
-
-	op3, err := svc.GetItem(ctx, &dynamodb.GetItemInput{
-		Key:       connItemKey,
-		TableName: aws.String(tableName),
-
-		// ConsistentRead:           new(bool),
-		// ExpressionAttributeNames: map[string]string{"#PL": "players"},
-		// ProjectionExpression:     new(string),
-		// ReturnConsumedCapacity: types.ReturnConsumedCapacityTotal,
-	})
-	// fmt.Println("op", op)
-	if err != nil {
-
-		var intServErr *types.InternalServerError
-		if errors.As(err, &intServErr) {
-			fmt.Printf("get item error, %v",
-				intServErr.ErrorMessage())
-		}
-
-		// To get any API error
-		var apiErr smithy.APIError
-		if errors.As(err, &apiErr) {
-			fmt.Printf("db error, Code: %v, Message: %v",
-				apiErr.ErrorCode(), apiErr.ErrorMessage())
-		}
-
-	}
-	var game string
-	err = attributevalue.Unmarshal(op3.Item["game"], &game)
-	if err != nil {
-		fmt.Println("get item unmarshal err", err)
-	}
-
-	if len(game) > 0 {
-		return events.APIGatewayProxyResponse{
-			StatusCode: http.StatusOK,
-			Headers:    map[string]string{"Content-Type": "application/json"},
-
-			Body:            "",
-			IsBase64Encoded: false,
-		}, nil
-	}
-
-	var gameno string
 	var body body
-	// var ga map[string]types.AttributeValue
-	// var ue string
+	var gameno string
 
 	err = json.Unmarshal([]byte(req.Body), &body)
 	if err != nil {
 		fmt.Println("unmarshal err")
 	}
 
-	// fmt.Printf("body: %v\n", body.Game)
-
-	if body.Game == "new" {
-		gameno = fmt.Sprintf("%d", time.Now().UnixNano())
-	} else {
+	if body.Game != "new" {
 		gameno = body.Game
+	} else {
+		gameno = fmt.Sprintf("%d", time.Now().UnixNano())
 	}
+	if body.Type == "join" {
 
-	gameAttrs, err := attributevalue.MarshalMap(GameItemAttrs{
-		Players: []string{auth["username"].(string) + "#" + req.RequestContext.ConnectionID},
-		MaxSize: maxPlayersPerGame,
-	})
-	if err != nil {
-		panic(fmt.Sprintf("failed to marshal Record 2, %v", err))
-	}
-
-	connAttrs, err := attributevalue.MarshalMap(ConnItemAttrs{
-		Game: gameno,
-	})
-	if err != nil {
-		panic(fmt.Sprintf("failed to marshal Record 4, %v", err))
-	}
-
-	gameItemKey, err := attributevalue.MarshalMap(Key{
-		Pk: "GAME",
-		Sk: gameno,
-	})
-	if err != nil {
-		panic(fmt.Sprintf("failed to marshal Record, %v", err))
-	}
-
-	_, err = svc.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{
-
-		TransactItems: []types.TransactWriteItem{
-			{
-				Update: &types.Update{
-
-					Key:                 gameItemKey,
-					TableName:           aws.String(tableName),
-					ConditionExpression: aws.String("size (#PL) < :maxsize"),
-					ExpressionAttributeNames: map[string]string{
-						"#PL": "players",
-					},
-					ExpressionAttributeValues: gameAttrs,
-
-					UpdateExpression: aws.String("ADD #PL :p"),
-				},
-			},
-			{
-				Update: &types.Update{
-
-					Key:       connItemKey,
-					TableName: aws.String(tableName),
-					// ConditionExpression: aws.String("contains(Color, :v_sub)"),
-					ExpressionAttributeNames: map[string]string{
-						"#IG": "game",
-					},
-					ExpressionAttributeValues: connAttrs,
-
-					UpdateExpression: aws.String("SET #IG = :g"),
-				},
-			},
-		},
-		// ReturnConsumedCapacity: types.ReturnConsumedCapacityTotal,
-	})
-	// fmt.Println("op", op)
-	if err != nil {
-
-		var intServErr *types.InternalServerError
-		if errors.As(err, &intServErr) {
-			fmt.Printf("put item error, %v",
-				intServErr.ErrorMessage())
+		connItemKey, err := attributevalue.MarshalMap(Key{
+			Pk: "CONN#" + id,
+			Sk: name,
+		})
+		if err != nil {
+			panic(fmt.Sprintf("failed to marshal Record 3, %v", err))
 		}
 
-		// To get any API error
-		var apiErr smithy.APIError
-		if errors.As(err, &apiErr) {
-			fmt.Printf("db error, Code: %v, Message: %v",
-				apiErr.ErrorCode(), apiErr.ErrorMessage())
+		gameAttrs, err := attributevalue.MarshalMap(GameItemAttrs{
+			Players: []string{auth["username"].(string) + "#" + req.RequestContext.ConnectionID},
+			MaxSize: maxPlayersPerGame,
+		})
+		if err != nil {
+			panic(fmt.Sprintf("failed to marshal Record 2, %v", err))
 		}
 
+		connAttrs, err := attributevalue.MarshalMap(ConnItemAttrs{
+			Game: gameno,
+			Zero: 0,
+		})
+		if err != nil {
+			panic(fmt.Sprintf("failed to marshal Record 4, %v", err))
+		}
+
+		gameItemKey, err := attributevalue.MarshalMap(Key{
+			Pk: "GAME",
+			Sk: gameno,
+		})
+		if err != nil {
+			panic(fmt.Sprintf("failed to marshal Record, %v", err))
+		}
+
+		_, err = svc.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{
+
+			TransactItems: []types.TransactWriteItem{
+				{
+					Update: &types.Update{
+
+						Key:                 gameItemKey,
+						TableName:           aws.String(tableName),
+						ConditionExpression: aws.String("(attribute_exists(#PL) AND size (#PL) < :maxsize) OR attribute_not_exists(#PL)"),
+						ExpressionAttributeNames: map[string]string{
+							"#PL": "players",
+						},
+						ExpressionAttributeValues: gameAttrs,
+
+						UpdateExpression: aws.String("ADD #PL :p"),
+					},
+				},
+				{
+					Update: &types.Update{
+
+						Key:                 connItemKey,
+						TableName:           aws.String(tableName),
+						ConditionExpression: aws.String("size (#IG) = :zero"),
+						ExpressionAttributeNames: map[string]string{
+							"#IG": "game",
+						},
+						ExpressionAttributeValues: connAttrs,
+
+						UpdateExpression: aws.String("SET #IG = :g"),
+					},
+				},
+			},
+			// ReturnConsumedCapacity: types.ReturnConsumedCapacityTotal,
+		})
+		// fmt.Println("op", op)
+		if err != nil {
+
+			var intServErr *types.InternalServerError
+			if errors.As(err, &intServErr) {
+				fmt.Printf("put item error, %v",
+					intServErr.ErrorMessage())
+			}
+
+			// To get any API error
+			var apiErr smithy.APIError
+			if errors.As(err, &apiErr) {
+				fmt.Printf("db error, Code: %v, Message: %v",
+					apiErr.ErrorCode(), apiErr.ErrorMessage())
+			}
+
+		}
+	} else {
+		connItemKey, err := attributevalue.MarshalMap(Key{
+			Pk: "CONN#" + id,
+			Sk: name,
+		})
+		if err != nil {
+			panic(fmt.Sprintf("failed to marshal Record 3, %v", err))
+		}
+
+		gameAttrs, err := attributevalue.MarshalMap(GameItemAttrs{
+			Players: []string{auth["username"].(string) + "#" + req.RequestContext.ConnectionID},
+			// MaxSize: maxPlayersPerGame,
+		})
+		if err != nil {
+			panic(fmt.Sprintf("failed to marshal Record 2, %v", err))
+		}
+
+		connAttrs, err := attributevalue.MarshalMap(ConnItemAttrs{
+			Game: "",
+			// Zero: 0,
+		})
+		if err != nil {
+			panic(fmt.Sprintf("failed to marshal Record 4, %v", err))
+		}
+
+		gameItemKey, err := attributevalue.MarshalMap(Key{
+			Pk: "GAME",
+			Sk: gameno,
+		})
+		if err != nil {
+			panic(fmt.Sprintf("failed to marshal Record, %v", err))
+		}
+
+		_, err = svc.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{
+
+			TransactItems: []types.TransactWriteItem{
+				{
+					Update: &types.Update{
+
+						Key:       gameItemKey,
+						TableName: aws.String(tableName),
+						// ConditionExpression: aws.String("(attribute_exists(#PL) AND size (#PL) < :maxsize) OR attribute_not_exists(#PL)"),
+						ExpressionAttributeNames: map[string]string{
+							"#PL": "players",
+						},
+						ExpressionAttributeValues: gameAttrs,
+
+						UpdateExpression: aws.String("DELETE #PL :p"),
+					},
+				},
+				{
+					Update: &types.Update{
+
+						Key:       connItemKey,
+						TableName: aws.String(tableName),
+						// ConditionExpression: aws.String("size (#IG) = :zero"),
+						ExpressionAttributeNames: map[string]string{
+							"#IG": "game",
+						},
+						ExpressionAttributeValues: connAttrs,
+
+						UpdateExpression: aws.String("SET #IG = :g"),
+					},
+				},
+			},
+			// ReturnConsumedCapacity: types.ReturnConsumedCapacityTotal,
+		})
+		// fmt.Println("op", op)
+		if err != nil {
+
+			var intServErr *types.InternalServerError
+			if errors.As(err, &intServErr) {
+				fmt.Printf("put item error, %v",
+					intServErr.ErrorMessage())
+			}
+
+			// To get any API error
+			var apiErr smithy.APIError
+			if errors.As(err, &apiErr) {
+				fmt.Printf("db error, Code: %v, Message: %v",
+					apiErr.ErrorCode(), apiErr.ErrorMessage())
+			}
+
+		}
 	}
 
 	return events.APIGatewayProxyResponse{

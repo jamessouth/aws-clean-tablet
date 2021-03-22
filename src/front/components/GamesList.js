@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 const ce = React.createElement;
 
 
-export default function GamesList({games}) {
+export default function GamesList({games, ingame, send}) {
     // const [connectedWS, setConnectedWS] = useState(false);
     // const [games, setGames] = useState(null);
     // const [startedNewGame, setStartedNewGame] = useState(false);
@@ -60,7 +60,7 @@ export default function GamesList({games}) {
                 },
                 s.split("#", 1)[0]
             )),
-            ce(
+            !!ingame && ingame !== g.no ? null : ce(
                 "button",
                 {
                     className: "w-full absolute pt-36",
@@ -68,10 +68,11 @@ export default function GamesList({games}) {
                         send({
                             action: "lobby",
                             game: `${g.no}`,
-                          });
+                            type: !!ingame ? "leave" : "join",
+                        });
                     },
                 },
-                "join"
+                !!ingame ? "leave" : "join"
             )
         ))
     );

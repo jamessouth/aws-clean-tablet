@@ -26,34 +26,36 @@ exports.handler = (req, ctx, cb) => {
             region: rec.AWSRegion,
         });
 
-        if (rec.eventName === "INSERT" || (rec.eventName === "MODIFY" && item.pk.S.startsWith("GAME"))) {
+    
 
 
-            const gamesParams = {
-                TableName: tableName,
-                KeyConditionExpression: "pk = :gm",
-                ExpressionAttributeValues: {
-                    ":gm": {
-                        S: "GAME",
-                    },
-                },
-            };
-            try {
-                gamesResults = await dyndb.query(gamesParams).promise();
-            } catch (err) {
-                console.log("db error: ", err);
-            }
-            const payload = {
-                games: gamesResults.Items.map(g => ({
-                    no: g.sk.S,
-                    players: g.players && g.players.SS || [],
-                })),
-                type: "games",
-            };
 
-            console.log("data: ", payload);
-
+        if (rec.eventName === "INSERT") {
             if (item.pk.S.startsWith("CONN")) {
+
+                const gamesParams = {
+                    TableName: tableName,
+                    KeyConditionExpression: "pk = :gm",
+                    ExpressionAttributeValues: {
+                        ":gm": {
+                            S: "GAME",
+                        },
+                    },
+                };
+                try {
+                    gamesResults = await dyndb.query(gamesParams).promise();
+                } catch (err) {
+                    console.log("db error: ", err);
+                }
+                const payload = {
+                    games: gamesResults.Items.map(g => ({
+                        no: g.sk.S,
+                        players: g.players && g.players.SS || [],
+                    })),
+                    type: "games",
+                };
+    
+                console.log("data: ", payload);
                 try {
                     await apigw
                         .postToConnection({
@@ -65,6 +67,32 @@ exports.handler = (req, ctx, cb) => {
                     console.log("post error: ", err);
                 }
             } else if (item.pk.S.startsWith("GAME")) {
+                const gamesParams = {
+                    TableName: tableName,
+                    KeyConditionExpression: "pk = :gm",
+                    ExpressionAttributeValues: {
+                        ":gm": {
+                            S: "GAME",
+                        },
+                    },
+                };
+                try {
+                    gamesResults = await dyndb.query(gamesParams).promise();
+                } catch (err) {
+                    console.log("db error: ", err);
+                }
+                const payload = {
+                    games: gamesResults.Items.map(g => ({
+                        no: g.sk.S,
+                        players: g.players && g.players.SS || [],
+                    })),
+                    type: "games",
+                };
+    
+                console.log("data: ", payload);
+
+
+
                 const connsParams = {
                     TableName: tableName,
                     IndexName: "GSI1",
@@ -94,25 +122,86 @@ exports.handler = (req, ctx, cb) => {
                     console.log("post error: ", err);
                 }
             } else {
-                console.log("other: ");
+                console.log("stat insert: ", item);
             }
 
-        } else if (rec.eventName === "MODIFY" && item.pk.S.startsWith("CONN")) {
-            const payload = {
-                ingame: !!item.game.S,
-                type: "user",
-            };
+            
+        } else if (rec.eventName === "MODIFY") {
+            if (item.pk.S.startsWith("CONN")) {
 
-            console.log("data: ", payload);
-            try {
-                await apigw
-                    .postToConnection({
-                        ConnectionId: item.GSI1SK.S,
-                        Data: JSON.stringify(payload),
-                    })
-                    .promise();
-            } catch (err) {
-                console.log("post error: ", err);
+                const payload = {
+                    ingame: item.game.S,
+                    type: "user",
+                };
+    
+                console.log("data: ", payload);
+                try {
+                    await apigw
+                        .postToConnection({
+                            ConnectionId: item.GSI1SK.S,
+                            Data: JSON.stringify(payload),
+                        })
+                        .promise();
+                } catch (err) {
+                    console.log("post error: ", err);
+                }
+            } else if (item.pk.S.startsWith("GAME")) {
+                const gamesParams = {
+                    TableName: tableName,
+                    KeyConditionExpression: "pk = :gm",
+                    ExpressionAttributeValues: {
+                        ":gm": {
+                            S: "GAME",
+                        },
+                    },
+                };
+                try {
+                    gamesResults = await dyndb.query(gamesParams).promise();
+                } catch (err) {
+                    console.log("db error: ", err);
+                }
+                const payload = {
+                    games: gamesResults.Items.map(g => ({
+                        no: g.sk.S,
+                        players: g.players && g.players.SS || [],
+                    })),
+                    type: "games",
+                };
+    
+                console.log("data: ", payload);
+
+
+
+                const connsParams = {
+                    TableName: tableName,
+                    IndexName: "GSI1",
+                    KeyConditionExpression: "GSI1PK = :cn",
+                    ExpressionAttributeValues: {
+                        ":cn": {
+                            S: "CONN",
+                        },
+                    },
+                };
+                try {
+                    connsResults = await dyndb.query(connsParams).promise();
+                } catch (err) {
+                    console.log("db error: ", err);
+                }
+
+                try {
+                    connsResults.Items.forEach(async ({ GSI1SK }) => {
+                        await apigw
+                            .postToConnection({
+                                ConnectionId: GSI1SK.S,
+                                Data: JSON.stringify(payload),
+                            })
+                            .promise();
+                    });
+                } catch (err) {
+                    console.log("post error: ", err);
+                }
+            } else {
+                console.log("stat modify: ", item);
             }
 
 
@@ -121,7 +210,7 @@ exports.handler = (req, ctx, cb) => {
             console.log("keys", rec.dynamodb.Keys);
         }
 
-        console.log("Stream record: ", JSON.stringify(rec, null, 2));
+        // console.log("Stream record: ", JSON.stringify(rec, null, 2));
     });
     cb(null, `Successfully processed ${req.Records.length} records.`);
 };

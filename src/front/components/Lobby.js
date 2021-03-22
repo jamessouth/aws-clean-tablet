@@ -139,6 +139,7 @@ export default function Lobby() {
                         send({
                             action: "lobby",
                             game: "new",
+                            type: "join",
                         });
                     },
                 },
@@ -153,7 +154,11 @@ export default function Lobby() {
             )
             : ce(
                 GamesList,
-                {games}
+                {
+                    games,
+                    ingame,
+                    send: val => send(val),
+                }
             )
         );
 }
