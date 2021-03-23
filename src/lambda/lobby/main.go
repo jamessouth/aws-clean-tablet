@@ -31,7 +31,7 @@ type Key struct {
 // GameItemAttrs holds values to be put in db
 type GameItemAttrs struct {
 	Players []string `dynamodbav:":p,stringset"` //name + connid
-	MaxSize int      `dynamodbav:":maxsize"`
+	MaxSize int      `dynamodbav:":maxsize,omitempty"`
 }
 
 type body struct {
@@ -41,7 +41,7 @@ type body struct {
 // ConnItemAttrs holds vals for db
 type ConnItemAttrs struct {
 	Game string `dynamodbav:":g"`
-	Zero int    `dynamodbav:":zero"`
+	Zero *int   `dynamodbav:":zero,omitempty"`
 }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -102,9 +102,10 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			panic(fmt.Sprintf("failed to marshal Record 2, %v", err))
 		}
 
+		z := 0
 		connAttrs, err := attributevalue.MarshalMap(ConnItemAttrs{
 			Game: gameno,
-			Zero: 0,
+			Zero: &z,
 		})
 		if err != nil {
 			panic(fmt.Sprintf("failed to marshal Record 4, %v", err))
@@ -241,14 +242,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 			var intServErr *types.InternalServerError
 			if errors.As(err, &intServErr) {
-				fmt.Printf("put item error, %v",
+				fmt.Printf("put item error 1122, %v",
 					intServErr.ErrorMessage())
 			}
 
 			// To get any API error
 			var apiErr smithy.APIError
 			if errors.As(err, &apiErr) {
-				fmt.Printf("db error, Code: %v, Message: %v",
+				fmt.Printf("db error 1112222, Code: %v, Message: %v",
 					apiErr.ErrorCode(), apiErr.ErrorMessage())
 			}
 

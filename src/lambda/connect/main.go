@@ -94,15 +94,15 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	// 	panic(fmt.Sprintf("failed to marshal Record 11, %v", err))
 	// }
 
-	statItem, err := attributevalue.MarshalMap(StatItem{
-		Pk:     "STAT#" + id,
-		Sk:     name,
-		GSI1PK: "STAT",
-		GSI1SK: "0",
-	})
-	if err != nil {
-		panic(fmt.Sprintf("failed to marshal Record 2, %v", err))
-	}
+	// statItem, err := attributevalue.MarshalMap(StatItem{
+	// 	Pk:     "STAT#" + id,
+	// 	Sk:     name,
+	// 	GSI1PK: "STAT",
+	// 	GSI1SK: "0",
+	// })
+	// if err != nil {
+	// 	panic(fmt.Sprintf("failed to marshal Record 2, %v", err))
+	// }
 
 	tableName, ok := os.LookupEnv("tableName")
 	if !ok {
@@ -140,49 +140,49 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			StatusCode:        http.StatusBadRequest,
 			Headers:           map[string]string{"Content-Type": "application/json"},
 			MultiValueHeaders: map[string][]string{},
-			Body:              "",
+			Body:              "baddd",
 			IsBase64Encoded:   false,
 		}, err
 
 	}
-	statItemInput := dynamodb.PutItemInput{
-		TableName: aws.String(tableName),
-		Item:      statItem,
-		// ExpressionAttributeNames: map[string]string,
-		// ExpressionAttributeValues: map[string]types.AttributeValue{
-		// 	":id": statid,
-		// },
-		ConditionExpression: aws.String("attribute_not_exists(pk)"),
-	}
+	// statItemInput := dynamodb.PutItemInput{
+	// 	TableName: aws.String(tableName),
+	// 	Item:      statItem,
+	// 	// ExpressionAttributeNames: map[string]string,
+	// 	// ExpressionAttributeValues: map[string]types.AttributeValue{
+	// 	// 	":id": statid,
+	// 	// },
+	// 	ConditionExpression: aws.String("attribute_not_exists(pk)"),
+	// }
 
-	err = panicProtectedPut(ctx, svc, &statItemInput)
+	// err = panicProtectedPut(ctx, svc, &statItemInput)
 
-	if err != nil {
-		// fmt.Println("poi", err)
-		var condCheckErr *types.ConditionalCheckFailedException
-		if errors.As(err, &condCheckErr) {
-			fmt.Printf("stat already exists, not putting, %v\n", condCheckErr.ErrorMessage())
+	// if err != nil {
+	// 	// fmt.Println("poi", err)
+	// 	var condCheckErr *types.ConditionalCheckFailedException
+	// 	if errors.As(err, &condCheckErr) {
+	// 		fmt.Printf("stat already exists, not putting, %v\n", condCheckErr.ErrorMessage())
 
-		} else {
+	// 	} else {
 
-			// To get any API error
-			var apiErr smithy.APIError
-			if errors.As(err, &apiErr) {
-				fmt.Printf("db error 2, Code: %v, Message: %v",
-					apiErr.ErrorCode(), apiErr.ErrorMessage())
-			}
+	// 		// To get any API error
+	// 		var apiErr smithy.APIError
+	// 		if errors.As(err, &apiErr) {
+	// 			fmt.Printf("db error 2, Code: %v, Message: %v",
+	// 				apiErr.ErrorCode(), apiErr.ErrorMessage())
+	// 		}
 
-			return events.APIGatewayProxyResponse{
-				StatusCode:        http.StatusBadRequest,
-				Headers:           map[string]string{"Content-Type": "application/json"},
-				MultiValueHeaders: map[string][]string{},
-				Body:              "",
-				IsBase64Encoded:   false,
-			}, err
+	// 		return events.APIGatewayProxyResponse{
+	// 			StatusCode:        http.StatusOK,
+	// 			Headers:           map[string]string{"Content-Type": "application/json"},
+	// 			MultiValueHeaders: map[string][]string{},
+	// 			Body:              "",
+	// 			IsBase64Encoded:   false,
+	// 		}, err
 
-		}
+	// 	}
 
-	}
+	// }
 
 	return events.APIGatewayProxyResponse{
 		StatusCode:        http.StatusOK,

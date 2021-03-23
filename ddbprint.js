@@ -15,9 +15,12 @@ readable.on('end', () => {
   const data = Items.map(i => {
       const obj = {};
       for (const p in i) {
-        const val = Object.values(i[p])[0];
-        const half = val.length > 19 ? val.length / 2 : 0;
-        obj[p] = val.slice(half);
+          const val = Object.values(i[p])[0];
+          if (Array.isArray(val)) {
+              obj[p] = val.length;
+          } else {
+              obj[p] = val.length > 19 ? val.slice(0, 8) + "..." + val.slice(val.length - 8) : val.slice(0);
+          }
       }
       return obj;
   });
