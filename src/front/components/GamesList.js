@@ -35,7 +35,7 @@ export default function GamesList({games, ingame, send}) {
             "li",
             {
                 key: g.no,
-                className: "mb-8 w-10/12 mx-auto grid grid-cols-2 grid-rows-gamebox relative pb-6",
+                className: "mb-8 w-10/12 mx-auto grid grid-cols-2 grid-rows-gamebox relative pb-8",
             },
             ce(
                 "p",
@@ -60,10 +60,10 @@ export default function GamesList({games, ingame, send}) {
                 },
                 s.split("#", 1)[0]
             )),
-            !!ingame && ingame !== g.no ? null : ce(
+            (!!ingame && ingame !== g.no) || (!ingame && g.players.length > 7) ? null : ce(
                 "button",
-                {
-                    className: "w-full absolute pt-36",
+                {// border border-white border-solid
+                    className: "w-1/2 bottom-0 h-8 left-0 absolute pt-2 bg-smoke-700 bg-opacity-70",
                     onClick: () => {
                         send({
                             action: "lobby",
@@ -73,6 +73,21 @@ export default function GamesList({games, ingame, send}) {
                     },
                 },
                 !!ingame ? "leave" : "join"
+            ),
+            (!!ingame && ingame !== g.no) || !ingame || g.players.length < 3 ? null : ce(
+                "button",
+                {// border border-white border-solid
+                    className: "w-1/2 bottom-0 h-8 right-0 absolute pt-2 bg-smoke-700 bg-opacity-70",
+                    onClick: () => {
+                        send({
+                            action: "lobby",
+                            game: `${g.no}`,
+                            type: !!ingame ? "leave" : "join",
+                        });
+                    },
+                },
+                // !!ingame ? "leave" : "join"
+                "ready"
             )
         ))
     );

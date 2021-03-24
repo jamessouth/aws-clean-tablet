@@ -24,7 +24,7 @@
   --amplify-secondary-color: var(--amplify-primary-color);
 
   
-  --amplify-primary-color: #444444;
+  --amplify-primary-color: #404040;
   --amplify-primary-shade: var(--amplify-primary-color);
   --amplify-primary-tint: var(--amplify-primary-color);
   /* --amplify-primary-shade: #008000; */
@@ -70,12 +70,13 @@ body{
 button:disabled{
   cursor: not-allowed;
   filter: contrast(0.25);
-}
+} */
 button:focus,
 button:hover{
-  outline: 2px dashed #ffee58;
-  outline-offset: 4px;
-} */
+  outline: none;
+  /* outline: 2px dashed #ffee58; */
+  /* outline-offset: 4px; */
+}
 .div{
   height: 240px;
   display: flex;
