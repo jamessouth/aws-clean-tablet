@@ -112,7 +112,9 @@ export default function Lobby() {
             answer: text,
           }));
         // }
-      }
+    }
+
+    const startBtnStyles = " mx-auto mb-8 w-1/2 bg-smoke-100 text-gray-700";
 
     return wsError
         ? ce("p", null, "not connected: connection error")
@@ -127,12 +129,10 @@ export default function Lobby() {
             {
                 className: "flex flex-col mt-8",
             },
-            !ingame
-            ? ce(
+            ce(
                 "button",
                 {
-                    className:
-                        "mx-auto mb-8 w-1/2 bg-smoke-100 text-gray-700",
+                    className: !ingame ? `visible${startBtnStyles}` : `invisible${startBtnStyles}`,
                     type: "button",
                     onClick: () => {
                         // setStartedNewGame(true);
@@ -144,8 +144,7 @@ export default function Lobby() {
                     },
                 },
                 "start a new game"
-            )
-            : null,
+            ),
             games.length < 1
             ? ce(
                 "p",
