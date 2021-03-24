@@ -38,7 +38,10 @@ amplify-authenticator{
 }
 
 
-
+*:disabled{
+  cursor: not-allowed;
+  filter: contrast(0.25);
+}
 
 [slot="sign-out"] {
   --amplify-primary-color: var(--amplify-smoke-white);
