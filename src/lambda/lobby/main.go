@@ -28,11 +28,19 @@ type Key struct {
 	Sk string `dynamodbav:"sk"`
 }
 
+// Player holds values to be put in db
+type Player struct {
+	Name   string `dynamodbav:"name"`
+	ConnID string `dynamodbav:"connid"`
+	Ready  bool   `dynamodbav:"ready"`
+}
+
 // GameItemAttrs holds values to be put in db
 type GameItemAttrs struct {
-	Players []string `dynamodbav:":p,stringset"` //name + connid
-	MaxSize int      `dynamodbav:":maxsize,omitempty"`
+	Players map[string]Player `dynamodbav:":p"`
 }
+
+// MaxSize int      `dynamodbav:":maxsize,omitempty"`
 
 type body struct {
 	Game, Type string
@@ -84,6 +92,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	} else {
 		gameno = fmt.Sprintf("%d", time.Now().UnixNano())
 	}
+
 	if body.Type == "join" {
 
 		connItemKey, err := attributevalue.MarshalMap(Key{
@@ -94,12 +103,25 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			panic(fmt.Sprintf("failed to marshal Record 3, %v", err))
 		}
 
-		gameAttrs, err := attributevalue.MarshalMap(GameItemAttrs{
-			Players: []string{auth["username"].(string) + "#" + req.RequestContext.ConnectionID},
-			MaxSize: maxPlayersPerGame,
+		marshaledID, err := attributevalue.Marshal(id)
+		if err != nil {
+			panic(fmt.Sprintf("failed to marshal marshaledID, %v", err))
+		}
+
+		marshaledMaxSize, err := attributevalue.Marshal(maxPlayersPerGame)
+		if err != nil {
+			panic(fmt.Sprintf("failed to marshal marshaledMaxSize, %v", err))
+		}
+
+		// Players: []string{auth["username"].(string) + "#" + },
+		// MaxSize: maxPlayersPerGame,
+		player, err := attributevalue.MarshalMap(Player{
+			Name:   name,
+			ConnID: req.RequestContext.ConnectionID,
+			Ready:  false,
 		})
 		if err != nil {
-			panic(fmt.Sprintf("failed to marshal Record 2, %v", err))
+			panic(fmt.Sprintf("failed to marshal player, %v", err))
 		}
 
 		z := 0
@@ -131,7 +153,9 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 						ExpressionAttributeNames: map[string]string{
 							"#PL": "players",
 						},
-						ExpressionAttributeValues: gameAttrs,
+						ExpressionAttributeValues: map[string]types.AttributeValue{
+							":maxsize": marshaledMaxSize,
+						},
 
 						UpdateExpression: aws.String("ADD #PL :p"),
 					},

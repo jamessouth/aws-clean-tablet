@@ -81,11 +81,11 @@ export default function GamesList({games, ingame, send}) {
                     className: "w-1/2 bottom-0 h-8 right-0 absolute pt-2 bg-smoke-700 bg-opacity-70",
                     disabled: (!!ingame && ingame !== g.no) || !ingame || g.players.length < 3,
                     onClick: () => {
-                        // send({
-                        //     action: "lobby",
-                        //     game: `${g.no}`,
-                        //     type: !!ingame ? "leave" : "join",
-                        // });
+                        send({
+                            action: "lobby",
+                            game: `${g.no}`,
+                            type: !!ingame ? "leave" : "join",
+                        });
                         
                     },
                 },
