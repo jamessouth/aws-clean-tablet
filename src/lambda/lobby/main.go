@@ -20,7 +20,7 @@ import (
 	"github.com/aws/smithy-go"
 )
 
-const maxPlayersPerGame = 8
+// const maxPlayersPerGame = 8
 
 // Key holds values to be put in db
 type Key struct {
@@ -34,13 +34,6 @@ type Player struct {
 	ConnID string `dynamodbav:"connid"`
 	Ready  bool   `dynamodbav:"ready"`
 }
-
-// GameItemAttrs holds values to be put in db
-type GameItemAttrs struct {
-	Players map[string]Player `dynamodbav:":p"`
-}
-
-// MaxSize int      `dynamodbav:":maxsize,omitempty"`
 
 type body struct {
 	Game, Type string
@@ -95,43 +88,39 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	if body.Type == "join" {
 
-		connItemKey, err := attributevalue.MarshalMap(Key{
-			Pk: "CONN#" + id,
-			Sk: name,
-		})
-		if err != nil {
-			panic(fmt.Sprintf("failed to marshal Record 3, %v", err))
-		}
+		// connItemKey, err := attributevalue.MarshalMap(Key{
+		// 	Pk: "CONN#" + id,
+		// 	Sk: name,
+		// })
+		// if err != nil {
+		// 	panic(fmt.Sprintf("failed to marshal Record 3, %v", err))
+		// }
 
-		marshaledID, err := attributevalue.Marshal(id)
-		if err != nil {
-			panic(fmt.Sprintf("failed to marshal marshaledID, %v", err))
-		}
+		// marshaledID, err := attributevalue.Marshal(id)
+		// if err != nil {
+		// 	panic(fmt.Sprintf("failed to marshal marshaledID, %v", err))
+		// }
 
-		marshaledMaxSize, err := attributevalue.Marshal(maxPlayersPerGame)
-		if err != nil {
-			panic(fmt.Sprintf("failed to marshal marshaledMaxSize, %v", err))
-		}
+		// marshaledMaxSize, err := attributevalue.Marshal(maxPlayersPerGame)
+		// if err != nil {
+		// 	panic(fmt.Sprintf("failed to marshal marshaledMaxSize, %v", err))
+		// }
 
 		// Players: []string{auth["username"].(string) + "#" + },
 		// MaxSize: maxPlayersPerGame,
-		player, err := attributevalue.MarshalMap(Player{
-			Name:   name,
-			ConnID: req.RequestContext.ConnectionID,
-			Ready:  false,
-		})
-		if err != nil {
-			panic(fmt.Sprintf("failed to marshal player, %v", err))
-		}
+		// player, err := attributevalue.Marshal()
+		// if err != nil {
+		// 	panic(fmt.Sprintf("failed to marshal player, %v", err))
+		// }
 
-		z := 0
-		connAttrs, err := attributevalue.MarshalMap(ConnItemAttrs{
-			Game: gameno,
-			Zero: &z,
-		})
-		if err != nil {
-			panic(fmt.Sprintf("failed to marshal Record 4, %v", err))
-		}
+		// z := 0
+		// connAttrs, err := attributevalue.MarshalMap(ConnItemAttrs{
+		// 	Game: gameno,
+		// 	Zero: &z,
+		// })
+		// if err != nil {
+		// 	panic(fmt.Sprintf("failed to marshal Record 4, %v", err))
+		// }
 
 		gameItemKey, err := attributevalue.MarshalMap(Key{
 			Pk: "GAME",
@@ -141,6 +130,30 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			panic(fmt.Sprintf("failed to marshal Record, %v", err))
 		}
 
+		// GameItemAttrs holds values to be put in db
+		// type GameItemAttrs struct {
+		// 	Players map[string]Player `dynamodbav:"Players"`
+		// 	MaxSize int               `dynamodbav:":maxsize,omitempty"`
+		// 	Player  Player            `dynamodbav:":player"`
+		// }
+
+		att1, err := attributevalue.Marshal(map[string]Player{})
+		if err != nil {
+			panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
+		}
+		// att2, err := attributevalue.Marshal(maxPlayersPerGame)
+		// if err != nil {
+		// 	panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
+		// }
+		// att3, err := attributevalue.Marshal(Player{
+		// 	Name:   name,
+		// 	ConnID: req.RequestContext.ConnectionID,
+		// 	Ready:  false,
+		// })
+		// if err != nil {
+		// 	panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
+		// }
+
 		_, err = svc.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{
 
 			TransactItems: []types.TransactWriteItem{
@@ -149,46 +162,69 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 						Key:                 gameItemKey,
 						TableName:           aws.String(tableName),
-						ConditionExpression: aws.String("(attribute_exists(#PL) AND size (#PL) < :maxsize) OR attribute_not_exists(#PL)"),
+						ConditionExpression: aws.String("attribute_not_exists(#PL)"),
 						ExpressionAttributeNames: map[string]string{
 							"#PL": "players",
+							// "#ID": id,
 						},
 						ExpressionAttributeValues: map[string]types.AttributeValue{
-							":maxsize": marshaledMaxSize,
+							":p": att1,
+							// ":maxsize": att2,
+							// ":player": att3,
 						},
 
-						UpdateExpression: aws.String("ADD #PL :p"),
+						UpdateExpression: aws.String("SET #PL = :p"),
 					},
 				},
-				{
-					Update: &types.Update{
+				// {
+				// 	Update: &types.Update{
 
-						Key:                 connItemKey,
-						TableName:           aws.String(tableName),
-						ConditionExpression: aws.String("size (#IG) = :zero"),
-						ExpressionAttributeNames: map[string]string{
-							"#IG": "game",
-						},
-						ExpressionAttributeValues: connAttrs,
+				// 		Key:       gameItemKey,
+				// 		TableName: aws.String(tableName),
+				// 		// ConditionExpression: aws.String("size (#PL) < :maxsize"),
+				// 		ExpressionAttributeNames: map[string]string{
+				// 			"#PL": "players",
+				// 			// "#ID": id,
+				// 		},
+				// 		ExpressionAttributeValues: map[string]types.AttributeValue{
+				// 			// "players": att1,
+				// 			// ":maxsize": att2,
+				// 			":player": att3,
+				// 		},
 
-						UpdateExpression: aws.String("SET #IG = :g"),
-					},
-				},
+				// 		UpdateExpression: aws.String("SET #PL = :player"),
+				// 	},
+				// },
+				// {
+				// 	Update: &types.Update{
+
+				// 		Key:                 connItemKey,
+				// 		TableName:           aws.String(tableName),
+				// 		ConditionExpression: aws.String("size (#IG) = :zero"),
+				// 		ExpressionAttributeNames: map[string]string{
+				// 			"#IG": "game",
+				// 		},
+				// 		ExpressionAttributeValues: connAttrs,
+
+				// 		UpdateExpression: aws.String("SET #IG = :g"),
+				// 	},
+				// },
 			},
 			// ReturnConsumedCapacity: types.ReturnConsumedCapacityTotal,
 		})
 		// fmt.Println("op", op)
 		if err != nil {
 
-			var intServErr *types.InternalServerError
+			var intServErr *types.TransactionCanceledException
 			if errors.As(err, &intServErr) {
-				fmt.Printf("put item error, %v",
-					intServErr.ErrorMessage())
+				fmt.Printf("put item error, %v\n",
+					intServErr.CancellationReasons)
 			}
 
 			// To get any API error
 			var apiErr smithy.APIError
 			if errors.As(err, &apiErr) {
+				// fmt.Println(err.Error(), apiErr.Error())
 				fmt.Printf("db error, Code: %v, Message: %v",
 					apiErr.ErrorCode(), apiErr.ErrorMessage())
 			}
@@ -203,13 +239,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			panic(fmt.Sprintf("failed to marshal Record 3, %v", err))
 		}
 
-		gameAttrs, err := attributevalue.MarshalMap(GameItemAttrs{
-			Players: []string{auth["username"].(string) + "#" + req.RequestContext.ConnectionID},
-			// MaxSize: maxPlayersPerGame,
-		})
-		if err != nil {
-			panic(fmt.Sprintf("failed to marshal Record 2, %v", err))
-		}
+		// gameAttrs, err := attributevalue.MarshalMap(GameItemAttrs{
+		// 	Players: []string{auth["username"].(string) + "#" + req.RequestContext.ConnectionID},
+		// 	// MaxSize: maxPlayersPerGame,
+		// })
+		// if err != nil {
+		// 	panic(fmt.Sprintf("failed to marshal Record 2, %v", err))
+		// }
 
 		connAttrs, err := attributevalue.MarshalMap(ConnItemAttrs{
 			Game: "",
@@ -238,10 +274,11 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 						// ConditionExpression: aws.String("(attribute_exists(#PL) AND size (#PL) < :maxsize) OR attribute_not_exists(#PL)"),
 						ExpressionAttributeNames: map[string]string{
 							"#PL": "players",
+							"#ID": id,
 						},
-						ExpressionAttributeValues: gameAttrs,
+						// ExpressionAttributeValues: gameAttrs,
 
-						UpdateExpression: aws.String("DELETE #PL :p"),
+						UpdateExpression: aws.String("REMOVE #PL.#ID"),
 					},
 				},
 				{
