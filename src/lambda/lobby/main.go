@@ -88,13 +88,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	if body.Type == "join" {
 
-		// connItemKey, err := attributevalue.MarshalMap(Key{
-		// 	Pk: "CONN#" + id,
-		// 	Sk: name,
-		// })
-		// if err != nil {
-		// 	panic(fmt.Sprintf("failed to marshal Record 3, %v", err))
-		// }
+		connItemKey, err := attributevalue.MarshalMap(Key{
+			Pk: "CONN#" + id,
+			Sk: name,
+		})
+		if err != nil {
+			panic(fmt.Sprintf("failed to marshal Record 3, %v", err))
+		}
 
 		// marshaledID, err := attributevalue.Marshal(id)
 		// if err != nil {
@@ -113,14 +113,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		// 	panic(fmt.Sprintf("failed to marshal player, %v", err))
 		// }
 
-		// z := 0
-		// connAttrs, err := attributevalue.MarshalMap(ConnItemAttrs{
-		// 	Game: gameno,
-		// 	Zero: &z,
-		// })
-		// if err != nil {
-		// 	panic(fmt.Sprintf("failed to marshal Record 4, %v", err))
-		// }
+		z := 0
+		connAttrs, err := attributevalue.MarshalMap(ConnItemAttrs{
+			Game: gameno,
+			Zero: &z,
+		})
+		if err != nil {
+			panic(fmt.Sprintf("failed to marshal Record 4, %v", err))
+		}
 
 		gameItemKey, err := attributevalue.MarshalMap(Key{
 			Pk: "GAME",
@@ -137,7 +137,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		// 	Player  Player            `dynamodbav:":player"`
 		// }
 
-		att1, err := attributevalue.Marshal(map[string]Player{})
+		att1, err := attributevalue.Marshal(map[string]Player{
+			id: {
+				Name:   name,
+				ConnID: req.RequestContext.ConnectionID,
+				Ready:  false,
+			},
+		})
 		if err != nil {
 			panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
 		}
@@ -145,14 +151,73 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		// if err != nil {
 		// 	panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
 		// }
-		// att3, err := attributevalue.Marshal(Player{
-		// 	Name:   name,
-		// 	ConnID: req.RequestContext.ConnectionID,
-		// 	Ready:  false,
-		// })
-		// if err != nil {
-		// 	panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
-		// }
+		att3, err := attributevalue.Marshal(Player{
+			Name:   name,
+			ConnID: req.RequestContext.ConnectionID,
+			Ready:  false,
+		})
+		if err != nil {
+			panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
+		}
+
+		_, err = svc.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{
+
+			TransactItems: []types.TransactWriteItem{
+				{
+					Update: &types.Update{
+
+						Key:                 gameItemKey,
+						TableName:           aws.String(tableName),
+						ConditionExpression: aws.String("attribute_exists(#PL)"),
+						ExpressionAttributeNames: map[string]string{
+							"#PL": "players",
+							"#ID": id,
+						},
+						ExpressionAttributeValues: map[string]types.AttributeValue{
+							// ":p": att1,
+							// ":maxsize": att2,
+							":player": att3,
+						},
+
+						UpdateExpression: aws.String("SET #PL.#ID = :player"),
+					},
+				},
+
+				{
+					Update: &types.Update{
+
+						Key:                 connItemKey,
+						TableName:           aws.String(tableName),
+						ConditionExpression: aws.String("size (#IG) = :zero"),
+						ExpressionAttributeNames: map[string]string{
+							"#IG": "game",
+						},
+						ExpressionAttributeValues: connAttrs,
+
+						UpdateExpression: aws.String("SET #IG = :g"),
+					},
+				},
+			},
+			// ReturnConsumedCapacity: types.ReturnConsumedCapacityTotal,
+		})
+		// fmt.Println("op", op)
+		if err != nil {
+
+			var intServErr *types.TransactionCanceledException
+			if errors.As(err, &intServErr) {
+				fmt.Printf("put item error777, %v\n",
+					intServErr.CancellationReasons)
+			}
+
+			// To get any API error
+			var apiErr smithy.APIError
+			if errors.As(err, &apiErr) {
+				// fmt.Println(err.Error(), apiErr.Error())
+				fmt.Printf("db error777, Code: %v, Message: %v",
+					apiErr.ErrorCode(), apiErr.ErrorMessage())
+			}
+
+		}
 
 		_, err = svc.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{
 
@@ -176,39 +241,21 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 						UpdateExpression: aws.String("SET #PL = :p"),
 					},
 				},
-				// {
-				// 	Update: &types.Update{
 
-				// 		Key:       gameItemKey,
-				// 		TableName: aws.String(tableName),
-				// 		// ConditionExpression: aws.String("size (#PL) < :maxsize"),
-				// 		ExpressionAttributeNames: map[string]string{
-				// 			"#PL": "players",
-				// 			// "#ID": id,
-				// 		},
-				// 		ExpressionAttributeValues: map[string]types.AttributeValue{
-				// 			// "players": att1,
-				// 			// ":maxsize": att2,
-				// 			":player": att3,
-				// 		},
+				{
+					Update: &types.Update{
 
-				// 		UpdateExpression: aws.String("SET #PL = :player"),
-				// 	},
-				// },
-				// {
-				// 	Update: &types.Update{
+						Key:                 connItemKey,
+						TableName:           aws.String(tableName),
+						ConditionExpression: aws.String("size (#IG) = :zero"),
+						ExpressionAttributeNames: map[string]string{
+							"#IG": "game",
+						},
+						ExpressionAttributeValues: connAttrs,
 
-				// 		Key:                 connItemKey,
-				// 		TableName:           aws.String(tableName),
-				// 		ConditionExpression: aws.String("size (#IG) = :zero"),
-				// 		ExpressionAttributeNames: map[string]string{
-				// 			"#IG": "game",
-				// 		},
-				// 		ExpressionAttributeValues: connAttrs,
-
-				// 		UpdateExpression: aws.String("SET #IG = :g"),
-				// 	},
-				// },
+						UpdateExpression: aws.String("SET #IG = :g"),
+					},
+				},
 			},
 			// ReturnConsumedCapacity: types.ReturnConsumedCapacityTotal,
 		})
@@ -217,7 +264,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 			var intServErr *types.TransactionCanceledException
 			if errors.As(err, &intServErr) {
-				fmt.Printf("put item error, %v\n",
+				fmt.Printf("put item error888, %v\n",
 					intServErr.CancellationReasons)
 			}
 
@@ -225,11 +272,12 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			var apiErr smithy.APIError
 			if errors.As(err, &apiErr) {
 				// fmt.Println(err.Error(), apiErr.Error())
-				fmt.Printf("db error, Code: %v, Message: %v",
+				fmt.Printf("db error888, Code: %v, Message: %v",
 					apiErr.ErrorCode(), apiErr.ErrorMessage())
 			}
 
 		}
+
 	} else {
 		connItemKey, err := attributevalue.MarshalMap(Key{
 			Pk: "CONN#" + id,
