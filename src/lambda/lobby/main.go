@@ -168,7 +168,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 						Key:                 gameItemKey,
 						TableName:           aws.String(tableName),
-						ConditionExpression: aws.String("attribute_exists(#PL)"),
+						ConditionExpression: aws.String("attribute_exists(#PL)"), //and size less than max
 						ExpressionAttributeNames: map[string]string{
 							"#PL": "players",
 							"#ID": id,
@@ -366,11 +366,11 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	return events.APIGatewayProxyResponse{
-		StatusCode: http.StatusOK,
-		Headers:    map[string]string{"Content-Type": "application/json"},
-
-		Body:            "",
-		IsBase64Encoded: false,
+		StatusCode:        http.StatusOK,
+		Headers:           map[string]string{"Content-Type": "application/json"},
+		MultiValueHeaders: map[string][]string{},
+		Body:              "",
+		IsBase64Encoded:   false,
 	}, nil
 }
 
