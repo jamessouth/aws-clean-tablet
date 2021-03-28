@@ -50,7 +50,7 @@ exports.handler = (req, ctx, cb) => {
                 const payload = {
                     games: gamesResults.Items.map(g => ({
                         no: g.sk.S,
-                        players: g.players && g.players.SS || [],
+                        players: g.players && g.players.M || {},
                     })),
                     type: "games",
                 };
@@ -84,7 +84,7 @@ exports.handler = (req, ctx, cb) => {
                 const payload = {
                     games: gamesResults.Items.map(g => ({
                         no: g.sk.S,
-                        players: g.players && g.players.SS || [],
+                        players: g.players && g.players.M || {},
                     })),
                     type: "games",
                 };
@@ -163,7 +163,7 @@ exports.handler = (req, ctx, cb) => {
                 const payload = {
                     games: gamesResults.Items.map(g => ({
                         no: g.sk.S,
-                        players: g.players && g.players.SS || [],
+                        players: g.players && g.players.M || {},
                     })),
                     type: "games",
                 };

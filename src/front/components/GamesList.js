@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 
 
 const ce = React.createElement;
+const chk = String.fromCharCode(10003);
 
 
 export default function GamesList({games, ingame, send}) {
@@ -51,20 +52,23 @@ export default function GamesList({games, ingame, send}) {
                 },
                 "players"
             ),
-            g.players.map(s => ce(
-            // ["aaa", "bbb", "ccc", "ddd", "fff", "zzz", "ooo", "ttt"]
-                "p",
-                {
-                    key: s,
-                    // className: "text-right",
-                },
-                s.split("#", 1)[0]
-            )),
+            Object.keys(g.players).map(p => {
+                    const plr = g.players[p].M;
+                    return ce(
+                // ["aaa", "bbb", "ccc", "ddd", "fff", "zzz", "ooo", "ttt"]
+                    "p",
+                    {
+                        key: plr.connid.S,
+                        // className: "text-right",
+                    },
+                    !plr.ready.BOOL ? plr.name.S + chk : plr.name.S
+                );
+            }),
             ce(
                 "button",
                 {// border border-white border-solid
                     className: "w-1/2 bottom-0 h-8 left-0 absolute pt-2 bg-smoke-700 bg-opacity-70",
-                    disabled: (!!ingame && ingame !== g.no) || (!ingame && g.players.length > 7),
+                    disabled: (!!ingame && ingame !== g.no) || (!ingame && Object.keys(g.players).length > 7),
                     onClick: () => {
                         send({
                             action: "lobby",
@@ -79,7 +83,7 @@ export default function GamesList({games, ingame, send}) {
                 "button",
                 {// border border-white border-solid
                     className: "w-1/2 bottom-0 h-8 right-0 absolute pt-2 bg-smoke-700 bg-opacity-70",
-                    disabled: (!!ingame && ingame !== g.no) || !ingame || g.players.length < 3,
+                    disabled: (!!ingame && ingame !== g.no) || !ingame || Object.keys(g.players).length < 3,
                     onClick: () => {
                         send({
                             action: "lobby",

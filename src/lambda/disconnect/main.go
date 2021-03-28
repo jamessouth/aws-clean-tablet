@@ -25,9 +25,9 @@ type Key struct {
 }
 
 // GameItemAttrs holds values to be put in db
-type GameItemAttrs struct {
-	Players []string `dynamodbav:":p,stringset"` //name + connid
-}
+// type GameItemAttrs struct {
+// 	Players []string `dynamodbav:":p,stringset"` //name + connid
+// }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
@@ -110,26 +110,28 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			panic(fmt.Sprintf("failed to marshal Record 7, %v", err))
 		}
 
-		gameAttrs, err := attributevalue.MarshalMap(GameItemAttrs{
-			Players: []string{
-				auth["username"].(string) + "#" + req.RequestContext.ConnectionID,
-			},
-		})
-		if err != nil {
-			panic(fmt.Sprintf("failed to marshal Record 8, %v", err))
-		}
+		// gameAttrs, err := attributevalue.MarshalMap(GameItemAttrs{
+		// 	Players: []string{
+		// 		auth["username"].(string) + "#" + req.RequestContext.ConnectionID,
+		// 	},
+		// })
+		// if err != nil {
+		// 	panic(fmt.Sprintf("failed to marshal Record 8, %v", err))
+		// }
 
 		_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 
+			// ----------------------------------------------------
 			Key:       gameItemKey,
 			TableName: aws.String(tableName),
-			// ConditionExpression: aws.String("contains(Color, :v_sub)"),
+			// ConditionExpression: aws.String("(attribute_exists(#PL) AND size (#PL) < :maxsize) OR attribute_not_exists(#PL)"),
 			ExpressionAttributeNames: map[string]string{
 				"#PL": "players",
+				"#ID": id,
 			},
-			ExpressionAttributeValues: gameAttrs,
+			// ExpressionAttributeValues: gameAttrs,
 
-			UpdateExpression: aws.String("DELETE #PL :p"),
+			UpdateExpression: aws.String("REMOVE #PL.#ID"),
 		})
 		// fmt.Println("op", op)
 		if err != nil {
@@ -155,7 +157,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		StatusCode:        http.StatusOK,
 		Headers:           map[string]string{"Content-Type": "application/json"},
 		MultiValueHeaders: map[string][]string{},
-		Body:              fmt.Sprintf("cap used: %v", &op.ConsumedCapacity.CapacityUnits),
+		Body:              "",
 		IsBase64Encoded:   false,
 	}, nil
 }
