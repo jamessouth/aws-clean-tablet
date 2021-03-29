@@ -37,6 +37,7 @@ type Player struct {
 
 type body struct {
 	Game, Type string
+	Value      bool
 }
 
 // ConnItemAttrs holds vals for db
@@ -372,7 +373,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			panic(fmt.Sprintf("failed to marshal Record, %v", err))
 		}
 
-		att2, err := attributevalue.Marshal()
+		att2, err := attributevalue.Marshal(body.Value)
 		if err != nil {
 			panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
 		}

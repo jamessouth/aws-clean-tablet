@@ -5,7 +5,7 @@ const chk = String.fromCharCode(10003);
 
 export default function GamesList({ games, ingame, send }) {
     // const [connectedWS, setConnectedWS] = useState(false);
-    // const [games, setGames] = useState(null);
+    const [ready, setReady] = useState(true);
     // const [startedNewGame, setStartedNewGame] = useState(false);
     // const [token, setToken] = useState("");
     // const [wsError, setWSError] = useState();
@@ -69,7 +69,7 @@ export default function GamesList({ games, ingame, send }) {
                                 chk
                             )
                         : null
-                );
+                    );
                 }),
                 ce(
                     "button",
@@ -88,6 +88,9 @@ export default function GamesList({ games, ingame, send }) {
                                         ? "leave"
                                         : "join",
                             });
+                            if (!!ingame && ingame === g.no) {
+                                setReady(true);
+                            }
                         },
                     },
                     !!ingame && ingame === g.no ? "leave" : "join"
@@ -106,10 +109,12 @@ export default function GamesList({ games, ingame, send }) {
                                 action: "lobby",
                                 game: `${g.no}`,
                                 type: "ready",
+                                value: ready,
                             });
+                            setReady(!ready);
                         },
                     },
-                    "ready"
+                    ready ? "ready" : "not ready"
                 )
             )
         )
