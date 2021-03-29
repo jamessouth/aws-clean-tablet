@@ -1,18 +1,16 @@
 import React, { useEffect, useState } from "react";
 
-
 const ce = React.createElement;
 const chk = String.fromCharCode(10003);
 
-
-export default function GamesList({games, ingame, send}) {
+export default function GamesList({ games, ingame, send }) {
     // const [connectedWS, setConnectedWS] = useState(false);
     // const [games, setGames] = useState(null);
     // const [startedNewGame, setStartedNewGame] = useState(false);
     // const [token, setToken] = useState("");
     // const [wsError, setWSError] = useState();
-    
-// console.log('gamesss: ', Array.isArray(games));
+
+    // console.log('gamesss: ', Array.isArray(games));
     // useEffect(() => {
 
     // }, []);
@@ -30,73 +28,90 @@ export default function GamesList({games, ingame, send}) {
     return ce(
         "ul",
         {
-            className: "mx-auto mb-10 w-10/12"
+            className: "mx-auto mb-10 w-10/12",
         },
-        games.map(g => ce(
-            "li",
-            {
-                key: g.no,
-                className: "mb-8 w-10/12 mx-auto grid grid-cols-2 grid-rows-gamebox relative pb-8",
-            },
+        games.map((g) =>
             ce(
-                "p",
+                "li",
                 {
-                    className: "text-xs col-span-2"
+                    key: g.no,
+                    className:
+                        "mb-8 w-10/12 mx-auto grid grid-cols-2 grid-rows-gamebox relative pb-8",
                 },
-                `${g.no}`
-            ),
-            ce(
-                "p",
-                {
-                    className: "text-xs col-span-2"
-                },
-                "players"
-            ),
-            Object.keys(g.players).map(p => {
-                    const plr = g.players[p].M;
-                    return ce(
-                // ["aaa", "bbb", "ccc", "ddd", "fff", "zzz", "ooo", "ttt"]
+                ce(
                     "p",
                     {
-                        key: plr.connid.S,
-                        // className: "text-right",
+                        className: "text-xs col-span-2",
                     },
-                    !plr.ready.BOOL ? plr.name.S + chk : plr.name.S
+                    `${g.no}`
+                ),
+                ce(
+                    "p",
+                    {
+                        className: "text-xs col-span-2",
+                    },
+                    "players"
+                ), // ["aaa", "bbb", "ccc", "ddd", "fff", "zzz", "ooo", "ttt"]
+                Object.keys(g.players).map((p) => {
+                    const plr = g.players[p].M;
+                    return ce(
+                        "p",
+                        {
+                            key: plr.connid.S,
+                        },
+                        plr.name.S,
+                        plr.ready.BOOL
+                        ? ce(
+                                "span",
+                                {
+                                    className: "text-green-200 text-2xl font-bold leading-3",
+                                },
+                                chk
+                            )
+                        : null
                 );
-            }),
-            ce(
-                "button",
-                {// border border-white border-solid
-                    className: "w-1/2 bottom-0 h-8 left-0 absolute pt-2 bg-smoke-700 bg-opacity-70",
-                    disabled: (!!ingame && ingame !== g.no) || (!ingame && Object.keys(g.players).length > 7),
-                    onClick: () => {
-                        send({
-                            action: "lobby",
-                            game: `${g.no}`,
-                            type: !!ingame && ingame === g.no ? "leave" : "join",
-                        });
+                }),
+                ce(
+                    "button",
+                    {
+                        className:
+                            "w-1/2 bottom-0 h-8 left-0 absolute pt-2 bg-smoke-700 bg-opacity-70",
+                        disabled:
+                            (!!ingame && ingame !== g.no) ||
+                            (!ingame && Object.keys(g.players).length > 7),
+                        onClick: () => {
+                            send({
+                                action: "lobby",
+                                game: `${g.no}`,
+                                type:
+                                    !!ingame && ingame === g.no
+                                        ? "leave"
+                                        : "join",
+                            });
+                        },
                     },
-                },
-                !!ingame && ingame === g.no ? "leave" : "join"
-            ),
-            ce(
-                "button",
-                {// border border-white border-solid
-                    className: "w-1/2 bottom-0 h-8 right-0 absolute pt-2 bg-smoke-700 bg-opacity-70",
-                    disabled: (!!ingame && ingame !== g.no) || !ingame || Object.keys(g.players).length < 3,
-                    onClick: () => {
-                        send({
-                            action: "lobby",
-                            game: `${g.no}`,
-                            type: !!ingame ? "leave" : "join",
-                        });
-                        
+                    !!ingame && ingame === g.no ? "leave" : "join"
+                ),
+                ce(
+                    "button",
+                    {
+                        className:
+                            "w-1/2 bottom-0 h-8 right-0 absolute pt-2 bg-smoke-700 bg-opacity-70",
+                        disabled:
+                            (!!ingame && ingame !== g.no) ||
+                            !ingame ||
+                            Object.keys(g.players).length < 3,
+                        onClick: () => {
+                            send({
+                                action: "lobby",
+                                game: `${g.no}`,
+                                type: "ready",
+                            });
+                        },
                     },
-                },
-                // !!ingame ? "leave" : "join"
-                "ready"
+                    "ready"
+                )
             )
-        ))
+        )
     );
 }
-
