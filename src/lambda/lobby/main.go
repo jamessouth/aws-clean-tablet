@@ -378,7 +378,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
 		}
 
-		_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		ui, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 
 			// ----------------------------------------------------
 			Key:       gameItemKey,
@@ -396,6 +396,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			},
 
 			UpdateExpression: aws.String("SET #PL.#ID.#RD = :r"),
+			ReturnValues:     types.ReturnValueUpdatedNew,
 		})
 		// fmt.Println("op", op)
 		if err != nil {
@@ -413,6 +414,20 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 					apiErr.ErrorCode(), apiErr.ErrorMessage())
 			}
 
+		}
+
+		var game map[string]Player
+		err = attributevalue.Unmarshal(ui.Attributes["players"], &game)
+		if err != nil {
+			fmt.Println("del item unmarshal err", err)
+		}
+
+		for k, v := range game {
+
+			fmt.Printf("%s, %v, %+v", "ui", k, v)
+			if !v.Ready {
+
+			}
 		}
 
 	}
