@@ -12,7 +12,7 @@ exports.handler = (req, ctx, cb) => {
     req.Records.forEach(async (rec) => {
         const tableName = rec.eventSourceARN.split("/", 2)[1];
         const item = rec.dynamodb.NewImage;
-        console.log('item: ', item);
+        // console.log('item: ', item);
         const endpoint = `https://${apiid}.execute-api.${rec.awsRegion}.amazonaws.com/${stage}`;
 
         const apigw = new ApiGatewayManagementApi({
@@ -50,12 +50,13 @@ exports.handler = (req, ctx, cb) => {
                 const payload = {
                     games: gamesResults.Items.map(g => ({
                         no: g.sk.S,
+                        ready: g.ready && g.ready.BOOL || false,
                         players: g.players && g.players.M || {},
                     })),
                     type: "games",
                 };
     
-                console.log("data: ", payload);
+                // console.log("data: ", payload);
                 try {
                     await apigw
                         .postToConnection({
@@ -84,12 +85,13 @@ exports.handler = (req, ctx, cb) => {
                 const payload = {
                     games: gamesResults.Items.map(g => ({
                         no: g.sk.S,
+                        ready: g.ready && g.ready.BOOL || false,
                         players: g.players && g.players.M || {},
                     })),
                     type: "games",
                 };
     
-                console.log("data: ", payload);
+                // console.log("data: ", payload);
 
 
 
@@ -134,7 +136,7 @@ exports.handler = (req, ctx, cb) => {
                     type: "user",
                 };
     
-                console.log("data: ", payload);
+                // console.log("data: ", payload);
                 try {
                     await apigw
                         .postToConnection({
@@ -163,12 +165,13 @@ exports.handler = (req, ctx, cb) => {
                 const payload = {
                     games: gamesResults.Items.map(g => ({
                         no: g.sk.S,
+                        ready: g.ready && g.ready.BOOL || false,
                         players: g.players && g.players.M || {},
                     })),
                     type: "games",
                 };
     
-                console.log("data: ", payload);
+                // console.log("data: ", payload);
 
 
 
