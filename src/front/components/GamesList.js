@@ -43,7 +43,7 @@ export default function GamesList({ games, ingame, send }) {
                     {
                         className: "text-xs col-span-2",
                     },
-                    `${g.no}`
+                    `${g.ready}`
                 ),
                 ce(
                     "p",
