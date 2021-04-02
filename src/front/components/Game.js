@@ -4,8 +4,10 @@ const ce = React.createElement;
 const chk = String.fromCharCode(10003);
 
 export default function Game({ game, ingame, send }) {
+    const gameReady = game.ready;
     // const [connectedWS, setConnectedWS] = useState(false);
     const [ready, setReady] = useState(true);
+    const [count, setCount] = useState(5);
     // const [startedNewGame, setStartedNewGame] = useState(false);
     // const [token, setToken] = useState("");
     // const [wsError, setWSError] = useState();
@@ -15,9 +17,18 @@ export default function Game({ game, ingame, send }) {
 
     // }, []);
 
-    // useEffect(() => {
-
-    // }, []);
+    useEffect(() => {
+        let id;
+        if (gameReady) {
+            id = setInterval(() => {
+                setCount(c => c - 1);
+            }, 1000);
+        }
+        return () => {
+            clearInterval(id);
+            setCount(5);
+        }
+    }, [gameReady]);
 
     return ce(
                 "li",
@@ -57,6 +68,13 @@ export default function Game({ game, ingame, send }) {
                         : null
                     );
                 }),
+                ce(
+                    "p",
+                    {
+                        className: "absolute text-yellow-200 text-2xl font-bold left-1/2 bottom-1/4 transform -translate-x-2/4"
+                    },
+                    `${count}`
+                ),
                 ce(
                     "button",
                     {
