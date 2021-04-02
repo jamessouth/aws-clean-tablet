@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Switch, Route, Redirect, Link, useLocation } from "react-router-dom";
 
 const ce = React.createElement;
 const chk = String.fromCharCode(10003);
@@ -13,10 +14,7 @@ export default function Game({ game, ingame, send }) {
     // const [wsError, setWSError] = useState();
 
     // console.log('gamesss: ', Array.isArray(games));
-    // useEffect(() => {
-
-    // }, []);
-
+    
     useEffect(() => {
         let id;
         if (gameReady) {
@@ -24,11 +22,21 @@ export default function Game({ game, ingame, send }) {
                 setCount(c => c - 1);
             }, 1000);
         }
+
         return () => {
-            clearInterval(id);
             setCount(5);
+            clearInterval(id);
         }
     }, [gameReady]);
+
+    useEffect(() => {
+        // console.log('cntfffff: ', count);
+        if (count === 0) {
+            // console.log('cnt: ', count);
+            // setCount(5);
+            ce(Redirect, {to: "/game"})
+        }
+    }, [count]);
 
     return ce(
                 "li",

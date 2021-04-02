@@ -68,13 +68,31 @@ export default function Routes() {
                 "div",
                 null,
                 ce(Lobby),
-                ce(
-                    Link,
-                    {
-                        to: "/leaderboards",
-                    },
-                    "Leaderboards"
-                )
+                // ce(
+                //     Link,
+                //     {
+                //         to: "/leaderboards",
+                //     },
+                //     "Leaderboards"
+                // )
+            )
+        ),
+        ce(
+            PrivateRoute,
+            {
+                path: "/game",
+            },
+            ce(
+                "div",
+                null,
+                ce(Comp),
+                // ce(
+                //     Link,
+                //     {
+                //         to: "/leaderboards",
+                //     },
+                //     "Leaderboards"
+                // )
             )
         )
     );
