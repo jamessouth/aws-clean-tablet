@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import { useHistory } from "react-router-dom";
-import { authContext } from "../App";
+import { authContext } from "./ProvideAuth";
 
 import { AmplifySignOut } from "@aws-amplify/ui-react";
 

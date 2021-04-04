@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import { useHistory, useLocation } from "react-router-dom";
-import { authContext } from "../App";
+import { authContext } from "./ProvideAuth";
 import { AuthState } from "@aws-amplify/ui-components";
 
 import {

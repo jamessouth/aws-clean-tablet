@@ -30,12 +30,16 @@ export default function Game({ game, ingame, send }) {
     }, [gameReady]);
 
     useEffect(() => {
-        // console.log('cntfffff: ', count);
-        if (count === 0) {
-            // console.log('cnt: ', count);
-            // setCount(5);
-            ce(Redirect, {to: "/game"})
-        }
+        console.log('cntfffff: ', count);
+        // if (count === 0) {
+        //     console.log('cnt: ', count);
+        //     // setCount(5);
+        //     ce(
+        //         Switch,
+        //         null,
+        //     )
+            
+        // }
     }, [count]);
 
     return ce(
@@ -43,6 +47,7 @@ export default function Game({ game, ingame, send }) {
                 {
                     className: "mb-8 w-10/12 mx-auto grid grid-cols-2 grid-rows-gamebox relative pb-8",
                 },
+                count === 0 ? ce(Redirect, {to: "/game"}) : null,
                 ce(
                     "p",
                     {

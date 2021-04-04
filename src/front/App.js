@@ -20,7 +20,7 @@ Amplify.configure(awsExports);
 
 const ce = React.createElement;
 
-export const authContext = createContext();
+
 
 export default function App() {
     return ce(
