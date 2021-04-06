@@ -4,10 +4,10 @@ import { Switch, Route, Redirect, Link, useLocation } from "react-router-dom";
 const ce = React.createElement;
 const chk = String.fromCharCode(10003);
 
-export default function Game({ action, game, ingame, send }) {
+export default function Game({ game, ingame, send }) {
     const gameReady = game.ready;
     // const [connectedWS, setConnectedWS] = useState(false);
-    const [ready, setReady] = useState(action === "REPLACE");
+    const [ready, setReady] = useState(true);
     const [count, setCount] = useState(5);
     // const [startedNewGame, setStartedNewGame] = useState(false);
     // const [token, setToken] = useState("");
@@ -15,10 +15,9 @@ export default function Game({ action, game, ingame, send }) {
 
     // console.log('gamesss: ', Array.isArray(games));
 
-
     useEffect(() => {
         let id;
-        if (gameReady && action === "REPLACE") {
+        if (gameReady) {
             id = setInterval(() => {
                 setCount((c) => c - 1);
             }, 1000);
@@ -28,7 +27,7 @@ export default function Game({ action, game, ingame, send }) {
             setCount(5);
             clearInterval(id);
         };
-    }, [gameReady, action]);
+    }, [gameReady]);
 
     useEffect(() => {
         console.log("cntfffff: ", count);
@@ -49,7 +48,7 @@ export default function Game({ action, game, ingame, send }) {
             className:
                 "mb-8 w-10/12 mx-auto grid grid-cols-2 grid-rows-gamebox relative pb-8",
         },
-        count === 0 ? ce(Redirect, { to: "/game", push: true }) : null,
+        ingame === game.no && count === 0 ? ce(Redirect, { to: "/game", push: true }) : null,
         ce(
             "p",
             {
