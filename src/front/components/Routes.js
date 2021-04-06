@@ -70,14 +70,14 @@ export default function Routes() {
                 {
                     path: "/lobby",
                 },
-                ce("div", null, ce(Lobby))
+                Lobby//"div", null, ce()
             ),
             ce(
                 PrivateRoute,
                 {
                     path: "/game",
                 },
-                ce("div", null, ce(Comp))
+                Comp
             )
         )
     );

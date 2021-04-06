@@ -5,7 +5,7 @@ import { wsContext } from "./ProvideWS";
 const ce = React.createElement;
 
 
-export default function Lobby() {
+export default function Lobby({history: {action}}) {
     const {
         connectedWS,
         games,
@@ -17,7 +17,7 @@ export default function Lobby() {
     // const [startedNewGame, setStartedNewGame] = useState(false);
     
     
-    console.log("lobbbbbbbb ", games, ingame);
+    console.log("lobbbbbbbb ", games, ingame, action);
 
 
     const startBtnStyles = " mx-auto mb-8 w-1/2 bg-smoke-100 text-gray-700";
@@ -60,6 +60,7 @@ export default function Lobby() {
             : ce(
                 GamesList,
                 {
+                    action,
                     games,
                     ingame,
                     send: val => send(val),

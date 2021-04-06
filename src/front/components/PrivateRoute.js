@@ -5,12 +5,13 @@ import { authContext } from "./ProvideAuth";
 const ce = React.createElement;
 
 export default function PrivateRoute({ children, ...rest }) {
+    console.log('ccxxxx: ', children);
     let auth = useContext(authContext);
     return ce(Route, {
         ...rest,
-        render: ({ location }) =>
+        render: ({ location, history }) =>
             auth.user
-                ? children
+                ? ce(children, {history})
                 : ce(Redirect, {
                       to: {
                           pathname: "/login",

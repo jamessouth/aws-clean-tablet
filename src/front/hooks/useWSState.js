@@ -10,9 +10,10 @@ export default function useWSState() {
     const [games, setGames] = useState(null);
     const [ingame, setInGame] = useState(false);
 
-    console.log('wsstate: ', );
+    console.log('wsstate: ', connectedWS, wsError, !!token && token[0], !!games && games[0], ingame);
     
     useEffect(() => {
+        console.log('usewsst111: ', );
         async function getToken() {
             const user = await Auth.currentUserPoolUser();
             const {
@@ -25,9 +26,11 @@ export default function useWSState() {
         }
         getToken();
     }, []);
-
+    
     useEffect(() => {
+        console.log('usewsst222: ', );
         if (token) {
+            console.log('usewsst333: ', );
             ws = new WebSocket(`wss://${process.env.CT_APIID}.execute-api.${process.env.CT_REGION}.amazonaws.com/${process.env.CT_STAGE}?auth=${token}`);
             console.log("pojoihuh", token[0]);
 

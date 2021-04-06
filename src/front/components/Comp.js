@@ -1,21 +1,20 @@
 import React, { useContext } from "react";
 import { useHistory, useLocation } from "react-router-dom";
 import { authContext } from "./ProvideAuth";
-import { AuthState } from "@aws-amplify/ui-components";
+import { wsContext } from "./ProvideWS";
 
-import {
-    withAuthenticator,
-    AmplifyAuthenticator,
-    AmplifyFormSection,
-    AmplifyForgotPassword,
-    AmplifyConfirmSignUp,
-    AmplifySignIn,
-    AmplifySignUp,
-} from "@aws-amplify/ui-react";
+
+
 
 const ce = React.createElement;
 export default function Comp() {
-
+  const {
+    connectedWS,
+    games,
+    ingame,
+    send,
+    wsError
+} = useContext(wsContext);
 
   // console.log('props: ', history, location);
 
@@ -25,6 +24,6 @@ export default function Comp() {
   return ce(
     "p",
     null,
-    "gggghhhhuuuuhh"
+    "gggghhhhuuuuhh" + ingame
   );
 }
