@@ -11,7 +11,7 @@ export default function Game({ game, ingame, send }) {
     const [count, setCount] = useState(5);
     // const [startedNewGame, setStartedNewGame] = useState(false);
     // const [token, setToken] = useState("");
-    // const [wsError, setWSError] = useState();
+    const [startGame, setStartGame] = useState(false);
 
     // console.log('gamesss: ', Array.isArray(games));
 
@@ -31,15 +31,16 @@ export default function Game({ game, ingame, send }) {
 
     useEffect(() => {
         console.log("cntfffff: ", count);
-        // if (count === 0) {
-        //     console.log('cnt: ', count);
-        //     // setCount(5);
-        //     ce(
-        //         Switch,
-        //         null,
-        //     )
-
-        // }
+        if (ingame === game.no && count === 0) {
+            
+            send({
+                action: "lobby",
+                game: `${game.no}`,
+                type: "start",
+            });
+            
+            setStartGame(true);
+        }
     }, [count]);
 
     return ce(
@@ -48,7 +49,9 @@ export default function Game({ game, ingame, send }) {
             className:
                 "mb-8 w-10/12 mx-auto grid grid-cols-2 grid-rows-gamebox relative pb-8",
         },
-        ingame === game.no && count === 0 ? ce(Redirect, { to: "/game", push: true }) : null,
+
+        startGame ? ce(Redirect, { to: `game/${game.no}`, push: true }) : null,
+
         ce(
             "p",
             {

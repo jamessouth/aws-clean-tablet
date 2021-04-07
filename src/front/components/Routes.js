@@ -2,6 +2,7 @@ import React, { useContext } from "react";
 import { Switch, Route, Redirect, Link, useLocation } from "react-router-dom";
 import LoginPage from "./LoginPage";
 import Comp from "./Comp";
+import Play from "./Play";
 import PrivateRoute from "./PrivateRoute";
 import Lobby from "./Lobby";
 import { authContext } from "./ProvideAuth";
@@ -75,9 +76,9 @@ export default function Routes() {
             ce(
                 PrivateRoute,
                 {
-                    path: "/game",
+                    path: "/game/:gameno",
                 },
-                Comp
+                Play
             )
         )
     );

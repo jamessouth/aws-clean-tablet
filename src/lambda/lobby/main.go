@@ -478,7 +478,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		}
 
-	} else {
+	} else if body.Type == "ready" {
 		gameItemKey, err := attributevalue.MarshalMap(Key{
 			Pk: "GAME",
 			Sk: gameno,
@@ -592,6 +592,8 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		}
 
+	} else {
+		fmt.Println("other lobby")
 	}
 
 	return events.APIGatewayProxyResponse{
