@@ -34,7 +34,7 @@ export default function Game({ game, ingame, send }) {
         if (ingame === game.no && count === 0) {
             
             send({
-                action: "lobby",
+                action: "play",
                 game: `${game.no}`,
                 type: "start",
             });
