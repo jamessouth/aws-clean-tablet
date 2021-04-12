@@ -204,14 +204,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		panic(fmt.Sprintf("failed to marshal Record, %v", err))
 	}
 
-	sei := sfn.StartExecutionInput{
+	sei := sfn.StartSyncExecutionInput{
 		StateMachineArn: aws.String(smarn),
 		Input:           aws.String(string(seii)),
-		Name:            aws.String("bill1"),
+		Name:            aws.String("bill3"),
 		// TraceHeader:     new(string),
 	}
 
-	_, err = svc2.StartExecution(ctx, &sei)
+	output, err := svc2.StartSyncExecution(ctx, &sei)
 
 	if err != nil {
 		// fmt.Println("poi", err)
@@ -239,13 +239,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	}
 
-	// fmt.Println("smmmm", se)
+	fmt.Printf("%s, %v\n", "outputtttt", *output.Output)
 
 	return events.APIGatewayProxyResponse{
 		StatusCode:        http.StatusOK,
 		Headers:           map[string]string{"Content-Type": "application/json"},
 		MultiValueHeaders: map[string][]string{},
-		Body:              "",
+		Body:              "1594865",
 		IsBase64Encoded:   false,
 	}, nil
 }
