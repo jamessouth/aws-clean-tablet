@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	lamb "github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/smithy-go"
 )
 
@@ -67,6 +68,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	// .WithEndpoint("http://192.168.4.27:8000")
 
 	svc := dynamodb.NewFromConfig(cfg)
+	svc2 := lamb.NewFromConfig(cfg)
 
 	auth := req.RequestContext.Authorizer.(map[string]interface{})
 
@@ -548,49 +550,88 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		if len(game) > 2 && readyCount == len(game) {
 			readyBool = true
 		}
-
-		att3, err := attributevalue.Marshal(readyBool)
-		if err != nil {
-			panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
+		type st struct {
+			Key string `json:"key"`
 		}
 
-		_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-
-			// ----------------------------------------------------
-			Key:       gameItemKey,
-			TableName: aws.String(tableName),
-			// ConditionExpression: aws.String("(attribute_exists(#PL) AND size (#PL) < :maxsize) OR attribute_not_exists(#PL)"),
-			ExpressionAttributeNames: map[string]string{
-				// "#PL": "players",
-				// "#ID": id,
-				"#RD": "ready",
-			},
-			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":r": att3,
-				// ":maxsize": att2,
-				// ":player": att3,
-			},
-
-			UpdateExpression: aws.String("SET #RD = :r"),
-			// ReturnValues:     types.ReturnValueAllNew,
+		mj, _ := json.Marshal(st{
+			Key: "value",
 		})
-		// fmt.Println("op", op)
-		if err != nil {
 
-			var intServErr *types.InternalServerError
-			if errors.As(err, &intServErr) {
-				fmt.Printf("get item error, %v",
-					intServErr.ErrorMessage())
-			}
+		ii := lamb.InvokeInput{
+			FunctionName: aws.String("ct-playJS"),
+			// ClientContext:  new(string),
+			// InvocationType: "",
+			// LogType:        "",
+			Payload: mj,
+			// Qualifier:      new(string),
+		}
 
-			// To get any API error
-			var apiErr smithy.APIError
-			if errors.As(err, &apiErr) {
-				fmt.Printf("db error, Code: %v, Message: %v",
-					apiErr.ErrorCode(), apiErr.ErrorMessage())
+		if readyBool {
+			li, err := svc2.Invoke(ctx, &ii)
+
+			fmt.Println("liii", li)
+			if err != nil {
+
+				var intServErr *types.InternalServerError
+				if errors.As(err, &intServErr) {
+					fmt.Printf("get item error, %v",
+						intServErr.ErrorMessage())
+				}
+
+				// To get any API error
+				var apiErr smithy.APIError
+				if errors.As(err, &apiErr) {
+					fmt.Printf("db error, Code: %v, Message: %v",
+						apiErr.ErrorCode(), apiErr.ErrorMessage())
+				}
+
 			}
 
 		}
+
+		// att3, err := attributevalue.Marshal(readyBool)
+		// if err != nil {
+		// 	panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
+		// }
+
+		// _, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+
+		// 	// ----------------------------------------------------
+		// 	Key:       gameItemKey,
+		// 	TableName: aws.String(tableName),
+		// 	// ConditionExpression: aws.String("(attribute_exists(#PL) AND size (#PL) < :maxsize) OR attribute_not_exists(#PL)"),
+		// 	ExpressionAttributeNames: map[string]string{
+		// 		// "#PL": "players",
+		// 		// "#ID": id,
+		// 		"#RD": "ready",
+		// 	},
+		// 	ExpressionAttributeValues: map[string]types.AttributeValue{
+		// 		":r": att3,
+		// 		// ":maxsize": att2,
+		// 		// ":player": att3,
+		// 	},
+
+		// 	UpdateExpression: aws.String("SET #RD = :r"),
+		// 	// ReturnValues:     types.ReturnValueAllNew,
+		// })
+		// fmt.Println("op", op)
+		// if err != nil {
+
+		// 	var intServErr *types.InternalServerError
+		// 	if errors.As(err, &intServErr) {
+		// 		fmt.Printf("get item error, %v",
+		// 			intServErr.ErrorMessage())
+		// 	}
+
+		// 	// To get any API error
+		// 	var apiErr smithy.APIError
+		// 	if errors.As(err, &apiErr) {
+		// 		fmt.Printf("db error, Code: %v, Message: %v",
+		// 			apiErr.ErrorCode(), apiErr.ErrorMessage())
+		// 	}
+
+		// }
 
 	} else {
 		fmt.Println("other lobby")
