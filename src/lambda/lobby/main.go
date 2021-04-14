@@ -550,24 +550,25 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		if len(game) > 2 && readyCount == len(game) {
 			readyBool = true
 		}
-		type st struct {
-			Key string `json:"key"`
-		}
-
-		mj, _ := json.Marshal(st{
-			Key: "value",
-		})
-
-		ii := lamb.InvokeInput{
-			FunctionName: aws.String("ct-playJS"),
-			// ClientContext:  new(string),
-			// InvocationType: "",
-			// LogType:        "",
-			Payload: mj,
-			// Qualifier:      new(string),
-		}
+		// type st struct {
+		// 	Key string `json:"key"`
+		// }
 
 		if readyBool {
+			mj, err := json.Marshal(game)
+			if err != nil {
+				fmt.Println("game item marshal err", err)
+			}
+
+			ii := lamb.InvokeInput{
+				FunctionName: aws.String("ct-playJS"),
+				// ClientContext:  new(string),
+				// InvocationType: "",
+				// LogType:        "",
+				Payload: mj,
+				// Qualifier:      new(string),
+			}
+
 			li, err := svc2.Invoke(ctx, &ii)
 
 			fmt.Println("liii", li)
@@ -590,48 +591,48 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		}
 
-		// att3, err := attributevalue.Marshal(readyBool)
-		// if err != nil {
-		// 	panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
-		// }
+		att3, err := attributevalue.Marshal(readyBool)
+		if err != nil {
+			panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
+		}
 
-		// _, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 
-		// 	// ----------------------------------------------------
-		// 	Key:       gameItemKey,
-		// 	TableName: aws.String(tableName),
-		// 	// ConditionExpression: aws.String("(attribute_exists(#PL) AND size (#PL) < :maxsize) OR attribute_not_exists(#PL)"),
-		// 	ExpressionAttributeNames: map[string]string{
-		// 		// "#PL": "players",
-		// 		// "#ID": id,
-		// 		"#RD": "ready",
-		// 	},
-		// 	ExpressionAttributeValues: map[string]types.AttributeValue{
-		// 		":r": att3,
-		// 		// ":maxsize": att2,
-		// 		// ":player": att3,
-		// 	},
+			// ----------------------------------------------------
+			Key:       gameItemKey,
+			TableName: aws.String(tableName),
+			// ConditionExpression: aws.String("(attribute_exists(#PL) AND size (#PL) < :maxsize) OR attribute_not_exists(#PL)"),
+			ExpressionAttributeNames: map[string]string{
+				// "#PL": "players",
+				// "#ID": id,
+				"#RD": "ready",
+			},
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":r": att3,
+				// ":maxsize": att2,
+				// ":player": att3,
+			},
 
-		// 	UpdateExpression: aws.String("SET #RD = :r"),
-		// 	// ReturnValues:     types.ReturnValueAllNew,
-		// })
+			UpdateExpression: aws.String("SET #RD = :r"),
+			// ReturnValues:     types.ReturnValueAllNew,
+		})
 		// fmt.Println("op", op)
-		// if err != nil {
+		if err != nil {
 
-		// 	var intServErr *types.InternalServerError
-		// 	if errors.As(err, &intServErr) {
-		// 		fmt.Printf("get item error, %v",
-		// 			intServErr.ErrorMessage())
-		// 	}
+			var intServErr *types.InternalServerError
+			if errors.As(err, &intServErr) {
+				fmt.Printf("get item error, %v",
+					intServErr.ErrorMessage())
+			}
 
-		// 	// To get any API error
-		// 	var apiErr smithy.APIError
-		// 	if errors.As(err, &apiErr) {
-		// 		fmt.Printf("db error, Code: %v, Message: %v",
-		// 			apiErr.ErrorCode(), apiErr.ErrorMessage())
-		// 	}
+			// To get any API error
+			var apiErr smithy.APIError
+			if errors.As(err, &apiErr) {
+				fmt.Printf("db error, Code: %v, Message: %v",
+					apiErr.ErrorCode(), apiErr.ErrorMessage())
+			}
 
-		// }
+		}
 
 	} else {
 		fmt.Println("other lobby")

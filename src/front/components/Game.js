@@ -8,40 +8,40 @@ export default function Game({ game, ingame, send }) {
     const gameReady = game.ready;
     // const [connectedWS, setConnectedWS] = useState(false);
     const [ready, setReady] = useState(true);
-    const [count, setCount] = useState(5);
+    // const [count, setCount] = useState(5);
     // const [startedNewGame, setStartedNewGame] = useState(false);
     // const [token, setToken] = useState("");
-    const [startGame, setStartGame] = useState(false);
+    // const [startGame, setStartGame] = useState(false);
 
-    // console.log('gamesss: ', Array.isArray(games));
+    console.log('gamesss: ');
 
-    useEffect(() => {
-        let id;
-        if (gameReady) {
-            id = setInterval(() => {
-                setCount((c) => c - 1);
-            }, 1000);
-        }
+    // useEffect(() => {
+    //     let id;
+    //     if (gameReady) {
+    //         id = setInterval(() => {
+    //             setCount((c) => c - 1);
+    //         }, 1000);
+    //     }
 
-        return () => {
-            setCount(5);
-            clearInterval(id);
-        };
-    }, [gameReady]);
+    //     return () => {
+    //         setCount(5);
+    //         clearInterval(id);
+    //     };
+    // }, [gameReady]);
 
-    useEffect(() => {
-        console.log("cntfffff: ", count);
-        if (ingame === game.no && count === 0) {
+    // useEffect(() => {
+    //     console.log("cntfffff: ", count);
+    //     if (ingame === game.no && count === 0) {
             
-            send({
-                action: "play",
-                game: `${game.no}`,
-                type: "start",
-            });
+    //         send({
+    //             action: "play",
+    //             game: `${game.no}`,
+    //             type: "start",
+    //         });
             
-            setStartGame(true);
-        }
-    }, [count]);
+    //         setStartGame(true);
+    //     }
+    // }, [count]);
 
     return ce(
         "li",
@@ -50,14 +50,14 @@ export default function Game({ game, ingame, send }) {
                 "mb-8 w-10/12 mx-auto grid grid-cols-2 grid-rows-gamebox relative pb-8",
         },
 
-        startGame ? ce(Redirect, { to: `game/${game.no}`, push: true }) : null,
+        // startGame ? ce(Redirect, { to: `game/${game.no}`, push: true }) : null,
 
         ce(
             "p",
             {
                 className: "text-xs col-span-2",
             },
-            `${game.ready}`
+            `${game.no}`
         ),
         ce(
             "p",
@@ -86,14 +86,23 @@ export default function Game({ game, ingame, send }) {
                     : null
             );
         }),
-        ce(
+
+        gameReady && ingame !== game.no ? ce(
             "p",
             {
                 className:
                     "absolute text-yellow-200 text-2xl font-bold left-1/2 bottom-1/4 transform -translate-x-2/4",
             },
-            `${count}`
-        ),
+            "Starting..."
+        ) : gameReady && ingame === game.no ? ce(
+            "p",
+            {
+                className:
+                    "absolute text-yellow-200 text-2xl font-bold left-1/2 bottom-1/4 transform -translate-x-2/4",
+            },
+            "num goes here"
+        ) : null,
+
         ce(
             "button",
             {

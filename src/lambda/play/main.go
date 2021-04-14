@@ -19,16 +19,16 @@ import (
 	"github.com/aws/smithy-go"
 )
 
-var colors = []string{
-	"#dc2626", //red 600
-	"#0c4a6e", //light blue 900
-	"#16a34a", //green 600
-	"#7c2d12", //orange 900
-	"#c026d3", //fuchsia 600
-	"#365314", //lime 900
-	"#0891b2", //cyan 600
-	"#581c87", //purple 900
-}
+// var colors = []string{
+// 	"#dc2626", //red 600
+// 	"#0c4a6e", //light blue 900
+// 	"#16a34a", //green 600
+// 	"#7c2d12", //orange 900
+// 	"#c026d3", //fuchsia 600
+// 	"#365314", //lime 900
+// 	"#0891b2", //cyan 600
+// 	"#581c87", //purple 900
+// }
 
 // const maxPlayersPerGame = 8
 
@@ -78,10 +78,10 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	svc := dynamodb.NewFromConfig(cfg)
 
-	auth := req.RequestContext.Authorizer.(map[string]interface{})
+	// auth := req.RequestContext.Authorizer.(map[string]interface{})
 
-	id := auth["principalId"].(string)
-	name := auth["username"].(string)
+	// id := auth["principalId"].(string)
+	// name := auth["username"].(string)
 
 	var body body
 
@@ -100,16 +100,16 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			panic(fmt.Sprintf("failed to marshal Record, %v", err))
 		}
 
-		att1, err := attributevalue.Marshal(map[string]Player{
-			id: {
-				Name:   name,
-				ConnID: req.RequestContext.ConnectionID,
-				Ready:  false,
-			},
-		})
-		if err != nil {
-			panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
-		}
+		// att1, err := attributevalue.Marshal(map[string]Player{
+		// 	id: {
+		// 		Name:   name,
+		// 		ConnID: req.RequestContext.ConnectionID,
+		// 		Ready:  false,
+		// 	},
+		// })
+		// if err != nil {
+		// 	panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
+		// }
 
 		_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 
@@ -123,7 +123,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 				"#RD": "ready",
 			},
 			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":r": att4,
+				// ":r": att4,
 				// ":maxsize": att2,
 				// ":player": att3,
 			},
