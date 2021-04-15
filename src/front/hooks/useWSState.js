@@ -7,6 +7,7 @@ export default function useWSState() {
     const [connectedWS, setConnectedWS] = useState(false);
     const [wsError, setWSError] = useState();
     const [token, setToken] = useState("");
+    const [count, setCount] = useState(null);
     const [games, setGames] = useState(null);
     const [ingame, setInGame] = useState(false);
 
@@ -60,12 +61,12 @@ export default function useWSState() {
                         type,
                         games,
                         ingame,
-                        // time,
+                        count,
                         // winners,
                         // word
                     } = JSON.parse(e.data);
 
-                    console.log("mmmm", type, games, ingame);
+                    console.log("mmmm", type, games, ingame, count);
 
                     switch (type) {
                         case "games":
@@ -73,6 +74,9 @@ export default function useWSState() {
                             break;
                         case "user":
                             setInGame(ingame);
+                            break;
+                        case "cd":
+                            setCount(count);
                             break;
                         default:
                             console.log('no case found: ', e.data);
@@ -116,6 +120,7 @@ export default function useWSState() {
 
     return {
         connectedWS,
+        count,
         games,
         ingame,
         send,

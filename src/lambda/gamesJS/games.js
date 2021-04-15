@@ -66,6 +66,7 @@ exports.handler = (req, ctx, cb) => {
                         .promise();
                 } catch (err) {
                     console.log("post error: ", err);
+                    cb(Error(err));
                 }
             } else if (item.pk.S.startsWith("GAME")) {
                 const gamesParams = {
@@ -122,6 +123,7 @@ exports.handler = (req, ctx, cb) => {
                     });
                 } catch (err) {
                     console.log("post error: ", err);
+                    cb(Error(err));
                 }
             } else {
                 console.log("stat insert: ", item);
@@ -146,6 +148,7 @@ exports.handler = (req, ctx, cb) => {
                         .promise();
                 } catch (err) {
                     console.log("post error: ", err);
+                    cb(Error(err));
                 }
             } else if (item.pk.S.startsWith("GAME")) {
                 const gamesParams = {
@@ -202,6 +205,7 @@ exports.handler = (req, ctx, cb) => {
                     });
                 } catch (err) {
                     console.log("post error: ", err);
+                    cb(Error(err));
                 }
             } else {
                 console.log("stat modify: ", item);

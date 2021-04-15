@@ -4,7 +4,7 @@ import { Switch, Route, Redirect, Link, useLocation } from "react-router-dom";
 const ce = React.createElement;
 const chk = String.fromCharCode(10003);
 
-export default function Game({ game, ingame, send }) {
+export default function Game({ count, game, ingame, send }) {
     const gameReady = game.ready;
     // const [connectedWS, setConnectedWS] = useState(false);
     const [ready, setReady] = useState(true);
@@ -100,7 +100,7 @@ export default function Game({ game, ingame, send }) {
                 className:
                     "absolute text-yellow-200 text-2xl font-bold left-1/2 bottom-1/4 transform -translate-x-2/4",
             },
-            "num goes here"
+            `${count}`
         ) : null,
 
         ce(

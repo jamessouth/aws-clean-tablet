@@ -550,12 +550,20 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		if len(game) > 2 && readyCount == len(game) {
 			readyBool = true
 		}
-		// type st struct {
-		// 	Key string `json:"key"`
-		// }
+		type lambdaInput struct {
+			Game   map[string]Player `json:"game"`
+			ApiId  string            `json:"apiid"`
+			Stage  string            `json:"stage"`
+			Region string            `json:"region"`
+		}
 
 		if readyBool {
-			mj, err := json.Marshal(game)
+			mj, err := json.Marshal(lambdaInput{
+				Game:   game,
+				ApiId:  req.RequestContext.APIID,
+				Stage:  req.RequestContext.Stage,
+				Region: reg,
+			})
 			if err != nil {
 				fmt.Println("game item marshal err", err)
 			}
@@ -571,7 +579,17 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 			li, err := svc2.Invoke(ctx, &ii)
 
-			fmt.Println("liii", li)
+			fmt.Printf("\n%s, %+v\n", "liii", *li)
+			// fmt.Println(*li.FunctionError, li.Payload)
+			q := *li
+			z := q.FunctionError
+			x := q.Payload
+			// fmt.Println(*z, x)
+
+			if z != nil {
+				fmt.Println(*z, x)
+			}
+
 			if err != nil {
 
 				var intServErr *types.InternalServerError

@@ -8,6 +8,7 @@ const ce = React.createElement;
 export default function Lobby({history: {action}}) {
     const {
         connectedWS,
+        count,
         games,
         ingame,
         send,
@@ -61,6 +62,7 @@ export default function Lobby({history: {action}}) {
                 GamesList,
                 {
                     action,
+                    count,
                     games,
                     ingame,
                     send: val => send(val),
