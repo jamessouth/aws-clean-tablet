@@ -36,7 +36,7 @@ export default function GamesList({ action, count, games, ingame, send }) {
                 Game,
                 {
                     action,
-                    count,
+                    // count,
                     key: game.no,
                     game,
                     ingame,

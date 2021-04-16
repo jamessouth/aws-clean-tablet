@@ -100,35 +100,29 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			panic(fmt.Sprintf("failed to marshal Record, %v", err))
 		}
 
-		// att1, err := attributevalue.Marshal(map[string]Player{
-		// 	id: {
-		// 		Name:   name,
-		// 		ConnID: req.RequestContext.ConnectionID,
-		// 		Ready:  false,
-		// 	},
-		// })
-		// if err != nil {
-		// 	panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
-		// }
+		att1, err := attributevalue.Marshal(true)
+		if err != nil {
+			panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
+		}
 
 		_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 
 			// ----------------------------------------------------
-			Key:       gameItemKey,
-			TableName: aws.String(tableName),
-			// ConditionExpression: aws.String("(attribute_exists(#PL) AND size (#PL) < :maxsize) OR attribute_not_exists(#PL)"),
+			Key:                 gameItemKey,
+			TableName:           aws.String(tableName),
+			ConditionExpression: aws.String("attribute_not_exists(#ST)"),
 			ExpressionAttributeNames: map[string]string{
 				// "#PL": "players",
 				// "#ID": id,
-				"#RD": "ready",
+				"#ST": "starting",
 			},
 			ExpressionAttributeValues: map[string]types.AttributeValue{
-				// ":r": att4,
+				":s": att1,
 				// ":maxsize": att2,
 				// ":player": att3,
 			},
 
-			UpdateExpression: aws.String("SET #RD = :r"),
+			UpdateExpression: aws.String("SET #ST = :s"),
 			// ReturnValues:     types.ReturnValueAllNew,
 		})
 		// fmt.Println("op", op)

@@ -4,44 +4,44 @@ import { Switch, Route, Redirect, Link, useLocation } from "react-router-dom";
 const ce = React.createElement;
 const chk = String.fromCharCode(10003);
 
-export default function Game({ count, game, ingame, send }) {
+export default function Game({ game, ingame, send }) {
     const gameReady = game.ready;
     // const [connectedWS, setConnectedWS] = useState(false);
     const [ready, setReady] = useState(true);
-    // const [count, setCount] = useState(5);
+    const [count, setCount] = useState(5);
     // const [startedNewGame, setStartedNewGame] = useState(false);
     // const [token, setToken] = useState("");
     // const [startGame, setStartGame] = useState(false);
 
     console.log('gamesss: ');
 
-    // useEffect(() => {
-    //     let id;
-    //     if (gameReady) {
-    //         id = setInterval(() => {
-    //             setCount((c) => c - 1);
-    //         }, 1000);
-    //     }
+    useEffect(() => {
+        let id;
+        if (gameReady && game.no === ingame) {
+            id = setInterval(() => {
+                setCount((c) => c - 1);
+            }, 1000);
+        }
 
-    //     return () => {
-    //         setCount(5);
-    //         clearInterval(id);
-    //     };
-    // }, [gameReady]);
+        return () => {
+            setCount(5);
+            clearInterval(id);
+        };
+    }, [gameReady, game.no, ingame]);
 
-    // useEffect(() => {
-    //     console.log("cntfffff: ", count);
-    //     if (ingame === game.no && count === 0) {
+    useEffect(() => {
+        console.log("cntfffff: ", count);
+        if (ingame === game.no && count === 0) {
             
-    //         send({
-    //             action: "play",
-    //             game: `${game.no}`,
-    //             type: "start",
-    //         });
+            send({
+                action: "play",
+                game: `${game.no}`,
+                type: "start",
+            });
             
-    //         setStartGame(true);
-    //     }
-    // }, [count]);
+            setStartGame(true);
+        }
+    }, [count, game.no, ingame]);
 
     return ce(
         "li",

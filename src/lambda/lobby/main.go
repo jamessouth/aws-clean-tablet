@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	lamb "github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/smithy-go"
 )
 
@@ -68,7 +67,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	// .WithEndpoint("http://192.168.4.27:8000")
 
 	svc := dynamodb.NewFromConfig(cfg)
-	svc2 := lamb.NewFromConfig(cfg)
+	// svc2 := lamb.NewFromConfig(cfg)
 
 	auth := req.RequestContext.Authorizer.(map[string]interface{})
 
@@ -550,64 +549,12 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		if len(game) > 2 && readyCount == len(game) {
 			readyBool = true
 		}
-		type lambdaInput struct {
-			Game   map[string]Player `json:"game"`
-			ApiId  string            `json:"apiid"`
-			Stage  string            `json:"stage"`
-			Region string            `json:"region"`
-		}
-
-		if readyBool {
-			mj, err := json.Marshal(lambdaInput{
-				Game:   game,
-				ApiId:  req.RequestContext.APIID,
-				Stage:  req.RequestContext.Stage,
-				Region: reg,
-			})
-			if err != nil {
-				fmt.Println("game item marshal err", err)
-			}
-
-			ii := lamb.InvokeInput{
-				FunctionName: aws.String("ct-playJS"),
-				// ClientContext:  new(string),
-				// InvocationType: "",
-				// LogType:        "",
-				Payload: mj,
-				// Qualifier:      new(string),
-			}
-
-			li, err := svc2.Invoke(ctx, &ii)
-
-			fmt.Printf("\n%s, %+v\n", "liii", *li)
-			// fmt.Println(*li.FunctionError, li.Payload)
-			q := *li
-			z := q.FunctionError
-			x := q.Payload
-			// fmt.Println(*z, x)
-
-			if z != nil {
-				fmt.Println(*z, x)
-			}
-
-			if err != nil {
-
-				var intServErr *types.InternalServerError
-				if errors.As(err, &intServErr) {
-					fmt.Printf("get item error, %v",
-						intServErr.ErrorMessage())
-				}
-
-				// To get any API error
-				var apiErr smithy.APIError
-				if errors.As(err, &apiErr) {
-					fmt.Printf("db error, Code: %v, Message: %v",
-						apiErr.ErrorCode(), apiErr.ErrorMessage())
-				}
-
-			}
-
-		}
+		// type lambdaInput struct {
+		// 	Game   map[string]Player `json:"game"`
+		// 	ApiId  string            `json:"apiid"`
+		// 	Stage  string            `json:"stage"`
+		// 	Region string            `json:"region"`
+		// }
 
 		att3, err := attributevalue.Marshal(readyBool)
 		if err != nil {
@@ -651,6 +598,58 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			}
 
 		}
+
+		// if readyBool {
+		// 	mj, err := json.Marshal(lambdaInput{
+		// 		Game:   game,
+		// 		ApiId:  req.RequestContext.APIID,
+		// 		Stage:  req.RequestContext.Stage,
+		// 		Region: reg,
+		// 	})
+		// 	if err != nil {
+		// 		fmt.Println("game item marshal err", err)
+		// 	}
+
+		// 	ii := lamb.InvokeInput{
+		// 		FunctionName: aws.String("ct-playJS"),
+		// 		// ClientContext:  new(string),
+		// 		// InvocationType: "",
+		// 		// LogType:        "",
+		// 		Payload: mj,
+		// 		// Qualifier:      new(string),
+		// 	}
+
+		// 	li, err := svc2.Invoke(ctx, &ii)
+
+		// 	fmt.Printf("\n%s, %+v\n", "liii", *li)
+		// 	// fmt.Println(*li.FunctionError, li.Payload)
+		// 	q := *li
+		// 	z := q.FunctionError
+		// 	x := q.Payload
+		// 	// fmt.Println(*z, x)
+
+		// 	if z != nil {
+		// 		fmt.Println(*z, x)
+		// 	}
+
+		// 	if err != nil {
+
+		// 		var intServErr *types.InternalServerError
+		// 		if errors.As(err, &intServErr) {
+		// 			fmt.Printf("get item error, %v",
+		// 				intServErr.ErrorMessage())
+		// 		}
+
+		// 		// To get any API error
+		// 		var apiErr smithy.APIError
+		// 		if errors.As(err, &apiErr) {
+		// 			fmt.Printf("db error, Code: %v, Message: %v",
+		// 				apiErr.ErrorCode(), apiErr.ErrorMessage())
+		// 		}
+
+		// 	}
+
+		// }
 
 	} else {
 		fmt.Println("other lobby")

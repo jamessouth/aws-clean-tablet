@@ -14,25 +14,17 @@ exports.handler = (req, ctx, cb) => {
 
     try {
         (async () => {
-            let si;
-            let ct = 3;
-            si = setInterval(() => {
-                
-                for (const i in req.game) {
-                    await apigw
-                        .postToConnection({
-                            ConnectionId: req.game[i].ConnID,
-                            Data: JSON.stringify({
-                                type: "cd",
-                                count: ct,
-                            }),
-                        })
-                        .promise();
-                }
-                ct--;
-            }, 1000);
-            if (ct === 0) {
-                clearInterval(si);
+            for (const i in req.game) {
+                console.log('pc: ', );
+                await apigw
+                    .postToConnection({
+                        ConnectionId: req.game[i].ConnID,
+                        Data: JSON.stringify({
+                            type: "cd",
+                            count: 5,
+                        }),
+                    })
+                    .promise();
             }
         })();
     } catch (err) {

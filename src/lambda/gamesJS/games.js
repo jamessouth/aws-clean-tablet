@@ -12,7 +12,7 @@ exports.handler = (req, ctx, cb) => {
     req.Records.forEach(async (rec) => {
         const tableName = rec.eventSourceARN.split("/", 2)[1];
         const item = rec.dynamodb.NewImage;
-        // console.log('item: ', item);
+        console.log('item: ', item);
         const endpoint = `https://${apiid}.execute-api.${rec.awsRegion}.amazonaws.com/${stage}`;
 
         const apigw = new ApiGatewayManagementApi({
