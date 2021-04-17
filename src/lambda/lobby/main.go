@@ -293,7 +293,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			// ConditionExpression: aws.String("(attribute_exists(#PL) AND size (#PL) < :maxsize) OR attribute_not_exists(#PL)"),
 			ExpressionAttributeNames: map[string]string{
 				// "#PL": "players",
-				// "#ID": id,
+				"#ST": "starting",
 				"#RD": "ready",
 			},
 			ExpressionAttributeValues: map[string]types.AttributeValue{
@@ -302,7 +302,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 				// ":player": att3,
 			},
 
-			UpdateExpression: aws.String("SET #RD = :r"),
+			UpdateExpression: aws.String("SET #RD = :r, #ST = :r"),
 			// ReturnValues:     types.ReturnValueAllNew,
 		})
 		// fmt.Println("op", op)

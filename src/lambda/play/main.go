@@ -110,7 +110,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			// ----------------------------------------------------
 			Key:                 gameItemKey,
 			TableName:           aws.String(tableName),
-			ConditionExpression: aws.String("attribute_not_exists(#ST)"),
+			ConditionExpression: aws.String("#ST <> :s"),
 			ExpressionAttributeNames: map[string]string{
 				// "#PL": "players",
 				// "#ID": id,
@@ -137,7 +137,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			// To get any API error
 			var apiErr smithy.APIError
 			if errors.As(err, &apiErr) {
-				fmt.Printf("db error, Code: %v, Message: %v",
+				fmt.Printf("play rt db error, Code: %v, Message: %v",
 					apiErr.ErrorCode(), apiErr.ErrorMessage())
 			}
 

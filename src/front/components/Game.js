@@ -9,7 +9,7 @@ export default function Game({ game, ingame, send }) {
     // const [connectedWS, setConnectedWS] = useState(false);
     const [ready, setReady] = useState(true);
     const [count, setCount] = useState(5);
-    // const [startedNewGame, setStartedNewGame] = useState(false);
+    const [startedNewGame, setStartedNewGame] = useState(false);
     // const [token, setToken] = useState("");
     // const [startGame, setStartGame] = useState(false);
 
@@ -50,7 +50,7 @@ export default function Game({ game, ingame, send }) {
                 "mb-8 w-10/12 mx-auto grid grid-cols-2 grid-rows-gamebox relative pb-8",
         },
 
-        // startGame ? ce(Redirect, { to: `game/${game.no}`, push: true }) : null,
+        startGame ? ce(Redirect, { to: `game/${game.no}`, push: true }) : null,
 
         ce(
             "p",

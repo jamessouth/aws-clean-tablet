@@ -36,10 +36,17 @@ exports.handler = (req, ctx, cb) => {
                 const gamesParams = {
                     TableName: tableName,
                     KeyConditionExpression: "pk = :gm",
+                    FilterExpression: "#ST = :st",
                     ExpressionAttributeValues: {
                         ":gm": {
                             S: "GAME",
                         },
+                        ":st": {
+                            BOOL: false,
+                        },
+                    },
+                    ExpressionAttributeNames: {
+                        "#ST": "starting",
                     },
                 };
                 try {
@@ -72,10 +79,17 @@ exports.handler = (req, ctx, cb) => {
                 const gamesParams = {
                     TableName: tableName,
                     KeyConditionExpression: "pk = :gm",
+                    FilterExpression: "#ST = :st",
                     ExpressionAttributeValues: {
                         ":gm": {
                             S: "GAME",
                         },
+                        ":st": {
+                            BOOL: false,
+                        },
+                    },
+                    ExpressionAttributeNames: {
+                        "#ST": "starting",
                     },
                 };
                 try {
@@ -154,10 +168,17 @@ exports.handler = (req, ctx, cb) => {
                 const gamesParams = {
                     TableName: tableName,
                     KeyConditionExpression: "pk = :gm",
+                    FilterExpression: "#ST = :st",
                     ExpressionAttributeValues: {
                         ":gm": {
                             S: "GAME",
                         },
+                        ":st": {
+                            BOOL: false,
+                        },
+                    },
+                    ExpressionAttributeNames: {
+                        "#ST": "starting",
                     },
                 };
                 try {
