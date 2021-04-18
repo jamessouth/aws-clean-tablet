@@ -9,9 +9,9 @@ export default function Game({ game, ingame, send }) {
     // const [connectedWS, setConnectedWS] = useState(false);
     const [ready, setReady] = useState(true);
     const [count, setCount] = useState(5);
-    const [startedNewGame, setStartedNewGame] = useState(false);
+    // const [startedNewGame, setStartedNewGame] = useState(false);
     // const [token, setToken] = useState("");
-    // const [startGame, setStartGame] = useState(false);
+    const [startGame, setStartGame] = useState(false);
 
     console.log('gamesss: ');
 

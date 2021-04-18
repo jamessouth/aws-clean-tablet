@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	lamb "github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/smithy-go"
 )
 
@@ -56,6 +57,13 @@ type ConnItemAttrs struct {
 	Zero *int   `dynamodbav:":zero,omitempty"`
 }
 
+type lambdaInput struct {
+	Game   map[string]Player `json:"game"`
+	ApiId  string            `json:"apiid"`
+	Stage  string            `json:"stage"`
+	Region string            `json:"region"`
+}
+
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
 	fmt.Println("plaaaaaaay", req.Body)
@@ -77,6 +85,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	// .WithEndpoint("http://192.168.4.27:8000")
 
 	svc := dynamodb.NewFromConfig(cfg)
+	svc2 := lamb.NewFromConfig(cfg)
 
 	// auth := req.RequestContext.Authorizer.(map[string]interface{})
 
@@ -141,282 +150,59 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 					apiErr.ErrorCode(), apiErr.ErrorMessage())
 			}
 
+		} else {
+
+			mj, err := json.Marshal(lambdaInput{
+				// Game:   game,
+				// ApiId:  req.RequestContext.APIID,
+				// Stage:  req.RequestContext.Stage,
+				Region: reg + "junkjunk",
+			})
+			if err != nil {
+				fmt.Println("game item marshal err", err)
+			}
+
+			ii := lamb.InvokeInput{
+				FunctionName: aws.String("ct-playJS"),
+				// ClientContext:  new(string),
+				// InvocationType: "",
+				// LogType:        "",
+				Payload: mj,
+				// Qualifier:      new(string),
+			}
+
+			li, err := svc2.Invoke(ctx, &ii)
+
+			fmt.Printf("\n%s, %+v\n", "liii", *li)
+			// fmt.Println(*li.FunctionError, li.Payload)
+			q := *li
+			z := q.FunctionError
+			x := q.Payload
+			// fmt.Println(*z, x)
+
+			if z != nil {
+				fmt.Println(*z, x)
+			}
+
+			if err != nil {
+
+				var intServErr *types.InternalServerError
+				if errors.As(err, &intServErr) {
+					fmt.Printf("get item error, %v",
+						intServErr.ErrorMessage())
+				}
+
+				// To get any API error
+				var apiErr smithy.APIError
+				if errors.As(err, &apiErr) {
+					fmt.Printf("db error, Code: %v, Message: %v",
+						apiErr.ErrorCode(), apiErr.ErrorMessage())
+				}
+
+			}
 		}
 
 	}
-	// else if body.Type == "leave" {
-	// 	connItemKey, err := attributevalue.MarshalMap(Key{
-	// 		Pk: "CONN#" + id,
-	// 		Sk: name,
-	// 	})
-	// 	if err != nil {
-	// 		panic(fmt.Sprintf("failed to marshal Record 3, %v", err))
-	// 	}
-
-	// 	// gameAttrs, err := attributevalue.MarshalMap(GameItemAttrs{
-	// 	// 	Players: []string{auth["username"].(string) + "#" + req.RequestContext.ConnectionID},
-	// 	// 	// MaxSize: maxPlayersPerGame,
-	// 	// })
-	// 	// if err != nil {
-	// 	// 	panic(fmt.Sprintf("failed to marshal Record 2, %v", err))
-	// 	// }
-
-	// 	connAttrs, err := attributevalue.MarshalMap(ConnItemAttrs{
-	// 		Game: "",
-	// 		// Zero: 0,
-	// 	})
-	// 	if err != nil {
-	// 		panic(fmt.Sprintf("failed to marshal Record 4, %v", err))
-	// 	}
-
-	// 	gameItemKey, err := attributevalue.MarshalMap(Key{
-	// 		Pk: "GAME",
-	// 		Sk: gameno,
-	// 	})
-	// 	if err != nil {
-	// 		panic(fmt.Sprintf("failed to marshal Record, %v", err))
-	// 	}
-
-	// 	ui2, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-
-	// 		// ----------------------------------------------------
-	// 		Key:       gameItemKey,
-	// 		TableName: aws.String(tableName),
-	// 		// ConditionExpression: aws.String("(attribute_exists(#PL) AND size (#PL) < :maxsize) OR attribute_not_exists(#PL)"),
-	// 		ExpressionAttributeNames: map[string]string{
-	// 			"#PL": "players",
-	// 			"#ID": id,
-	// 		},
-
-	// 		UpdateExpression: aws.String("REMOVE #PL.#ID"),
-	// 		ReturnValues:     types.ReturnValueAllNew,
-	// 	})
-
-	// 	if err != nil {
-
-	// 		var intServErr *types.InternalServerError
-	// 		if errors.As(err, &intServErr) {
-	// 			fmt.Printf("put item error 1122, %v",
-	// 				intServErr.ErrorMessage())
-	// 		}
-
-	// 		// To get any API error
-	// 		var apiErr smithy.APIError
-	// 		if errors.As(err, &apiErr) {
-	// 			fmt.Printf("db error 1112222, Code: %v, Message: %v",
-	// 				apiErr.ErrorCode(), apiErr.ErrorMessage())
-	// 		}
-
-	// 	}
-	// 	_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-
-	// 		// ----------------------------------------------------
-	// 		Key:       connItemKey,
-	// 		TableName: aws.String(tableName),
-	// 		ExpressionAttributeNames: map[string]string{
-	// 			"#IG": "game",
-	// 		},
-	// 		ExpressionAttributeValues: connAttrs,
-
-	// 		UpdateExpression: aws.String("SET #IG = :g"),
-	// 	})
-
-	// 	if err != nil {
-
-	// 		var intServErr *types.InternalServerError
-	// 		if errors.As(err, &intServErr) {
-	// 			fmt.Printf("put item error 1122, %v",
-	// 				intServErr.ErrorMessage())
-	// 		}
-
-	// 		// To get any API error
-	// 		var apiErr smithy.APIError
-	// 		if errors.As(err, &apiErr) {
-	// 			fmt.Printf("db error 1112222, Code: %v, Message: %v",
-	// 				apiErr.ErrorCode(), apiErr.ErrorMessage())
-	// 		}
-
-	// 	}
-
-	// 	var game map[string]Player
-	// 	err = attributevalue.Unmarshal(ui2.Attributes["players"], &game)
-	// 	if err != nil {
-	// 		fmt.Println("del item unmarshal err", err)
-	// 	}
-	// 	readyCount := 0
-	// 	readyBool := false
-	// 	for k, v := range game {
-
-	// 		fmt.Printf("%s, %v, %+v", "ui", k, v)
-
-	// 		if v.Ready {
-	// 			readyCount++
-	// 		}
-	// 	}
-	// 	if len(game) > 2 && readyCount == len(game) {
-	// 		readyBool = true
-	// 	}
-
-	// 	att3, err := attributevalue.Marshal(readyBool)
-	// 	if err != nil {
-	// 		panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
-	// 	}
-
-	// 	_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-
-	// 		// ----------------------------------------------------
-	// 		Key:       gameItemKey,
-	// 		TableName: aws.String(tableName),
-	// 		// ConditionExpression: aws.String("(attribute_exists(#PL) AND size (#PL) < :maxsize) OR attribute_not_exists(#PL)"),
-	// 		ExpressionAttributeNames: map[string]string{
-	// 			// "#PL": "players",
-	// 			// "#ID": id,
-	// 			"#RD": "ready",
-	// 		},
-	// 		ExpressionAttributeValues: map[string]types.AttributeValue{
-	// 			":r": att3,
-	// 			// ":maxsize": att2,
-	// 			// ":player": att3,
-	// 		},
-
-	// 		UpdateExpression: aws.String("SET #RD = :r"),
-	// 		// ReturnValues:     types.ReturnValueAllNew,
-	// 	})
-	// 	// fmt.Println("op", op)
-	// 	if err != nil {
-
-	// 		var intServErr *types.InternalServerError
-	// 		if errors.As(err, &intServErr) {
-	// 			fmt.Printf("get item error, %v",
-	// 				intServErr.ErrorMessage())
-	// 		}
-
-	// 		// To get any API error
-	// 		var apiErr smithy.APIError
-	// 		if errors.As(err, &apiErr) {
-	// 			fmt.Printf("db error, Code: %v, Message: %v",
-	// 				apiErr.ErrorCode(), apiErr.ErrorMessage())
-	// 		}
-
-	// 	}
-
-	// } else if body.Type == "ready" {
-	// 	gameItemKey, err := attributevalue.MarshalMap(Key{
-	// 		Pk: "GAME",
-	// 		Sk: gameno,
-	// 	})
-	// 	if err != nil {
-	// 		panic(fmt.Sprintf("failed to marshal Record, %v", err))
-	// 	}
-
-	// 	att2, err := attributevalue.Marshal(body.Value)
-	// 	if err != nil {
-	// 		panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
-	// 	}
-
-	// 	ui, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-
-	// 		// ----------------------------------------------------
-	// 		Key:       gameItemKey,
-	// 		TableName: aws.String(tableName),
-	// 		// ConditionExpression: aws.String("(attribute_exists(#PL) AND size (#PL) < :maxsize) OR attribute_not_exists(#PL)"),
-	// 		ExpressionAttributeNames: map[string]string{
-	// 			"#PL": "players",
-	// 			"#ID": id,
-	// 			"#RD": "ready",
-	// 		},
-	// 		ExpressionAttributeValues: map[string]types.AttributeValue{
-	// 			":r": att2,
-	// 			// ":maxsize": att2,
-	// 			// ":player": att3,
-	// 		},
-
-	// 		UpdateExpression: aws.String("SET #PL.#ID.#RD = :r"),
-	// 		ReturnValues:     types.ReturnValueAllNew,
-	// 	})
-	// 	// fmt.Println("op", op)
-	// 	if err != nil {
-
-	// 		var intServErr *types.InternalServerError
-	// 		if errors.As(err, &intServErr) {
-	// 			fmt.Printf("get item error, %v",
-	// 				intServErr.ErrorMessage())
-	// 		}
-
-	// 		// To get any API error
-	// 		var apiErr smithy.APIError
-	// 		if errors.As(err, &apiErr) {
-	// 			fmt.Printf("db error, Code: %v, Message: %v",
-	// 				apiErr.ErrorCode(), apiErr.ErrorMessage())
-	// 		}
-
-	// 	}
-
-	// 	var game map[string]Player
-	// 	err = attributevalue.Unmarshal(ui.Attributes["players"], &game)
-	// 	if err != nil {
-	// 		fmt.Println("del item unmarshal err", err)
-	// 	}
-	// 	readyCount := 0
-	// 	readyBool := false
-	// 	for k, v := range game {
-
-	// 		fmt.Printf("%s, %v, %+v", "ui", k, v)
-
-	// 		if v.Ready {
-	// 			readyCount++
-	// 		}
-	// 	}
-	// 	if len(game) > 2 && readyCount == len(game) {
-	// 		readyBool = true
-	// 	}
-
-	// 	att3, err := attributevalue.Marshal(readyBool)
-	// 	if err != nil {
-	// 		panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
-	// 	}
-
-	// 	_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-
-	// 		// ----------------------------------------------------
-	// 		Key:       gameItemKey,
-	// 		TableName: aws.String(tableName),
-	// 		// ConditionExpression: aws.String("(attribute_exists(#PL) AND size (#PL) < :maxsize) OR attribute_not_exists(#PL)"),
-	// 		ExpressionAttributeNames: map[string]string{
-	// 			// "#PL": "players",
-	// 			// "#ID": id,
-	// 			"#RD": "ready",
-	// 		},
-	// 		ExpressionAttributeValues: map[string]types.AttributeValue{
-	// 			":r": att3,
-	// 			// ":maxsize": att2,
-	// 			// ":player": att3,
-	// 		},
-
-	// 		UpdateExpression: aws.String("SET #RD = :r"),
-	// 		// ReturnValues:     types.ReturnValueAllNew,
-	// 	})
-	// 	// fmt.Println("op", op)
-	// 	if err != nil {
-
-	// 		var intServErr *types.InternalServerError
-	// 		if errors.As(err, &intServErr) {
-	// 			fmt.Printf("get item error, %v",
-	// 				intServErr.ErrorMessage())
-	// 		}
-
-	// 		// To get any API error
-	// 		var apiErr smithy.APIError
-	// 		if errors.As(err, &apiErr) {
-	// 			fmt.Printf("db error, Code: %v, Message: %v",
-	// 				apiErr.ErrorCode(), apiErr.ErrorMessage())
-	// 		}
-
-	// 	}
-
-	// } else {
-	// 	fmt.Println("other lobby")
-	// }
 
 	return events.APIGatewayProxyResponse{
 		StatusCode:        http.StatusOK,
