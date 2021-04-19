@@ -156,7 +156,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 				// Game:   game,
 				// ApiId:  req.RequestContext.APIID,
 				// Stage:  req.RequestContext.Stage,
-				Region: reg + "junkjunk",
+				Region: reg,
 			})
 			if err != nil {
 				fmt.Println("game item marshal err", err)
