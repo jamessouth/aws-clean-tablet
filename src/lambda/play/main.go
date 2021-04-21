@@ -44,6 +44,7 @@ type Player struct {
 	Name   string `dynamodbav:"name"`
 	ConnID string `dynamodbav:"connid"`
 	Ready  bool   `dynamodbav:"ready"`
+	Color  string `dynamodbav:"color"`
 }
 
 type body struct {

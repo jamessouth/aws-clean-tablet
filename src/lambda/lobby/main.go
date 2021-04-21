@@ -33,6 +33,7 @@ type Player struct {
 	Name   string `dynamodbav:"name"`
 	ConnID string `dynamodbav:"connid"`
 	Ready  bool   `dynamodbav:"ready"`
+	Color  string `dynamodbav:"color"`
 }
 
 type body struct {
@@ -144,6 +145,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 				Name:   name,
 				ConnID: req.RequestContext.ConnectionID,
 				Ready:  false,
+				Color:  "",
 			},
 		})
 		if err != nil {
@@ -157,6 +159,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			Name:   name,
 			ConnID: req.RequestContext.ConnectionID,
 			Ready:  false,
+			Color:  "",
 		})
 		if err != nil {
 			panic(fmt.Sprintf("failed to marshal Record 22, %v", err))

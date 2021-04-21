@@ -29,6 +29,7 @@ type Player struct {
 	Name   string `dynamodbav:"name"`
 	ConnID string `dynamodbav:"connid"`
 	Ready  bool   `dynamodbav:"ready"`
+	Color  string `dynamodbav:"color"`
 }
 
 // GameItemAttrs holds values to be put in db
