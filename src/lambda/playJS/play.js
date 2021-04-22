@@ -5,7 +5,23 @@ const SF = require("aws-sdk/clients/stepfunctions");
 
 const smarn = process.env.SMARN;
 
+
+const colors = [
+    "#dc2626",
+    "#0c4a6e",
+    "#16a34a",
+    "#7c2d12",
+    "#c026d3",
+    "#365314",
+    "#0891b2",
+    "#581c87",
+];
+
+
 // const endpoint = `https://${req.apiid}.execute-api.${req.region}.amazonaws.com/${req.stage}`;
+
+
+
 exports.handler = (req, ctx, cb) => {
     console.log("njnjnjnj: ", req);
 
@@ -14,13 +30,18 @@ exports.handler = (req, ctx, cb) => {
         region: req.region,
     });
 
+    const sfInput = Object.keys(req.game.players).map((p, i) => ({id:p, color:colors[i]}));
+
+    console.log('sfip: ', sfInput);
+
     try {
         (async () => {
             const res = await sf
                 .startSyncExecution({
                     stateMachineArn: smarn,
                     input: JSON.stringify({
-                        arr: ["1", "2", "3", "4", "5", "6", "7", "8"],
+                        gameno: req.game.sk,
+                        arr: sfInput,
                     }),
                     name: "sfex1",
                 })

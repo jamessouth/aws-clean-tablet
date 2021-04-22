@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+
 	lamb "github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/smithy-go"
 )
@@ -40,11 +41,11 @@ type Key struct {
 }
 
 // Player holds values to be put in db
-type Player struct {
-	Name   string `dynamodbav:"name"`
-	ConnID string `dynamodbav:"connid"`
-	Ready  bool   `dynamodbav:"ready"`
-	Color  string `dynamodbav:"color"`
+type player struct {
+	Name   string `json:"name"`
+	ConnID string `json:"connid"`
+	Ready  bool   `json:"ready"`
+	Color  string `json:"color"`
 }
 
 type body struct {
@@ -58,11 +59,17 @@ type ConnItemAttrs struct {
 	Zero *int   `dynamodbav:":zero,omitempty"`
 }
 
+type game struct {
+	Pk       string            `json:"pk"`
+	Sk       string            `json:"sk"`
+	Starting bool              `json:"starting"`
+	Ready    bool              `json:"ready"`
+	Players  map[string]player `json:"players"`
+}
+
 type lambdaInput struct {
-	Game   map[string]Player `json:"game"`
-	ApiId  string            `json:"apiid"`
-	Stage  string            `json:"stage"`
-	Region string            `json:"region"`
+	Game   game   `json:"game"`
+	Region string `json:"region"`
 }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -115,7 +122,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
 		}
 
-		_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		ui, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 
 			// ----------------------------------------------------
 			Key:                 gameItemKey,
@@ -133,7 +140,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			},
 
 			UpdateExpression: aws.String("SET #ST = :s"),
-			// ReturnValues:     types.ReturnValueAllNew,
+			ReturnValues:     types.ReturnValueAllNew,
 		})
 		// fmt.Println("op", op)
 		if err != nil {
@@ -153,8 +160,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		} else {
 
+			var game game
+			err = attributevalue.UnmarshalMap(ui.Attributes, &game)
+			if err != nil {
+				fmt.Println("play update item unmarshal err", err)
+			}
+
 			mj, err := json.Marshal(lambdaInput{
-				// Game:   game,
+				Game: game,
 				// ApiId:  req.RequestContext.APIID,
 				// Stage:  req.RequestContext.Stage,
 				Region: reg,
@@ -174,15 +187,15 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 			li, err := svc2.Invoke(ctx, &ii)
 
-			fmt.Printf("\n%s, %+v\n", "liii", *li)
-			// fmt.Println(*li.FunctionError, li.Payload)
 			q := *li
+			fmt.Printf("\n%s, %+v\n", "liii", q)
+			// fmt.Println(*li.FunctionError, li.Payload)
 			z := q.FunctionError
-			x := q.Payload
-			// fmt.Println(*z, x)
+			x := string(q.Payload)
+			fmt.Println("inv pyld", x)
 
 			if z != nil {
-				fmt.Println(*z, x)
+				fmt.Println("inv err", *z, x)
 			}
 
 			if err != nil {
