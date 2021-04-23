@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useReducer } from "react";
+import { initialState, reducer } from '../reducers/appState';
 import { Auth } from "@aws-amplify/auth";
 
 let ws;
@@ -8,8 +9,14 @@ export default function useWSState() {
     const [wsError, setWSError] = useState();
     const [token, setToken] = useState("");
     const [count, setCount] = useState(null);
-    const [games, setGames] = useState(null);
+    // const [games, setGames] = useState(null);
     const [ingame, setInGame] = useState(false);
+    const [
+        {
+          games,
+        },
+        dispatch
+      ] = useReducer(reducer, initialState);
 
     console.log('wsstate: ', connectedWS, wsError, !!token && token[0], !!games && games[0], ingame);
     
@@ -70,7 +77,7 @@ export default function useWSState() {
 
                     switch (type) {
                         case "games":
-                            setGames(games);
+                            dispatch({ type: "games", games });
                             break;
                         case "user":
                             setInGame(ingame);
