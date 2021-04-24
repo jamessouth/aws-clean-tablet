@@ -18,7 +18,7 @@ export default function useWSState() {
         dispatch
       ] = useReducer(reducer, initialState);
 
-    console.log('wsstate: ', connectedWS, wsError, !!token && token[0], !!games && games[0], ingame);
+    console.log('wsstate: ', connectedWS, wsError, !!token && token[0], !!games && games, ingame);
     
     useEffect(() => {
         console.log('usewsst111: ', );

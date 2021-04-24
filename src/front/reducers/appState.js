@@ -24,6 +24,7 @@ function reducer(
   //     playerName: name
   //   };
     case 'games': {
+      console.log('reducer: ', state.games, games);
       if (!!state.games) {
         return {
           ...state,

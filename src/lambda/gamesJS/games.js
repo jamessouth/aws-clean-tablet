@@ -76,29 +76,12 @@ exports.handler = (req, ctx, cb) => {
                     cb(Error(err));
                 }
             } else if (item.pk.S.startsWith("GAME")) {
-                const gamesParams = {
-                    TableName: tableName,
-                    KeyConditionExpression: "pk = :gm",
-                    FilterExpression: "#ST = :st",
-                    ExpressionAttributeValues: {
-                        ":gm": {
-                            S: "GAME",
-                        },
-                        ":st": {
-                            BOOL: false,
-                        },
-                    },
-                    ExpressionAttributeNames: {
-                        "#ST": "starting",
-                    },
-                };
-                try {
-                    gamesResults = await dyndb.query(gamesParams).promise();
-                } catch (err) {
-                    console.log("db error: ", err);
-                }
+                
+                
+               
+                
                 const payload = {
-                    games: gamesResults.Items.map(g => ({
+                    games: [item].map(g => ({
                         no: g.sk.S,
                         ready: g.ready && g.ready.BOOL || false,
                         players: g.players && g.players.M || {},
@@ -165,31 +148,15 @@ exports.handler = (req, ctx, cb) => {
                     cb(Error(err));
                 }
             } else if (item.pk.S.startsWith("GAME")) {
-                const gamesParams = {
-                    TableName: tableName,
-                    KeyConditionExpression: "pk = :gm",
-                    FilterExpression: "#ST = :st",
-                    ExpressionAttributeValues: {
-                        ":gm": {
-                            S: "GAME",
-                        },
-                        ":st": {
-                            BOOL: false,
-                        },
-                    },
-                    ExpressionAttributeNames: {
-                        "#ST": "starting",
-                    },
-                };
-                try {
-                    gamesResults = await dyndb.query(gamesParams).promise();
-                } catch (err) {
-                    console.log("db error: ", err);
-                }
+                
+                
+               
+                
                 const payload = {
-                    games: gamesResults.Items.map(g => ({
+                    games: [item].map(g => ({
                         no: g.sk.S,
                         ready: g.ready && g.ready.BOOL || false,
+                        starting: g.starting && g.starting.BOOL || false,
                         players: g.players && g.players.M || {},
                     })),
                     type: "games",
@@ -197,9 +164,24 @@ exports.handler = (req, ctx, cb) => {
     
                 // console.log("data: ", payload);
 
+                // anything after game marked ready
 
+                // if game starting filter out conns that are starting, game sent to conns not in that game for FE filtering
 
-                const connsParams = {
+                let connsParams;
+
+                connsParams = {//filter by game
+                    TableName: tableName,
+                    IndexName: "GSI1",
+                    KeyConditionExpression: "GSI1PK = :cn",
+                    ExpressionAttributeValues: {
+                        ":cn": {
+                            S: "CONN",
+                        },
+                    },
+                };
+
+                connsParams = {//filter out starting
                     TableName: tableName,
                     IndexName: "GSI1",
                     KeyConditionExpression: "GSI1PK = :cn",
