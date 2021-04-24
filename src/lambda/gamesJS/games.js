@@ -132,6 +132,7 @@ exports.handler = (req, ctx, cb) => {
 
                 const payload = {
                     ingame: item.game.S,
+                    leader: item.leader.BOOL,
                     type: "user",
                 };
     

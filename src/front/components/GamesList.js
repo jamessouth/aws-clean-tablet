@@ -4,7 +4,7 @@ import Game from "./Game";
 const ce = React.createElement;
 // const chk = String.fromCharCode(10003);
 
-export default function GamesList({ action, count, games, ingame, send }) {
+export default function GamesList({ action, leader, games, ingame, send }) {
     // const [connectedWS, setConnectedWS] = useState(false);
     // const [ready, setReady] = useState(true);
     // const [startedNewGame, setStartedNewGame] = useState(false);
@@ -36,7 +36,7 @@ export default function GamesList({ action, count, games, ingame, send }) {
                 Game,
                 {
                     action,
-                    // count,
+                    leader,
                     key: game.no,
                     game,
                     ingame,

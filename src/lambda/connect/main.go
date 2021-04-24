@@ -25,6 +25,7 @@ type ConnItem struct {
 	Pk     string `dynamodbav:"pk"`     //'CONN' + uuid
 	Sk     string `dynamodbav:"sk"`     //name
 	Game   string `dynamodbav:"game"`   //game no or blank
+	Leader bool   `dynamodbav:"leader"` //t/f
 	GSI1PK string `dynamodbav:"GSI1PK"` //'CONN'
 	GSI1SK string `dynamodbav:"GSI1SK"` //conn id
 }
@@ -78,6 +79,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		Pk:     "CONN#" + id,
 		Sk:     name,
 		Game:   "",
+		Leader: false,
 		GSI1PK: "CONN",
 		GSI1SK: req.RequestContext.ConnectionID,
 	})

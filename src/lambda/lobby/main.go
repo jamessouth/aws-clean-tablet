@@ -541,23 +541,63 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		}
 		readyCount := 0
 		readyBool := false
+		var leaderID, leaderName string
+
 		for k, v := range game {
 
 			fmt.Printf("%s, %v, %+v", "ui", k, v)
 
 			if v.Ready {
 				readyCount++
+				if readyCount == len(game) && len(game) > 2 {
+					readyBool = true
+					leaderID, leaderName = k, v.Name
+				}
 			}
 		}
-		if len(game) > 2 && readyCount == len(game) {
-			readyBool = true
+		connItemKey2, err := attributevalue.MarshalMap(Key{
+			Pk: "CONN#" + leaderID,
+			Sk: leaderName,
+		})
+		if err != nil {
+			panic(fmt.Sprintf("failed to marshal Record connitemkey2, %v", err))
 		}
-		// type lambdaInput struct {
-		// 	Game   map[string]Player `json:"game"`
-		// 	ApiId  string            `json:"apiid"`
-		// 	Stage  string            `json:"stage"`
-		// 	Region string            `json:"region"`
-		// }
+		att5, err := attributevalue.Marshal(true)
+		if err != nil {
+			panic(fmt.Sprintf("failed to marshal Record att5, %v", err))
+		}
+
+		_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+
+			// ----------------------------------------------------
+			Key:       connItemKey2,
+			TableName: aws.String(tableName),
+			ExpressionAttributeNames: map[string]string{
+				"#LE": "leader",
+			},
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":l": att5,
+			},
+
+			UpdateExpression: aws.String("SET #LE = :l"),
+		})
+
+		if err != nil {
+
+			var intServErr *types.InternalServerError
+			if errors.As(err, &intServErr) {
+				fmt.Printf("put item error 1122, %v",
+					intServErr.ErrorMessage())
+			}
+
+			// To get any API error
+			var apiErr smithy.APIError
+			if errors.As(err, &apiErr) {
+				fmt.Printf("db error 1112222, Code: %v, Message: %v",
+					apiErr.ErrorCode(), apiErr.ErrorMessage())
+			}
+
+		}
 
 		att3, err := attributevalue.Marshal(readyBool)
 		if err != nil {

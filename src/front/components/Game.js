@@ -4,7 +4,7 @@ import { Switch, Route, Redirect, Link, useLocation } from "react-router-dom";
 const ce = React.createElement;
 const chk = String.fromCharCode(10003);
 
-export default function Game({ game, ingame, send }) {
+export default function Game({ game, leader, ingame, send }) {
     const gameReady = game.ready;
     // const [connectedWS, setConnectedWS] = useState(false);
     const [ready, setReady] = useState(true);
@@ -13,7 +13,7 @@ export default function Game({ game, ingame, send }) {
     // const [token, setToken] = useState("");
     const [startGame, setStartGame] = useState(false);
 
-    console.log('gamesss: ');
+    console.log("gamesss: ");
 
     useEffect(() => {
         let id;
@@ -32,16 +32,16 @@ export default function Game({ game, ingame, send }) {
     useEffect(() => {
         console.log("cntfffff: ", count);
         if (ingame === game.no && count === 0) {
-            
-            send({
-                action: "play",
-                game: `${game.no}`,
-                type: "start",
-            });
-            
             setStartGame(true);
+            if (leader) {
+                send({
+                    action: "play",
+                    game: `${game.no}`,
+                    type: "start",
+                });
+            }
         }
-    }, [count, game.no, ingame]);
+    }, [count, game.no, ingame, leader]);
 
     return ce(
         "li",
@@ -87,21 +87,25 @@ export default function Game({ game, ingame, send }) {
             );
         }),
 
-        gameReady && ingame !== game.no ? ce(
-            "p",
-            {
-                className:
-                    "absolute text-yellow-200 text-2xl font-bold left-1/2 bottom-1/4 transform -translate-x-2/4",
-            },
-            "Starting..."
-        ) : gameReady && ingame === game.no ? ce(
-            "p",
-            {
-                className:
-                    "absolute text-yellow-200 text-2xl font-bold left-1/2 bottom-1/4 transform -translate-x-2/4",
-            },
-            `${count}`
-        ) : null,
+        gameReady && ingame !== game.no
+            ? ce(
+                  "p",
+                  {
+                      className:
+                          "absolute text-yellow-200 text-2xl font-bold left-1/2 bottom-1/4 transform -translate-x-2/4",
+                  },
+                  "Starting..."
+              )
+            : gameReady && ingame === game.no
+            ? ce(
+                  "p",
+                  {
+                      className:
+                          "absolute text-yellow-200 text-2xl font-bold left-1/2 bottom-1/4 transform -translate-x-2/4",
+                  },
+                  `${count}`
+              )
+            : null,
 
         ce(
             "button",
