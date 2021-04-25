@@ -36,7 +36,7 @@ export default function Game({ game, leader, ingame, send }) {
             if (leader) {
                 send({
                     action: "play",
-                    game: `${game.no}`,
+                    game,
                     type: "start",
                 });
             }

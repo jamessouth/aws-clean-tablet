@@ -30,7 +30,11 @@ exports.handler = (req, ctx, cb) => {
         region: req.region,
     });
 
-    const sfInput = Object.keys(req.game.players).map((p, i) => ({id:p, color:colors[i]}));
+    const sfInput = Object.keys(req.game.players).map((p, i) => ({
+        id: p,
+        color: colors[i],
+        name: req.game.players[p].M.name.S,
+    }));
 
     console.log('sfip: ', sfInput);
 

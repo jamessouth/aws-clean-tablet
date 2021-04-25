@@ -6,15 +6,14 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+
+	// "github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 
 	lamb "github.com/aws/aws-sdk-go-v2/service/lambda"
@@ -48,23 +47,23 @@ type player struct {
 	Color  string `json:"color"`
 }
 
-type body struct {
-	Game, Type string
-	Value      bool
-}
-
-// ConnItemAttrs holds vals for db
-type ConnItemAttrs struct {
-	Game string `dynamodbav:":g"`
-	Zero *int   `dynamodbav:":zero,omitempty"`
-}
-
 type game struct {
 	Pk       string            `json:"pk"`
 	Sk       string            `json:"sk"`
 	Starting bool              `json:"starting"`
 	Ready    bool              `json:"ready"`
 	Players  map[string]player `json:"players"`
+}
+
+type body struct {
+	Game game
+	Type string
+}
+
+// ConnItemAttrs holds vals for db
+type ConnItemAttrs struct {
+	Game string `dynamodbav:":g"`
+	Zero *int   `dynamodbav:":zero,omitempty"`
 }
 
 type lambdaInput struct {
@@ -85,14 +84,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		fmt.Println("cfg err")
 	}
 
-	tableName, ok := os.LookupEnv("tableName")
-	if !ok {
-		panic(fmt.Sprintf("%v", "can't find table name"))
-	}
+	// tableName, ok := os.LookupEnv("tableName")
+	// if !ok {
+	// 	panic(fmt.Sprintf("%v", "can't find table name"))
+	// }
 
 	// .WithEndpoint("http://192.168.4.27:8000")
 
-	svc := dynamodb.NewFromConfig(cfg)
+	// svc := dynamodb.NewFromConfig(cfg)
 	svc2 := lamb.NewFromConfig(cfg)
 
 	// auth := req.RequestContext.Authorizer.(map[string]interface{})
@@ -104,45 +103,100 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	err = json.Unmarshal([]byte(req.Body), &body)
 	if err != nil {
-		fmt.Println("unmarshal err")
+		fmt.Println("unmarshal body err")
 	}
 
 	if body.Type == "start" {
 
-		gameItemKey, err := attributevalue.MarshalMap(Key{
-			Pk: "GAME",
-			Sk: body.Game,
+		// gameItemKey, err := attributevalue.MarshalMap(Key{
+		// 	Pk: "GAME",
+		// 	Sk: body.Game,
+		// })
+		// if err != nil {
+		// 	panic(fmt.Sprintf("failed to marshal Record, %v", err))
+		// }
+
+		// att1, err := attributevalue.Marshal(true)
+		// if err != nil {
+		// 	panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
+		// }
+
+		// ui, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+
+		// 	// ----------------------------------------------------
+		// 	Key:                 gameItemKey,
+		// 	TableName:           aws.String(tableName),
+		// 	ConditionExpression: aws.String("#ST <> :s"),
+		// 	ExpressionAttributeNames: map[string]string{
+		// 		// "#PL": "players",
+		// 		// "#ID": id,
+		// 		"#ST": "starting",
+		// 	},
+		// 	ExpressionAttributeValues: map[string]types.AttributeValue{
+		// 		":s": att1,
+		// 		// ":maxsize": att2,
+		// 		// ":player": att3,
+		// 	},
+
+		// 	UpdateExpression: aws.String("SET #ST = :s"),
+		// 	ReturnValues:     types.ReturnValueAllNew,
+		// })
+		// // fmt.Println("op", op)
+		// if err != nil {
+
+		// 	var intServErr *types.InternalServerError
+		// 	if errors.As(err, &intServErr) {
+		// 		fmt.Printf("get item error, %v",
+		// 			intServErr.ErrorMessage())
+		// 	}
+
+		// 	// To get any API error
+		// 	var apiErr smithy.APIError
+		// 	if errors.As(err, &apiErr) {
+		// 		fmt.Printf("play rt db error, Code: %v, Message: %v",
+		// 			apiErr.ErrorCode(), apiErr.ErrorMessage())
+		// 	}
+
+		// } else {
+
+		// var game game
+		// err = attributevalue.UnmarshalMap(ui.Attributes, &game)
+		// if err != nil {
+		// 	fmt.Println("play update item unmarshal err", err)
+		// }
+
+		mj, err := json.Marshal(lambdaInput{
+			Game: body.Game,
+			// ApiId:  req.RequestContext.APIID,
+			// Stage:  req.RequestContext.Stage,
+			Region: reg,
 		})
 		if err != nil {
-			panic(fmt.Sprintf("failed to marshal Record, %v", err))
+			fmt.Println("game item marshal err", err)
 		}
 
-		att1, err := attributevalue.Marshal(true)
-		if err != nil {
-			panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
+		ii := lamb.InvokeInput{
+			FunctionName: aws.String("ct-playJS"),
+			// ClientContext:  new(string),
+			// InvocationType: "",
+			// LogType:        "",
+			Payload: mj,
+			// Qualifier:      new(string),
 		}
 
-		ui, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		li, err := svc2.Invoke(ctx, &ii)
 
-			// ----------------------------------------------------
-			Key:                 gameItemKey,
-			TableName:           aws.String(tableName),
-			ConditionExpression: aws.String("#ST <> :s"),
-			ExpressionAttributeNames: map[string]string{
-				// "#PL": "players",
-				// "#ID": id,
-				"#ST": "starting",
-			},
-			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":s": att1,
-				// ":maxsize": att2,
-				// ":player": att3,
-			},
+		q := *li
+		fmt.Printf("\n%s, %+v\n", "liii", q)
+		// fmt.Println(*li.FunctionError, li.Payload)
+		z := q.FunctionError
+		x := string(q.Payload)
+		fmt.Println("inv pyld", x)
 
-			UpdateExpression: aws.String("SET #ST = :s"),
-			ReturnValues:     types.ReturnValueAllNew,
-		})
-		// fmt.Println("op", op)
+		if z != nil {
+			fmt.Println("inv err", *z, x)
+		}
+
 		if err != nil {
 
 			var intServErr *types.InternalServerError
@@ -154,67 +208,12 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			// To get any API error
 			var apiErr smithy.APIError
 			if errors.As(err, &apiErr) {
-				fmt.Printf("play rt db error, Code: %v, Message: %v",
+				fmt.Printf("db error, Code: %v, Message: %v",
 					apiErr.ErrorCode(), apiErr.ErrorMessage())
 			}
 
-		} else {
-
-			var game game
-			err = attributevalue.UnmarshalMap(ui.Attributes, &game)
-			if err != nil {
-				fmt.Println("play update item unmarshal err", err)
-			}
-
-			mj, err := json.Marshal(lambdaInput{
-				Game: game,
-				// ApiId:  req.RequestContext.APIID,
-				// Stage:  req.RequestContext.Stage,
-				Region: reg,
-			})
-			if err != nil {
-				fmt.Println("game item marshal err", err)
-			}
-
-			ii := lamb.InvokeInput{
-				FunctionName: aws.String("ct-playJS"),
-				// ClientContext:  new(string),
-				// InvocationType: "",
-				// LogType:        "",
-				Payload: mj,
-				// Qualifier:      new(string),
-			}
-
-			li, err := svc2.Invoke(ctx, &ii)
-
-			q := *li
-			fmt.Printf("\n%s, %+v\n", "liii", q)
-			// fmt.Println(*li.FunctionError, li.Payload)
-			z := q.FunctionError
-			x := string(q.Payload)
-			fmt.Println("inv pyld", x)
-
-			if z != nil {
-				fmt.Println("inv err", *z, x)
-			}
-
-			if err != nil {
-
-				var intServErr *types.InternalServerError
-				if errors.As(err, &intServErr) {
-					fmt.Printf("get item error, %v",
-						intServErr.ErrorMessage())
-				}
-
-				// To get any API error
-				var apiErr smithy.APIError
-				if errors.As(err, &apiErr) {
-					fmt.Printf("db error, Code: %v, Message: %v",
-						apiErr.ErrorCode(), apiErr.ErrorMessage())
-				}
-
-			}
 		}
+		// }
 
 	}
 
