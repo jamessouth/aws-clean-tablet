@@ -488,54 +488,50 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			if err != nil {
 				fmt.Println("del item unmarshal err", err)
 			}
-			readyCount := 0
-			readyBool := false
-			var leaderID string
-			for k, v := range game {
+			if len(game) > 2 {
 
-				fmt.Printf("%s, %v, %+v", "ui", k, v)
+				readyCount := 0
 
-				if v.Ready {
-					readyCount++
-					if readyCount == len(game) && len(game) > 2 {
-						readyBool = true
-						leaderID = k
+				for k, v := range game {
+
+					fmt.Printf("%s, %v, %+v", "ui", k, v)
+
+					if v.Ready {
+						readyCount++
+						if readyCount == len(game) {
+							_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+								Key:       gameItemKey,
+								TableName: aws.String(tableName),
+								ExpressionAttributeNames: map[string]string{
+									"#PL": "players",
+									"#ID": k,
+									"#RD": "ready",
+									"#LE": "leader",
+								},
+								ExpressionAttributeValues: map[string]types.AttributeValue{
+									":r": marshalledTrue,
+								},
+								UpdateExpression: aws.String("SET #RD = :r, #PL.#ID.#LE = :r"),
+							})
+
+							if err != nil {
+
+								var intServErr *types.InternalServerError
+								if errors.As(err, &intServErr) {
+									fmt.Printf("get item error, %v",
+										intServErr.ErrorMessage())
+								}
+
+								// To get any API error
+								var apiErr smithy.APIError
+								if errors.As(err, &apiErr) {
+									fmt.Printf("db error, Code: %v, Message: %v",
+										apiErr.ErrorCode(), apiErr.ErrorMessage())
+								}
+
+							}
+						}
 					}
-				}
-			}
-			att3, err := attributevalue.Marshal(readyBool)
-			if err != nil {
-				panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
-			}
-
-			_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-				Key:       gameItemKey,
-				TableName: aws.String(tableName),
-				ExpressionAttributeNames: map[string]string{
-					"#PL": "players",
-					"#ID": leaderID,
-					"#RD": "ready",
-					"#LE": "leader",
-				},
-				ExpressionAttributeValues: map[string]types.AttributeValue{
-					":r": att3,
-				},
-				UpdateExpression: aws.String("SET #RD = :r, #PL.#ID.#LE = :r"),
-			})
-
-			if err != nil {
-
-				var intServErr *types.InternalServerError
-				if errors.As(err, &intServErr) {
-					fmt.Printf("get item error, %v",
-						intServErr.ErrorMessage())
-				}
-
-				// To get any API error
-				var apiErr smithy.APIError
-				if errors.As(err, &apiErr) {
-					fmt.Printf("db error, Code: %v, Message: %v",
-						apiErr.ErrorCode(), apiErr.ErrorMessage())
 				}
 
 			}
