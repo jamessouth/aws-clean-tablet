@@ -132,7 +132,6 @@ exports.handler = (req, ctx, cb) => {
 
                 const payload = {
                     ingame: item.game.S,
-                    leader: item.leader.BOOL,
                     type: "user",
                 };
     
@@ -149,11 +148,23 @@ exports.handler = (req, ctx, cb) => {
                     cb(Error(err));
                 }
             } else if (item.pk.S.startsWith("GAME")) {
-                
-                
+                let payload;
+                let connsParams;
+
+                if (item.BOOL.starting) {
+
+                    payload = {
+                        games: [item].map(g => ({
+                            no: g.sk.S,
+                       
+                            starting: g.starting && g.starting.BOOL || false,
+                        })),
+                        type: "games",
+                    };
+                }
                
                 
-                const payload = {
+                payload = {
                     games: [item].map(g => ({
                         no: g.sk.S,
                         ready: g.ready && g.ready.BOOL || false,
@@ -169,7 +180,6 @@ exports.handler = (req, ctx, cb) => {
 
                 // if game starting filter out conns that are starting, game sent to conns not in that game for FE filtering
 
-                let connsParams;
 
                 connsParams = {//filter by game
                     TableName: tableName,
