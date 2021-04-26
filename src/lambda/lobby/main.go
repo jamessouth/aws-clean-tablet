@@ -89,6 +89,24 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		gameno = fmt.Sprintf("%d", time.Now().UnixNano())
 	}
 
+	gameItemKey, err := attributevalue.MarshalMap(Key{
+		Pk: "GAME",
+		Sk: gameno,
+	})
+	if err != nil {
+		panic(fmt.Sprintf("failed to marshal gik Record, %v", err))
+	}
+
+	marshalledFalse, err := attributevalue.Marshal(false)
+	if err != nil {
+		panic(fmt.Sprintf("failed to marshal false, %v", err))
+	}
+
+	marshalledTrue, err := attributevalue.Marshal(true)
+	if err != nil {
+		panic(fmt.Sprintf("failed to marshal true, %v", err))
+	}
+
 	if body.Type == "join" {
 
 		connItemKey, err := attributevalue.MarshalMap(Key{
@@ -125,14 +143,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			panic(fmt.Sprintf("failed to marshal Record 4, %v", err))
 		}
 
-		gameItemKey, err := attributevalue.MarshalMap(Key{
-			Pk: "GAME",
-			Sk: gameno,
-		})
-		if err != nil {
-			panic(fmt.Sprintf("failed to marshal Record, %v", err))
-		}
-
 		// GameItemAttrs holds values to be put in db
 		// type GameItemAttrs struct {
 		// 	Players map[string]Player `dynamodbav:"Players"`
@@ -165,11 +175,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
 		}
 
-		att4, err := attributevalue.Marshal(false)
-		if err != nil {
-			panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
-		}
-
 		_, err = svc.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{
 
 			TransactItems: []types.TransactWriteItem{
@@ -187,8 +192,8 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 						},
 						ExpressionAttributeValues: map[string]types.AttributeValue{
 							// ":p": att1,
-							// ":maxsize": att2,
-							":r": att4,
+
+							":r": marshalledFalse,
 							":p": att3,
 						},
 
@@ -249,8 +254,8 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 						},
 						ExpressionAttributeValues: map[string]types.AttributeValue{
 							":p": att1,
-							// ":maxsize": att2,
-							":r": att4,
+
+							":r": marshalledFalse,
 							// ":player": att3,
 						},
 
@@ -317,14 +322,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		})
 		if err != nil {
 			panic(fmt.Sprintf("failed to marshal Record 4, %v", err))
-		}
-
-		gameItemKey, err := attributevalue.MarshalMap(Key{
-			Pk: "GAME",
-			Sk: gameno,
-		})
-		if err != nil {
-			panic(fmt.Sprintf("failed to marshal Record, %v", err))
 		}
 
 		ui2, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
@@ -425,7 +422,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			},
 			ExpressionAttributeValues: map[string]types.AttributeValue{
 				":r": att3,
-				// ":maxsize": att2,
+
 				// ":player": att3,
 			},
 
@@ -451,115 +448,129 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		}
 
 	} else if body.Type == "ready" {
-		gameItemKey, err := attributevalue.MarshalMap(Key{
-			Pk: "GAME",
-			Sk: gameno,
-		})
-		if err != nil {
-			panic(fmt.Sprintf("failed to marshal Record, %v", err))
-		}
 
-		att2, err := attributevalue.Marshal(body.Value)
-		if err != nil {
-			panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
-		}
+		if body.Value {
 
-		ui, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+			ui, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+				Key:       gameItemKey,
+				TableName: aws.String(tableName),
+				ExpressionAttributeNames: map[string]string{
+					"#PL": "players",
+					"#ID": id,
+					"#RD": "ready",
+				},
+				ExpressionAttributeValues: map[string]types.AttributeValue{
+					":r": marshalledTrue,
+				},
+				UpdateExpression: aws.String("SET #PL.#ID.#RD = :r"),
+				ReturnValues:     types.ReturnValueAllNew,
+			})
 
-			// ----------------------------------------------------
-			Key:       gameItemKey,
-			TableName: aws.String(tableName),
-			// ConditionExpression: aws.String("(attribute_exists(#PL) AND size (#PL) < :maxsize) OR attribute_not_exists(#PL)"),
-			ExpressionAttributeNames: map[string]string{
-				"#PL": "players",
-				"#ID": id,
-				"#RD": "ready",
-			},
-			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":r": att2,
-				// ":maxsize": att2,
-				// ":player": att3,
-			},
+			if err != nil {
 
-			UpdateExpression: aws.String("SET #PL.#ID.#RD = :r"),
-			ReturnValues:     types.ReturnValueAllNew,
-		})
-		// fmt.Println("op", op)
-		if err != nil {
+				var intServErr *types.InternalServerError
+				if errors.As(err, &intServErr) {
+					fmt.Printf("get item error, %v",
+						intServErr.ErrorMessage())
+				}
 
-			var intServErr *types.InternalServerError
-			if errors.As(err, &intServErr) {
-				fmt.Printf("get item error, %v",
-					intServErr.ErrorMessage())
+				// To get any API error
+				var apiErr smithy.APIError
+				if errors.As(err, &apiErr) {
+					fmt.Printf("db error, Code: %v, Message: %v",
+						apiErr.ErrorCode(), apiErr.ErrorMessage())
+				}
+
 			}
 
-			// To get any API error
-			var apiErr smithy.APIError
-			if errors.As(err, &apiErr) {
-				fmt.Printf("db error, Code: %v, Message: %v",
-					apiErr.ErrorCode(), apiErr.ErrorMessage())
+			var game map[string]Player
+			err = attributevalue.Unmarshal(ui.Attributes["players"], &game)
+			if err != nil {
+				fmt.Println("del item unmarshal err", err)
+			}
+			readyCount := 0
+			readyBool := false
+			var leaderID string
+			for k, v := range game {
+
+				fmt.Printf("%s, %v, %+v", "ui", k, v)
+
+				if v.Ready {
+					readyCount++
+					if readyCount == len(game) && len(game) > 2 {
+						readyBool = true
+						leaderID = k
+					}
+				}
+			}
+			att3, err := attributevalue.Marshal(readyBool)
+			if err != nil {
+				panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
 			}
 
-		}
+			_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+				Key:       gameItemKey,
+				TableName: aws.String(tableName),
+				ExpressionAttributeNames: map[string]string{
+					"#PL": "players",
+					"#ID": leaderID,
+					"#RD": "ready",
+					"#LE": "leader",
+				},
+				ExpressionAttributeValues: map[string]types.AttributeValue{
+					":r": att3,
+				},
+				UpdateExpression: aws.String("SET #RD = :r, #PL.#ID.#LE = :r"),
+			})
 
-		var game map[string]Player
-		err = attributevalue.Unmarshal(ui.Attributes["players"], &game)
-		if err != nil {
-			fmt.Println("del item unmarshal err", err)
-		}
-		readyCount := 0
-		readyBool := false
-		for k, v := range game {
+			if err != nil {
 
-			fmt.Printf("%s, %v, %+v", "ui", k, v)
+				var intServErr *types.InternalServerError
+				if errors.As(err, &intServErr) {
+					fmt.Printf("get item error, %v",
+						intServErr.ErrorMessage())
+				}
 
-			if v.Ready {
-				readyCount++
-			}
-		}
-		if len(game) > 2 && readyCount == len(game) {
-			readyBool = true
-		}
+				// To get any API error
+				var apiErr smithy.APIError
+				if errors.As(err, &apiErr) {
+					fmt.Printf("db error, Code: %v, Message: %v",
+						apiErr.ErrorCode(), apiErr.ErrorMessage())
+				}
 
-		att3, err := attributevalue.Marshal(readyBool)
-		if err != nil {
-			panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
-		}
-
-		_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-
-			// ----------------------------------------------------
-			Key:       gameItemKey,
-			TableName: aws.String(tableName),
-			// ConditionExpression: aws.String("(attribute_exists(#PL) AND size (#PL) < :maxsize) OR attribute_not_exists(#PL)"),
-			ExpressionAttributeNames: map[string]string{
-				// "#PL": "players",
-				// "#ID": id,
-				"#RD": "ready",
-			},
-			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":r": att3,
-				// ":maxsize": att2,
-				// ":player": att3,
-			},
-
-			UpdateExpression: aws.String("SET #RD = :r"),
-			// ReturnValues:     types.ReturnValueAllNew,
-		})
-		// fmt.Println("op", op)
-		if err != nil {
-
-			var intServErr *types.InternalServerError
-			if errors.As(err, &intServErr) {
-				fmt.Printf("get item error, %v",
-					intServErr.ErrorMessage())
 			}
 
-			// To get any API error
-			var apiErr smithy.APIError
-			if errors.As(err, &apiErr) {
-				fmt.Printf("db error, Code: %v, Message: %v",
-					apiErr.ErrorCode(), apiErr.ErrorMessage())
+		} else {
+
+			_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+				Key:       gameItemKey,
+				TableName: aws.String(tableName),
+				ExpressionAttributeNames: map[string]string{
+					"#PL": "players",
+					"#ID": id,
+					"#RD": "ready",
+				},
+				ExpressionAttributeValues: map[string]types.AttributeValue{
+					":r": marshalledFalse,
+				},
+				UpdateExpression: aws.String("SET #PL.#ID.#RD = :r, #RD = :r"),
+			})
+
+			if err != nil {
+
+				var intServErr *types.InternalServerError
+				if errors.As(err, &intServErr) {
+					fmt.Printf("get item error, %v",
+						intServErr.ErrorMessage())
+				}
+
+				// To get any API error
+				var apiErr smithy.APIError
+				if errors.As(err, &apiErr) {
+					fmt.Printf("db error, Code: %v, Message: %v",
+						apiErr.ErrorCode(), apiErr.ErrorMessage())
+				}
+
 			}
 
 		}
