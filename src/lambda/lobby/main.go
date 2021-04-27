@@ -227,26 +227,8 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 					},
 				},
 			},
-			// ReturnConsumedCapacity: types.ReturnConsumedCapacityTotal,
 		})
-		// fmt.Println("op", op)
-		if err != nil {
-
-			var intServErr *types.TransactionCanceledException
-			if errors.As(err, &intServErr) {
-				fmt.Printf("put item error777, %v\n",
-					intServErr.CancellationReasons)
-			}
-
-			// To get any API error
-			var apiErr smithy.APIError
-			if errors.As(err, &apiErr) {
-				// fmt.Println(err.Error(), apiErr.Error())
-				fmt.Printf("db error777, Code: %v, Message: %v",
-					apiErr.ErrorCode(), apiErr.ErrorMessage())
-			}
-
-		}
+		callErr(err)
 
 		_, err = svc.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{
 
@@ -289,26 +271,8 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 					},
 				},
 			},
-			// ReturnConsumedCapacity: types.ReturnConsumedCapacityTotal,
 		})
-		// fmt.Println("op", op)
-		if err != nil {
-
-			var intServErr *types.TransactionCanceledException
-			if errors.As(err, &intServErr) {
-				fmt.Printf("put item error888, %v\n",
-					intServErr.CancellationReasons)
-			}
-
-			// To get any API error
-			var apiErr smithy.APIError
-			if errors.As(err, &apiErr) {
-				// fmt.Println(err.Error(), apiErr.Error())
-				fmt.Printf("db error888, Code: %v, Message: %v",
-					apiErr.ErrorCode(), apiErr.ErrorMessage())
-			}
-
-		}
+		callErr(err)
 
 	} else if body.Type == "leave" {
 
@@ -343,22 +307,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			ReturnValues:     types.ReturnValueAllNew,
 		})
 
-		if err != nil {
-
-			var intServErr *types.InternalServerError
-			if errors.As(err, &intServErr) {
-				fmt.Printf("put item error 1122, %v",
-					intServErr.ErrorMessage())
-			}
-
-			// To get any API error
-			var apiErr smithy.APIError
-			if errors.As(err, &apiErr) {
-				fmt.Printf("db error 1112222, Code: %v, Message: %v",
-					apiErr.ErrorCode(), apiErr.ErrorMessage())
-			}
-
-		}
+		callErr(err)
 		_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 
 			// ----------------------------------------------------
@@ -372,22 +321,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			UpdateExpression: aws.String("SET #IG = :g"),
 		})
 
-		if err != nil {
-
-			var intServErr *types.InternalServerError
-			if errors.As(err, &intServErr) {
-				fmt.Printf("put item error 1122, %v",
-					intServErr.ErrorMessage())
-			}
-
-			// To get any API error
-			var apiErr smithy.APIError
-			if errors.As(err, &apiErr) {
-				fmt.Printf("db error 1112222, Code: %v, Message: %v",
-					apiErr.ErrorCode(), apiErr.ErrorMessage())
-			}
-
-		}
+		callErr(err)
 
 		// var game map[string]Player
 		// err = attributevalue.Unmarshal(ui2.Attributes["players"], &game) //game still ready and >2 players???
@@ -400,67 +334,62 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			fmt.Println("joingame leave unmarshal err", err)
 		}
 
-		if game.Ready {
+		if len(game.Players) > 2 {
+
+			if game.Ready {
+
+				existingLeader := false
+				var k string
+				var v Player
+
+				for k, v = range game.Players {
+
+					fmt.Printf("%s, %v, %+v", "ui", k, v)
+					if v.Leader {
+						existingLeader = true
+						break
+					}
+
+				}
+
+				if !existingLeader {
+
+					_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+						Key:       gameItemKey,
+						TableName: aws.String(tableName),
+						ExpressionAttributeNames: map[string]string{
+							"#PL": "players",
+							"#ID": k,
+							"#LE": "leader",
+						},
+						ExpressionAttributeValues: map[string]types.AttributeValue{
+							":t": marshalledTrue,
+						},
+						UpdateExpression: aws.String("SET #PL.#ID.#LE = :t"),
+					})
+
+					callErr(err)
+				}
+
+			} else {
+				callFunction(game.Players, gameItemKey, tableName, marshalledTrue, ctx, svc)
+
+			}
 
 		} else {
+			_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+				Key:       gameItemKey,
+				TableName: aws.String(tableName),
+				ExpressionAttributeNames: map[string]string{
+					"#RD": "ready",
+				},
+				ExpressionAttributeValues: map[string]types.AttributeValue{
+					":f": marshalledFalse,
+				},
+				UpdateExpression: aws.String("SET #RD = :f"),
+			})
 
-		}
-
-		readyCount := 0
-		readyBool := false
-		for k, v := range game {
-
-			fmt.Printf("%s, %v, %+v", "ui", k, v)
-
-			if v.Ready {
-				readyCount++
-			}
-		}
-		if len(game) > 2 && readyCount == len(game) {
-			readyBool = true
-		}
-
-		att3, err := attributevalue.Marshal(readyBool)
-		if err != nil {
-			panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
-		}
-
-		_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-
-			// ----------------------------------------------------
-			Key:       gameItemKey,
-			TableName: aws.String(tableName),
-			// ConditionExpression: aws.String("(attribute_exists(#PL) AND size (#PL) < :maxsize) OR attribute_not_exists(#PL)"),
-			ExpressionAttributeNames: map[string]string{
-				// "#PL": "players",
-				// "#ID": id,
-				"#RD": "ready",
-			},
-			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":r": att3,
-
-				// ":player": att3,
-			},
-
-			UpdateExpression: aws.String("SET #RD = :r"),
-			// ReturnValues:     types.ReturnValueAllNew,
-		})
-		// fmt.Println("op", op)
-		if err != nil {
-
-			var intServErr *types.InternalServerError
-			if errors.As(err, &intServErr) {
-				fmt.Printf("get item error, %v",
-					intServErr.ErrorMessage())
-			}
-
-			// To get any API error
-			var apiErr smithy.APIError
-			if errors.As(err, &apiErr) {
-				fmt.Printf("db error, Code: %v, Message: %v",
-					apiErr.ErrorCode(), apiErr.ErrorMessage())
-			}
-
+			callErr(err)
 		}
 
 	} else if body.Type == "ready" {
@@ -482,22 +411,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 				ReturnValues:     types.ReturnValueAllNew,
 			})
 
-			if err != nil {
-
-				var intServErr *types.InternalServerError
-				if errors.As(err, &intServErr) {
-					fmt.Printf("get item error, %v",
-						intServErr.ErrorMessage())
-				}
-
-				// To get any API error
-				var apiErr smithy.APIError
-				if errors.As(err, &apiErr) {
-					fmt.Printf("db error, Code: %v, Message: %v",
-						apiErr.ErrorCode(), apiErr.ErrorMessage())
-				}
-
-			}
+			callErr(err)
 
 			var game map[string]Player
 			err = attributevalue.Unmarshal(ui.Attributes["players"], &game)
@@ -506,68 +420,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			}
 			if len(game) > 2 {
 
-				readyCount := 0
-				existingLeader := false
-
-				for k, v := range game {
-
-					fmt.Printf("%s, %v, %+v", "ui", k, v)
-					if v.Leader {
-						existingLeader = true
-					}
-					if v.Ready {
-						readyCount++
-						if readyCount == len(game) {
-							var uii dynamodb.UpdateItemInput
-							if existingLeader {
-								uii = dynamodb.UpdateItemInput{
-									Key:       gameItemKey,
-									TableName: aws.String(tableName),
-									ExpressionAttributeNames: map[string]string{
-										"#RD": "ready",
-									},
-									ExpressionAttributeValues: map[string]types.AttributeValue{
-										":t": marshalledTrue,
-									},
-									UpdateExpression: aws.String("SET #RD = :t"),
-								}
-							} else {
-								uii = dynamodb.UpdateItemInput{
-									Key:       gameItemKey,
-									TableName: aws.String(tableName),
-									ExpressionAttributeNames: map[string]string{
-										"#PL": "players",
-										"#ID": k,
-										"#RD": "ready",
-										"#LE": "leader",
-									},
-									ExpressionAttributeValues: map[string]types.AttributeValue{
-										":t": marshalledTrue,
-									},
-									UpdateExpression: aws.String("SET #RD = :t, #PL.#ID.#LE = :t"),
-								}
-							}
-							_, err = svc.UpdateItem(ctx, &uii)
-
-							if err != nil {
-
-								var intServErr *types.InternalServerError
-								if errors.As(err, &intServErr) {
-									fmt.Printf("get item error, %v",
-										intServErr.ErrorMessage())
-								}
-
-								// To get any API error
-								var apiErr smithy.APIError
-								if errors.As(err, &apiErr) {
-									fmt.Printf("db error, Code: %v, Message: %v",
-										apiErr.ErrorCode(), apiErr.ErrorMessage())
-								}
-
-							}
-						}
-					}
-				}
+				callFunction(game, gameItemKey, tableName, marshalledTrue, ctx, svc)
 
 			}
 
@@ -588,76 +441,9 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 				UpdateExpression: aws.String("SET #PL.#ID.#LE = :f, #PL.#ID.#RD = :f, #RD = :f"),
 			})
 
-			if err != nil {
-
-				var intServErr *types.InternalServerError
-				if errors.As(err, &intServErr) {
-					fmt.Printf("get item error, %v",
-						intServErr.ErrorMessage())
-				}
-
-				// To get any API error
-				var apiErr smithy.APIError
-				if errors.As(err, &apiErr) {
-					fmt.Printf("db error, Code: %v, Message: %v",
-						apiErr.ErrorCode(), apiErr.ErrorMessage())
-				}
-
-			}
+			callErr(err)
 
 		}
-
-		// if readyBool {
-		// 	mj, err := json.Marshal(lambdaInput{
-		// 		Game:   game,
-		// 		ApiId:  req.RequestContext.APIID,
-		// 		Stage:  req.RequestContext.Stage,
-		// 		Region: reg,
-		// 	})
-		// 	if err != nil {
-		// 		fmt.Println("game item marshal err", err)
-		// 	}
-
-		// 	ii := lamb.InvokeInput{
-		// 		FunctionName: aws.String("ct-playJS"),
-		// 		// ClientContext:  new(string),
-		// 		// InvocationType: "",
-		// 		// LogType:        "",
-		// 		Payload: mj,
-		// 		// Qualifier:      new(string),
-		// 	}
-
-		// 	li, err := svc2.Invoke(ctx, &ii)
-
-		// 	fmt.Printf("\n%s, %+v\n", "liii", *li)
-		// 	// fmt.Println(*li.FunctionError, li.Payload)
-		// 	q := *li
-		// 	z := q.FunctionError
-		// 	x := q.Payload
-		// 	// fmt.Println(*z, x)
-
-		// 	if z != nil {
-		// 		fmt.Println(*z, x)
-		// 	}
-
-		// 	if err != nil {
-
-		// 		var intServErr *types.InternalServerError
-		// 		if errors.As(err, &intServErr) {
-		// 			fmt.Printf("get item error, %v",
-		// 				intServErr.ErrorMessage())
-		// 		}
-
-		// 		// To get any API error
-		// 		var apiErr smithy.APIError
-		// 		if errors.As(err, &apiErr) {
-		// 			fmt.Printf("db error, Code: %v, Message: %v",
-		// 				apiErr.ErrorCode(), apiErr.ErrorMessage())
-		// 		}
-
-		// 	}
-
-		// }
 
 	} else {
 		fmt.Println("other lobby")
@@ -674,4 +460,78 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 func main() {
 	lambda.Start(handler)
+}
+
+func callFunction(it map[string]Player, gik map[string]types.AttributeValue, tn string, mt types.AttributeValue, ctx context.Context, svc *dynamodb.Client) {
+	readyCount := 0
+	existingLeader := false
+
+	for k, v := range it {
+
+		fmt.Printf("%s, %v, %+v", "ui", k, v)
+		if v.Leader {
+			existingLeader = true
+		}
+		if v.Ready {
+			readyCount++
+			if readyCount == len(it) {
+				var uii dynamodb.UpdateItemInput
+				if existingLeader {
+					uii = dynamodb.UpdateItemInput{
+						Key:       gik,
+						TableName: aws.String(tn),
+						ExpressionAttributeNames: map[string]string{
+							"#RD": "ready",
+						},
+						ExpressionAttributeValues: map[string]types.AttributeValue{
+							":t": mt,
+						},
+						UpdateExpression: aws.String("SET #RD = :t"),
+					}
+				} else {
+					uii = dynamodb.UpdateItemInput{
+						Key:       gik,
+						TableName: aws.String(tn),
+						ExpressionAttributeNames: map[string]string{
+							"#PL": "players",
+							"#ID": k,
+							"#RD": "ready",
+							"#LE": "leader",
+						},
+						ExpressionAttributeValues: map[string]types.AttributeValue{
+							":t": mt,
+						},
+						UpdateExpression: aws.String("SET #RD = :t, #PL.#ID.#LE = :t"),
+					}
+				}
+				_, err := svc.UpdateItem(ctx, &uii)
+
+				callErr(err)
+			}
+		}
+	}
+}
+
+func callErr(err error) {
+	if err != nil {
+		var transCxldErr *types.TransactionCanceledException
+		if errors.As(err, &transCxldErr) {
+			fmt.Printf("put item error777, %v\n",
+				transCxldErr.CancellationReasons)
+		}
+
+		var intServErr *types.InternalServerError
+		if errors.As(err, &intServErr) {
+			fmt.Printf("get item error, %v",
+				intServErr.ErrorMessage())
+		}
+
+		// To get any API error
+		var apiErr smithy.APIError
+		if errors.As(err, &apiErr) {
+			fmt.Printf("db error, Code: %v, Message: %v",
+				apiErr.ErrorCode(), apiErr.ErrorMessage())
+		}
+
+	}
 }
