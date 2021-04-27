@@ -44,6 +44,7 @@ type player struct {
 	Name   string `json:"name"`
 	ConnID string `json:"connid"`
 	Ready  bool   `json:"ready"`
+	Leader bool   `json:"leader"`
 	Color  string `json:"color"`
 }
 
