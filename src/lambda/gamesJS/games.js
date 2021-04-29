@@ -8,6 +8,14 @@ let connsResults;
 const apiid = process.env.CT_APIID;
 const stage = process.env.CT_STAGE;
 
+function objToArr(obj) {
+    const arr = [];
+    for (let p in obj) {
+        arr.push({ [p]: obj[p] });
+    }
+    return arr;
+}
+
 exports.handler = (req, ctx, cb) => {
     req.Records.forEach(async (rec) => {
         const tableName = rec.eventSourceARN.split("/", 2)[1];
@@ -52,8 +60,8 @@ exports.handler = (req, ctx, cb) => {
                 const payload = {
                     games: gamesResults.Items.map((g) => ({
                         no: g.sk.S,
-                        ready: (g.ready && g.ready.BOOL) || false,
-                        players: (g.players && g.players.M) || {},
+                        ready: g.ready.BOOL,
+                        players: objToArr(g.players.M),
                     })),
                     type: "games",
                 };
@@ -75,7 +83,7 @@ exports.handler = (req, ctx, cb) => {
                     games: {
                         no: item.sk.S,
                         ready: item.ready.BOOL,
-                        players: item.players.M,
+                        players: objToArr(item.players.M),
                     },
                     type: "games",
                 };
@@ -142,74 +150,48 @@ exports.handler = (req, ctx, cb) => {
                     cb(Error(err));
                 }
             } else if (item.pk.S.startsWith("GAME")) {
-                let payload;
-                let connsParams;
+                const payload = {
+                    games: {
+                        no: item.sk.S,
+                        ready: item.ready.BOOL,
+                        starting: item.starting.BOOL,
+                        loading: item.loading.BOOL,
+                        players: objToArr(item.players.M),
+                    },
+                    type: "games",
+                };
                 if (item.loading.BOOL) {
-                    payload = {
-                        games: {
-                            no: item.sk.S,
-                            ready: item.ready.BOOL,
-                            starting: item.starting.BOOL,
-                            loading: item.loading.BOOL,
-                            players: item.players.M,
-                        },
-                        type: "games",
-                    };
-                } else {
-                    if (item.starting.BOOL) {
-                        payload = {
-                            games: {
-                                no: item.sk.S,
-                                starting: item.starting.BOOL,
-                            },
-                            type: "games",
-                        };
-                        connsParams = {
-                            TableName: tableName,
-                            IndexName: "GSI1",
-                            KeyConditionExpression: "GSI1PK = :cn",
-                            FilterExpression: "#PL = :f",
-                            ExpressionAttributeValues: {
-                                ":cn": {
-                                    S: "CONN",
-                                },
-                                ":f": {
-                                    BOOL: false,
-                                },
-                            },
-                            ExpressionAttributeNames: {
-                                "#PL": "playing",
-                            },
-                        };
-                    } else {
-                        payload = {
-                            games: {
-                                no: item.sk.S,
-                                ready: item.ready.BOOL,
-                                starting: item.starting.BOOL,
-                                players: item.players.M,
-                            },
-                            type: "games",
-                        };
-
-                        connsParams = {
-                            TableName: tableName,
-                            IndexName: "GSI1",
-                            KeyConditionExpression: "GSI1PK = :cn",
-                            FilterExpression: "#PL = :f",
-                            ExpressionAttributeValues: {
-                                ":cn": {
-                                    S: "CONN",
-                                },
-                                ":f": {
-                                    BOOL: false,
-                                },
-                            },
-                            ExpressionAttributeNames: {
-                                "#PL": "playing",
-                            },
-                        };
+                    try {
+                        connsResults.Items.forEach(async ({ GSI1SK }) => {
+                            await apigw
+                                .postToConnection({
+                                    ConnectionId: GSI1SK.S,
+                                    Data: JSON.stringify(payload),
+                                })
+                                .promise();
+                        });
+                    } catch (err) {
+                        console.log("post error: ", err);
+                        cb(Error(err));
                     }
+                } else {
+                    const connsParams = {
+                        TableName: tableName,
+                        IndexName: "GSI1",
+                        KeyConditionExpression: "GSI1PK = :cn",
+                        FilterExpression: "#PL = :f",
+                        ExpressionAttributeValues: {
+                            ":cn": {
+                                S: "CONN",
+                            },
+                            ":f": {
+                                BOOL: false,
+                            },
+                        },
+                        ExpressionAttributeNames: {
+                            "#PL": "playing",
+                        },
+                    };
 
                     try {
                         connsResults = await dyndb.query(connsParams).promise();
