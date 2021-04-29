@@ -12,7 +12,7 @@ exports.handler = (req, ctx, cb) => {
     req.Records.forEach(async (rec) => {
         const tableName = rec.eventSourceARN.split("/", 2)[1];
         const item = rec.dynamodb.NewImage;
-        console.log('item: ', item);
+        console.log("item: ", item);
         const endpoint = `https://${apiid}.execute-api.${rec.awsRegion}.amazonaws.com/${stage}`;
 
         const apigw = new ApiGatewayManagementApi({
@@ -26,13 +26,8 @@ exports.handler = (req, ctx, cb) => {
             region: rec.AWSRegion,
         });
 
-    
-
-
-
         if (rec.eventName === "INSERT") {
             if (item.pk.S.startsWith("CONN")) {
-
                 const gamesParams = {
                     TableName: tableName,
                     KeyConditionExpression: "pk = :gm",
@@ -55,14 +50,14 @@ exports.handler = (req, ctx, cb) => {
                     console.log("db error: ", err);
                 }
                 const payload = {
-                    games: gamesResults.Items.map(g => ({
+                    games: gamesResults.Items.map((g) => ({
                         no: g.sk.S,
-                        ready: g.ready && g.ready.BOOL || false,
-                        players: g.players && g.players.M || {},
+                        ready: (g.ready && g.ready.BOOL) || false,
+                        players: (g.players && g.players.M) || {},
                     })),
                     type: "games",
                 };
-    
+
                 // console.log("data: ", payload);
                 try {
                     await apigw
@@ -76,31 +71,32 @@ exports.handler = (req, ctx, cb) => {
                     cb(Error(err));
                 }
             } else if (item.pk.S.startsWith("GAME")) {
-                
-                
-               
-                
                 const payload = {
-                    games: [item].map(g => ({
-                        no: g.sk.S,
-                        ready: g.ready && g.ready.BOOL || false,
-                        players: g.players && g.players.M || {},
-                    })),
+                    games: {
+                        no: item.sk.S,
+                        ready: item.ready.BOOL,
+                        players: item.players.M,
+                    },
                     type: "games",
                 };
-    
+
                 // console.log("data: ", payload);
-
-
 
                 const connsParams = {
                     TableName: tableName,
                     IndexName: "GSI1",
                     KeyConditionExpression: "GSI1PK = :cn",
+                    FilterExpression: "#PL = :f",
                     ExpressionAttributeValues: {
                         ":cn": {
                             S: "CONN",
                         },
+                        ":f": {
+                            BOOL: false,
+                        },
+                    },
+                    ExpressionAttributeNames: {
+                        "#PL": "playing",
                     },
                 };
                 try {
@@ -125,16 +121,14 @@ exports.handler = (req, ctx, cb) => {
             } else {
                 console.log("stat insert: ", item);
             }
-
-            
         } else if (rec.eventName === "MODIFY") {
             if (item.pk.S.startsWith("CONN")) {
-
                 const payload = {
                     ingame: item.game.S,
+                    playing: item.playing.BOOL,
                     type: "user",
                 };
-    
+
                 // console.log("data: ", payload);
                 try {
                     await apigw
@@ -150,83 +144,96 @@ exports.handler = (req, ctx, cb) => {
             } else if (item.pk.S.startsWith("GAME")) {
                 let payload;
                 let connsParams;
-
-                if (item.BOOL.starting) {
-
+                if (item.loading.BOOL) {
                     payload = {
-                        games: [item].map(g => ({
-                            no: g.sk.S,
-                       
-                            starting: g.starting && g.starting.BOOL || false,
-                        })),
+                        games: {
+                            no: item.sk.S,
+                            ready: item.ready.BOOL,
+                            starting: item.starting.BOOL,
+                            loading: item.loading.BOOL,
+                            players: item.players.M,
+                        },
                         type: "games",
                     };
-                }
-               
-                
-                payload = {
-                    games: [item].map(g => ({
-                        no: g.sk.S,
-                        ready: g.ready && g.ready.BOOL || false,
-                        starting: g.starting && g.starting.BOOL || false,
-                        players: g.players && g.players.M || {},
-                    })),
-                    type: "games",
-                };
-    
-                // console.log("data: ", payload);
+                } else {
+                    if (item.starting.BOOL) {
+                        payload = {
+                            games: {
+                                no: item.sk.S,
+                                starting: item.starting.BOOL,
+                            },
+                            type: "games",
+                        };
+                        connsParams = {
+                            TableName: tableName,
+                            IndexName: "GSI1",
+                            KeyConditionExpression: "GSI1PK = :cn",
+                            FilterExpression: "#PL = :f",
+                            ExpressionAttributeValues: {
+                                ":cn": {
+                                    S: "CONN",
+                                },
+                                ":f": {
+                                    BOOL: false,
+                                },
+                            },
+                            ExpressionAttributeNames: {
+                                "#PL": "playing",
+                            },
+                        };
+                    } else {
+                        payload = {
+                            games: {
+                                no: item.sk.S,
+                                ready: item.ready.BOOL,
+                                starting: item.starting.BOOL,
+                                players: item.players.M,
+                            },
+                            type: "games",
+                        };
 
-                // anything after game marked ready
+                        connsParams = {
+                            TableName: tableName,
+                            IndexName: "GSI1",
+                            KeyConditionExpression: "GSI1PK = :cn",
+                            FilterExpression: "#PL = :f",
+                            ExpressionAttributeValues: {
+                                ":cn": {
+                                    S: "CONN",
+                                },
+                                ":f": {
+                                    BOOL: false,
+                                },
+                            },
+                            ExpressionAttributeNames: {
+                                "#PL": "playing",
+                            },
+                        };
+                    }
 
-                // if game starting filter out conns that are starting, game sent to conns not in that game for FE filtering
+                    try {
+                        connsResults = await dyndb.query(connsParams).promise();
+                    } catch (err) {
+                        console.log("db error: ", err);
+                    }
 
-
-                connsParams = {//filter by game
-                    TableName: tableName,
-                    IndexName: "GSI1",
-                    KeyConditionExpression: "GSI1PK = :cn",
-                    ExpressionAttributeValues: {
-                        ":cn": {
-                            S: "CONN",
-                        },
-                    },
-                };
-
-                connsParams = {//filter out starting
-                    TableName: tableName,
-                    IndexName: "GSI1",
-                    KeyConditionExpression: "GSI1PK = :cn",
-                    ExpressionAttributeValues: {
-                        ":cn": {
-                            S: "CONN",
-                        },
-                    },
-                };
-                try {
-                    connsResults = await dyndb.query(connsParams).promise();
-                } catch (err) {
-                    console.log("db error: ", err);
-                }
-
-                try {
-                    connsResults.Items.forEach(async ({ GSI1SK }) => {
-                        await apigw
-                            .postToConnection({
-                                ConnectionId: GSI1SK.S,
-                                Data: JSON.stringify(payload),
-                            })
-                            .promise();
-                    });
-                } catch (err) {
-                    console.log("post error: ", err);
-                    cb(Error(err));
+                    try {
+                        connsResults.Items.forEach(async ({ GSI1SK }) => {
+                            await apigw
+                                .postToConnection({
+                                    ConnectionId: GSI1SK.S,
+                                    Data: JSON.stringify(payload),
+                                })
+                                .promise();
+                        });
+                    } catch (err) {
+                        console.log("post error: ", err);
+                        cb(Error(err));
+                    }
                 }
             } else {
                 console.log("stat modify: ", item);
             }
-
-
-
         } else {
             console.log("keys", rec.dynamodb.Keys);
         }

@@ -52,6 +52,7 @@ type game struct {
 	Pk       string            `json:"pk"`
 	Sk       string            `json:"sk"`
 	Starting bool              `json:"starting"`
+	Loading  bool              `json:"loading"`
 	Ready    bool              `json:"ready"`
 	Players  map[string]player `json:"players"`
 }

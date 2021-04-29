@@ -28,7 +28,7 @@ function reducer(
       if (!!state.games) {
         return {
           ...state,
-          games: [...state.games, ...games]
+          games: state.games.filter(g => !g.starting).map(g => g.no === games.no ? games : g)
         };
       }
       return {
