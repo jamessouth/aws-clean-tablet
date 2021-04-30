@@ -3,14 +3,15 @@ import { Switch, Route, Redirect, Link, useLocation } from "react-router-dom";
 
 const ce = React.createElement;
 const chk = String.fromCharCode(10003);
+const dot = String.fromCharCode(8228);
 
-export default function Game({ game, leader, ingame, send }) {
+export default function Game({ game, ingame, send, user }) {
     const gameReady = game.ready;
     // const [connectedWS, setConnectedWS] = useState(false);
     const [ready, setReady] = useState(true);
     const [count, setCount] = useState(5);
     // const [startedNewGame, setStartedNewGame] = useState(false);
-    // const [token, setToken] = useState("");
+    const [leader, setLeader] = useState(false);
     const [startGame, setStartGame] = useState(false);
 
     console.log("gamesss: ");
@@ -66,15 +67,15 @@ export default function Game({ game, leader, ingame, send }) {
             },
             "players"
         ), // ["aaa", "bbb", "ccc", "ddd", "fff", "zzz", "ooo", "ttt"]
-        Object.keys(game.players).map((p) => {
-            const plr = game.players[p].M;
+        game.players.map((p) => {
+            if (p.leader.BOOL && p.name.S === user) setLeader(true);
             return ce(
                 "p",
                 {
-                    key: plr.connid.S,
+                    key: p.connid.S,
                 },
-                plr.name.S,
-                plr.ready.BOOL
+                p.name.S,
+                p.ready.BOOL
                     ? ce(
                           "span",
                           {
@@ -82,6 +83,16 @@ export default function Game({ game, leader, ingame, send }) {
                                   "text-green-200 text-2xl font-bold leading-3",
                           },
                           chk
+                      )
+                    : null,
+                p.leader.BOOL
+                    ? ce(
+                          "span",
+                          {
+                              className:
+                                  "text-green-200 text-2xl font-bold leading-3",
+                          },
+                          dot
                       )
                     : null
             );
@@ -114,7 +125,7 @@ export default function Game({ game, leader, ingame, send }) {
                     "w-1/2 bottom-0 h-8 left-0 absolute pt-2 bg-smoke-700 bg-opacity-70",
                 disabled:
                     (!!ingame && ingame !== game.no) ||
-                    (!ingame && Object.keys(game.players).length > 7),
+                    (!ingame && game.players.length > 7),
                 onClick: () => {
                     send({
                         action: "lobby",
@@ -136,7 +147,7 @@ export default function Game({ game, leader, ingame, send }) {
                 disabled:
                     (!!ingame && ingame !== game.no) ||
                     !ingame ||
-                    Object.keys(game.players).length < 3,
+                    game.players.length < 3,
                 onClick: () => {
                     send({
                         action: "lobby",

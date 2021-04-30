@@ -11,7 +11,7 @@ const stage = process.env.CT_STAGE;
 function objToArr(obj) {
     const arr = [];
     for (let p in obj) {
-        arr.push({ [p]: obj[p] });
+        arr.push({ [p]: obj[p].M });
     }
     return arr;
 }
@@ -150,22 +150,20 @@ exports.handler = (req, ctx, cb) => {
                     cb(Error(err));
                 }
             } else if (item.pk.S.startsWith("GAME")) {
-                const payload = {
-                    games: {
-                        no: item.sk.S,
-                        ready: item.ready.BOOL,
-                        starting: item.starting.BOOL,
-                        loading: item.loading.BOOL,
-                        players: objToArr(item.players.M),
-                    },
-                    type: "games",
-                };
+                
                 if (item.loading.BOOL) {
+                    const payload = {
+                        game: {
+                            no: item.sk.S,
+                            players: objToArr(item.players.M),
+                        },
+                        type: "playing",
+                    };
                     try {
-                        connsResults.Items.forEach(async ({ GSI1SK }) => {
+                        payload.game.players.forEach(async ({ connid }) => {
                             await apigw
                                 .postToConnection({
-                                    ConnectionId: GSI1SK.S,
+                                    ConnectionId: connid.S,
                                     Data: JSON.stringify(payload),
                                 })
                                 .promise();
@@ -175,6 +173,16 @@ exports.handler = (req, ctx, cb) => {
                         cb(Error(err));
                     }
                 } else {
+                    const payload = {
+                        games: {
+                            no: item.sk.S,
+                            ready: item.ready.BOOL,
+                            starting: item.starting.BOOL,
+                            loading: item.loading.BOOL,
+                            players: objToArr(item.players.M),
+                        },
+                        type: "games",
+                    };
                     const connsParams = {
                         TableName: tableName,
                         IndexName: "GSI1",

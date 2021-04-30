@@ -11,7 +11,7 @@ export default function PrivateRoute({ children, ...rest }) {
         ...rest,
         render: ({ location, history }) =>
             auth.user
-                ? ce(children, {history})
+                ? ce(children, {history, user: auth.user})
                 : ce(Redirect, {
                       to: {
                           pathname: "/login",
