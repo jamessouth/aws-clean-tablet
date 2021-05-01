@@ -68,7 +68,7 @@ export default function Game({ game, ingame, send, user }) {
             "players"
         ), // ["aaa", "bbb", "ccc", "ddd", "fff", "zzz", "ooo", "ttt"]
         game.players.map((p) => {
-            if (p.leader.BOOL && p.name.S === user) setLeader(true);
+            // if (p.leader.BOOL && p.name.S === user) setLeader(true);
             return ce(
                 "p",
                 {

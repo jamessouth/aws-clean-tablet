@@ -4,14 +4,16 @@ import { authContext } from "./ProvideAuth";
 import { wsContext } from "./ProvideWS";
 
 const ce = React.createElement;
-export default function Play() {
-    //   const {
-    //     connectedWS,
-    //     games,
-    //     ingame,
-    //     send,
-    //     wsError
-    // } = useContext(wsContext);
+export default function Play({history: {action}, user}) {
+    const {
+        connectedWS,
+        game,
+    
+        send,
+        wsError
+    } = useContext(wsContext);
+
+    console.log("playyyyyy ", game, action, user);
 
     // console.log('props: ', history, location);
     const { gameno } = useParams();

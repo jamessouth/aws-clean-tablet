@@ -5,7 +5,7 @@ import { authContext } from "./ProvideAuth";
 const ce = React.createElement;
 
 export default function PrivateRoute({ children, ...rest }) {
-    console.log('ccxxxx: ', children);
+    // console.log('ccxxxx: ', children);
     let auth = useContext(authContext);
     return ce(Route, {
         ...rest,

@@ -11,7 +11,7 @@ const stage = process.env.CT_STAGE;
 function objToArr(obj) {
     const arr = [];
     for (let p in obj) {
-        arr.push({ [p]: obj[p].M });
+        arr.push(obj[p].M);
     }
     return arr;
 }

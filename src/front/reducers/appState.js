@@ -41,7 +41,9 @@ function reducer(
         //     playerName: name
         //   };
         case "games": {
-            console.log("reducer: ", state.games, games);
+          console.log("state.games in reducer: ", state.games);
+          console.log();
+          console.log("game in reducer: ", games);
             if (!!state.games) {
                 return {
                     ...state,

@@ -74,7 +74,7 @@ export default function useWSState() {
                         // word
                     } = JSON.parse(e.data);
 
-                    console.log("mmmm", type, game, games, ingame);
+                    console.log("wsstate json parse", type, game, games, ingame);
 
                     switch (type) {
                         case "games":
