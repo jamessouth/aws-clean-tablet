@@ -10,6 +10,8 @@ export default function Lobby({history: {action}, user}) {
         connectedWS,
         games,
         ingame,
+        leadertoken,
+        playing,
         send,
         wsError
     } = useContext(wsContext);
@@ -63,6 +65,7 @@ export default function Lobby({history: {action}, user}) {
                     action,
                     games,
                     ingame,
+                    leadertoken,
                     send: val => send(val),
                     user,
                 }

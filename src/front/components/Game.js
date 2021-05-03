@@ -5,16 +5,21 @@ const ce = React.createElement;
 const chk = String.fromCharCode(10003);
 const dot = String.fromCharCode(8228);
 
-export default function Game({ game, ingame, send, user }) {
+export default function Game({ game, ingame, leadertoken, send, user }) {
     const gameReady = game.ready;
     // const [connectedWS, setConnectedWS] = useState(false);
     const [ready, setReady] = useState(true);
     const [count, setCount] = useState(5);
-    // const [startedNewGame, setStartedNewGame] = useState(false);
     const [leader, setLeader] = useState(false);
     const [startGame, setStartGame] = useState(false);
 
     console.log("gamesss: ");
+
+    useEffect(() => {
+        if (leadertoken !== "" && game.leader === leadertoken) {
+            setLeader(true);
+        }
+    }, [game.leader, leadertoken]);
 
     useEffect(() => {
         let id;
@@ -68,7 +73,6 @@ export default function Game({ game, ingame, send, user }) {
             "players"
         ), // ["aaa", "bbb", "ccc", "ddd", "fff", "zzz", "ooo", "ttt"]
         game.players.map((p) => {
-            // if (p.leader.BOOL && p.name.S === user) setLeader(true);
             return ce(
                 "p",
                 {
@@ -85,7 +89,7 @@ export default function Game({ game, ingame, send, user }) {
                           chk
                       )
                     : null,
-                p.leader.BOOL
+                leader
                     ? ce(
                           "span",
                           {

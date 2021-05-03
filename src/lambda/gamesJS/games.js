@@ -61,6 +61,7 @@ exports.handler = (req, ctx, cb) => {
                     games: gamesResults.Items.map((g) => ({
                         no: g.sk.S,
                         ready: g.ready.BOOL,
+                        leader: g.leader.S,
                         players: objToArr(g.players.M),
                     })),
                     type: "games",
@@ -133,6 +134,7 @@ exports.handler = (req, ctx, cb) => {
             if (item.pk.S.startsWith("CONN")) {
                 const payload = {
                     ingame: item.game.S,
+                    leadertoken: item.sk.S + item.GSI1SK.S,
                     playing: item.playing.BOOL,
                     type: "user",
                 };
@@ -178,6 +180,7 @@ exports.handler = (req, ctx, cb) => {
                             no: item.sk.S,
                             ready: item.ready.BOOL,
                             starting: item.starting.BOOL,
+                            leader: item.leader.S,
                             loading: item.loading.BOOL,
                             players: objToArr(item.players.M),
                         },
