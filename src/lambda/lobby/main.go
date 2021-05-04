@@ -32,8 +32,8 @@ type Key struct {
 type Player struct {
 	Name   string `dynamodbav:"name"`
 	ConnID string `dynamodbav:"connid"`
-	Ready  bool   `dynamodbav:"ready,omitempty"`
-	Color  string `dynamodbav:"color,omitempty"`
+	Ready  bool   `dynamodbav:"ready"`
+	Color  string `dynamodbav:"color"`
 }
 
 type game struct {
@@ -42,7 +42,6 @@ type game struct {
 	Starting bool              `dynamodbav:"starting"`
 	Leader   string            `dynamodbav:"leader"`
 	Loading  bool              `dynamodbav:"loading"`
-	Ready    bool              `dynamodbav:"ready"`
 	Players  map[string]Player `dynamodbav:"players"`
 }
 
@@ -183,14 +182,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 							"#ID": id,
 							// "#ST": "starting",#ST = :f
 							// "#LO": "loading",#LO = :f
-							"#RD": "ready",
+							"#LE": "leader",
 						},
 						ExpressionAttributeValues: map[string]types.AttributeValue{
+							":e": &types.AttributeValueMemberS{Value: ""},
 							":m": marshalledMaxPlayers,
-							":f": marshalledFalse,
 							":p": marshalledPlayer,
 						},
-						UpdateExpression: aws.String("SET #PL.#ID = :p, #RD = :f"),
+						UpdateExpression: aws.String("SET #PL.#ID = :p, #LE = :e"),
 					},
 				},
 				{
@@ -212,14 +211,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 							"#ST": "starting",
 							"#LO": "loading",
 							"#LE": "leader",
-							"#RD": "ready",
 						},
 						ExpressionAttributeValues: map[string]types.AttributeValue{
 							":p": marshalledPlayersMap,
 							":e": &types.AttributeValueMemberS{Value: ""},
 							":f": marshalledFalse,
 						},
-						UpdateExpression: aws.String("SET #PL = :p, #RD = :f, #ST = :f, #LO = :f, #LE = :e"),
+						UpdateExpression: aws.String("SET #PL = :p, #ST = :f, #LO = :f, #LE = :e"),
 					},
 				},
 				{
@@ -232,113 +230,41 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	} else if body.Type == "leave" {
 
 		_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-
-			Key:       gameItemKey,
-			TableName: aws.String(tableName),
-
-			ExpressionAttributeNames: map[string]string{
-				"#PL": "players",
-				"#ID": id,
-			},
-
-			UpdateExpression: aws.String("REMOVE #PL.#ID"),
-		})
-		callErr(err)
-
-		_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-
 			Key:       connItemKey,
 			TableName: aws.String(tableName),
 			ExpressionAttributeNames: map[string]string{
 				"#IG": "game",
 			},
-
 			ExpressionAttributeValues: map[string]types.AttributeValue{
-
 				":g": &types.AttributeValueMemberS{Value: ""},
 			},
 			UpdateExpression: aws.String("SET #IG = :g"),
 		})
 		callErr(err)
 
-		ui3, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-
-			Key:                 gameItemKey,
-			TableName:           aws.String(tableName),
-			ConditionExpression: aws.String("#LE = :c"),
+		ui2, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+			Key:       gameItemKey,
+			TableName: aws.String(tableName),
 			ExpressionAttributeNames: map[string]string{
+				"#PL": "players",
+				"#ID": id,
 				"#LE": "leader",
 			},
 			ExpressionAttributeValues: map[string]types.AttributeValue{
-
-				":c": &types.AttributeValueMemberS{Value: name + req.RequestContext.ConnectionID},
 				":e": &types.AttributeValueMemberS{Value: ""},
 			},
-			UpdateExpression: aws.String("SET #LE = :e"),
+			UpdateExpression: aws.String("REMOVE #PL.#ID SET #LE = :e"),
 			ReturnValues:     types.ReturnValueAllNew,
 		})
 		callErr(err)
 
-		var game game
-		err = attributevalue.UnmarshalMap(ui3.Attributes, &game)
-		if err != nil {
-			fmt.Println("joingame leave unmarshal err", err)
-		}
-
-		if len(game.Players) > 2 {
-
-			if game.Ready {
-
-				if game.Leader == "" {
-
-					for k, v := range game.Players {
-
-						fmt.Printf("%s, %v, %+v", "ui", k, v)
-
-						_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-							Key:       gameItemKey,
-							TableName: aws.String(tableName),
-							ExpressionAttributeNames: map[string]string{
-								"#LE": "leader",
-							},
-							ExpressionAttributeValues: map[string]types.AttributeValue{
-								":l": &types.AttributeValueMemberS{Value: v.Name + v.ConnID},
-							},
-							UpdateExpression: aws.String("SET #LE = :l"),
-						})
-						callErr(err)
-						break
-
-					}
-
-				}
-
-			} else {
-				callFunction(game, gameItemKey, tableName, marshalledTrue, ctx, svc)
-
-			}
-
-		} else {
-			_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-				Key:       gameItemKey,
-				TableName: aws.String(tableName),
-				ExpressionAttributeNames: map[string]string{
-					"#RD": "ready",
-				},
-				ExpressionAttributeValues: map[string]types.AttributeValue{
-					":f": marshalledFalse,
-				},
-				UpdateExpression: aws.String("SET #RD = :f"),
-			})
-
-			callErr(err)
-		}
+		callFunction(ui2.Attributes, gameItemKey, tableName, marshalledTrue, ctx, svc)
 
 	} else if body.Type == "ready" {
 
 		if body.Value {
 
-			ui, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+			ui2, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 				Key:       gameItemKey,
 				TableName: aws.String(tableName),
 				ExpressionAttributeNames: map[string]string{
@@ -355,16 +281,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 			callErr(err)
 
-			var game game
-			err = attributevalue.UnmarshalMap(ui.Attributes, &game)
-			if err != nil {
-				fmt.Println("del item unmarshal err", err)
-			}
-			if len(game.Players) > 2 {
-
-				callFunction(game, gameItemKey, tableName, marshalledTrue, ctx, svc)
-
-			}
+			callFunction(ui2.Attributes, gameItemKey, tableName, marshalledTrue, ctx, svc)
 
 		} else {
 
@@ -375,28 +292,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 					"#PL": "players",
 					"#ID": id,
 					"#RD": "ready",
-				},
-				ExpressionAttributeValues: map[string]types.AttributeValue{
-					":f": marshalledFalse,
-				},
-				UpdateExpression: aws.String("SET #PL.#ID.#RD = :f, #RD = :f"),
-			})
-			callErr(err)
-
-			_, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-
-				Key:                 gameItemKey,
-				TableName:           aws.String(tableName),
-				ConditionExpression: aws.String("#LE = :c"),
-				ExpressionAttributeNames: map[string]string{
 					"#LE": "leader",
 				},
 				ExpressionAttributeValues: map[string]types.AttributeValue{
-
-					":c": &types.AttributeValueMemberS{Value: name + req.RequestContext.ConnectionID},
 					":e": &types.AttributeValueMemberS{Value: ""},
+					":f": marshalledFalse,
 				},
-				UpdateExpression: aws.String("SET #LE = :e"),
+				UpdateExpression: aws.String("SET #PL.#ID.#RD = :f, #LE = :e"),
 			})
 			callErr(err)
 
@@ -419,9 +321,18 @@ func main() {
 	lambda.Start(handler)
 }
 
-func callFunction(gm game, gik map[string]types.AttributeValue, tn string, mt types.AttributeValue, ctx context.Context, svc *dynamodb.Client) {
-	readyCount := 0
+func callFunction(rv, gik map[string]types.AttributeValue, tn string, mt types.AttributeValue, ctx context.Context, svc *dynamodb.Client) {
+	var gm game
+	err := attributevalue.UnmarshalMap(rv, &gm)
+	if err != nil {
+		fmt.Println("unmarshal err", err)
+	}
 
+	if len(gm.Players) < 3 {
+		return
+	}
+
+	readyCount := 0
 	for k, v := range gm.Players {
 
 		fmt.Printf("%s, %v, %+v", "uicf", k, v)
@@ -429,39 +340,21 @@ func callFunction(gm game, gik map[string]types.AttributeValue, tn string, mt ty
 		if v.Ready {
 			readyCount++
 			if readyCount == len(gm.Players) {
-				var uii dynamodb.UpdateItemInput
-				if gm.Leader == "" {
-					uii = dynamodb.UpdateItemInput{
-						Key:       gik,
-						TableName: aws.String(tn),
-						ExpressionAttributeNames: map[string]string{
-
-							"#RD": "ready",
-							"#LE": "leader",
-						},
-						ExpressionAttributeValues: map[string]types.AttributeValue{
-							":t": mt,
-							":l": &types.AttributeValueMemberS{Value: v.Name + v.ConnID},
-						},
-						UpdateExpression: aws.String("SET #RD = :t, #LE = :l"),
-					}
-				} else {
-					uii = dynamodb.UpdateItemInput{
-						Key:       gik,
-						TableName: aws.String(tn),
-						ExpressionAttributeNames: map[string]string{
-							"#RD": "ready",
-						},
-						ExpressionAttributeValues: map[string]types.AttributeValue{
-							":t": mt,
-						},
-						UpdateExpression: aws.String("SET #RD = :t"),
-					}
-				}
-				_, err := svc.UpdateItem(ctx, &uii)
-
+				_, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+					Key:       gik,
+					TableName: aws.String(tn),
+					ExpressionAttributeNames: map[string]string{
+						"#LE": "leader",
+					},
+					ExpressionAttributeValues: map[string]types.AttributeValue{
+						":l": &types.AttributeValueMemberS{Value: v.Name + "_" + v.ConnID},
+					},
+					UpdateExpression: aws.String("SET #LE = :l"),
+				})
 				callErr(err)
 			}
+		} else {
+			return
 		}
 	}
 }

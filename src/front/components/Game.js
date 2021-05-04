@@ -6,17 +6,18 @@ const chk = String.fromCharCode(10003);
 const dot = String.fromCharCode(8228);
 
 export default function Game({ game, ingame, leadertoken, send, user }) {
-    const gameReady = game.ready;
+    const gameReady = !!game.leader;
+    const leaderName = game.leader.split("_")[0];
     // const [connectedWS, setConnectedWS] = useState(false);
     const [ready, setReady] = useState(true);
-    const [count, setCount] = useState(5);
+    const [count, setCount] = useState(5000);
     const [leader, setLeader] = useState(false);
     const [startGame, setStartGame] = useState(false);
 
-    console.log("gamesss: ");
+    console.log("gamesss: ", game.leader, leadertoken);
 
     useEffect(() => {
-        if (leadertoken !== "" && game.leader === leadertoken) {
+        if (game.leader !== "" && game.leader === leadertoken) {
             setLeader(true);
         }
     }, [game.leader, leadertoken]);
@@ -30,7 +31,7 @@ export default function Game({ game, ingame, leadertoken, send, user }) {
         }
 
         return () => {
-            setCount(5);
+            setCount(5000);
             clearInterval(id);
         };
     }, [gameReady, game.no, ingame]);
@@ -89,7 +90,7 @@ export default function Game({ game, ingame, leadertoken, send, user }) {
                           chk
                       )
                     : null,
-                leader
+                leaderName === p.name.S
                     ? ce(
                           "span",
                           {
@@ -109,7 +110,7 @@ export default function Game({ game, ingame, leadertoken, send, user }) {
                       className:
                           "absolute text-yellow-200 text-2xl font-bold left-1/2 bottom-1/4 transform -translate-x-2/4",
                   },
-                  "Starting..."
+                  "Starting soon..."
               )
             : gameReady && ingame === game.no
             ? ce(
