@@ -8,15 +8,10 @@ github.com/aws/aws-sdk-go-v2/config v1.1.4 h1:2hjdDldmJJjb+rFieQySfOFt4WwxKZJVTE
 github.com/aws/aws-sdk-go-v2/config v1.1.4/go.mod h1:op05ummoVoAqctpA80jVt/+hvEtLfuKmDyx0bIuvfbE=
 github.com/aws/aws-sdk-go-v2/credentials v1.1.4 h1:whYYw2srG+zUQzUw4LhML83f+xd22Vm7gv0I7aJglc8=
 github.com/aws/aws-sdk-go-v2/credentials v1.1.4/go.mod h1:UQwsT2w2XelrWoVV2v/zL2uce1RxmVCiHaZsoKLamZg=
-github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.0.5 h1:SrngP5N1dXxKQxSzx8QXKECXwVDc3coIRuafiCOBQok=
-github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.0.5/go.mod h1:+7ENfClLR5fHO44r1sjDtJ8q7EWtrp6Ven2+xx+Foz0=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.0.5 h1:5gCrezE41xYQHWDsDkJD9nT22tUH3s+Zrvs4c3v2FGc=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.0.5/go.mod h1:z/NKNlYxMzphl7TzjV+ctUebHF4CFNGGlSvmV/NKcJU=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.2.1 h1:NnYXRukLvkiTnNyZHCCQcZaoWJSeE5Y7tCVPgvTyWfw=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.2.1/go.mod h1:WqAbIrpO0PSa3AIDxMG12aPPN4D1u99rOFdEfSM/KgY=
-github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.1.4 h1:UmlbQAaEbdAQpSDc78a2ZEIGQ8lO0bEA3Rpb066Exn8=
-github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.1.4/go.mod h1:ZtMHD0kB4ky0d6+Z+URaSXcwlEdx93kseYjI5abB8/8=
-github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.0.3 h1:iLFz4nrWkXMTFeVn0n99wRyc4Xib4SlDbtAM3h2z8P8=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.0.3/go.mod h1:g3Xw4tO/W+ae4EMzkxB6nGnJ48cLM4i1Z61WmD+IKtY=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.0.5 h1:GbW4bbc1iED64aIL203xcGSfLzWOWuIdnKV0guMcJvg=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.0.5/go.mod h1:MW0O/RpmVpS6MWKn6W03XEJmqXlG7+d3iaYLzkd2fAc=

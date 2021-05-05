@@ -14,7 +14,7 @@ export default function Game({ game, ingame, leadertoken, send, user }) {
     const [leader, setLeader] = useState(false);
     const [startGame, setStartGame] = useState(false);
 
-    console.log("gamesss: ", game.leader, leadertoken);
+    console.log("game.l: ", game.leader, "ldrtkn", leadertoken);
 
     useEffect(() => {
         if (game.leader !== "" && game.leader === leadertoken) {

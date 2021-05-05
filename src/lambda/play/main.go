@@ -44,17 +44,16 @@ type player struct {
 	Name   string `json:"name"`
 	ConnID string `json:"connid"`
 	Ready  bool   `json:"ready"`
-	Leader bool   `json:"leader"`
 	Color  string `json:"color"`
 }
 
 type game struct {
-	Pk       string            `json:"pk"`
-	Sk       string            `json:"sk"`
-	Starting bool              `json:"starting"`
-	Loading  bool              `json:"loading"`
-	Ready    bool              `json:"ready"`
-	Players  map[string]player `json:"players"`
+	Pk       string   `json:"pk"`
+	Sk       string   `json:"sk"`
+	Starting bool     `json:"starting"`
+	Leader   string   `json:"leader"`
+	Loading  bool     `json:"loading"`
+	Players  []player `json:"players"`
 }
 
 type body struct {
