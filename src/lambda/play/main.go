@@ -6,17 +6,18 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 
-	// "github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 
-	lamb "github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/smithy-go"
 )
 
@@ -40,25 +41,25 @@ type Key struct {
 }
 
 // Player holds values to be put in db
-type player struct {
-	Name   string `json:"name"`
-	ConnID string `json:"connid"`
-	Ready  bool   `json:"ready"`
-	Color  string `json:"color"`
-}
+// type player struct {
+// 	Name   string `json:"name"`
+// 	ConnID string `json:"connid"`
+// 	Ready  bool   `json:"ready"`
+// 	Color  string `json:"color"`
+// }
 
-type game struct {
-	Pk       string   `json:"pk"`
-	Sk       string   `json:"sk"`
-	Starting bool     `json:"starting"`
-	Leader   string   `json:"leader"`
-	Loading  bool     `json:"loading"`
-	Players  []player `json:"players"`
-}
+// type game struct {
+// 	Pk       string   `json:"pk"`
+// 	Sk       string   `json:"sk"`
+// 	Starting bool     `json:"starting"`
+// 	Leader   string   `json:"leader"`
+// 	Loading  bool     `json:"loading"`
+// 	Players  []player `json:"players"`
+// }
 
 type body struct {
-	Game game
-	Type string
+	Gameno string
+	Type   string
 }
 
 // ConnItemAttrs holds vals for db
@@ -67,10 +68,10 @@ type ConnItemAttrs struct {
 	Zero *int   `dynamodbav:":zero,omitempty"`
 }
 
-type lambdaInput struct {
-	Game   game   `json:"game"`
-	Region string `json:"region"`
-}
+// type lambdaInput struct {
+// 	Game   game   `json:"game"`
+// 	Region string `json:"region"`
+// }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
@@ -85,15 +86,15 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		fmt.Println("cfg err")
 	}
 
-	// tableName, ok := os.LookupEnv("tableName")
-	// if !ok {
-	// 	panic(fmt.Sprintf("%v", "can't find table name"))
-	// }
+	tableName, ok := os.LookupEnv("tableName")
+	if !ok {
+		panic(fmt.Sprintf("%v", "can't find table name"))
+	}
 
 	// .WithEndpoint("http://192.168.4.27:8000")
 
-	// svc := dynamodb.NewFromConfig(cfg)
-	svc2 := lamb.NewFromConfig(cfg)
+	svc := dynamodb.NewFromConfig(cfg)
+	// svc2 := lamb.NewFromConfig(cfg)
 
 	// auth := req.RequestContext.Authorizer.(map[string]interface{})
 
@@ -109,55 +110,39 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	if body.Type == "start" {
 
-		// gameItemKey, err := attributevalue.MarshalMap(Key{
-		// 	Pk: "GAME",
-		// 	Sk: body.Game,
-		// })
-		// if err != nil {
-		// 	panic(fmt.Sprintf("failed to marshal Record, %v", err))
-		// }
+		gameItemKey, err := attributevalue.MarshalMap(Key{
+			Pk: "GAME",
+			Sk: body.Gameno,
+		})
+		if err != nil {
+			panic(fmt.Sprintf("failed to marshal gik Record, %v", err))
+		}
 
-		// att1, err := attributevalue.Marshal(true)
-		// if err != nil {
-		// 	panic(fmt.Sprintf("failed to marshal Record 22, %v", err))
-		// }
+		gi, err := svc.GetItem(ctx, &dynamodb.GetItemInput{
+			Key:       gameItemKey,
+			TableName: aws.String(tableName),
+		})
+		// j := &gi
 
-		// ui, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		fmt.Printf("%s%+v\n", "get item", gi)
+		fmt.Printf("%s%+v\n", "get item22222", *gi)
+		// fmt.Println("get item2222", j.Item)
 
-		// 	// ----------------------------------------------------
-		// 	Key:                 gameItemKey,
-		// 	TableName:           aws.String(tableName),
-		// 	ConditionExpression: aws.String("#ST <> :s"),
-		// 	ExpressionAttributeNames: map[string]string{
-		// 		// "#PL": "players",
-		// 		// "#ID": id,
-		// 		"#ST": "starting",
-		// 	},
-		// 	ExpressionAttributeValues: map[string]types.AttributeValue{
-		// 		":s": att1,
-		// 		// ":maxsize": att2,
-		// 		// ":player": att3,
-		// 	},
+		if err != nil {
 
-		// 	UpdateExpression: aws.String("SET #ST = :s"),
-		// 	ReturnValues:     types.ReturnValueAllNew,
-		// })
-		// // fmt.Println("op", op)
-		// if err != nil {
+			var intServErr *types.InternalServerError
+			if errors.As(err, &intServErr) {
+				fmt.Printf("get item error, %v",
+					intServErr.ErrorMessage())
+			}
 
-		// 	var intServErr *types.InternalServerError
-		// 	if errors.As(err, &intServErr) {
-		// 		fmt.Printf("get item error, %v",
-		// 			intServErr.ErrorMessage())
-		// 	}
-
-		// 	// To get any API error
-		// 	var apiErr smithy.APIError
-		// 	if errors.As(err, &apiErr) {
-		// 		fmt.Printf("play rt db error, Code: %v, Message: %v",
-		// 			apiErr.ErrorCode(), apiErr.ErrorMessage())
-		// 	}
-
+			// To get any API error
+			var apiErr smithy.APIError
+			if errors.As(err, &apiErr) {
+				fmt.Printf("play rt db error, Code: %v, Message: %v",
+					apiErr.ErrorCode(), apiErr.ErrorMessage())
+			}
+		}
 		// } else {
 
 		// var game game
@@ -166,37 +151,37 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		// 	fmt.Println("play update item unmarshal err", err)
 		// }
 
-		mj, err := json.Marshal(lambdaInput{
-			Game: body.Game,
-			// ApiId:  req.RequestContext.APIID,
-			// Stage:  req.RequestContext.Stage,
-			Region: reg,
-		})
-		if err != nil {
-			fmt.Println("game item marshal err", err)
-		}
+		// mj, err := json.Marshal(lambdaInput{
+		// 	Game: gi.Item,
+		// 	// ApiId:  req.RequestContext.APIID,
+		// 	// Stage:  req.RequestContext.Stage,
+		// 	Region: reg,
+		// })
+		// if err != nil {
+		// 	fmt.Println("game item marshal err", err)
+		// }
 
-		ii := lamb.InvokeInput{
-			FunctionName: aws.String("ct-playJS"),
-			// ClientContext:  new(string),
-			// InvocationType: "",
-			// LogType:        "",
-			Payload: mj,
-			// Qualifier:      new(string),
-		}
+		// ii := lamb.InvokeInput{
+		// 	FunctionName: aws.String("ct-playJS"),
+		// 	// ClientContext:  new(string),
+		// 	// InvocationType: "",
+		// 	// LogType:        "",
+		// 	Payload: mj,
+		// 	// Qualifier:      new(string),
+		// }
 
-		li, err := svc2.Invoke(ctx, &ii)
+		// li, err := svc2.Invoke(ctx, &ii)
 
-		q := *li
-		fmt.Printf("\n%s, %+v\n", "liii", q)
-		// fmt.Println(*li.FunctionError, li.Payload)
-		z := q.FunctionError
-		x := string(q.Payload)
-		fmt.Println("inv pyld", x)
+		// q := *li
+		// fmt.Printf("\n%s, %+v\n", "liii", q)
+		// // fmt.Println(*li.FunctionError, li.Payload)
+		// z := q.FunctionError
+		// x := string(q.Payload)
+		// fmt.Println("inv pyld", x)
 
-		if z != nil {
-			fmt.Println("inv err", *z, x)
-		}
+		// if z != nil {
+		// 	fmt.Println("inv err", *z, x)
+		// }
 
 		if err != nil {
 

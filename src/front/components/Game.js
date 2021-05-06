@@ -3,16 +3,18 @@ import { Switch, Route, Redirect, Link, useLocation } from "react-router-dom";
 
 const ce = React.createElement;
 const chk = String.fromCharCode(10003);
-const dot = String.fromCharCode(8228);
+// const dot = String.fromCharCode(8228);
 
 export default function Game({ game, ingame, leadertoken, send, user }) {
     const gameReady = !!game.leader;
     const leaderName = game.leader.split("_")[0];
     // const [connectedWS, setConnectedWS] = useState(false);
     const [ready, setReady] = useState(true);
-    const [count, setCount] = useState(5000);
+    const [count, setCount] = useState(500);
     const [leader, setLeader] = useState(false);
     const [startGame, setStartGame] = useState(false);
+
+    const chkstyl = " text-2xl font-bold leading-3";
 
     console.log("game.l: ", game.leader, "ldrtkn", leadertoken);
 
@@ -31,7 +33,7 @@ export default function Game({ game, ingame, leadertoken, send, user }) {
         }
 
         return () => {
-            setCount(5000);
+            setCount(500);
             clearInterval(id);
         };
     }, [gameReady, game.no, ingame]);
@@ -43,7 +45,7 @@ export default function Game({ game, ingame, leadertoken, send, user }) {
             if (leader) {
                 send({
                     action: "play",
-                    game,
+                    gameno: game.no,
                     type: "start",
                 });
             }
@@ -84,20 +86,9 @@ export default function Game({ game, ingame, leadertoken, send, user }) {
                     ? ce(
                           "span",
                           {
-                              className:
-                                  "text-green-200 text-2xl font-bold leading-3",
+                              className: leaderName === p.name.S ? `text-red-200${chkstyl}` : `text-green-200${chkstyl}`
                           },
                           chk
-                      )
-                    : null,
-                leaderName === p.name.S
-                    ? ce(
-                          "span",
-                          {
-                              className:
-                                  "text-green-200 text-2xl font-bold leading-3",
-                          },
-                          dot
                       )
                     : null
             );
