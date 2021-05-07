@@ -17,6 +17,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	lamb "github.com/aws/aws-sdk-go-v2/service/lambda"
 
 	"github.com/aws/smithy-go"
 )
@@ -41,21 +42,21 @@ type Key struct {
 }
 
 // Player holds values to be put in db
-// type player struct {
-// 	Name   string `json:"name"`
-// 	ConnID string `json:"connid"`
-// 	Ready  bool   `json:"ready"`
-// 	Color  string `json:"color"`
-// }
+type player struct {
+	Name   string `dynamodbav:"name"`
+	ConnID string `dynamodbav:"connid"`
+	Ready  bool   `dynamodbav:"ready"`
+	Color  string `dynamodbav:"color"`
+}
 
-// type game struct {
-// 	Pk       string   `json:"pk"`
-// 	Sk       string   `json:"sk"`
-// 	Starting bool     `json:"starting"`
-// 	Leader   string   `json:"leader"`
-// 	Loading  bool     `json:"loading"`
-// 	Players  []player `json:"players"`
-// }
+type game struct {
+	Pk       string            `dynamodbav:"pk"`
+	Sk       string            `dynamodbav:"sk"`
+	Starting bool              `dynamodbav:"starting"`
+	Leader   string            `dynamodbav:"leader"`
+	Loading  bool              `dynamodbav:"loading"`
+	Players  map[string]player `dynamodbav:"players"`
+}
 
 type body struct {
 	Gameno string
@@ -68,10 +69,10 @@ type ConnItemAttrs struct {
 	Zero *int   `dynamodbav:":zero,omitempty"`
 }
 
-// type lambdaInput struct {
-// 	Game   game   `json:"game"`
-// 	Region string `json:"region"`
-// }
+type lambdaInput struct {
+	Game   game   `json:"game"`
+	Region string `json:"region"`
+}
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
@@ -94,7 +95,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	// .WithEndpoint("http://192.168.4.27:8000")
 
 	svc := dynamodb.NewFromConfig(cfg)
-	// svc2 := lamb.NewFromConfig(cfg)
+	svc2 := lamb.NewFromConfig(cfg)
 
 	// auth := req.RequestContext.Authorizer.(map[string]interface{})
 
@@ -122,11 +123,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			Key:       gameItemKey,
 			TableName: aws.String(tableName),
 		})
-		// j := &gi
-
-		fmt.Printf("%s%+v\n", "get item", gi)
-		fmt.Printf("%s%+v\n", "get item22222", *gi)
-		// fmt.Println("get item2222", j.Item)
 
 		if err != nil {
 
@@ -143,6 +139,15 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 					apiErr.ErrorCode(), apiErr.ErrorMessage())
 			}
 		}
+
+		var game game
+		err = attributevalue.UnmarshalMap(gi.Item, &game)
+		if err != nil {
+			fmt.Println("get item unmarshal err", err)
+		}
+
+		fmt.Printf("%s%+v\n", "gammmmme ", game)
+
 		// } else {
 
 		// var game game
@@ -151,37 +156,37 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		// 	fmt.Println("play update item unmarshal err", err)
 		// }
 
-		// mj, err := json.Marshal(lambdaInput{
-		// 	Game: gi.Item,
-		// 	// ApiId:  req.RequestContext.APIID,
-		// 	// Stage:  req.RequestContext.Stage,
-		// 	Region: reg,
-		// })
-		// if err != nil {
-		// 	fmt.Println("game item marshal err", err)
-		// }
+		mj, err := json.Marshal(lambdaInput{
+			Game: game,
+			// ApiId:  req.RequestContext.APIID,
+			// Stage:  req.RequestContext.Stage,
+			Region: reg,
+		})
+		if err != nil {
+			fmt.Println("game item marshal err", err)
+		}
 
-		// ii := lamb.InvokeInput{
-		// 	FunctionName: aws.String("ct-playJS"),
-		// 	// ClientContext:  new(string),
-		// 	// InvocationType: "",
-		// 	// LogType:        "",
-		// 	Payload: mj,
-		// 	// Qualifier:      new(string),
-		// }
+		ii := lamb.InvokeInput{
+			FunctionName: aws.String("ct-playJS"),
+			// ClientContext:  new(string),
+			// InvocationType: "",
+			// LogType:        "",
+			Payload: mj,
+			// Qualifier:      new(string),
+		}
 
-		// li, err := svc2.Invoke(ctx, &ii)
+		li, err := svc2.Invoke(ctx, &ii)
 
-		// q := *li
-		// fmt.Printf("\n%s, %+v\n", "liii", q)
-		// // fmt.Println(*li.FunctionError, li.Payload)
-		// z := q.FunctionError
-		// x := string(q.Payload)
-		// fmt.Println("inv pyld", x)
+		q := *li
+		fmt.Printf("\n%s, %+v\n", "liii", q)
+		// fmt.Println(*li.FunctionError, li.Payload)
+		z := q.FunctionError
+		x := string(q.Payload)
+		fmt.Println("inv pyld", x)
 
-		// if z != nil {
-		// 	fmt.Println("inv err", *z, x)
-		// }
+		if z != nil {
+			fmt.Println("inv err", *z, x)
+		}
 
 		if err != nil {
 

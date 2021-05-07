@@ -340,6 +340,7 @@ func callFunction(rv, gik map[string]types.AttributeValue, tn string, mt types.A
 		if v.Ready {
 			readyCount++
 			if readyCount == len(gm.Players) {
+				time.Sleep(1000 * time.Millisecond)
 				_, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 					Key:       gik,
 					TableName: aws.String(tn),

@@ -38,6 +38,7 @@ exports.handler = (req, ctx, cb) => {
             if (item.pk.S.startsWith("CONN")) {
                 const gamesParams = {
                     TableName: tableName,
+                    ScanIndexForward: false,
                     KeyConditionExpression: "pk = :gm",
                     FilterExpression: "#ST = :st",
                     ExpressionAttributeValues: {

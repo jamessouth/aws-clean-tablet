@@ -23,17 +23,16 @@ const colors = [
 
 
 exports.handler = (req, ctx, cb) => {
-    console.log("njnjnjnj: ", req);
-
+   
     const sf = new SF({
         apiVersion: "2016-11-23",
         region: req.region,
     });
 
-    const sfInput = Object.keys(req.game.players).map((p, i) => ({
+    const sfInput = Object.keys(req.game.Players).map((p, i) => ({
         id: p,
         color: colors[i],
-        name: req.game.players[p].M.name.S,
+        name: req.game.Players[p].Name,
     }));
 
     console.log('sfip: ', sfInput);
@@ -44,7 +43,7 @@ exports.handler = (req, ctx, cb) => {
                 .startSyncExecution({
                     stateMachineArn: smarn,
                     input: JSON.stringify({
-                        gameno: req.game.sk,
+                        gameno: req.game.Sk,
                         arr: sfInput,
                     }),
                     name: "sfex1",

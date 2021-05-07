@@ -20,7 +20,7 @@ function processGames(arr, ni) {
             }
         }
     }
-    return list.concat(ni);
+    return [ni, ...list];
 }
 
 function reducer(

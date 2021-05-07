@@ -10,7 +10,7 @@ export default function Game({ game, ingame, leadertoken, send, user }) {
     const leaderName = game.leader.split("_")[0];
     // const [connectedWS, setConnectedWS] = useState(false);
     const [ready, setReady] = useState(true);
-    const [count, setCount] = useState(500);
+    const [count, setCount] = useState(5);
     const [leader, setLeader] = useState(false);
     const [startGame, setStartGame] = useState(false);
 
@@ -33,7 +33,7 @@ export default function Game({ game, ingame, leadertoken, send, user }) {
         }
 
         return () => {
-            setCount(500);
+            setCount(5);
             clearInterval(id);
         };
     }, [gameReady, game.no, ingame]);
