@@ -8,7 +8,7 @@ export default function ProvideWS({
   children
 }) {
   let auth = useContext(authContext);
-  console.log('provWS: ', auth.user);
+  // console.log('provWS: ', auth.user);
   const ws = auth.user && useWSState();
   return React.createElement(wsContext.Provider, {
     value: ws

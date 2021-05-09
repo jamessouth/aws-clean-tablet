@@ -114,16 +114,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		panic(fmt.Sprintf("failed to marshal cik Record 3, %v", err))
 	}
 
-	marshalledFalse, err := attributevalue.Marshal(false)
-	if err != nil {
-		panic(fmt.Sprintf("failed to marshal false, %v", err))
-	}
-
-	marshalledTrue, err := attributevalue.Marshal(true)
-	if err != nil {
-		panic(fmt.Sprintf("failed to marshal true, %v", err))
-	}
-
 	if body.Type == "join" {
 
 		zero := 0
@@ -215,7 +205,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 						ExpressionAttributeValues: map[string]types.AttributeValue{
 							":p": marshalledPlayersMap,
 							":e": &types.AttributeValueMemberS{Value: ""},
-							":f": marshalledFalse,
+							":f": &types.AttributeValueMemberBOOL{Value: false},
 						},
 						UpdateExpression: aws.String("SET #PL = :p, #ST = :f, #LO = :f, #LE = :e"),
 					},
@@ -258,7 +248,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		})
 		callErr(err)
 
-		callFunction(ui2.Attributes, gameItemKey, tableName, marshalledTrue, ctx, svc)
+		callFunction(ui2.Attributes, gameItemKey, tableName, ctx, svc)
 
 	} else if body.Type == "ready" {
 
@@ -273,7 +263,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 					"#RD": "ready",
 				},
 				ExpressionAttributeValues: map[string]types.AttributeValue{
-					":t": marshalledTrue,
+					":t": &types.AttributeValueMemberBOOL{Value: true},
 				},
 				UpdateExpression: aws.String("SET #PL.#ID.#RD = :t"),
 				ReturnValues:     types.ReturnValueAllNew,
@@ -281,7 +271,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 			callErr(err)
 
-			callFunction(ui2.Attributes, gameItemKey, tableName, marshalledTrue, ctx, svc)
+			callFunction(ui2.Attributes, gameItemKey, tableName, ctx, svc)
 
 		} else {
 
@@ -296,7 +286,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 				},
 				ExpressionAttributeValues: map[string]types.AttributeValue{
 					":e": &types.AttributeValueMemberS{Value: ""},
-					":f": marshalledFalse,
+					":f": &types.AttributeValueMemberBOOL{Value: false},
 				},
 				UpdateExpression: aws.String("SET #PL.#ID.#RD = :f, #LE = :e"),
 			})
@@ -321,7 +311,7 @@ func main() {
 	lambda.Start(handler)
 }
 
-func callFunction(rv, gik map[string]types.AttributeValue, tn string, mt types.AttributeValue, ctx context.Context, svc *dynamodb.Client) {
+func callFunction(rv, gik map[string]types.AttributeValue, tn string, ctx context.Context, svc *dynamodb.Client) {
 	var gm game
 	err := attributevalue.UnmarshalMap(rv, &gm)
 	if err != nil {

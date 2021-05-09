@@ -13,7 +13,7 @@ function objToArr(obj) {
     for (let p in obj) {
         arr.push(obj[p].M);
     }
-    return arr;
+    return arr.sort((a, b) => a.name.S > b.name.S ? 1 : -1);
 }
 
 exports.handler = (req, ctx, cb) => {
