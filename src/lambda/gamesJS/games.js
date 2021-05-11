@@ -13,7 +13,16 @@ function objToArr(obj) {
     for (let p in obj) {
         arr.push(obj[p].M);
     }
-    return arr.sort((a, b) => a.name.S > b.name.S ? 1 : -1);
+    return arr.sort((a, b) => {
+        const dif = b.score.N - a.score.N;
+        if (dif == 0) {
+            if (a.name.S > b.name.S) {
+                return 1;
+            }
+            return -1;
+        }
+        return dif;
+    });
 }
 
 exports.handler = (req, ctx, cb) => {
@@ -61,7 +70,7 @@ exports.handler = (req, ctx, cb) => {
                 const payload = {
                     games: gamesResults.Items.map((g) => ({
                         no: g.sk.S,
-     
+
                         leader: g.leader.S,
                         players: objToArr(g.players.M),
                     })),
@@ -133,27 +142,26 @@ exports.handler = (req, ctx, cb) => {
             }
         } else if (rec.eventName === "MODIFY") {
             if (item.pk.S.startsWith("CONN")) {
-                const payload = {
-                    ingame: item.game.S,
-                    leadertoken: item.sk.S + "_" + item.GSI1SK.S,
-                    playing: item.playing.BOOL,
-                    type: "user",
-                };
+                if (!item.playing.BOOL) {
+                    const payload = {
+                        ingame: item.game.S,
+                        leadertoken: item.sk.S + "_" + item.GSI1SK.S,
+                        type: "user",
+                    };
 
-                // console.log("data: ", payload);
-                try {
-                    await apigw
-                        .postToConnection({
-                            ConnectionId: item.GSI1SK.S,
-                            Data: JSON.stringify(payload),
-                        })
-                        .promise();
-                } catch (err) {
-                    console.log("post error: ", err);
-                    cb(Error(err));
+                    try {
+                        await apigw
+                            .postToConnection({
+                                ConnectionId: item.GSI1SK.S,
+                                Data: JSON.stringify(payload),
+                            })
+                            .promise();
+                    } catch (err) {
+                        console.log("post error: ", err);
+                        cb(Error(err));
+                    }
                 }
             } else if (item.pk.S.startsWith("GAME")) {
-                
                 if (item.loading.BOOL) {
                     const payload = {
                         game: {
@@ -179,7 +187,7 @@ exports.handler = (req, ctx, cb) => {
                     const payload = {
                         games: {
                             no: item.sk.S,
-           
+
                             starting: item.starting.BOOL,
                             leader: item.leader.S,
                             loading: item.loading.BOOL,

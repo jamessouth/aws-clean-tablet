@@ -47,6 +47,7 @@ type player struct {
 	ConnID string `dynamodbav:"connid"`
 	Ready  bool   `dynamodbav:"ready"`
 	Color  string `dynamodbav:"color"`
+	Score  *int   `dynamodbav:"score"`
 }
 
 type game struct {

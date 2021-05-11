@@ -2,6 +2,7 @@ import React, { useContext } from "react";
 import { Prompt, useParams } from "react-router-dom";
 import { authContext } from "./ProvideAuth";
 import { wsContext } from "./ProvideWS";
+import Scoreboard from "./Scoreboard";
 
 const ce = React.createElement;
 export default function Play({history: {action}, user}) {
@@ -21,7 +22,13 @@ export default function Play({history: {action}, user}) {
     return ce(
         "div",
         null,
-        ce("p", null, "gggghhhhuuuuhh " + gameno),
+        ce(
+            Scoreboard,
+            {
+                playerName: user,
+                players: game.players,
+            }
+        ),
         ce(Prompt, {
             when: true,
             message: "You will be ejected from the game!",
