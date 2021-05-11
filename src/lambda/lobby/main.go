@@ -34,7 +34,6 @@ type Player struct {
 	ConnID string `dynamodbav:"connid"`
 	Ready  bool   `dynamodbav:"ready"`
 	Color  string `dynamodbav:"color"`
-	Score  *int   `dynamodbav:"score"`
 }
 
 type game struct {
@@ -132,7 +131,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			ConnID: req.RequestContext.ConnectionID,
 			Ready:  false,
 			Color:  "",
-			Score:  &zero,
 		}
 
 		marshalledPlayersMap, err := attributevalue.Marshal(map[string]Player{

@@ -13,16 +13,7 @@ function objToArr(obj) {
     for (let p in obj) {
         arr.push(obj[p].M);
     }
-    return arr.sort((a, b) => {
-        const dif = b.score.N - a.score.N;
-        if (dif == 0) {
-            if (a.name.S > b.name.S) {
-                return 1;
-            }
-            return -1;
-        }
-        return dif;
-    });
+    return arr;
 }
 
 exports.handler = (req, ctx, cb) => {
@@ -70,9 +61,10 @@ exports.handler = (req, ctx, cb) => {
                 const payload = {
                     games: gamesResults.Items.map((g) => ({
                         no: g.sk.S,
-
                         leader: g.leader.S,
-                        players: objToArr(g.players.M),
+                        players: objToArr(g.players.M).sort((a, b) =>
+                            a.name.S > b.name.S ? 1 : -1
+                        ),
                     })),
                     type: "games",
                 };
@@ -98,8 +90,6 @@ exports.handler = (req, ctx, cb) => {
                     },
                     type: "games",
                 };
-
-                // console.log("data: ", payload);
 
                 const connsParams = {
                     TableName: tableName,
@@ -166,7 +156,16 @@ exports.handler = (req, ctx, cb) => {
                     const payload = {
                         game: {
                             no: item.sk.S,
-                            players: objToArr(item.players.M),
+                            players: objToArr(item.players.M).sort((a, b) => {
+                                const dif = b.score.N - a.score.N;
+                                if (dif == 0) {
+                                    if (a.name.S > b.name.S) {
+                                        return 1;
+                                    }
+                                    return -1;
+                                }
+                                return dif;
+                            }),
                         },
                         type: "playing",
                     };
@@ -187,11 +186,12 @@ exports.handler = (req, ctx, cb) => {
                     const payload = {
                         games: {
                             no: item.sk.S,
-
                             starting: item.starting.BOOL,
                             leader: item.leader.S,
                             loading: item.loading.BOOL,
-                            players: objToArr(item.players.M),
+                            players: objToArr(item.players.M).sort((a, b) =>
+                                a.name.S > b.name.S ? 1 : -1
+                            ),
                         },
                         type: "games",
                     };
