@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { Prompt, useParams } from "react-router-dom";
 import { authContext } from "./ProvideAuth";
 import { wsContext } from "./ProvideWS";
@@ -9,10 +9,11 @@ export default function Play({history: {action}, user}) {
     const {
         connectedWS,
         game,
-    
         send,
         wsError
     } = useContext(wsContext);
+
+    const [count, setCount] = useState(5);
 
     console.log("playyyyyy ", game, action, user);
 

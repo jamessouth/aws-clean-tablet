@@ -156,6 +156,8 @@ exports.handler = (req, ctx, cb) => {
                     const payload = {
                         game: {
                             no: item.sk.S,
+                            leader: item.leader.S,
+                            playing: item.playing && item.playing.BOOL || false,
                             players: objToArr(item.players.M).sort((a, b) => {
                                 const dif = b.score.N - a.score.N;
                                 if (dif == 0) {

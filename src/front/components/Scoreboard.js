@@ -71,7 +71,7 @@ export default function Scoreboard({
                     "bg-yellow-300 opacity-80 border-2 border-solid border-yellow-400 p-3 w-11/12 max-w-lg my-0 mx-auto flex flex-col justify-around items-center",
             },
             players.map((p) =>
-                ce(
+                !!p.color.S ? ce(
                     "li",
                     {
                         className:
@@ -83,7 +83,7 @@ export default function Scoreboard({
                     },
                     ce("p", null, p.name.S),
                     ce("p", null, p.score.N)
-                )
+                ) : null
             )
         )
     );
