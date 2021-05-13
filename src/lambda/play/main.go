@@ -92,15 +92,8 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		panic(fmt.Sprintf("%v", "can't find table name"))
 	}
 
-	// .WithEndpoint("http://192.168.4.27:8000")
-
 	svc := dynamodb.NewFromConfig(cfg)
 	svc2 := lamb.NewFromConfig(cfg)
-
-	// auth := req.RequestContext.Authorizer.(map[string]interface{})
-
-	// id := auth["principalId"].(string)
-	// name := auth["username"].(string)
 
 	var body body
 
@@ -148,18 +141,8 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		fmt.Printf("%s%+v\n", "gammmmme ", game)
 
-		// } else {
-
-		// var game game
-		// err = attributevalue.UnmarshalMap(ui.Attributes, &game)
-		// if err != nil {
-		// 	fmt.Println("play update item unmarshal err", err)
-		// }
-
 		mj, err := json.Marshal(lambdaInput{
-			Game: game,
-			// ApiId:  req.RequestContext.APIID,
-			// Stage:  req.RequestContext.Stage,
+			Game:   game,
 			Region: reg,
 		})
 		if err != nil {
@@ -168,11 +151,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		ii := lamb.InvokeInput{
 			FunctionName: aws.String("ct-playJS"),
-			// ClientContext:  new(string),
-			// InvocationType: "",
-			// LogType:        "",
-			Payload: mj,
-			// Qualifier:      new(string),
+			Payload:      mj,
 		}
 
 		li, err := svc2.Invoke(ctx, &ii)
