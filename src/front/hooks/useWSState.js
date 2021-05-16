@@ -75,10 +75,10 @@ export default function useWSState() {
                         playing,
                   
                         // winners,
-                        // word
+                        word
                     } = JSON.parse(e.data);
 
-                    console.log("wsstate json parse", type, game, games, ingame, leadertoken, playing);
+                    console.log("wsstate json parse", type, game, games, ingame, leadertoken, playing, word);
 
                     switch (type) {
                         case "games":
