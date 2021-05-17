@@ -38,7 +38,7 @@ exports.handler = (req, ctx, cb) => {
                 setTimeout(() => {
                     sf.sendTaskSuccess(
                         {
-                            output: "STRING_VALUE4444444",
+                            output: JSON.stringify({"keyzzz": "STRING_VALUE4444444"}),
                             taskToken: req.token,
                         },
                         (err, data) => {
