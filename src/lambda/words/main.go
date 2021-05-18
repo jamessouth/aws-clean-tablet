@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -26,9 +25,7 @@ func shuffleList(l []string) []string {
 		nl[i], nl[j] = nl[j], nl[i]
 	})
 
-	fmt.Println("nlllll", nl[0:40])
-
-	return nl[0:40]
+	return nl[:40]
 }
 
 var words = []string{
