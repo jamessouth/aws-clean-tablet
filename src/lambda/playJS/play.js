@@ -33,6 +33,7 @@ exports.handler = (req, ctx, cb) => {
         id: p,
         color: colors[i],
         name: req.game.Players[p].Name,
+        connid: req.game.Players[p].ConnID,
     }));
 
     console.log('sfip: ', sfInput);
