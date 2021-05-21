@@ -3,6 +3,7 @@ import { Prompt, useParams } from "react-router-dom";
 import { authContext } from "./ProvideAuth";
 import { wsContext } from "./ProvideWS";
 import Scoreboard from "./Scoreboard";
+import Word from "./Word";
 
 const circ = String.fromCharCode(9862);
 const ce = React.createElement;
@@ -12,7 +13,8 @@ export default function Play({history: {action}, user}) {
         game,
         leadertoken,
         send,
-        wsError
+        wsError,
+        word
     } = useContext(wsContext);
 
     // const [count, setCount] = useState(5);
@@ -82,6 +84,13 @@ export default function Play({history: {action}, user}) {
               )
           )
         : null,
+
+        ce(
+            Word,
+            {
+
+            }
+        ),
 
 
         ce(Prompt, {

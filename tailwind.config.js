@@ -5,6 +5,10 @@ module.exports = {
   darkMode: false, // or 'media' or 'class'
   theme: {
     extend: {
+      animation: {
+        'erase': 'erase 3s cubic-bezier(.03,.74,.03,1) forwards 1',
+        'change': 'change 35s linear forwards 1',
+      },
       colors: {
         smoke: colors.trueGray
       },
@@ -19,6 +23,14 @@ module.exports = {
       },
       height: {
         // '40vh': '40vh',
+      },
+      keyframes: {
+        change: {
+          '100%': { 'stroke-dashoffset': '1000' },
+        },
+        erase: {
+          '100%': { opacity: '0' },
+        },
       },
       lineHeight: {
         '12rem': '12rem',
