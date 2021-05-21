@@ -4,6 +4,7 @@ import { authContext } from "./ProvideAuth";
 import { wsContext } from "./ProvideWS";
 import Scoreboard from "./Scoreboard";
 import Word from "./Word";
+import Form from "./Form";
 
 const circ = String.fromCharCode(9862);
 const ce = React.createElement;
@@ -88,7 +89,11 @@ export default function Play({history: {action}, user}) {
         ce(
             Word,
             {
-
+                onAnimationEnd: () => setSubmitSignal(true),
+                playerColor,
+                showAnswers,
+                showSVGTimer,
+                word
             }
         ),
 
