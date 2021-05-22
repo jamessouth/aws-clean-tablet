@@ -7,6 +7,7 @@ let ws;
 export default function useWSState() {
     const [connectedWS, setConnectedWS] = useState(false);
     const [wsError, setWSError] = useState();
+    const [answered, setAnswered] = useState(false);
     const [token, setToken] = useState("");
     const [word, setWord] = useState(null);
     const [game, setGame] = useState(null);
@@ -91,6 +92,7 @@ export default function useWSState() {
                             setGame(game);
                             break;
                         case "word":
+                            setAnswered(false);
                             setWord(word);
                             break;
                         case "user":
@@ -126,19 +128,20 @@ export default function useWSState() {
 
 
     function send(obj) {
-        // if (!hasJoined) {
+        if (game.playing) {
         //   ws.send(JSON.stringify({
         //     name: text,
         //   }));
-        // } else {
-        //   setAnswered(true);
+            setAnswered(true);
+        } else {
         //   setSubmitSignal(false);
         //   setShowSVGTimer(false);
+        }
           ws.send(JSON.stringify(obj));
-        // }
     }
 
     return {
+        answered,
         connectedWS,
         game,
         games,

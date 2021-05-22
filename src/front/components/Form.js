@@ -1,38 +1,82 @@
 import React from 'react';
 // import PropTypes from 'prop-types';
-import { bg, inv, signin } from '../styles/Form.module.css';
-import useFormState from '../hooks/useFormState';
+// import useFormState from '../hooks/useFormState';
 
 
 const ce = React.createElement;
 export default function Form({
   answered,
-  dupeName,
   hasJoined,
   invalidInput,
   onEnter,
-  playerName,
   playing,
   submitSignal,
 }) {
 
-  const {
-    ANSWER_MAX_LENGTH,
-    badChar,
-    disableSubmit,
-    inputBox,
-    inputText,
-    isValidInput,
+  // const {
+  //   ANSWER_MAX_LENGTH,
+  //   badChar,
+  //   disableSubmit,
+  //   inputBox,
+  //   inputText,
+  //   isValidInput,
    
-    setInputText,
-  } = useFormState(
-    answered,
-    hasJoined,
-    invalidInput,
-    onEnter,
-    playing,
-    submitSignal,
-  );
+  //   setInputText,
+  // } = useFormState(
+  //   answered,
+  //   hasJoined,
+  //   invalidInput,
+  //   onEnter,
+  //   playing,
+  //   submitSignal,
+  // );
+
+  const inputBox = useRef(null);
+  const regex = /[^a-z '-]+/i;
+  const ANSWER_MAX_LENGTH = 12;// see also app.go
+  const INPUT_MIN_LENGTH = 2;
+  const [inputText, setInputText] = useState('');
+  const [maxLength, setMaxLength] = useState(ANSWER_MAX_LENGTH);
+  const [disableSubmit, setDisableSubmit] = useState(true);
+  const [isValidInput, setIsValidInput] = useState(true);
+  const [badChar, setBadChar] = useState(null);
+
+    
+  useEffect(() => {
+    const test = inputText.match(regex);
+    if (test) {
+      setBadChar(test[0]);
+    } else {
+      setBadChar(null);
+    }
+    setIsValidInput(!test);
+  }, [inputText, regex]);
+  
+  useEffect(() => {
+    if (answered) {
+      inputBox.current.blur();
+    }
+  }, [answered]);
+
+  
+  useEffect(() => {
+    if (hasJoined) {
+      setMaxLength(ANSWER_MAX_LENGTH);
+    }
+  }, [hasJoined]);
+  
+  useEffect(() => {
+    if (submitSignal) {
+      onEnter(inputText.slice(0, ANSWER_MAX_LENGTH));
+      setInputText('');
+    }
+  }, [inputText, onEnter, submitSignal]);
+
+  
+  
+  useEffect(() => {
+    setDisableSubmit((inputText.length < INPUT_MIN_LENGTH || inputText.length > maxLength) || answered || invalidInput || !isValidInput || (hasJoined && !playing));
+  }, [inputText, maxLength, answered, invalidInput, isValidInput, hasJoined, playing]);
 
     return ce(
       "section",
@@ -58,6 +102,7 @@ export default function Form({
       ce(
         "input",
         {
+          className: "h-7 w-3/5 text-xl pl-1 text-left bg-transparent border-none text-smoke-700",
           id: "inputbox",
           autoComplete: "off",
           autoFocus,
@@ -75,6 +120,19 @@ export default function Form({
           placeholder: `2 - ${ANSWER_MAX_LENGTH} letters`,
           ...(answered ? { 'readOnly': true } : {})
         }
+      ),
+      ce(
+        "button",
+        {
+          className: "text-2xl text-smoke-700 bg-smoke-100 h-7 w-2/3 max-w-max cursor-pointer border-none disabled:cursor-not-allowed disabled:contrast-50",
+          type: "button",
+          onClick: () => {
+            onEnter(inputText.slice(0, ANSWER_MAX_LENGTH));
+            setInputText('');
+          },
+          ...(disableSubmit ? { 'disabled': true } : {})
+        },
+        "Submit"
       )
     );
   
