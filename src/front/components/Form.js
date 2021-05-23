@@ -5,37 +5,35 @@ import React from 'react';
 
 const ce = React.createElement;
 export default function Form({
+  ANSWER_MAX_LENGTH,
   answered,
-  
-  invalidInput,
+  inputText,
   onEnter,
-  
-  
+  setInputText,
 }) {
 
 
-  
+
 
   const inputBox = useRef(null);
-  const regex = /[^a-z '-]+/i;
-  
+
   const INPUT_MIN_LENGTH = 2;
-  
-  
+
+
   const [disableSubmit, setDisableSubmit] = useState(true);
   const [isValidInput, setIsValidInput] = useState(true);
   const [badChar, setBadChar] = useState(null);
-
-    
+  
+  
   useEffect(() => {
-    const test = inputText.match(regex);
+    const test = inputText.match(/[^a-z '-]+/i);
     if (test) {
       setBadChar(test[0]);
     } else {
       setBadChar(null);
     }
     setIsValidInput(!test);
-  }, [inputText, regex]);
+  }, [inputText]);
   
   useEffect(() => {
     if (answered) {
@@ -44,20 +42,16 @@ export default function Form({
   }, [answered]);
 
 
-  
-
-  
-  
   useEffect(() => {
-    setDisableSubmit((inputText.length < INPUT_MIN_LENGTH || inputText.length > ANSWER_MAX_LENGTH) || answered || invalidInput || !isValidInput);
-  }, [inputText, ANSWER_MAX_LENGTH, answered, invalidInput, isValidInput]);
+    setDisableSubmit((inputText.length < INPUT_MIN_LENGTH || inputText.length > ANSWER_MAX_LENGTH) || answered || !isValidInput);
+  }, [inputText, ANSWER_MAX_LENGTH, answered, isValidInput]);
 
     return ce(
       "section",
       {
         className: "relative flex flex-col justify-between items-center h-40 text-xl mb-12"
       },
-      (invalidInput || !isValidInput) && ce(
+      !isValidInput && ce(
         "p",
         {
           className: "absolute text-smoke-100 bg-smoke-800 font-bold w-11/12 max-w-xl",

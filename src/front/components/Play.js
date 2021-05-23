@@ -113,7 +113,6 @@ export default function Play({history: {action}, user}) {
                 inputText,
                 onEnter: () => sendAnswer(),
                 setInputText,
-                
             }
         ),
 
