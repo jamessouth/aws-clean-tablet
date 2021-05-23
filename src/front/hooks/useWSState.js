@@ -12,7 +12,8 @@ export default function useWSState() {
     const [connectedWS, setConnectedWS] = useState(false);
     const [wsError, setWSError] = useState();
     const [token, setToken] = useState("");
-    const [word, setWord] = useState(null);
+    const [currentWord, setCurrentWord] = useState("");
+    const [previousWord, setPreviousWord] = useState("");
     const [game, setGame] = useState(null);
     const [ingame, setInGame] = useState(false);
     const [leadertoken, setLeadertoken] = useState("");
@@ -97,8 +98,8 @@ export default function useWSState() {
                             setPlayerColor(color);
                             break;
                         case "word":
-               
-                            setWord(word);
+                            setPreviousWord(currentWord);
+                            setCurrentWord(word);
                             break;
                         case "user":
                             setInGame(ingame);
@@ -146,7 +147,8 @@ export default function useWSState() {
         games,
         ingame,
         leadertoken,
-        word,
+        currentWord,
+        previousWord,
         send,
         wsError
     };

@@ -16,7 +16,8 @@ export default function Play({history: {action}, user}) {
         playerColor,
         send,
         wsError,
-        word
+        currentWord,
+        previousWord,
     } = useContext(wsContext);
 
    
@@ -25,7 +26,7 @@ export default function Play({history: {action}, user}) {
 
     const [answered, setAnswered] = useState(false);
     const [inputText, setInputText] = useState('');
-    const [hideWord, setHideWord] = useState(false);
+    // const [hideWord, setHideWord] = useState(false);
 
     function sendAnswer() {
         send({
@@ -35,6 +36,7 @@ export default function Play({history: {action}, user}) {
             type: "game",
         });
         setAnswered(true);
+        // setHideWord(true);
         setInputText("");
     }
 
@@ -43,7 +45,8 @@ export default function Play({history: {action}, user}) {
 
     useEffect(() => {
         setAnswered(false);
-    }, [word]);
+        // setHideWord(false);
+    }, [currentWord]);
 
     // useEffect(() => {
     //     console.log("cnt play: ", count);
@@ -77,7 +80,7 @@ export default function Play({history: {action}, user}) {
 
 
 
-        game.playing
+        game.playing && !(currentWord || previousWord)
         ? ce(
               "p",
               {
@@ -97,10 +100,10 @@ export default function Play({history: {action}, user}) {
         ce(
             Word,
             {
-                className: hideWord ? "animate-erase" : "",
+                className: answered ? "animate-erase" : "",
                 onAnimationEnd: () => sendAnswer(),
                 playerColor,
-                word
+                currentWord
             }
         ),
 
