@@ -18,6 +18,20 @@ export default function Play({history: {action}, user}) {
         word
     } = useContext(wsContext);
 
+    const ANSWER_MAX_LENGTH = 12;// see also app.go
+
+    const [inputText, setInputText] = useState('');
+
+    function sendUnanswered() {
+        send({
+            action: "play",
+            gameno: game.no,
+            answer: inputText.slice(0, ANSWER_MAX_LENGTH),
+            type: "game",
+        });
+        setInputText("");
+    }
+
     // const [count, setCount] = useState(5);
     // const [stopCount, setStopCount] = useState(false);
 
@@ -89,11 +103,21 @@ export default function Play({history: {action}, user}) {
         ce(
             Word,
             {
-                onAnimationEnd: () => setSubmitSignal(true),
+                onAnimationEnd: () => sendUnanswered(),
                 playerColor,
                 showAnswers,
-                showSVGTimer,
+                // showSVGTimer,
                 word
+            }
+        ),
+
+
+        ce(
+            Form,
+            {
+                inputText,
+                setInputText,
+                
             }
         ),
 

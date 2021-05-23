@@ -5,9 +5,12 @@ import { Auth } from "@aws-amplify/auth";
 let ws;
 
 export default function useWSState() {
+    
+    const [playerColor, setPlayerColor] = useState(null);
+
+
     const [connectedWS, setConnectedWS] = useState(false);
     const [wsError, setWSError] = useState();
-    const [answered, setAnswered] = useState(false);
     const [token, setToken] = useState("");
     const [word, setWord] = useState(null);
     const [game, setGame] = useState(null);
@@ -73,6 +76,7 @@ export default function useWSState() {
                         games,
                         ingame,
                         leadertoken,
+                        color,
                         // playing,
                   
                         // winners,
@@ -90,9 +94,10 @@ export default function useWSState() {
                             break;
                         case "playing":
                             setGame(game);
+                            setPlayerColor(color);
                             break;
                         case "word":
-                            setAnswered(false);
+               
                             setWord(word);
                             break;
                         case "user":
@@ -128,20 +133,14 @@ export default function useWSState() {
 
 
     function send(obj) {
-        if (game.playing) {
-        //   ws.send(JSON.stringify({
-        //     name: text,
-        //   }));
-            setAnswered(true);
-        } else {
-        //   setSubmitSignal(false);
-        //   setShowSVGTimer(false);
-        }
+   
+        
           ws.send(JSON.stringify(obj));
     }
 
     return {
-        answered,
+        
+        playerColor,
         connectedWS,
         game,
         games,

@@ -172,11 +172,12 @@ exports.handler = (req, ctx, cb) => {
                         type: "playing",
                     };
                     try {
-                        payload.game.players.forEach(async ({ connid }) => {
+                        payload.game.players.forEach(async (p) => {
+                            pkg = Object.assign(payload, {color: p.color.S});
                             await apigw
                                 .postToConnection({
-                                    ConnectionId: connid.S,
-                                    Data: JSON.stringify(payload),
+                                    ConnectionId: p.connid.S,
+                                    Data: JSON.stringify(pkg),
                                 })
                                 .promise();
                         });

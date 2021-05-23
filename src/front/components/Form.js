@@ -33,9 +33,9 @@ export default function Form({
 
   const inputBox = useRef(null);
   const regex = /[^a-z '-]+/i;
-  const ANSWER_MAX_LENGTH = 12;// see also app.go
+  
   const INPUT_MIN_LENGTH = 2;
-  const [inputText, setInputText] = useState('');
+  
   const [maxLength, setMaxLength] = useState(ANSWER_MAX_LENGTH);
   const [disableSubmit, setDisableSubmit] = useState(true);
   const [isValidInput, setIsValidInput] = useState(true);
