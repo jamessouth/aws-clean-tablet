@@ -6,37 +6,22 @@ import React from 'react';
 const ce = React.createElement;
 export default function Form({
   answered,
-  hasJoined,
+  
   invalidInput,
   onEnter,
-  playing,
-  submitSignal,
+  
+  
 }) {
 
-  // const {
-  //   ANSWER_MAX_LENGTH,
-  //   badChar,
-  //   disableSubmit,
-  //   inputBox,
-  //   inputText,
-  //   isValidInput,
-   
-  //   setInputText,
-  // } = useFormState(
-  //   answered,
-  //   hasJoined,
-  //   invalidInput,
-  //   onEnter,
-  //   playing,
-  //   submitSignal,
-  // );
+
+  
 
   const inputBox = useRef(null);
   const regex = /[^a-z '-]+/i;
   
   const INPUT_MIN_LENGTH = 2;
   
-  const [maxLength, setMaxLength] = useState(ANSWER_MAX_LENGTH);
+  
   const [disableSubmit, setDisableSubmit] = useState(true);
   const [isValidInput, setIsValidInput] = useState(true);
   const [badChar, setBadChar] = useState(null);
@@ -58,25 +43,14 @@ export default function Form({
     }
   }, [answered]);
 
+
   
-  useEffect(() => {
-    if (hasJoined) {
-      setMaxLength(ANSWER_MAX_LENGTH);
-    }
-  }, [hasJoined]);
-  
-  useEffect(() => {
-    if (submitSignal) {
-      onEnter(inputText.slice(0, ANSWER_MAX_LENGTH));
-      setInputText('');
-    }
-  }, [inputText, onEnter, submitSignal]);
 
   
   
   useEffect(() => {
-    setDisableSubmit((inputText.length < INPUT_MIN_LENGTH || inputText.length > maxLength) || answered || invalidInput || !isValidInput || (hasJoined && !playing));
-  }, [inputText, maxLength, answered, invalidInput, isValidInput, hasJoined, playing]);
+    setDisableSubmit((inputText.length < INPUT_MIN_LENGTH || inputText.length > ANSWER_MAX_LENGTH) || answered || invalidInput || !isValidInput);
+  }, [inputText, ANSWER_MAX_LENGTH, answered, invalidInput, isValidInput]);
 
     return ce(
       "section",
@@ -111,8 +85,7 @@ export default function Form({
           spellCheck: "false",
           onKeyPress: ({ key }) => {
             if (key == 'Enter' && !disableSubmit) {
-              onEnter(inputText.slice(0, ANSWER_MAX_LENGTH));
-              setInputText('');
+              onEnter();
             }
           },
           onChange: ({ target: { value } }) => setInputText(value),
@@ -127,8 +100,7 @@ export default function Form({
           className: "text-2xl text-smoke-700 bg-smoke-100 h-7 w-2/3 max-w-max cursor-pointer border-none disabled:cursor-not-allowed disabled:contrast-50",
           type: "button",
           onClick: () => {
-            onEnter(inputText.slice(0, ANSWER_MAX_LENGTH));
-            setInputText('');
+            onEnter();
           },
           ...(disableSubmit ? { 'disabled': true } : {})
         },

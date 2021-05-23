@@ -6,8 +6,6 @@ const ce = React.createElement;
 export default function Word({
   onAnimationEnd,
   playerColor,
-  showAnswers,
-  showSVGTimer,
   word,
 }) {
 
@@ -17,7 +15,7 @@ export default function Word({
   return ce(
     "div",
     {
-      className: showAnswers ? `animate-erase ${divstyle}` : divstyle,
+      className: divstyle,
     },
     ce(
       "svg",
@@ -25,7 +23,7 @@ export default function Word({
         preserveAspectRatio: "none",
         className: "overflow-visible absolute top-0 left-0 w-full h-full"
       },
-      showSVGTimer && ce(
+      ce(
         "rect",
         {
           x: "0",

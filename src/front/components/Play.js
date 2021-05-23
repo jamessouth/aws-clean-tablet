@@ -13,43 +13,37 @@ export default function Play({history: {action}, user}) {
         connectedWS,
         game,
         leadertoken,
+        playerColor,
         send,
         wsError,
         word
     } = useContext(wsContext);
 
+   
+    
     const ANSWER_MAX_LENGTH = 12;// see also app.go
 
+    const [answered, setAnswered] = useState(false);
     const [inputText, setInputText] = useState('');
+    const [hideWord, setHideWord] = useState(false);
 
-    function sendUnanswered() {
+    function sendAnswer() {
         send({
             action: "play",
             gameno: game.no,
             answer: inputText.slice(0, ANSWER_MAX_LENGTH),
             type: "game",
         });
+        setAnswered(true);
         setInputText("");
     }
 
     // const [count, setCount] = useState(5);
     // const [stopCount, setStopCount] = useState(false);
 
-    // useEffect(() => {
-    //     let id;
-    //     if (game.playing) {
-    //         id = setInterval(() => {
-    //             setCount((c) => c - 1);
-    //         }, 1000);
-    //     }
-
-    //     if (stopCount) {
-    //         clearInterval(id);
-    //     };
-    //     return () => {
-    //         clearInterval(id);
-    //     };
-    // }, [game.playing, stopCount]);
+    useEffect(() => {
+        setAnswered(false);
+    }, [word]);
 
     // useEffect(() => {
     //     console.log("cnt play: ", count);
@@ -103,10 +97,9 @@ export default function Play({history: {action}, user}) {
         ce(
             Word,
             {
-                onAnimationEnd: () => sendUnanswered(),
+                className: hideWord ? "animate-erase" : "",
+                onAnimationEnd: () => sendAnswer(),
                 playerColor,
-                showAnswers,
-                // showSVGTimer,
                 word
             }
         ),
@@ -115,7 +108,10 @@ export default function Play({history: {action}, user}) {
         ce(
             Form,
             {
+                ANSWER_MAX_LENGTH,
+                answered,
                 inputText,
+                onEnter: () => sendAnswer(),
                 setInputText,
                 
             }
