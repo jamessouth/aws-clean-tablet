@@ -33,7 +33,7 @@ export default function Play({history: {action}, user}) {
             action: "play",
             gameno: game.no,
             answer: inputText.slice(0, ANSWER_MAX_LENGTH),
-            type: "game",
+            type: "answer",
         });
         setAnswered(true);
         // setHideWord(true);

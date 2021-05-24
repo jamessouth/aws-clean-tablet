@@ -59,8 +59,7 @@ type game struct {
 }
 
 type body struct {
-	Gameno string
-	Type   string
+	Gameno, Type, Answer string
 }
 
 // ConnItemAttrs holds vals for db
@@ -184,6 +183,88 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		}
 		// }
+
+	} else if body.Type == "answer" {
+		gameItemKey, err := attributevalue.MarshalMap(Key{
+			Pk: "GAME",
+			Sk: body.Gameno,
+		})
+		if err != nil {
+			panic(fmt.Sprintf("failed to marshal gik Record, %v", err))
+		}
+
+
+		ui, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+			Key:       gameItemKey,
+			TableName: aws.String(tableName),
+			ExpressionAttributeNames: map[string]string{
+				"#PL": "players",
+				"#ID": id,
+				"#RD": "ready",
+			},
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":t": &types.AttributeValueMemberBOOL{Value: true},
+			},
+			UpdateExpression: aws.String("SET #PL.#ID.#RD = :t"),
+			ReturnValues:     types.ReturnValueAllNew,
+		})
+
+		if err != nil {
+
+			var intServErr *types.InternalServerError
+			if errors.As(err, &intServErr) {
+				fmt.Printf("get item error, %v",
+					intServErr.ErrorMessage())
+			}
+
+			// To get any API error
+			var apiErr smithy.APIError
+			if errors.As(err, &apiErr) {
+				fmt.Printf("db error, Code: %v, Message: %v",
+					apiErr.ErrorCode(), apiErr.ErrorMessage())
+			}
+
+		}
+
+		var gm game
+		err := attributevalue.UnmarshalMap(ui, &gm)
+		if err != nil {
+			fmt.Println("unmarshal err", err)
+		}
+	
+		if len(gm.Players) < 3 {
+			return
+		}
+	
+		readyCount := 0
+		for k, v := range gm.Players {
+	
+			fmt.Printf("%s, %v, %+v", "uicf", k, v)
+	
+			if v.Ready {
+				readyCount++
+				if readyCount == len(gm.Players) {
+					time.Sleep(1000 * time.Millisecond)
+					_, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+						Key:       gik,
+						TableName: aws.String(tn),
+						ExpressionAttributeNames: map[string]string{
+							"#LE": "leader",
+						},
+						ExpressionAttributeValues: map[string]types.AttributeValue{
+							":l": &types.AttributeValueMemberS{Value: v.Name + "_" + v.ConnID},
+						},
+						UpdateExpression: aws.String("SET #LE = :l"),
+					})
+					callErr(err)
+				}
+			} else {
+				return
+			}
+		}
+
+
+	} else {
 
 	}
 
