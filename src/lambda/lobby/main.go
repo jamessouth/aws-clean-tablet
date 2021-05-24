@@ -36,6 +36,10 @@ type Player struct {
 	Color  string `dynamodbav:"color"`
 }
 
+type answer struct {
+	PlayerID, Answer string
+}
+
 type game struct {
 	Pk       string            `dynamodbav:"pk"`
 	Sk       string            `dynamodbav:"sk"`
@@ -43,6 +47,7 @@ type game struct {
 	Leader   string            `dynamodbav:"leader"`
 	Loading  bool              `dynamodbav:"loading"`
 	Players  map[string]Player `dynamodbav:"players"`
+	Answers  []answer          `dynamodbav:"answers"`
 }
 
 type body struct {
@@ -150,6 +155,11 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			panic(fmt.Sprintf("failed to marshal indiv Record 22, %v", err))
 		}
 
+		marshalledAnswersList, err := attributevalue.Marshal([]answer{})
+		if err != nil {
+			panic(fmt.Sprintf("failed to marshal ans list 122, %v", err))
+		}
+
 		updateConnInput := types.Update{
 			Key:                 connItemKey,
 			TableName:           aws.String(tableName),
@@ -202,13 +212,15 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 							"#ST": "starting",
 							"#LO": "loading",
 							"#LE": "leader",
+							"#AN": "answers",
 						},
 						ExpressionAttributeValues: map[string]types.AttributeValue{
 							":p": marshalledPlayersMap,
+							":a": marshalledAnswersList,
 							":e": &types.AttributeValueMemberS{Value: ""},
 							":f": &types.AttributeValueMemberBOOL{Value: false},
 						},
-						UpdateExpression: aws.String("SET #PL = :p, #ST = :f, #LO = :f, #LE = :e"),
+						UpdateExpression: aws.String("SET #PL = :p, #ST = :f, #LO = :f, #LE = :e, #AN = :a"),
 					},
 				},
 				{

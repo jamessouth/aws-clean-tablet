@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -49,6 +50,10 @@ type player struct {
 	Color  string `dynamodbav:"color"`
 }
 
+type answer struct {
+	PlayerID, Answer string
+}
+
 type game struct {
 	Pk       string            `dynamodbav:"pk"`
 	Sk       string            `dynamodbav:"sk"`
@@ -56,6 +61,7 @@ type game struct {
 	Leader   string            `dynamodbav:"leader"`
 	Loading  bool              `dynamodbav:"loading"`
 	Players  map[string]player `dynamodbav:"players"`
+	Answers  []answer          `dynamodbav:"answers"`
 }
 
 type body struct {
@@ -94,6 +100,8 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	svc := dynamodb.NewFromConfig(cfg)
 	svc2 := lamb.NewFromConfig(cfg)
 
+	id := req.RequestContext.Authorizer.(map[string]interface{})["principalId"].(string)
+
 	var body body
 
 	err = json.Unmarshal([]byte(req.Body), &body)
@@ -101,15 +109,15 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		fmt.Println("unmarshal body err")
 	}
 
-	if body.Type == "start" {
+	gameItemKey, err := attributevalue.MarshalMap(Key{
+		Pk: "GAME",
+		Sk: body.Gameno,
+	})
+	if err != nil {
+		panic(fmt.Sprintf("failed to marshal gik Record, %v", err))
+	}
 
-		gameItemKey, err := attributevalue.MarshalMap(Key{
-			Pk: "GAME",
-			Sk: body.Gameno,
-		})
-		if err != nil {
-			panic(fmt.Sprintf("failed to marshal gik Record, %v", err))
-		}
+	if body.Type == "start" {
 
 		gi, err := svc.GetItem(ctx, &dynamodb.GetItemInput{
 			Key:       gameItemKey,
@@ -185,28 +193,28 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		// }
 
 	} else if body.Type == "answer" {
-		gameItemKey, err := attributevalue.MarshalMap(Key{
-			Pk: "GAME",
-			Sk: body.Gameno,
+
+		ans, err := attributevalue.MarshalList(answer{
+			PlayerID: id,
+			Answer:   body.Answer,
 		})
 		if err != nil {
-			panic(fmt.Sprintf("failed to marshal gik Record, %v", err))
+			panic(fmt.Sprintf("failed to marshal answer Record, %v", err))
 		}
-
 
 		ui, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 			Key:       gameItemKey,
 			TableName: aws.String(tableName),
 			ExpressionAttributeNames: map[string]string{
-				"#PL": "players",
-				"#ID": id,
-				"#RD": "ready",
+				// "#PL": "players",
+				// "#ID": id,
+				"#AN": "answers",
 			},
 			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":t": &types.AttributeValueMemberBOOL{Value: true},
+				":a": &types.AttributeValueMemberL{Value: ans},
 			},
-			UpdateExpression: aws.String("SET #PL.#ID.#RD = :t"),
-			ReturnValues:     types.ReturnValueAllNew,
+			UpdateExpression: aws.String("SET #AN = list_append(#AN, :a)"),
+			ReturnValues:     types.ReturnValueUpdatedNew,
 		})
 
 		if err != nil {
@@ -231,16 +239,16 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		if err != nil {
 			fmt.Println("unmarshal err", err)
 		}
-	
+
 		if len(gm.Players) < 3 {
 			return
 		}
-	
+
 		readyCount := 0
 		for k, v := range gm.Players {
-	
+
 			fmt.Printf("%s, %v, %+v", "uicf", k, v)
-	
+
 			if v.Ready {
 				readyCount++
 				if readyCount == len(gm.Players) {
@@ -262,7 +270,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 				return
 			}
 		}
-
 
 	} else {
 
