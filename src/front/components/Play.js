@@ -34,6 +34,7 @@ export default function Play({history: {action}, user}) {
             gameno: game.no,
             answer: inputText.slice(0, ANSWER_MAX_LENGTH),
             type: "answer",
+            playersCount: `${game.players.length}`,
         });
         setAnswered(true);
         // setHideWord(true);

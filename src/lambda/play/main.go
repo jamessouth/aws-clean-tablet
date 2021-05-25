@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -65,7 +64,7 @@ type game struct {
 }
 
 type body struct {
-	Gameno, Type, Answer string
+	Gameno, Type, Answer, PlayersCount string
 }
 
 // ConnItemAttrs holds vals for db
@@ -203,8 +202,9 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		}
 
 		ui, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-			Key:       gameItemKey,
-			TableName: aws.String(tableName),
+			Key:                 gameItemKey,
+			TableName:           aws.String(tableName),
+			ConditionExpression: aws.String("size (#AN) < :c"),
 			ExpressionAttributeNames: map[string]string{
 				// "#PL": "players",
 				// "#ID": id,
@@ -212,9 +212,10 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			},
 			ExpressionAttributeValues: map[string]types.AttributeValue{
 				":a": &types.AttributeValueMemberL{Value: ans},
+				":c": &types.AttributeValueMemberN{Value: body.PlayersCount},
 			},
 			UpdateExpression: aws.String("SET #AN = list_append(#AN, :a)"),
-			ReturnValues:     types.ReturnValueUpdatedNew,
+			ReturnValues:     types.ReturnValueAllNew,
 		})
 
 		if err != nil {
@@ -235,44 +236,132 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		}
 
 		var gm game
-		err := attributevalue.UnmarshalMap(ui, &gm)
+		err = attributevalue.UnmarshalMap(ui.Attributes, &gm)
 		if err != nil {
 			fmt.Println("unmarshal err", err)
 		}
 
-		if len(gm.Players) < 3 {
-			return
-		}
+		if len(gm.Players) == len(gm.Answers) {
 
-		readyCount := 0
-		for k, v := range gm.Players {
+			answers := map[string][]string{}
+			for i, v := range gm.Answers {
 
-			fmt.Printf("%s, %v, %+v", "uicf", k, v)
+				fmt.Printf("%s, %v, %+v", "anssss", i, v)
 
-			if v.Ready {
-				readyCount++
-				if readyCount == len(gm.Players) {
-					time.Sleep(1000 * time.Millisecond)
-					_, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-						Key:       gik,
-						TableName: aws.String(tn),
-						ExpressionAttributeNames: map[string]string{
-							"#LE": "leader",
-						},
-						ExpressionAttributeValues: map[string]types.AttributeValue{
-							":l": &types.AttributeValueMemberS{Value: v.Name + "_" + v.ConnID},
-						},
-						UpdateExpression: aws.String("SET #LE = :l"),
-					})
-					callErr(err)
-				}
-			} else {
-				return
+				answers[v.Answer] = append(answers[v.Answer], v.PlayerID)
+
+				// if v.Ready {
+				// 	readyCount++
+				// 	if readyCount == len(gm.Players) {
+				// 		time.Sleep(1000 * time.Millisecond)
+				// 		_, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+				// 			Key:       gik,
+				// 			TableName: aws.String(tn),
+				// 			ExpressionAttributeNames: map[string]string{
+				// 				"#LE": "leader",
+				// 			},
+				// 			ExpressionAttributeValues: map[string]types.AttributeValue{
+				// 				":l": &types.AttributeValueMemberS{Value: v.Name + "_" + v.ConnID},
+				// 			},
+				// 			UpdateExpression: aws.String("SET #LE = :l"),
+				// 		})
+				// 		callErr(err)
+				// 	}
+				// } else {
+				// 	return
+				// }
 			}
+
+			for k, v := range answers {
+
+				fmt.Printf("%s, %v, %+v", "anssssmapppp", k, v)
+
+				switch {
+				case len(k) < 2:
+					// c.updateEachScore(v, 0)
+
+				case len(v) > 2:
+					// c.updateEachScore(v, 1)
+
+					for _, id := range v {
+
+						_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+							Key:       gameItemKey,
+							TableName: aws.String(tableName),
+							ExpressionAttributeNames: map[string]string{
+								"#PL": "players",
+								"#ID": id,
+								"#SC": "score",
+							},
+							ExpressionAttributeValues: map[string]types.AttributeValue{
+								":s": &types.AttributeValueMemberN{Value: "1"},
+							},
+							UpdateExpression: aws.String("ADD #PL.#ID.#SC :s"),
+						})
+						if err != nil {
+
+							var intServErr *types.InternalServerError
+							if errors.As(err, &intServErr) {
+								fmt.Printf("get item error, %v",
+									intServErr.ErrorMessage())
+							}
+
+							// To get any API error
+							var apiErr smithy.APIError
+							if errors.As(err, &apiErr) {
+								fmt.Printf("db error, Code: %v, Message: %v",
+									apiErr.ErrorCode(), apiErr.ErrorMessage())
+							}
+
+						}
+					}
+
+				case len(v) == 2:
+					// c.updateEachScore(v, 3)
+
+					for _, id := range v {
+
+						_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+							Key:       gameItemKey,
+							TableName: aws.String(tableName),
+							ExpressionAttributeNames: map[string]string{
+								"#PL": "players",
+								"#ID": id,
+								"#SC": "score",
+							},
+							ExpressionAttributeValues: map[string]types.AttributeValue{
+								":s": &types.AttributeValueMemberN{Value: "3"},
+							},
+							UpdateExpression: aws.String("ADD #PL.#ID.#SC :s"),
+						})
+						if err != nil {
+
+							var intServErr *types.InternalServerError
+							if errors.As(err, &intServErr) {
+								fmt.Printf("get item error, %v",
+									intServErr.ErrorMessage())
+							}
+
+							// To get any API error
+							var apiErr smithy.APIError
+							if errors.As(err, &apiErr) {
+								fmt.Printf("db error, Code: %v, Message: %v",
+									apiErr.ErrorCode(), apiErr.ErrorMessage())
+							}
+
+						}
+					}
+
+				default:
+					// c.updateEachScore(v, 0)
+				}
+
+			}
+
 		}
 
 	} else {
-
+		fmt.Println("other play")
 	}
 
 	return events.APIGatewayProxyResponse{
