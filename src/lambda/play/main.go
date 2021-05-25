@@ -250,26 +250,39 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 				answers[v.Answer] = append(answers[v.Answer], v.PlayerID)
 
-				// if v.Ready {
-				// 	readyCount++
-				// 	if readyCount == len(gm.Players) {
-				// 		time.Sleep(1000 * time.Millisecond)
-				// 		_, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-				// 			Key:       gik,
-				// 			TableName: aws.String(tn),
-				// 			ExpressionAttributeNames: map[string]string{
-				// 				"#LE": "leader",
-				// 			},
-				// 			ExpressionAttributeValues: map[string]types.AttributeValue{
-				// 				":l": &types.AttributeValueMemberS{Value: v.Name + "_" + v.ConnID},
-				// 			},
-				// 			UpdateExpression: aws.String("SET #LE = :l"),
-				// 		})
-				// 		callErr(err)
-				// 	}
-				// } else {
-				// 	return
-				// }
+			}
+
+			_, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+				Key:       gameItemKey,
+				TableName: aws.String(tableName),
+				// ConditionExpression: aws.String("size (#AN) < :c"),
+				ExpressionAttributeNames: map[string]string{
+					// "#PL": "players",
+					// "#ID": id,
+					"#AN": "answers",
+				},
+				ExpressionAttributeValues: map[string]types.AttributeValue{
+					":a": &types.AttributeValueMemberL{Value: []types.AttributeValue{}},
+					// ":c": &types.AttributeValueMemberN{Value: body.PlayersCount},
+				},
+				UpdateExpression: aws.String("SET #AN = :a"),
+				// ReturnValues:     types.ReturnValueAllNew,
+			})
+			if err != nil {
+
+				var intServErr *types.InternalServerError
+				if errors.As(err, &intServErr) {
+					fmt.Printf("get item error, %v",
+						intServErr.ErrorMessage())
+				}
+
+				// To get any API error
+				var apiErr smithy.APIError
+				if errors.As(err, &apiErr) {
+					fmt.Printf("db error, Code: %v, Message: %v",
+						apiErr.ErrorCode(), apiErr.ErrorMessage())
+				}
+
 			}
 
 			for k, v := range answers {

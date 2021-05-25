@@ -157,6 +157,7 @@ exports.handler = (req, ctx, cb) => {
                         game: {
                             no: item.sk.S,
                             leader: item.leader.S,
+                            answers: item.answers && item.answers.L || [],
                             playing: item.playing && item.playing.BOOL || false,
                             players: objToArr(item.players.M).sort((a, b) => {
                                 const dif = b.score.N - a.score.N;
@@ -171,19 +172,21 @@ exports.handler = (req, ctx, cb) => {
                         },
                         type: "playing",
                     };
-                    try {
-                        payload.game.players.forEach(async (p) => {
-                            pkg = Object.assign(payload, {color: p.color.S});
-                            await apigw
-                                .postToConnection({
-                                    ConnectionId: p.connid.S,
-                                    Data: JSON.stringify(pkg),
-                                })
-                                .promise();
-                        });
-                    } catch (err) {
-                        console.log("post error: ", err);
-                        cb(Error(err));
+                    if (item.answers.L.length === 0 || item.answers.L.length === payload.game.players.length) {
+                        try {
+                            payload.game.players.forEach(async (p) => {
+                                pkg = Object.assign(payload, {color: p.color.S});
+                                await apigw
+                                    .postToConnection({
+                                        ConnectionId: p.connid.S,
+                                        Data: JSON.stringify(pkg),
+                                    })
+                                    .promise();
+                            });
+                        } catch (err) {
+                            console.log("post error: ", err);
+                            cb(Error(err));
+                        }
                     }
                 } else {
                     const payload = {
