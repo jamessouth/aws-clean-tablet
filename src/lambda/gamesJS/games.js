@@ -153,29 +153,38 @@ exports.handler = (req, ctx, cb) => {
                 }
             } else if (item.pk.S.startsWith("GAME")) {
                 if (item.loading.BOOL) {
-                    const payload = {
-                        game: {
-                            no: item.sk.S,
-                            leader: item.leader.S,
-                            answers: item.answers && item.answers.L || [],
-                            playing: item.playing && item.playing.BOOL || false,
-                            players: objToArr(item.players.M).sort((a, b) => {
-                                const dif = b.score.N - a.score.N;
-                                if (dif == 0) {
-                                    if (a.name.S > b.name.S) {
-                                        return 1;
+                    if (
+                        item.answers.L.length === 0 ||
+                        item.answers.L.length === payload.game.players.length
+                    ) {
+                        const payload = {
+                            game: {
+                                no: item.sk.S,
+                                leader: item.leader.S,
+                                answers: (item.answers && item.answers.L) || [],
+                                playing:
+                                    (item.playing && item.playing.BOOL) ||
+                                    false,
+                                players: objToArr(item.players.M).sort(
+                                    (a, b) => {
+                                        const dif = b.score.N - a.score.N;
+                                        if (dif == 0) {
+                                            if (a.name.S > b.name.S) {
+                                                return 1;
+                                            }
+                                            return -1;
+                                        }
+                                        return dif;
                                     }
-                                    return -1;
-                                }
-                                return dif;
-                            }),
-                        },
-                        type: "playing",
-                    };
-                    if (item.answers.L.length === 0 || item.answers.L.length === payload.game.players.length) {
+                                ),
+                            },
+                            type: "playing",
+                        };
                         try {
                             payload.game.players.forEach(async (p) => {
-                                pkg = Object.assign(payload, {color: p.color.S});
+                                pkg = Object.assign(payload, {
+                                    color: p.color.S,
+                                });
                                 await apigw
                                     .postToConnection({
                                         ConnectionId: p.connid.S,

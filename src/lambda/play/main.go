@@ -47,6 +47,7 @@ type player struct {
 	ConnID string `dynamodbav:"connid"`
 	Ready  bool   `dynamodbav:"ready"`
 	Color  string `dynamodbav:"color"`
+	Score  int    `dynamodbav:"score"`
 }
 
 type answer struct {
@@ -252,39 +253,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 			}
 
-			_, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-				Key:       gameItemKey,
-				TableName: aws.String(tableName),
-				// ConditionExpression: aws.String("size (#AN) < :c"),
-				ExpressionAttributeNames: map[string]string{
-					// "#PL": "players",
-					// "#ID": id,
-					"#AN": "answers",
-				},
-				ExpressionAttributeValues: map[string]types.AttributeValue{
-					":a": &types.AttributeValueMemberL{Value: []types.AttributeValue{}},
-					// ":c": &types.AttributeValueMemberN{Value: body.PlayersCount},
-				},
-				UpdateExpression: aws.String("SET #AN = :a"),
-				// ReturnValues:     types.ReturnValueAllNew,
-			})
-			if err != nil {
-
-				var intServErr *types.InternalServerError
-				if errors.As(err, &intServErr) {
-					fmt.Printf("get item error, %v",
-						intServErr.ErrorMessage())
-				}
-
-				// To get any API error
-				var apiErr smithy.APIError
-				if errors.As(err, &apiErr) {
-					fmt.Printf("db error, Code: %v, Message: %v",
-						apiErr.ErrorCode(), apiErr.ErrorMessage())
-				}
-
-			}
-
 			for k, v := range answers {
 
 				fmt.Printf("%s, %v, %+v", "anssssmapppp", k, v)
@@ -311,6 +279,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 							},
 							UpdateExpression: aws.String("ADD #PL.#ID.#SC :s"),
 						})
+
 						if err != nil {
 
 							var intServErr *types.InternalServerError
@@ -347,6 +316,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 							},
 							UpdateExpression: aws.String("ADD #PL.#ID.#SC :s"),
 						})
+
 						if err != nil {
 
 							var intServErr *types.InternalServerError
@@ -369,6 +339,53 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 					// c.updateEachScore(v, 0)
 				}
 
+			}
+
+			ui2, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+				Key:       gameItemKey,
+				TableName: aws.String(tableName),
+				// ConditionExpression: aws.String("size (#AN) < :c"),
+				ExpressionAttributeNames: map[string]string{
+					// "#PL": "players",
+					// "#ID": id,
+					"#AN": "answers",
+				},
+				ExpressionAttributeValues: map[string]types.AttributeValue{
+					":a": &types.AttributeValueMemberL{Value: []types.AttributeValue{}},
+					// ":c": &types.AttributeValueMemberN{Value: body.PlayersCount},
+				},
+				UpdateExpression: aws.String("SET #AN = :a"),
+				ReturnValues:     types.ReturnValueAllNew,
+			})
+
+			if err != nil {
+
+				var intServErr *types.InternalServerError
+				if errors.As(err, &intServErr) {
+					fmt.Printf("get item error, %v",
+						intServErr.ErrorMessage())
+				}
+
+				// To get any API error
+				var apiErr smithy.APIError
+				if errors.As(err, &apiErr) {
+					fmt.Printf("db error, Code: %v, Message: %v",
+						apiErr.ErrorCode(), apiErr.ErrorMessage())
+				}
+
+			}
+
+			var gm2 game
+			err = attributevalue.UnmarshalMap(ui2.Attributes, &gm2)
+			if err != nil {
+				fmt.Println("unmarshal err", err)
+			}
+
+			hiScore := 0
+			for _, v := range gm2.Players {
+				if v.Score > hiScore {
+					hiScore = v.Score
+				}
 			}
 
 		}

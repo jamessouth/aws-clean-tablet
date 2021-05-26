@@ -28,10 +28,10 @@ func handler(ctx context.Context, req input) (output, error) {
 	index := req.Iterator.Index + req.Iterator.Step
 
 	return output{
-		Index:    index,
-		Step:     req.Iterator.Step,
-		Count:    req.Iterator.Count,
-		Continue: index < req.Iterator.Count,
+		Index: index,
+		Step:  req.Iterator.Step,
+		Count: req.Iterator.Count,
+		// Continue: index < req.Iterator.Count,
 	}, nil
 }
 
