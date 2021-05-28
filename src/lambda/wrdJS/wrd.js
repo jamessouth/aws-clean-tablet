@@ -19,7 +19,7 @@ exports.handler = (req, ctx, cb) => {
         region: req.region,
     });
 
-    const hiScore = req.hiScore + 7;
+    const hiScore = 7;
     
 
     try {
