@@ -8,36 +8,44 @@ const SF = require("aws-sdk/clients/stepfunctions");
 exports.handler = (req, ctx, cb) => {
     console.log("wrddddd", req);
 
-    // const apigw = new ApiGatewayManagementApi({
-    //     apiVersion: "2018-11-29",
-    //     region: req.region,
-    //     endpoint: req.endpoint,
-    // });
+    if (req.word) {
+        const apigw = new ApiGatewayManagementApi({
+            apiVersion: "2018-11-29",
+            region: req.region,
+            endpoint: req.endpoint,
+        });
 
-    const sf = new SF({
-        apiVersion: "2016-11-23",
-        region: req.region,
-    });
+        try {
+            (async () => {
+                for (const i of req.conns) {
+                    console.log("ppcc: ", i);
+                    const res = await apigw
+                        .postToConnection({
+                            ConnectionId: i,
+                            Data: JSON.stringify({
+                                type: "word",
+                                word: req.word,
+                            }),
+                        })
+                        .promise();
 
-    const hiScore = 7;
-    
+                    console.log("xcvxcvxres: ", res);
+                }
+            })();
+        } catch (err) {
+            console.log("post error: ", err);
+            cb(Error(err));
+        }
+    } else if (req.hiScore) {
+        const sf = new SF({
+            apiVersion: "2016-11-23",
+            region: req.region,
+        });
 
-    try {
-        (async () => {
-            // for (const i of req.conns) {
-            //     console.log('ppcc: ', i);
-            //     const res = await apigw
-            //         .postToConnection({
-            //             ConnectionId: i,
-            //             Data: JSON.stringify({
-            //                 type: "word",
-            //                 word: req.word,
-            //             }),
-            //         })
-            //         .promise();
+        const hiScore = req.hiScore.score;
 
-            //     console.log("xcvxcvxres: ", res);
-
+        try {
+            (async () => {
                 setTimeout(() => {
                     sf.sendTaskSuccess(
                         {
@@ -50,11 +58,11 @@ exports.handler = (req, ctx, cb) => {
                         }
                     );
                 }, 4000);
-            // }
-        })();
-    } catch (err) {
-        console.log("post error: ", err);
-        cb(Error(err));
+            })();
+        } catch (err) {
+            console.log("post error: ", err);
+            cb(Error(err));
+        }
     }
 
     cb(null, `myOtherString`);

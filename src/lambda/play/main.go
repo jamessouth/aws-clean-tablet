@@ -54,6 +54,11 @@ type answer struct {
 	PlayerID, Answer string
 }
 
+type hiScore struct {
+	Score int  `json:"score"`
+	Tie   bool `json:"tie"`
+}
+
 type game struct {
 	Pk       string            `dynamodbav:"pk"`
 	Sk       string            `dynamodbav:"sk"`
@@ -75,8 +80,9 @@ type ConnItemAttrs struct {
 }
 
 type lambdaInput struct {
-	Game   game   `json:"game"`
-	Region string `json:"region"`
+	Game    game    `json:"game,omitempty"`
+	Region  string  `json:"region"`
+	HiScore hiScore `json:"hiScore,omitempty"`
 }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -190,7 +196,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			}
 
 		}
-		// }
 
 	} else if body.Type == "answer" {
 
@@ -381,11 +386,62 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 				fmt.Println("unmarshal err", err)
 			}
 
-			hiScore := 0
+			hiScore := hiScore{
+				Score: 0,
+				Tie:   false,
+			}
+			// && hiScore.Score > 0
 			for _, v := range gm2.Players {
-				if v.Score > hiScore {
-					hiScore = v.Score
+				if v.Score == hiScore.Score {
+					hiScore.Tie = true
 				}
+				if v.Score > hiScore.Score {
+					hiScore.Score = v.Score
+					hiScore.Tie = false
+				}
+			}
+
+			mj2, err := json.Marshal(lambdaInput{
+				HiScore: hiScore,
+				Region:  reg,
+			})
+			if err != nil {
+				fmt.Println("hiscore item marshal err", err)
+			}
+
+			ii2 := lamb.InvokeInput{
+				FunctionName: aws.String("ct-wrdJS"),
+				Payload:      mj2,
+			}
+
+			li2, err := svc2.Invoke(ctx, &ii2)
+
+			q := *li2
+			fmt.Printf("\n%s, %+v\n", "liii", q)
+			// fmt.Println(*li.FunctionError, li.Payload)
+			z := q.FunctionError
+			x := string(q.Payload)
+			fmt.Println("inv pyld", x)
+
+			if z != nil {
+				fmt.Println("inv err", *z, x)
+			}
+
+			if err != nil {
+
+				var intServErr *types.InternalServerError
+				if errors.As(err, &intServErr) {
+					fmt.Printf("get item error, %v",
+						intServErr.ErrorMessage())
+				}
+
+				// To get any API error
+				var apiErr smithy.APIError
+				if errors.As(err, &apiErr) {
+					fmt.Printf("db error, Code: %v, Message: %v",
+						apiErr.ErrorCode(), apiErr.ErrorMessage())
+				}
+
 			}
 
 		}
