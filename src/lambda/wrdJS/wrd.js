@@ -63,6 +63,8 @@ exports.handler = (req, ctx, cb) => {
             console.log("post error: ", err);
             cb(Error(err));
         }
+    } else {
+        console.log('other wrdJS: ', req);
     }
 
     cb(null, `myOtherString`);
