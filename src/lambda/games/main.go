@@ -1,13 +1,14 @@
 package main
 
 import (
-	"bufio"
-	"bytes"
+	// "bufio"
+
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
+
+	// "io"
 	"net/http"
 	"os"
 	"strings"
@@ -18,13 +19,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
 	"github.com/aws/smithy-go"
-	"github.com/aws/smithy-go/logging"
 )
 
-var buffer bytes.Buffer
+// var buffer bytes.Buffer
 
 func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayProxyResponse, error) {
-
+	fmt.Println("reqqqq", req)
 	for _, rec := range req.Records {
 		// || rec.EventName == "MODIFY"
 		if rec.EventName == "INSERT" {
@@ -32,7 +32,8 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			// for k, v := range rec.Change.NewImage {
 			item := rec.Change.NewImage
 
-			// fmt.Printf("%s: %+v\n", "new db item", item)
+			fmt.Printf("%s: %+v\n", "new db item", item)
+			fmt.Println("nnnn", item["pk"].String())
 			// if k == "pk" {
 			if strings.HasPrefix(item["pk"].String(), "CONN") {
 				apiid, ok := os.LookupEnv("CT_APIID")
@@ -50,44 +51,47 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 				customResolver := aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
 					if service == apigatewaymanagementapi.ServiceID && region == rec.AWSRegion {
-						return aws.Endpoint{
+						ep := aws.Endpoint{
 							PartitionID:   "aws",
 							URL:           str,
 							SigningRegion: rec.AWSRegion,
-						}, nil
+						}
+						fmt.Println("eppppppppppppppppp", ep)
+						return ep, nil
 					}
 					return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested")
 				})
 
-				logger := logging.NewStandardLogger(&buffer)
-				logger.Logf(logging.Debug, "time to %s", "log")
+				// logger := logging.NewStandardLogger(&buffer)
+				// logger.Logf(logging.Debug, "time to %s", "log")
 
 				cfg, err := config.LoadDefaultConfig(ctx,
 					config.WithRegion(rec.AWSRegion),
-					config.WithLogger(logger),
+					// config.WithLogger(logger),
 					config.WithEndpointResolver(customResolver),
 				)
 				if err != nil {
 					fmt.Println("cfg err")
 				}
-
+				// fmt.Println("cfggggggggggggg", cfg)
 				// , &aws.Config{
 				// 	Region:   aws.String(),
 				// 	Endpoint: aws.String(apiid + ".execute-api." + rec.AWSRegion + ".amazonaws.com/" + stage + "/@connections/"),
 				// }
 
-				svc := apigatewaymanagementapi.NewFromConfig(cfg, func(o *apigatewaymanagementapi.Options) {
-					o.ClientLogMode = aws.LogSigning | aws.LogRequest | aws.LogResponseWithBody
-				})
+				svc := apigatewaymanagementapi.NewFromConfig(cfg)
 
+				// , func(o *apigatewaymanagementapi.Options) {
+				// 	o.ClientLogMode = aws.LogSigning | aws.LogRequest | aws.LogResponseWithBody
+				// }
 				// fmt.Println("game")
 
 				b, err := json.Marshal("{a: 19894, b: 74156}")
 				if err != nil {
 					fmt.Println("error marshalling", err)
 				}
-				// fmt.Println(b, item["sk"].String())
-				conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(item["sk"].String()), Data: b}
+				fmt.Println("xxxxxxxxxxxxx", item["GSI1SK"].String(), string(b))
+				conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(item["GSI1SK"].String()), Data: b}
 
 				// conn.SetConnectionId()
 
@@ -119,25 +123,25 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 		}
 
 	}
-	r := bufio.NewReader(&buffer)
-	log := make([]byte, 0, 1024)
-	for {
-		n, err := io.ReadFull(r, log[:cap(log)])
-		log = log[:n]
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			if err != io.ErrUnexpectedEOF {
-				fmt.Fprintln(os.Stderr, err)
-				break
-			}
-		}
+	// r := bufio.NewReader(&buffer)
+	// log := make([]byte, 0, 1024)
+	// for {
+	// 	n, err := io.ReadFull(r, log[:cap(log)])
+	// 	log = log[:n]
+	// 	if err != nil {
+	// 		if err == io.EOF {
+	// 			break
+	// 		}
+	// 		if err != io.ErrUnexpectedEOF {
+	// 			fmt.Fprintln(os.Stderr, err)
+	// 			break
+	// 		}
+	// 	}
 
-		fmt.Printf("read %d bytes: ", n)
+	// 	fmt.Printf("read %d bytes: ", n)
 
-		fmt.Println(string(log))
-	}
+	// 	fmt.Println(string(log))
+	// }
 
 	return events.APIGatewayProxyResponse{
 		StatusCode:        http.StatusOK,
