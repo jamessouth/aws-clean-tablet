@@ -1,14 +1,10 @@
 package main
 
 import (
-	// "bufio"
-
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 
-	// "io"
 	"net/http"
 	"os"
 	"strings"
@@ -18,97 +14,120 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/smithy-go"
 )
 
-// var buffer bytes.Buffer
+type player struct {
+	Name   string `dynamodbav:"name"`
+	ConnID string `dynamodbav:"connid"`
+	Ready  bool   `dynamodbav:"ready"`
+	Color  string `dynamodbav:"color"`
+}
+
+type game struct {
+	No      string   `json:"no"`
+	Leader  string   `json:"leader,omitempty"`
+	Players []player `json:"players"`
+}
+
+type payload struct {
+	Games []game `json:"games"`
+	Type  string `json:"type"`
+}
+
+// var (
+// 	connResults, gamesResults *dynamodb.QueryOutput
+// )
+
+func getPlayersSlice(m map[string]player) (res []player) {
+	for _, v := range m {
+		res = append(res, v)
+	}
+
+	return
+}
+
+type games struct {
+	*dynamodb.QueryOutput
+}
+
+func (m games) mapGames() []game {
+	fmt.Print(m)
+	return []game{}
+}
 
 func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayProxyResponse, error) {
-	fmt.Println("reqqqq", req)
+	// fmt.Println("reqqqq", req)
 	for _, rec := range req.Records {
-		// || rec.EventName == "MODIFY"
+		tableName := strings.Split(rec.EventSourceArn, "/")[1]
+		item := rec.Change.NewImage
+		fmt.Printf("%s: %+v\n", "new db item", item)
+
+		apiid, ok := os.LookupEnv("CT_APIID")
+		if !ok {
+			panic(fmt.Sprintf("%v", "can't find api id"))
+		}
+
+		stage, ok := os.LookupEnv("CT_STAGE")
+		if !ok {
+			panic(fmt.Sprintf("%v", "can't find stage"))
+		}
+		endpoint := "https://" + apiid + ".execute-api." + rec.AWSRegion + ".amazonaws.com/" + stage
+
+		customResolver := aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
+			if service == apigatewaymanagementapi.ServiceID && region == rec.AWSRegion {
+				ep := aws.Endpoint{
+					PartitionID:   "aws",
+					URL:           endpoint,
+					SigningRegion: rec.AWSRegion,
+				}
+				fmt.Println("eppppppppppppppppp", ep)
+				return ep, nil
+			}
+			return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested")
+		})
+
+		cfg, err := config.LoadDefaultConfig(ctx,
+			config.WithRegion(rec.AWSRegion),
+			// config.WithLogger(logger),
+			config.WithEndpointResolver(customResolver),
+		)
+		if err != nil {
+			fmt.Println("cfg err")
+		}
+
+		apigwsvc := apigatewaymanagementapi.NewFromConfig(cfg)
+		ddbsvc := dynamodb.NewFromConfig(cfg)
+
 		if rec.EventName == "INSERT" {
-
-			// for k, v := range rec.Change.NewImage {
-			item := rec.Change.NewImage
-
-			fmt.Printf("%s: %+v\n", "new db item", item)
-			fmt.Println("nnnn", item["pk"].String())
-			// if k == "pk" {
 			if strings.HasPrefix(item["pk"].String(), "CONN") {
-				apiid, ok := os.LookupEnv("CT_APIID")
-				if !ok {
-					panic(fmt.Sprintf("%v", "can't find api id"))
+
+				gamesParams := dynamodb.QueryInput{
+					TableName:              aws.String(tableName),
+					ScanIndexForward:       aws.Bool(false),
+					KeyConditionExpression: aws.String("pk = :gm"),
+					FilterExpression:       aws.String("#ST = :st"),
+					ExpressionAttributeValues: map[string]types.AttributeValue{
+						":gm": &types.AttributeValueMemberS{Value: "GAME"},
+						":st": &types.AttributeValueMemberBOOL{Value: false},
+					},
+					ExpressionAttributeNames: map[string]string{
+						"#ST": "starting",
+					},
 				}
+				// if err != nil {
+				// 	panic(fmt.Sprintf("failed to marshal query input, %v", err))
+				// }
+				gamesResults, err := ddbsvc.Query(ctx, &gamesParams)
+				if err != nil {
 
-				stage, ok := os.LookupEnv("CT_STAGE")
-				if !ok {
-					panic(fmt.Sprintf("%v", "can't find stage"))
-				}
-				str := "https://" + apiid + ".execute-api." + rec.AWSRegion + ".amazonaws.com/" + stage
-
-				// fmt.Println(str)
-
-				customResolver := aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
-					if service == apigatewaymanagementapi.ServiceID && region == rec.AWSRegion {
-						ep := aws.Endpoint{
-							PartitionID:   "aws",
-							URL:           str,
-							SigningRegion: rec.AWSRegion,
-						}
-						fmt.Println("eppppppppppppppppp", ep)
-						return ep, nil
+					var intServErr *types.InternalServerError
+					if errors.As(err, &intServErr) {
+						fmt.Printf("get item error, %v",
+							intServErr.ErrorMessage())
 					}
-					return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested")
-				})
-
-				// logger := logging.NewStandardLogger(&buffer)
-				// logger.Logf(logging.Debug, "time to %s", "log")
-
-				cfg, err := config.LoadDefaultConfig(ctx,
-					config.WithRegion(rec.AWSRegion),
-					// config.WithLogger(logger),
-					config.WithEndpointResolver(customResolver),
-				)
-				if err != nil {
-					fmt.Println("cfg err")
-				}
-				// fmt.Println("cfggggggggggggg", cfg)
-				// , &aws.Config{
-				// 	Region:   aws.String(),
-				// 	Endpoint: aws.String(apiid + ".execute-api." + rec.AWSRegion + ".amazonaws.com/" + stage + "/@connections/"),
-				// }
-
-				svc := apigatewaymanagementapi.NewFromConfig(cfg)
-
-				// , func(o *apigatewaymanagementapi.Options) {
-				// 	o.ClientLogMode = aws.LogSigning | aws.LogRequest | aws.LogResponseWithBody
-				// }
-				// fmt.Println("game")
-
-				b, err := json.Marshal("{a: 19894, b: 74156}")
-				if err != nil {
-					fmt.Println("error marshalling", err)
-				}
-				fmt.Println("xxxxxxxxxxxxx", item["GSI1SK"].String(), string(b))
-				conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(item["GSI1SK"].String()), Data: b}
-
-				// conn.SetConnectionId()
-
-				// conn.SetData(b)
-
-				// er := conn.Validate()
-				// if er != nil {
-				// 	fmt.Println("val err", er)
-				// }
-
-				// fmt.Println("defff", defaults.Get())
-				// fmt.Println("defff2222", defaults.Config())
-
-				_, e := svc.PostToConnection(ctx, &conn)
-				// fmt.Println("opopopo", o)
-				if e != nil {
-					fmt.Println("errrr", e)
 
 					// To get any API error
 					var apiErr smithy.APIError
@@ -116,7 +135,14 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 						fmt.Printf("db error, Code: %v, Message: %v",
 							apiErr.ErrorCode(), apiErr.ErrorMessage())
 					}
+
 				}
+
+				payload := payload{
+					Games: gamesResults.Items.mapGames(),
+					Type:  "",
+				}
+
 			}
 			// }
 			// }
