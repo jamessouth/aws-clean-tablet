@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
 
 	"net/http"
 	"os"
@@ -13,6 +15,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
@@ -23,39 +26,53 @@ type player struct {
 	Name   string `dynamodbav:"name"`
 	ConnID string `dynamodbav:"connid"`
 	Ready  bool   `dynamodbav:"ready"`
-	Color  string `dynamodbav:"color"`
+	Color  string `dynamodbav:"color,omitempty"`
 }
 
-type game struct {
+type gameout struct {
 	No      string   `json:"no"`
 	Leader  string   `json:"leader,omitempty"`
 	Players []player `json:"players"`
 }
-
-type payload struct {
-	Games []game `json:"games"`
-	Type  string `json:"type"`
+type gamein struct {
+	No      string            `json:"no"`
+	Leader  string            `json:"leader,omitempty"`
+	Players map[string]player `json:"players"`
 }
 
-// var (
-// 	connResults, gamesResults *dynamodb.QueryOutput
-// )
+type insertPayload struct {
+	Games []gameout `json:"games"`
+	Type  string    `json:"type"`
+}
+
+func sortByName(p []player) []player {
+	sort.Slice(p, func(i, j int) bool {
+		return p[i].Name > p[j].Name
+	})
+
+	return p
+}
 
 func getPlayersSlice(m map[string]player) (res []player) {
 	for _, v := range m {
 		res = append(res, v)
 	}
 
+	return sortByName(res)
+}
+
+type gamesList []gamein
+
+func (gl gamesList) mapGames() (res []gameout) {
+	for _, g := range gl {
+		res = append(res, gameout{
+			No:      g.No,
+			Leader:  g.Leader,
+			Players: getPlayersSlice(g.Players),
+		})
+	}
+
 	return
-}
-
-type games struct {
-	*dynamodb.QueryOutput
-}
-
-func (m games) mapGames() []game {
-	fmt.Print(m)
-	return []game{}
 }
 
 func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayProxyResponse, error) {
@@ -138,10 +155,43 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 				}
 
-				payload := payload{
-					Games: gamesResults.Items.mapGames(),
-					Type:  "",
+				var games gamesList
+				err = attributevalue.UnmarshalListOfMaps(gamesResults.Items, &games)
+				if err != nil {
+					fmt.Println("query unmarshal err", err)
 				}
+
+				payload, err := json.Marshal(insertPayload{
+					Games: games.mapGames(),
+					Type:  "games",
+				})
+				if err != nil {
+					fmt.Println("error marshalling", err)
+				}
+
+				conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(item["GSI1SK"].String()), Data: payload}
+
+				_, err = apigwsvc.PostToConnection(ctx, &conn)
+				if err != nil {
+
+					var intServErr *types.InternalServerError
+					if errors.As(err, &intServErr) {
+						fmt.Printf("get item error, %v",
+							intServErr.ErrorMessage())
+					}
+
+					// To get any API error
+					var apiErr smithy.APIError
+					if errors.As(err, &apiErr) {
+						fmt.Printf("db error, Code: %v, Message: %v",
+							apiErr.ErrorCode(), apiErr.ErrorMessage())
+					}
+
+				}
+
+			} else if strings.HasPrefix(item["pk"].String(), "GAME") {
+
+			} else {
 
 			}
 			// }

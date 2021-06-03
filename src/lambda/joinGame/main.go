@@ -33,7 +33,7 @@ type Player struct {
 	Name   string `dynamodbav:"name"`
 	ConnID string `dynamodbav:"connid"`
 	Ready  bool   `dynamodbav:"ready"`
-	Color  string `dynamodbav:"color"`
+	// Color  string `dynamodbav:"color"`
 }
 
 type answer struct {
@@ -135,7 +135,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			Name:   name,
 			ConnID: req.RequestContext.ConnectionID,
 			Ready:  false,
-			Color:  "",
+			// Color:  "",
 		}
 
 		marshalledPlayersMap, err := attributevalue.Marshal(map[string]Player{
