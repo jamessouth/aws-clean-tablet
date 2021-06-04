@@ -30,22 +30,28 @@ type player struct {
 }
 
 type gameout struct {
-	No      string   `json:"no"`
-	Leader  string   `json:"leader,omitempty"`
-	Players []player `json:"players"`
+	No      string     `json:"no"`
+	Leader  string     `json:"leader,omitempty"`
+	Players playerList `json:"players"`
 }
+
 type gamein struct {
 	No      string            `json:"no"`
 	Leader  string            `json:"leader,omitempty"`
 	Players map[string]player `json:"players"`
 }
 
-type insertPayload struct {
+type insertConnPayload struct {
 	Games []gameout `json:"games"`
 	Type  string    `json:"type"`
 }
 
-func sortByName(p []player) []player {
+type insertGamePayload struct {
+	Games gameout `json:"games"`
+	Type  string  `json:"type"`
+}
+
+func (p playerList) sortByName() playerList {
 	sort.Slice(p, func(i, j int) bool {
 		return p[i].Name > p[j].Name
 	})
@@ -53,22 +59,23 @@ func sortByName(p []player) []player {
 	return p
 }
 
-func getPlayersSlice(m map[string]player) (res []player) {
+func getPlayersSlice(m map[string]player) (res playerList) {
 	for _, v := range m {
 		res = append(res, v)
 	}
 
-	return sortByName(res)
+	return
 }
 
 type gamesList []gamein
+type playerList []player
 
 func (gl gamesList) mapGames() (res []gameout) {
 	for _, g := range gl {
 		res = append(res, gameout{
 			No:      g.No,
 			Leader:  g.Leader,
-			Players: getPlayersSlice(g.Players),
+			Players: getPlayersSlice(g.Players).sortByName(),
 		})
 	}
 
@@ -161,7 +168,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 					fmt.Println("query unmarshal err", err)
 				}
 
-				payload, err := json.Marshal(insertPayload{
+				payload, err := json.Marshal(insertConnPayload{
 					Games: games.mapGames(),
 					Type:  "games",
 				})
@@ -190,6 +197,27 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				}
 
 			} else if strings.HasPrefix(item["pk"].String(), "GAME") {
+
+				var players map[string]player
+				var b []byte
+				z := item["players"]
+				c := z.UnmarshalJSON(b)
+				err = attributevalue.UnmarshalMap(, &players)
+				if err != nil {
+					fmt.Println("query unmarshal err", err)
+				}
+
+				payload, err := json.Marshal(insertGamePayload{
+					Games: gameout{
+						No:      item["sk"].String(),
+						Leader:  item["leader"].String(),
+						Players: getPlayersSlice(),
+					},
+					Type: "games",
+				})
+				if err != nil {
+					fmt.Println("error marshalling", err)
+				}
 
 			} else {
 
