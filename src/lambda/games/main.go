@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/aws-sdk-go/service/dynamodbstreams"
 	"github.com/aws/smithy-go"
 )
 
@@ -46,10 +47,10 @@ type insertConnPayload struct {
 	Type  string    `json:"type"`
 }
 
-type insertGamePayload struct {
-	Games gameout `json:"games"`
-	Type  string  `json:"type"`
-}
+// type insertGamePayload struct {
+// 	Games gameout `json:"games"`
+// 	Type  string  `json:"type"`
+// }
 
 func (p playerList) sortByName() playerList {
 	sort.Slice(p, func(i, j int) bool {
@@ -82,11 +83,45 @@ func (gl gamesList) mapGames() (res []gameout) {
 	return
 }
 
-func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayProxyResponse, error) {
+func FromDynamoDBEventAVMap(from map[string]*types.AttributeValue) (to map[string]types.AttributeValue, err error) {
+	to = make(map[string]types.AttributeValue, len(from))
+	for field, value := range from {
+		to[field], err = FromDynamoDBEventAV(*value)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return to, nil
+}
+
+func FromDynamoDBEventAV(from types.AttributeValue) (types.AttributeValue, error) {
+	switch v := from.(type) {
+
+	case *types.AttributeValueMemberBOOL:
+		return &types.AttributeValueMemberBOOL{v.Value}, nil
+
+	case *types.AttributeValueMemberS:
+		return &types.AttributeValueMemberS{v.Value}, nil
+
+	case *types.AttributeValueMemberM:
+		return &types.AttributeValueMemberM{v.Value}, nil
+
+	default:
+		return nil, fmt.Errorf("unknown AttributeValue union member, %T", from)
+	}
+}
+
+type streamEvent struct {
+	Records []dynamodbstreams.Record `json:"Records"`
+}
+
+func handler(ctx context.Context, req streamEvent) (events.APIGatewayProxyResponse, error) {
 	// fmt.Println("reqqqq", req)
 	for _, rec := range req.Records {
-		tableName := strings.Split(rec.EventSourceArn, "/")[1]
-		item := rec.Change.NewImage
+		// tableName := strings.Split(rec.EventSourceArn, "/")[1]
+
+		item := rec.Dynamodb.NewImage
 		fmt.Printf("%s: %+v\n", "new db item", item)
 
 		apiid, ok := os.LookupEnv("CT_APIID")
@@ -94,18 +129,20 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			panic(fmt.Sprintf("%v", "can't find api id"))
 		}
 
+		reg := *rec.AwsRegion
+
 		stage, ok := os.LookupEnv("CT_STAGE")
 		if !ok {
 			panic(fmt.Sprintf("%v", "can't find stage"))
 		}
-		endpoint := "https://" + apiid + ".execute-api." + rec.AWSRegion + ".amazonaws.com/" + stage
+		endpoint := "https://" + apiid + ".execute-api." + reg + ".amazonaws.com/" + stage
 
 		customResolver := aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
-			if service == apigatewaymanagementapi.ServiceID && region == rec.AWSRegion {
+			if service == apigatewaymanagementapi.ServiceID && region == reg {
 				ep := aws.Endpoint{
 					PartitionID:   "aws",
 					URL:           endpoint,
-					SigningRegion: rec.AWSRegion,
+					SigningRegion: reg,
 				}
 				fmt.Println("eppppppppppppppppp", ep)
 				return ep, nil
@@ -114,7 +151,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 		})
 
 		cfg, err := config.LoadDefaultConfig(ctx,
-			config.WithRegion(rec.AWSRegion),
+			config.WithRegion(reg),
 			// config.WithLogger(logger),
 			config.WithEndpointResolver(customResolver),
 		)
@@ -125,7 +162,9 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 		apigwsvc := apigatewaymanagementapi.NewFromConfig(cfg)
 		ddbsvc := dynamodb.NewFromConfig(cfg)
 
-		if rec.EventName == "INSERT" {
+		ev := *rec.EventName
+
+		if ev == dynamodbstreams.OperationTypeInsert {
 			if strings.HasPrefix(item["pk"].String(), "CONN") {
 
 				gamesParams := dynamodb.QueryInput{
@@ -198,29 +237,37 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			} else if strings.HasPrefix(item["pk"].String(), "GAME") {
 
-				var players map[string]player
-				var b []byte
-				z := item["players"]
-				c := z.UnmarshalJSON(b)
-				err = attributevalue.UnmarshalMap(, &players)
+				// var players map[string]player
+
+				game, _ := FromDynamoDBEventAVMap(item)
+
+				var gamein gamein
+				err = attributevalue.UnmarshalMap(game, &gamein)
 				if err != nil {
-					fmt.Println("query unmarshal err", err)
+					fmt.Println("item unmarshal err", err)
 				}
 
-				payload, err := json.Marshal(insertGamePayload{
-					Games: gameout{
-						No:      item["sk"].String(),
-						Leader:  item["leader"].String(),
-						Players: getPlayersSlice(),
-					},
-					Type: "games",
-				})
-				if err != nil {
-					fmt.Println("error marshalling", err)
-				}
+				fmt.Printf("%s%+v\n", "gammmmme ", gamein)
+
+				// err = attributevalue.UnmarshalMap(, &players)
+				// if err != nil {
+				// 	fmt.Println("query unmarshal err", err)
+				// }
+
+				// payload, err := json.Marshal(insertGamePayload{
+				// 	Games: gameout{
+				// 		No:      item["sk"].String(),
+				// 		Leader:  item["leader"].String(),
+				// 		Players: getPlayersSlice(),
+				// 	},
+				// 	Type: "games",
+				// })
+				// if err != nil {
+				// 	fmt.Println("error marshalling", err)
+				// }
 
 			} else {
-
+				fmt.Println("other game")
 			}
 			// }
 			// }
