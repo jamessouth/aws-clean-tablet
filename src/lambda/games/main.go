@@ -83,10 +83,10 @@ func (gl gamesList) mapGames() (res []gameout) {
 	return
 }
 
-func FromDynamoDBEventAVMap(from map[string]*types.AttributeValue) (to map[string]types.AttributeValue, err error) {
+func FromDynamoDBEventAVMap(from map[string]events.DynamoDBAttributeValue) (to map[string]types.AttributeValue, err error) {
 	to = make(map[string]types.AttributeValue, len(from))
 	for field, value := range from {
-		to[field], err = FromDynamoDBEventAV(*value)
+		to[field], err = FromDynamoDBEventAV(value)
 		if err != nil {
 			return nil, err
 		}
@@ -95,33 +95,32 @@ func FromDynamoDBEventAVMap(from map[string]*types.AttributeValue) (to map[strin
 	return to, nil
 }
 
-func FromDynamoDBEventAV(from types.AttributeValue) (types.AttributeValue, error) {
-	switch v := from.(type) {
+func FromDynamoDBEventAV(from events.DynamoDBAttributeValue) (types.AttributeValue, error) {
+	switch from.DataType() {
 
-	case *types.AttributeValueMemberBOOL:
-		return &types.AttributeValueMemberBOOL{v.Value}, nil
+	case events.DataTypeBoolean:
+		return &types.AttributeValueMemberBOOL{Value: from.Boolean()}, nil
 
-	case *types.AttributeValueMemberS:
-		return &types.AttributeValueMemberS{v.Value}, nil
+	case events.DataTypeString:
+		return &types.AttributeValueMemberS{Value: from.String()}, nil
 
-	case *types.AttributeValueMemberM:
-		return &types.AttributeValueMemberM{v.Value}, nil
+	case events.DataTypeMap:
+		values, err := FromDynamoDBEventAVMap(from.Map())
+		if err != nil {
+			return nil, err
+		}
+		return &types.AttributeValueMemberM{Value: values}, nil
 
 	default:
 		return nil, fmt.Errorf("unknown AttributeValue union member, %T", from)
 	}
 }
 
-type streamEvent struct {
-	Records []dynamodbstreams.Record `json:"Records"`
-}
-
-func handler(ctx context.Context, req streamEvent) (events.APIGatewayProxyResponse, error) {
+func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayProxyResponse, error) {
 	// fmt.Println("reqqqq", req)
 	for _, rec := range req.Records {
-		// tableName := strings.Split(rec.EventSourceArn, "/")[1]
-
-		item := rec.Dynamodb.NewImage
+		tableName := strings.Split(rec.EventSourceArn, "/")[1]
+		item := rec.Change.NewImage
 		fmt.Printf("%s: %+v\n", "new db item", item)
 
 		apiid, ok := os.LookupEnv("CT_APIID")
@@ -129,20 +128,18 @@ func handler(ctx context.Context, req streamEvent) (events.APIGatewayProxyRespon
 			panic(fmt.Sprintf("%v", "can't find api id"))
 		}
 
-		reg := *rec.AwsRegion
-
 		stage, ok := os.LookupEnv("CT_STAGE")
 		if !ok {
 			panic(fmt.Sprintf("%v", "can't find stage"))
 		}
-		endpoint := "https://" + apiid + ".execute-api." + reg + ".amazonaws.com/" + stage
+		endpoint := "https://" + apiid + ".execute-api." + rec.AWSRegion + ".amazonaws.com/" + stage
 
 		customResolver := aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
-			if service == apigatewaymanagementapi.ServiceID && region == reg {
+			if service == apigatewaymanagementapi.ServiceID && region == rec.AWSRegion {
 				ep := aws.Endpoint{
 					PartitionID:   "aws",
 					URL:           endpoint,
-					SigningRegion: reg,
+					SigningRegion: rec.AWSRegion,
 				}
 				fmt.Println("eppppppppppppppppp", ep)
 				return ep, nil
@@ -151,7 +148,7 @@ func handler(ctx context.Context, req streamEvent) (events.APIGatewayProxyRespon
 		})
 
 		cfg, err := config.LoadDefaultConfig(ctx,
-			config.WithRegion(reg),
+			config.WithRegion(rec.AWSRegion),
 			// config.WithLogger(logger),
 			config.WithEndpointResolver(customResolver),
 		)
@@ -162,9 +159,7 @@ func handler(ctx context.Context, req streamEvent) (events.APIGatewayProxyRespon
 		apigwsvc := apigatewaymanagementapi.NewFromConfig(cfg)
 		ddbsvc := dynamodb.NewFromConfig(cfg)
 
-		ev := *rec.EventName
-
-		if ev == dynamodbstreams.OperationTypeInsert {
+		if rec.EventName == dynamodbstreams.OperationTypeInsert {
 			if strings.HasPrefix(item["pk"].String(), "CONN") {
 
 				gamesParams := dynamodb.QueryInput{
