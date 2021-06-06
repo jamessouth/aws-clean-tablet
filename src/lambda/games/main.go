@@ -36,6 +36,10 @@ type gameout struct {
 	Players playerList `json:"players"`
 }
 
+type connin struct {
+	GSI1SK      string            `json:"gsi1sk"`
+}
+
 type gamein struct {
 	No      string            `json:"no"`
 	Leader  string            `json:"leader,omitempty"`
@@ -69,6 +73,7 @@ func getPlayersSlice(m map[string]player) (res playerList) {
 }
 
 type gamesList []gamein
+type connsList []connin
 type playerList []player
 
 func (gl gamesList) mapGames() (res []gameout) {
@@ -288,39 +293,62 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 				}
 
-				var games gamesList
-				err = attributevalue.UnmarshalListOfMaps(gamesResults.Items, &games)
+				var conns connsList
+				err = attributevalue.UnmarshalListOfMaps(connsResults.Items, &conns)
 				if err != nil {
 					fmt.Println("query unmarshal err", err)
 				}
 
+
+				for _, v := range conns {
+
+
+					conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.GSI1SK), Data: payload}
+
+
+
+
+
+
+
+					_, err = apigwsvc.PostToConnection(ctx, &conn)
+					if err != nil {
+
+						var intServErr *types.InternalServerError
+						if errors.As(err, &intServErr) {
+							fmt.Printf("get item error, %v",
+								intServErr.ErrorMessage())
+						}
+
+						// To get any API error
+						var apiErr smithy.APIError
+						if errors.As(err, &apiErr) {
+							fmt.Printf("db error, Code: %v, Message: %v",
+								apiErr.ErrorCode(), apiErr.ErrorMessage())
+						}
+
+					}
+
+				}
+
+
+
 			} else {
-				fmt.Println("other game")
+				fmt.Println("other insert", item)
 			}
-			// }
-			// }
+			} else if rec.EventName == dynamodbstreams.OperationTypeModify {
+				if strings.HasPrefix(item["pk"].String(), "CONN") {
+
+
+				} else if strings.HasPrefix(item["pk"].String(), "GAME") {
+
+				} else {
+					fmt.Println("other modify", item)
+				}
+			}
 		}
 
 	}
-	// r := bufio.NewReader(&buffer)
-	// log := make([]byte, 0, 1024)
-	// for {
-	// 	n, err := io.ReadFull(r, log[:cap(log)])
-	// 	log = log[:n]
-	// 	if err != nil {
-	// 		if err == io.EOF {
-	// 			break
-	// 		}
-	// 		if err != io.ErrUnexpectedEOF {
-	// 			fmt.Fprintln(os.Stderr, err)
-	// 			break
-	// 		}
-	// 	}
-
-	// 	fmt.Printf("read %d bytes: ", n)
-
-	// 	fmt.Println(string(log))
-	// }
 
 	return events.APIGatewayProxyResponse{
 		StatusCode:        http.StatusOK,
