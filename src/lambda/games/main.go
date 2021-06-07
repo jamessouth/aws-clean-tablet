@@ -37,7 +37,7 @@ type gameout struct {
 }
 
 type connin struct {
-	GSI1SK      string            `json:"gsi1sk"`
+	GSI1SK string `json:"gsi1sk"`
 }
 
 type gamein struct {
@@ -51,10 +51,16 @@ type insertConnPayload struct {
 	Type  string    `json:"type"`
 }
 
-// type insertGamePayload struct {
-// 	Games gameout `json:"games"`
-// 	Type  string  `json:"type"`
-// }
+type modifyConnPayload struct {
+	Ingame      string `json:"ingame"`
+	Leadertoken string `json:"leadertoken"`
+	Type        string `json:"type"`
+}
+
+type insertGamePayload struct {
+	Games gameout `json:"games"`
+	Type  string  `json:"type"`
+}
 
 func (p playerList) sortByName() playerList {
 	sort.Slice(p, func(i, j int) bool {
@@ -247,28 +253,26 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 				fmt.Printf("%s%+v\n", "gammmmme ", gamein)
 
-				
-
-				 payload, err := json.Marshal(insertGamePayload{
-				 	Games: gameout{
-				 		No:      item["sk"].String(),
-				 		Leader:  item["leader"].String(),
-				 		Players: getPlayersSlice(gamein.Players),
-				 	},
-				 	Type: "games",
-				 })
-				 if err != nil {
-				 	fmt.Println("error marshalling payload", err)
-				 }
+				payload, err := json.Marshal(insertGamePayload{
+					Games: gameout{
+						No:      item["sk"].String(),
+						Leader:  item["leader"].String(),
+						Players: getPlayersSlice(gamein.Players),
+					},
+					Type: "games",
+				})
+				if err != nil {
+					fmt.Println("error marshalling payload", err)
+				}
 
 				connsParams := dynamodb.QueryInput{
 					TableName:              aws.String(tableName),
-					IndexName:		aws.String("GSI1"),
+					IndexName:              aws.String("GSI1"),
 					KeyConditionExpression: aws.String("GSI1PK = :cn"),
 					FilterExpression:       aws.String("#PL = :f"),
 					ExpressionAttributeValues: map[string]types.AttributeValue{
 						":cn": &types.AttributeValueMemberS{Value: "CONN"},
-						":f": &types.AttributeValueMemberBOOL{Value: false},
+						":f":  &types.AttributeValueMemberBOOL{Value: false},
 					},
 					ExpressionAttributeNames: map[string]string{
 						"#PL": "playing",
@@ -299,17 +303,9 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 					fmt.Println("query unmarshal err", err)
 				}
 
-
 				for _, v := range conns {
 
-
 					conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.GSI1SK), Data: payload}
-
-
-
-
-
-
 
 					_, err = apigwsvc.PostToConnection(ctx, &conn)
 					if err != nil {
@@ -331,23 +327,58 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 				}
 
-
-
 			} else {
 				fmt.Println("other insert", item)
 			}
-			} else if rec.EventName == dynamodbstreams.OperationTypeModify {
-				if strings.HasPrefix(item["pk"].String(), "CONN") {
+		} else if rec.EventName == dynamodbstreams.OperationTypeModify {
+			if strings.HasPrefix(item["pk"].String(), "CONN") {
+				if !item["playing"].Boolean() {
 
+					payload, err := json.Marshal(modifyConnPayload{
+						Ingame:      item["game"].String(),
+						Leadertoken: item["sk"].String() + "_" + item["GSI1SK"].String(),
+						Type:        "games",
+					})
+					if err != nil {
+						fmt.Println("error marshalling payload", err)
+					}
 
-				} else if strings.HasPrefix(item["pk"].String(), "GAME") {
+					conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(item["GSI1SK"].String()), Data: payload}
 
-				} else {
-					fmt.Println("other modify", item)
+					_, err = apigwsvc.PostToConnection(ctx, &conn)
+					if err != nil {
+
+						var intServErr *types.InternalServerError
+						if errors.As(err, &intServErr) {
+							fmt.Printf("get item error, %v",
+								intServErr.ErrorMessage())
+						}
+
+						// To get any API error
+						var apiErr smithy.APIError
+						if errors.As(err, &apiErr) {
+							fmt.Printf("db error, Code: %v, Message: %v",
+								apiErr.ErrorCode(), apiErr.ErrorMessage())
+						}
+
+					}
+
 				}
+
+			} else if strings.HasPrefix(item["pk"].String(), "GAME") {
+
+				if item["loading"].Boolean() {
+
+					if len(item["answers"].List()) == 0 || len(item["answers"].List()) == 8 {
+
+					}
+
+				}
+
+			} else {
+				fmt.Println("other modify", item)
 			}
 		}
-
 	}
 
 	return events.APIGatewayProxyResponse{
