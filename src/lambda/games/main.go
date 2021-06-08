@@ -31,20 +31,19 @@ type player struct {
 }
 
 type gameout struct {
-	No      string     `json:"no"`
-	Leader  string     `json:"leader,omitempty"`
-	Players playerList `json:"players"`
+	Pk       string     `json:"pk,omitempty"`
+	No       string     `json:"no"`
+	Leader   string     `json:"leader,omitempty"`
+	Starting bool       `json:"starting,omitempty"`
+	Loading  bool       `json:"loading,omitempty"`
+	Playing  bool       `json:"playing,omitempty"`
+	Players  playerList `json:"players"`
+	Answers  []answer   `json:"answers,omitempty"`
 }
 
 type connin struct {
 	GSI1SK string `json:"gsi1sk"`
 }
-
-// type gamein struct {
-// 	No      string            `json:"no"`
-// 	Leader  string            `json:"leader,omitempty"`
-// 	Players map[string]player `json:"players"`
-// }
 
 type insertConnPayload struct {
 	Games []gameout `json:"games"`
@@ -57,7 +56,7 @@ type modifyConnPayload struct {
 	Type        string `json:"type"`
 }
 
-type insertGamePayload struct {
+type gamePayload struct {
 	Games gameout `json:"games"`
 	Type  string  `json:"type"`
 }
@@ -144,9 +143,10 @@ type connItem struct {
 type gamein struct {
 	Pk       string    `dynamodbav:"pk"`
 	Sk       string    `dynamodbav:"sk"`
-	Starting bool      `dynamodbav:"starting"`
 	Leader   string    `dynamodbav:"leader"`
+	Starting bool      `dynamodbav:"starting"`
 	Loading  bool      `dynamodbav:"loading"`
+	Playing  bool      `dynamodbav:"playing,omitempty"`
 	Players  playerMap `dynamodbav:"players"`
 	Answers  []answer  `dynamodbav:"answers"`
 }
@@ -309,6 +309,8 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 				}
 
+			} else {
+				fmt.Println("remove conn ", connRecord)
 			}
 
 		} else if recType == "GAME" {
@@ -321,9 +323,19 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			fmt.Printf("%s%+v\n", "gammmmme ", gameRecord)
 
+			if len(gameRecord.Answers) > 0 && len(gameRecord.Answers) < len(gameRecord.Players) {
+				return events.APIGatewayProxyResponse{
+					StatusCode:        http.StatusOK,
+					Headers:           map[string]string{"Content-Type": "application/json"},
+					MultiValueHeaders: map[string][]string{},
+					Body:              "",
+					IsBase64Encoded:   false,
+				}, nil
+			}
+
 			if rec.EventName == dynamodbstreams.OperationTypeInsert {
 
-				payload, err := json.Marshal(insertGamePayload{
+				payload, err := json.Marshal(gamePayload{
 					Games: gameout{
 						No:      gameRecord.Sk,
 						Leader:  gameRecord.Leader,
@@ -398,21 +410,32 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				}
 
 			} else if rec.EventName == dynamodbstreams.OperationTypeModify {
-				if strings.HasPrefix(item["pk"].String(), "CONN") {
 
-				} else if strings.HasPrefix(item["pk"].String(), "GAME") {
+				payload, err := json.Marshal(gamePayload{
+					Games: gameout{
+						Pk:       "",
+						No:       gameRecord.Sk,
+						Leader:   gameRecord.Leader,
+						Starting: gameRecord.Starting,
+						Loading:  gameRecord.Loading,
+						Playing:  gameRecord.Playing,
+						Players:  gameRecord.Players.getPlayersSlice(),
+						Answers:  gameRecord.Answers,
+					},
+					Type: "",
+				})
+				if err != nil {
+					fmt.Println("error marshalling payload", err)
+				}
 
-					if item["loading"].Boolean() {
-
-						if len(item["answers"].List()) == 0 || len(item["answers"].List()) == 8 {
-
-						}
-
-					}
+				if gameRecord.Loading {
 
 				} else {
-					fmt.Println("other modify", item)
+
 				}
+
+			} else {
+				fmt.Println("remove game ", gameRecord)
 			}
 
 		} else {
