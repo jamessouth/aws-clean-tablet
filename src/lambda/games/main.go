@@ -28,6 +28,7 @@ type player struct {
 	ConnID string `dynamodbav:"connid"`
 	Ready  bool   `dynamodbav:"ready"`
 	Color  string `dynamodbav:"color,omitempty"`
+	Score  int    `dynamodbav:"score,omitempty"`
 }
 
 type gameout struct {
@@ -61,10 +62,66 @@ type gamePayload struct {
 	Type  string  `json:"type"`
 }
 
-func (p playerList) sortByName() playerList {
-	sort.Slice(p, func(i, j int) bool {
-		return p[i].Name > p[j].Name
-	})
+type lessFunc func(p1, p2 *player) int
+
+type multiSorter struct {
+	players []player
+	less    []lessFunc
+}
+
+func (ms *multiSorter) Sort(players []player) {
+	ms.players = players
+	sort.Sort(ms)
+}
+
+func OrderedBy(less ...lessFunc) *multiSorter {
+	return &multiSorter{
+		less: less,
+	}
+}
+
+func (ms *multiSorter) Len() int {
+	return len(ms.players)
+}
+
+func (ms *multiSorter) Swap(i, j int) {
+	ms.players[i], ms.players[j] = ms.players[j], ms.players[i]
+}
+
+func (ms *multiSorter) Less(i, j int) bool {
+	for _, k := range ms.less {
+		switch k(&ms.players[i], &ms.players[j]) {
+		case 1:
+			return true
+		case -1:
+			return false
+		}
+	}
+
+	return true
+}
+
+var name = func(a, b *player) int {
+	if a.Name > b.Name {
+		return -1
+	}
+
+	return 1
+}
+
+var score = func(a, b *player) int {
+	if a.Score < b.Score {
+		return -1
+	}
+	if a.Score > b.Score {
+		return 1
+	}
+
+	return 0
+}
+
+func (p playerList) sort(fs ...lessFunc) playerList {
+	OrderedBy(fs...).Sort(p)
 
 	return p
 }
@@ -87,7 +144,7 @@ func (gl gamesList) mapGames() (res []gameout) {
 		res = append(res, gameout{
 			No:      g.Sk,
 			Leader:  g.Leader,
-			Players: g.Players.getPlayersSlice().sortByName(),
+			Players: g.Players.getPlayersSlice().sort(name),
 		})
 	}
 
