@@ -156,36 +156,37 @@ func (gl gamesList) mapGames() (res []gameout) {
 	return
 }
 
-func FromDynamoDBEventAVMap(from map[string]events.DynamoDBAttributeValue) (to map[string]types.AttributeValue, err error) {
-	to = make(map[string]types.AttributeValue, len(from))
-	for field, value := range from {
-		to[field], err = FromDynamoDBEventAV(value)
+func FromDynamoDBEventAVMap(m map[string]events.DynamoDBAttributeValue) (res map[string]types.AttributeValue, err error) {
+	res = make(map[string]types.AttributeValue, len(m))
+
+	for k, v := range m {
+		res[k], err = FromDynamoDBEventAV(v)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return to, nil
+	return
 }
 
-func FromDynamoDBEventAV(from events.DynamoDBAttributeValue) (types.AttributeValue, error) {
-	switch from.DataType() {
+func FromDynamoDBEventAV(av events.DynamoDBAttributeValue) (types.AttributeValue, error) {
+	switch av.DataType() {
 
 	case events.DataTypeBoolean:
-		return &types.AttributeValueMemberBOOL{Value: from.Boolean()}, nil
+		return &types.AttributeValueMemberBOOL{Value: av.Boolean()}, nil
 
 	case events.DataTypeString:
-		return &types.AttributeValueMemberS{Value: from.String()}, nil
+		return &types.AttributeValueMemberS{Value: av.String()}, nil
 
 	case events.DataTypeMap:
-		values, err := FromDynamoDBEventAVMap(from.Map())
+		values, err := FromDynamoDBEventAVMap(av.Map())
 		if err != nil {
 			return nil, err
 		}
 		return &types.AttributeValueMemberM{Value: values}, nil
 
 	default:
-		return nil, fmt.Errorf("unknown AttributeValue union member, %T", from)
+		return nil, fmt.Errorf("unknown AttributeValue union member, %T", av)
 	}
 }
 
@@ -290,22 +291,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				}
 
 				gamesResults, err := ddbsvc.Query(ctx, &gamesParams)
-				if err != nil {
-
-					var intServErr *types.InternalServerError
-					if errors.As(err, &intServErr) {
-						fmt.Printf("get item error, %v",
-							intServErr.ErrorMessage())
-					}
-
-					// To get any API error
-					var apiErr smithy.APIError
-					if errors.As(err, &apiErr) {
-						fmt.Printf("db error, Code: %v, Message: %v",
-							apiErr.ErrorCode(), apiErr.ErrorMessage())
-					}
-
-				}
+				callErr(err)
 
 				var games gamesList
 				err = attributevalue.UnmarshalListOfMaps(gamesResults.Items, &games)
@@ -324,22 +310,8 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(connRecord.GSI1SK), Data: payload}
 
 				_, err = apigwsvc.PostToConnection(ctx, &conn)
-				if err != nil {
+				callErr(err)
 
-					var intServErr *types.InternalServerError
-					if errors.As(err, &intServErr) {
-						fmt.Printf("get item error, %v",
-							intServErr.ErrorMessage())
-					}
-
-					// To get any API error
-					var apiErr smithy.APIError
-					if errors.As(err, &apiErr) {
-						fmt.Printf("db error, Code: %v, Message: %v",
-							apiErr.ErrorCode(), apiErr.ErrorMessage())
-					}
-
-				}
 			} else if rec.EventName == dynamodbstreams.OperationTypeModify && !connRecord.Playing {
 
 				payload, err := json.Marshal(modifyConnPayload{
@@ -354,22 +326,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(connRecord.GSI1SK), Data: payload}
 
 				_, err = apigwsvc.PostToConnection(ctx, &conn)
-				if err != nil {
-
-					var intServErr *types.InternalServerError
-					if errors.As(err, &intServErr) {
-						fmt.Printf("get item error, %v",
-							intServErr.ErrorMessage())
-					}
-
-					// To get any API error
-					var apiErr smithy.APIError
-					if errors.As(err, &apiErr) {
-						fmt.Printf("db error, Code: %v, Message: %v",
-							apiErr.ErrorCode(), apiErr.ErrorMessage())
-					}
-
-				}
+				callErr(err)
 
 			} else {
 				fmt.Println("remove conn ", connRecord)
@@ -397,79 +354,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			if rec.EventName == dynamodbstreams.OperationTypeInsert {
 
-				payload, err := json.Marshal(insertGamePayload{
-					Games: gameout{
-						No:      gameRecord.Sk,
-						Leader:  gameRecord.Leader,
-						Players: gameRecord.Players.getPlayersSlice(),
-					},
-					Type: "games",
-				})
-				if err != nil {
-					fmt.Println("error marshalling payload", err)
-				}
-
-				connsParams := dynamodb.QueryInput{
-					TableName:              aws.String(tableName),
-					IndexName:              aws.String("GSI1"),
-					KeyConditionExpression: aws.String("GSI1PK = :cn"),
-					FilterExpression:       aws.String("#PL = :f"),
-					ExpressionAttributeValues: map[string]types.AttributeValue{
-						":cn": &types.AttributeValueMemberS{Value: "CONN"},
-						":f":  &types.AttributeValueMemberBOOL{Value: false},
-					},
-					ExpressionAttributeNames: map[string]string{
-						"#PL": "playing",
-					},
-				}
-
-				connsResults, err := ddbsvc.Query(ctx, &connsParams)
-				if err != nil {
-
-					var intServErr *types.InternalServerError
-					if errors.As(err, &intServErr) {
-						fmt.Printf("get item error, %v",
-							intServErr.ErrorMessage())
-					}
-
-					// To get any API error
-					var apiErr smithy.APIError
-					if errors.As(err, &apiErr) {
-						fmt.Printf("db error, Code: %v, Message: %v",
-							apiErr.ErrorCode(), apiErr.ErrorMessage())
-					}
-
-				}
-
-				var conns connsList
-				err = attributevalue.UnmarshalListOfMaps(connsResults.Items, &conns)
-				if err != nil {
-					fmt.Println("query unmarshal err", err)
-				}
-
-				for _, v := range conns {
-
-					conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.GSI1SK), Data: payload}
-
-					_, err = apigwsvc.PostToConnection(ctx, &conn)
-					if err != nil {
-
-						var intServErr *types.InternalServerError
-						if errors.As(err, &intServErr) {
-							fmt.Printf("get item error, %v",
-								intServErr.ErrorMessage())
-						}
-
-						// To get any API error
-						var apiErr smithy.APIError
-						if errors.As(err, &apiErr) {
-							fmt.Printf("db error, Code: %v, Message: %v",
-								apiErr.ErrorCode(), apiErr.ErrorMessage())
-						}
-
-					}
-
-				}
+				sendGamesToConns(tableName, ddbsvc, apigwsvc, ctx, gameRecord)
 
 			} else if rec.EventName == dynamodbstreams.OperationTypeModify {
 
@@ -498,106 +383,13 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 						conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.ConnID), Data: payload}
 
 						_, err = apigwsvc.PostToConnection(ctx, &conn)
-						if err != nil {
-
-							var intServErr *types.InternalServerError
-							if errors.As(err, &intServErr) {
-								fmt.Printf("get item error, %v",
-									intServErr.ErrorMessage())
-							}
-
-							// To get any API error
-							var apiErr smithy.APIError
-							if errors.As(err, &apiErr) {
-								fmt.Printf("db error, Code: %v, Message: %v",
-									apiErr.ErrorCode(), apiErr.ErrorMessage())
-							}
-
-						}
+						callErr(err)
 
 					}
 
 				} else {
-					gp := insertGamePayload{
-						Games: gameout{
-							Pk:       "",
-							No:       gameRecord.Sk,
-							Leader:   gameRecord.Leader,
-							Starting: gameRecord.Starting,
-							Loading:  gameRecord.Loading,
-							Playing:  gameRecord.Playing,
-							Players:  gameRecord.Players.getPlayersSlice().sort(name),
-							Answers:  gameRecord.Answers,
-						},
-						Type: "games",
-					}
 
-					payload, err := json.Marshal(gp)
-					if err != nil {
-						fmt.Println("error marshalling payload", err)
-					}
-
-					connsParams := dynamodb.QueryInput{
-						TableName:              aws.String(tableName),
-						IndexName:              aws.String("GSI1"),
-						KeyConditionExpression: aws.String("GSI1PK = :cn"),
-						FilterExpression:       aws.String("#PL = :f"),
-						ExpressionAttributeValues: map[string]types.AttributeValue{
-							":cn": &types.AttributeValueMemberS{Value: "CONN"},
-							":f":  &types.AttributeValueMemberBOOL{Value: false},
-						},
-						ExpressionAttributeNames: map[string]string{
-							"#PL": "playing",
-						},
-					}
-
-					connsResults, err := ddbsvc.Query(ctx, &connsParams)
-					if err != nil {
-
-						var intServErr *types.InternalServerError
-						if errors.As(err, &intServErr) {
-							fmt.Printf("get item error, %v",
-								intServErr.ErrorMessage())
-						}
-
-						// To get any API error
-						var apiErr smithy.APIError
-						if errors.As(err, &apiErr) {
-							fmt.Printf("db error, Code: %v, Message: %v",
-								apiErr.ErrorCode(), apiErr.ErrorMessage())
-						}
-
-					}
-
-					var conns connsList
-					err = attributevalue.UnmarshalListOfMaps(connsResults.Items, &conns)
-					if err != nil {
-						fmt.Println("query unmarshal err", err)
-					}
-
-					for _, v := range conns {
-
-						conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.GSI1SK), Data: payload}
-
-						_, err = apigwsvc.PostToConnection(ctx, &conn)
-						if err != nil {
-
-							var intServErr *types.InternalServerError
-							if errors.As(err, &intServErr) {
-								fmt.Printf("get item error, %v",
-									intServErr.ErrorMessage())
-							}
-
-							// To get any API error
-							var apiErr smithy.APIError
-							if errors.As(err, &apiErr) {
-								fmt.Printf("db error, Code: %v, Message: %v",
-									apiErr.ErrorCode(), apiErr.ErrorMessage())
-							}
-
-						}
-
-					}
+					sendGamesToConns(tableName, ddbsvc, apigwsvc, ctx, gameRecord)
 
 				}
 
@@ -622,4 +414,75 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 func main() {
 	lambda.Start(handler)
+}
+
+func sendGamesToConns(tableName string, ddbsvc *dynamodb.Client, apigwsvc *apigatewaymanagementapi.Client, ctx context.Context, gameRecord gamein) {
+
+	payload, err := json.Marshal(insertGamePayload{
+		Games: gameout{
+			Pk:       "",
+			No:       gameRecord.Sk,
+			Leader:   gameRecord.Leader,
+			Starting: gameRecord.Starting,
+			Loading:  gameRecord.Loading,
+			Playing:  gameRecord.Playing,
+			Players:  gameRecord.Players.getPlayersSlice().sort(name),
+			Answers:  gameRecord.Answers,
+		},
+		Type: "games",
+	})
+	if err != nil {
+		fmt.Println("error marshalling payload", err)
+	}
+
+	connsParams := dynamodb.QueryInput{
+		TableName:              aws.String(tableName),
+		IndexName:              aws.String("GSI1"),
+		KeyConditionExpression: aws.String("GSI1PK = :cn"),
+		FilterExpression:       aws.String("#PL = :f"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":cn": &types.AttributeValueMemberS{Value: "CONN"},
+			":f":  &types.AttributeValueMemberBOOL{Value: false},
+		},
+		ExpressionAttributeNames: map[string]string{
+			"#PL": "playing",
+		},
+	}
+
+	connsResults, err := ddbsvc.Query(ctx, &connsParams)
+	callErr(err)
+
+	var conns connsList
+	err = attributevalue.UnmarshalListOfMaps(connsResults.Items, &conns)
+	if err != nil {
+		fmt.Println("query unmarshal err", err)
+	}
+
+	for _, v := range conns {
+
+		conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.GSI1SK), Data: payload}
+
+		_, err = apigwsvc.PostToConnection(ctx, &conn)
+		callErr(err)
+
+	}
+}
+
+func callErr(err error) {
+	if err != nil {
+
+		var intServErr *types.InternalServerError
+		if errors.As(err, &intServErr) {
+			fmt.Printf("get item error, %v",
+				intServErr.ErrorMessage())
+		}
+
+		// To get any API error
+		var apiErr smithy.APIError
+		if errors.As(err, &apiErr) {
+			fmt.Printf("db error, Code: %v, Message: %v",
+				apiErr.ErrorCode(), apiErr.ErrorMessage())
+		}
+
+	}
 }
