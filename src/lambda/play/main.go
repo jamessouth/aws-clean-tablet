@@ -95,7 +95,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		config.WithRegion(reg),
 	)
 	if err != nil {
-		fmt.Println("cfg err")
+		return callErr(err)
 	}
 
 	tableName, ok := os.LookupEnv("tableName")
@@ -112,7 +112,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	err = json.Unmarshal([]byte(req.Body), &body)
 	if err != nil {
-		fmt.Println("unmarshal body err")
+		return callErr(err)
 	}
 
 	gameItemKey, err := attributevalue.MarshalMap(Key{
@@ -120,7 +120,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		Sk: body.Gameno,
 	})
 	if err != nil {
-		panic(fmt.Sprintf("failed to marshal gik Record, %v", err))
+		return callErr(err)
 	}
 
 	if body.Type == "start" {
@@ -132,24 +132,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		if err != nil {
 
-			var intServErr *types.InternalServerError
-			if errors.As(err, &intServErr) {
-				fmt.Printf("get item error, %v",
-					intServErr.ErrorMessage())
-			}
-
-			// To get any API error
-			var apiErr smithy.APIError
-			if errors.As(err, &apiErr) {
-				fmt.Printf("play rt db error, Code: %v, Message: %v",
-					apiErr.ErrorCode(), apiErr.ErrorMessage())
-			}
+			return callErr(err)
 		}
 
 		var game game
 		err = attributevalue.UnmarshalMap(gi.Item, &game)
 		if err != nil {
-			fmt.Println("get item unmarshal err", err)
+			return callErr(err)
 		}
 
 		fmt.Printf("%s%+v\n", "gammmmme ", game)
@@ -159,7 +148,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			Region: reg,
 		})
 		if err != nil {
-			fmt.Println("game item marshal err", err)
+			return callErr(err)
 		}
 
 		ii := lamb.InvokeInput{
@@ -182,18 +171,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		if err != nil {
 
-			var intServErr *types.InternalServerError
-			if errors.As(err, &intServErr) {
-				fmt.Printf("get item error, %v",
-					intServErr.ErrorMessage())
-			}
-
-			// To get any API error
-			var apiErr smithy.APIError
-			if errors.As(err, &apiErr) {
-				fmt.Printf("db error, Code: %v, Message: %v",
-					apiErr.ErrorCode(), apiErr.ErrorMessage())
-			}
+			return callErr(err)
 
 		}
 
@@ -204,7 +182,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			Answer:   body.Answer,
 		})
 		if err != nil {
-			panic(fmt.Sprintf("failed to marshal answer Record, %v", err))
+			return callErr(err)
 		}
 
 		ui, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
@@ -226,25 +204,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		if err != nil {
 
-			var intServErr *types.InternalServerError
-			if errors.As(err, &intServErr) {
-				fmt.Printf("get item error, %v",
-					intServErr.ErrorMessage())
-			}
-
-			// To get any API error
-			var apiErr smithy.APIError
-			if errors.As(err, &apiErr) {
-				fmt.Printf("db error, Code: %v, Message: %v",
-					apiErr.ErrorCode(), apiErr.ErrorMessage())
-			}
+			return callErr(err)
 
 		}
 
 		var gm game
 		err = attributevalue.UnmarshalMap(ui.Attributes, &gm)
 		if err != nil {
-			fmt.Println("unmarshal err", err)
+			return callErr(err)
 		}
 
 		if len(gm.Players) == len(gm.Answers) {
@@ -287,18 +254,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 						if err != nil {
 
-							var intServErr *types.InternalServerError
-							if errors.As(err, &intServErr) {
-								fmt.Printf("get item error, %v",
-									intServErr.ErrorMessage())
-							}
-
-							// To get any API error
-							var apiErr smithy.APIError
-							if errors.As(err, &apiErr) {
-								fmt.Printf("db error, Code: %v, Message: %v",
-									apiErr.ErrorCode(), apiErr.ErrorMessage())
-							}
+							return callErr(err)
 
 						}
 					}
@@ -324,18 +280,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 						if err != nil {
 
-							var intServErr *types.InternalServerError
-							if errors.As(err, &intServErr) {
-								fmt.Printf("get item error, %v",
-									intServErr.ErrorMessage())
-							}
-
-							// To get any API error
-							var apiErr smithy.APIError
-							if errors.As(err, &apiErr) {
-								fmt.Printf("db error, Code: %v, Message: %v",
-									apiErr.ErrorCode(), apiErr.ErrorMessage())
-							}
+							return callErr(err)
 
 						}
 					}
@@ -365,25 +310,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 			if err != nil {
 
-				var intServErr *types.InternalServerError
-				if errors.As(err, &intServErr) {
-					fmt.Printf("get item error, %v",
-						intServErr.ErrorMessage())
-				}
-
-				// To get any API error
-				var apiErr smithy.APIError
-				if errors.As(err, &apiErr) {
-					fmt.Printf("db error, Code: %v, Message: %v",
-						apiErr.ErrorCode(), apiErr.ErrorMessage())
-				}
+				return callErr(err)
 
 			}
 
 			var gm2 game
 			err = attributevalue.UnmarshalMap(ui2.Attributes, &gm2)
 			if err != nil {
-				fmt.Println("unmarshal err", err)
+				return callErr(err)
 			}
 
 			hiScore := hiScore{
@@ -406,7 +340,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 				Region:  reg,
 			})
 			if err != nil {
-				fmt.Println("hiscore item marshal err", err)
+				return callErr(err)
 			}
 
 			ii2 := lamb.InvokeInput{
@@ -429,18 +363,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 			if err != nil {
 
-				var intServErr *types.InternalServerError
-				if errors.As(err, &intServErr) {
-					fmt.Printf("get item error, %v",
-						intServErr.ErrorMessage())
-				}
-
-				// To get any API error
-				var apiErr smithy.APIError
-				if errors.As(err, &apiErr) {
-					fmt.Printf("db error, Code: %v, Message: %v",
-						apiErr.ErrorCode(), apiErr.ErrorMessage())
-				}
+				return callErr(err)
 
 			}
 
@@ -461,4 +384,29 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 func main() {
 	lambda.Start(handler)
+}
+
+func callErr(err error) (events.APIGatewayProxyResponse, error) {
+
+	var intServErr *types.InternalServerError
+	if errors.As(err, &intServErr) {
+		fmt.Printf("get item error, %v",
+			intServErr.ErrorMessage())
+	}
+
+	// To get any API error
+	var apiErr smithy.APIError
+	if errors.As(err, &apiErr) {
+		fmt.Printf("db error, Code: %v, Message: %v",
+			apiErr.ErrorCode(), apiErr.ErrorMessage())
+	}
+
+	return events.APIGatewayProxyResponse{
+		StatusCode:        http.StatusBadRequest,
+		Headers:           map[string]string{"Content-Type": "application/json"},
+		MultiValueHeaders: map[string][]string{},
+		Body:              "",
+		IsBase64Encoded:   false,
+	}, err
+
 }
