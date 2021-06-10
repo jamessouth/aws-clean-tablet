@@ -18,20 +18,21 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	lamb "github.com/aws/aws-sdk-go-v2/service/lambda"
+	"github.com/aws/aws-sdk-go-v2/service/sfn"
 
 	"github.com/aws/smithy-go"
 )
 
-// var colors = []string{
-// 	"#dc2626", //red 600
-// 	"#0c4a6e", //light blue 900
-// 	"#16a34a", //green 600
-// 	"#7c2d12", //orange 900
-// 	"#c026d3", //fuchsia 600
-// 	"#365314", //lime 900
-// 	"#0891b2", //cyan 600
-// 	"#581c87", //purple 900
-// }
+var colors = []string{
+	"#dc2626", //red 600
+	"#0c4a6e", //light blue 900
+	"#16a34a", //green 600
+	"#7c2d12", //orange 900
+	"#c026d3", //fuchsia 600
+	"#365314", //lime 900
+	"#0891b2", //cyan 600
+	"#581c87", //purple 900
+}
 
 // const maxPlayersPerGame = 8
 
@@ -46,7 +47,7 @@ type player struct {
 	Name   string `dynamodbav:"name"`
 	ConnID string `dynamodbav:"connid"`
 	Ready  bool   `dynamodbav:"ready"`
-	Color  string `dynamodbav:"color"`
+	Color  string `dynamodbav:"color,omitempty"`
 	Score  int    `dynamodbav:"score"`
 }
 
@@ -103,8 +104,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		panic(fmt.Sprintf("%v", "can't find table name"))
 	}
 
-	svc := dynamodb.NewFromConfig(cfg)
-	svc2 := lamb.NewFromConfig(cfg)
+	sfnarn, ok := os.LookupEnv("SFNARN")
+	if !ok {
+		panic(fmt.Sprintf("%v", "can't find sfn arn"))
+	}
+
+	ddbsvc := dynamodb.NewFromConfig(cfg)
+	sfnsvc := sfn.NewFromConfig(cfg)
 
 	id := req.RequestContext.Authorizer.(map[string]interface{})["principalId"].(string)
 
@@ -125,7 +131,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	if body.Type == "start" {
 
-		gi, err := svc.GetItem(ctx, &dynamodb.GetItemInput{
+		gi, err := ddbsvc.GetItem(ctx, &dynamodb.GetItemInput{
 			Key:       gameItemKey,
 			TableName: aws.String(tableName),
 		})
@@ -143,9 +149,9 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		fmt.Printf("%s%+v\n", "gammmmme ", game)
 
-		mj, err := json.Marshal(lambdaInput{
-			Game:   game,
-			Region: reg,
+		mj, err := json.Marshal(sfn.StartSyncExecutionInput{
+			StateMachineArn: aws.String(sfnarn),
+			Input:           new(string),
 		})
 		if err != nil {
 			return callErr(err)
@@ -185,7 +191,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			return callErr(err)
 		}
 
-		ui, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		ui, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 			Key:                 gameItemKey,
 			TableName:           aws.String(tableName),
 			ConditionExpression: aws.String("size (#AN) < :c"),
@@ -238,7 +244,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 					for _, id := range v {
 
-						_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+						_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 							Key:       gameItemKey,
 							TableName: aws.String(tableName),
 							ExpressionAttributeNames: map[string]string{
@@ -264,7 +270,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 					for _, id := range v {
 
-						_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+						_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 							Key:       gameItemKey,
 							TableName: aws.String(tableName),
 							ExpressionAttributeNames: map[string]string{
@@ -291,7 +297,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 			}
 
-			ui2, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+			ui2, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 				Key:       gameItemKey,
 				TableName: aws.String(tableName),
 				// ConditionExpression: aws.String("size (#AN) < :c"),

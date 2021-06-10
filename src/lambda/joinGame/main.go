@@ -20,7 +20,7 @@ import (
 	"github.com/aws/smithy-go"
 )
 
-const maxPlayersPerGame = 8
+const maxPlayersPerGame = "8"
 
 // Key holds values to be put in db
 type Key struct {
@@ -33,7 +33,8 @@ type Player struct {
 	Name   string `dynamodbav:"name"`
 	ConnID string `dynamodbav:"connid"`
 	Ready  bool   `dynamodbav:"ready"`
-	// Color  string `dynamodbav:"color"`
+	Color  string `dynamodbav:"color,omitempty"`
+	Score  int    `dynamodbav:"score"`
 }
 
 type answer struct {
@@ -53,12 +54,6 @@ type game struct {
 type body struct {
 	Game, Type string
 	Value      bool
-}
-
-// ConnItemAttrs holds vals for db
-type ConnItemAttrs struct {
-	Game string `dynamodbav:":g"`
-	Zero *int   `dynamodbav:":z,omitempty"`
 }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -121,21 +116,12 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	if body.Type == "join" {
 
-		zero := 0
-
-		connAttrs, err := attributevalue.MarshalMap(ConnItemAttrs{
-			Game: gameno,
-			Zero: &zero,
-		})
-		if err != nil {
-			panic(fmt.Sprintf("failed to marshal Record 4, %v", err))
-		}
-
 		player := Player{
 			Name:   name,
 			ConnID: req.RequestContext.ConnectionID,
 			Ready:  false,
-			// Color:  "",
+			Color:  "",
+			Score:  0,
 		}
 
 		marshalledPlayersMap, err := attributevalue.Marshal(map[string]Player{
@@ -143,11 +129,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		})
 		if err != nil {
 			panic(fmt.Sprintf("failed to marshal map Record 22, %v", err))
-		}
-
-		marshalledMaxPlayers, err := attributevalue.Marshal(maxPlayersPerGame)
-		if err != nil {
-			panic(fmt.Sprintf("failed to marshal max Record 22, %v", err))
 		}
 
 		marshalledPlayer, err := attributevalue.Marshal(player)
@@ -167,8 +148,11 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			ExpressionAttributeNames: map[string]string{
 				"#IG": "game",
 			},
-			ExpressionAttributeValues: connAttrs,
-			UpdateExpression:          aws.String("SET #IG = :g"),
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":g": &types.AttributeValueMemberS{Value: gameno},
+				":z": &types.AttributeValueMemberN{Value: "0"},
+			},
+			UpdateExpression: aws.String("SET #IG = :g"),
 		}
 
 		_, err = svc.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{
@@ -187,7 +171,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 						},
 						ExpressionAttributeValues: map[string]types.AttributeValue{
 							":e": &types.AttributeValueMemberS{Value: ""},
-							":m": marshalledMaxPlayers,
+							":m": &types.AttributeValueMemberN{Value: maxPlayersPerGame},
 							":p": marshalledPlayer,
 						},
 						UpdateExpression: aws.String("SET #PL.#ID = :p, #LE = :e"),
