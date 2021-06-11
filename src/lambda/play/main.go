@@ -74,16 +74,32 @@ type body struct {
 	Gameno, Type, Answer, PlayersCount string
 }
 
-// ConnItemAttrs holds vals for db
-type ConnItemAttrs struct {
-	Game string `dynamodbav:":g"`
-	Zero *int   `dynamodbav:":zero,omitempty"`
-}
-
 type lambdaInput struct {
 	Game    game    `json:"game,omitempty"`
 	Region  string  `json:"region"`
 	HiScore hiScore `json:"hiScore,omitempty"`
+}
+
+type sfnInput struct {
+	Id     string `json:"id"`
+	Color  string `json:"color"`
+	Name   string `json:"name"`
+	ConnID string `json:"connid"`
+}
+
+func getPlayersSlice(pm map[string]player) (res []sfnInput) {
+	count := 0
+	for k, v := range pm {
+		res = append(res, sfnInput{
+			Id:     k,
+			Color:  colors[count],
+			Name:   v.Name,
+			ConnID: v.ConnID,
+		})
+		count++
+	}
+
+	return
 }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -149,12 +165,16 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		fmt.Printf("%s%+v\n", "gammmmme ", game)
 
-		mj, err := json.Marshal(sfn.StartSyncExecutionInput{
-			StateMachineArn: aws.String(sfnarn),
-			Input:           new(string),
-		})
+		players := getPlayersSlice(game.Players)
+
+		sfnInput, err := json.Marshal(players)
 		if err != nil {
 			return callErr(err)
+		}
+
+		ssei := sfn.StartSyncExecutionInput{
+			StateMachineArn: aws.String(sfnarn),
+			Input:           aws.String(string(sfnInput)),
 		}
 
 		ii := lamb.InvokeInput{

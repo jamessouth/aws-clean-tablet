@@ -147,9 +147,14 @@ type playerMap map[string]player
 func (gl gamesList) mapGames() (res []gameout) {
 	for _, g := range gl {
 		res = append(res, gameout{
-			No:      g.Sk,
-			Leader:  g.Leader,
-			Players: g.Players.getPlayersSlice().sort(name),
+			Pk:       "",
+			No:       g.Sk,
+			Leader:   g.Leader,
+			Starting: false,
+			Loading:  false,
+			Playing:  false,
+			Players:  g.Players.getPlayersSlice().sort(name),
+			Answers:  []answer{},
 		})
 	}
 
