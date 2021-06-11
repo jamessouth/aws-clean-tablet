@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	lamb "github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/sfn"
+	sfntypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
 
 	"github.com/aws/smithy-go"
 )
@@ -80,17 +81,22 @@ type lambdaInput struct {
 	HiScore hiScore `json:"hiScore,omitempty"`
 }
 
-type sfnInput struct {
+type sfnArrInput struct {
 	Id     string `json:"id"`
 	Color  string `json:"color"`
 	Name   string `json:"name"`
 	ConnID string `json:"connid"`
 }
 
-func getPlayersSlice(pm map[string]player) (res []sfnInput) {
+type sfnInput struct {
+	Gameno  string        `json:"gameno"`
+	Players []sfnArrInput `json:"players"`
+}
+
+func getPlayersSlice(pm map[string]player) (res []sfnArrInput) {
 	count := 0
 	for k, v := range pm {
-		res = append(res, sfnInput{
+		res = append(res, sfnArrInput{
 			Id:     k,
 			Color:  colors[count],
 			Name:   v.Name,
@@ -167,7 +173,10 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		players := getPlayersSlice(game.Players)
 
-		sfnInput, err := json.Marshal(players)
+		sfnInput, err := json.Marshal(sfnInput{
+			Gameno:  body.Gameno,
+			Players: players,
+		})
 		if err != nil {
 			return callErr(err)
 		}
@@ -177,26 +186,17 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			Input:           aws.String(string(sfnInput)),
 		}
 
-		ii := lamb.InvokeInput{
-			FunctionName: aws.String("ct-playJS"),
-			Payload:      mj,
-		}
-
-		li, err := svc2.Invoke(ctx, &ii)
-
-		q := *li
-		fmt.Printf("\n%s, %+v\n", "liii", q)
-		// fmt.Println(*li.FunctionError, li.Payload)
-		z := q.FunctionError
-		x := string(q.Payload)
-		fmt.Println("inv pyld", x)
-
-		if z != nil {
-			fmt.Println("inv err", *z, x)
-		}
-
+		sse, err := sfnsvc.StartSyncExecution(ctx, &ssei)
 		if err != nil {
+			return callErr(err)
+		}
 
+		sseo := *sse
+		fmt.Printf("\n%s, %+v\n", "sse op", sseo)
+
+		if sseo.Status == sfntypes.SyncExecutionStatusFailed || sseo.Status == sfntypes.SyncExecutionStatusTimedOut {
+
+			err := fmt.Errorf("Step function %s, execution %s, failed with status %s. Error code: %s. Cause: %s. ", *sseo.StateMachineArn, *sseo.ExecutionArn, sseo.Status, *sseo.Error, *sseo.Cause)
 			return callErr(err)
 
 		}
