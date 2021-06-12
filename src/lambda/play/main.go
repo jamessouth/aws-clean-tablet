@@ -108,6 +108,12 @@ func getPlayersSlice(pm map[string]player) (res []sfnArrInput) {
 	return
 }
 
+type sfev struct {
+	Region, Endpoint, Word, Token string
+	Conns                         []int
+	Index                         int
+}
+
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
 	fmt.Println("plaaaaaaay", req.Body)
@@ -359,6 +365,16 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 					hiScore.Score = v.Score
 					hiScore.Tie = false
 				}
+			}
+
+			lambdaOutput, err := json.Marshal(hiScore)
+			if err != nil {
+				return callErr(err)
+			}
+
+			stsi := sfn.SendTaskSuccessInput{
+				Output:    aws.String(string(lambdaOutput)),
+				TaskToken: new(string),
 			}
 
 			mj2, err := json.Marshal(lambdaInput{
