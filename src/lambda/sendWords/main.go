@@ -4,12 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 
 	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -19,9 +17,9 @@ import (
 )
 
 type sfnEvent struct {
-	Region, Endpoint, Word, Token string
-	Conns                         []int
-	Index                         int
+	Region, Endpoint, Word, Token, Gameno, TableName string
+	Conns                                            []int
+	Index                                            int
 }
 
 func handler(ctx context.Context, req sfnEvent) (int, error) {
@@ -50,64 +48,35 @@ func handler(ctx context.Context, req sfnEvent) (int, error) {
 		return callErr(err)
 	}
 
-	tableName, ok := os.LookupEnv("tableName")
-	if !ok {
-		panic(fmt.Sprintf("%v", "can't find table name"))
-	}
-
 	ddbsvc := dynamodb.NewFromConfig(cfg)
 	apigwsvc := apigatewaymanagementapi.NewFromConfig(cfg)
 
-	gameItemKey, err := attributevalue.MarshalMap(Key{
-		Pk: "GAME",
-		Sk: body.Gameno,
-	})
-	if err != nil {
-		return callErr(err)
-	}
-
-	var game game
-	err = attributevalue.UnmarshalMap(gi.Item, &game)
-	if err != nil {
-		return callErr(err)
-	}
-
-	fmt.Printf("%s%+v\n", "gammmmme ", game)
-
-	ans, err := attributevalue.MarshalList(answer{
-		PlayerID: id,
-		Answer:   body.Answer,
-	})
-	if err != nil {
-		return callErr(err)
-	}
-
-	ui, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-		Key:                 gameItemKey,
-		TableName:           aws.String(tableName),
-		ConditionExpression: aws.String("size (#AN) < :c"),
+	_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		Key: map[string]types.AttributeValue{
+			"pk": &types.AttributeValueMemberS{Value: "GAME"},
+			"sk": &types.AttributeValueMemberS{Value: req.Gameno},
+		},
+		TableName: aws.String(req.TableName),
+		// ConditionExpression: aws.String("size (#AN) < :c"),
 		ExpressionAttributeNames: map[string]string{
 			// "#PL": "players",
 			// "#ID": id,
-			"#AN": "answers",
+			"#T": "token",
 		},
 		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":a": &types.AttributeValueMemberL{Value: ans},
-			":c": &types.AttributeValueMemberN{Value: body.PlayersCount},
+			":t": &types.AttributeValueMemberS{Value: req.Token},
 		},
-		UpdateExpression: aws.String("SET #AN = list_append(#AN, :a)"),
-		ReturnValues:     types.ReturnValueAllNew,
+		UpdateExpression: aws.String("SET #T = :t)"),
+		// ReturnValues:     types.ReturnValueAllNew,
 	})
 
 	if err != nil {
-
 		return callErr(err)
-
 	}
 
-	for _, v := range gp.Game.Players {
+	for _, v := range req.Conns {
 
-		conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.ConnID), Data: payload}
+		conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v), Data: []byte(req.Word)}
 
 		_, err = apigwsvc.PostToConnection(ctx, &conn)
 		if err != nil {
