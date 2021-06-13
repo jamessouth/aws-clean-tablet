@@ -17,7 +17,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	lamb "github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/sfn"
 	sfntypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
 
@@ -66,6 +65,7 @@ type game struct {
 	Sk       string            `dynamodbav:"sk"`
 	Starting bool              `dynamodbav:"starting"`
 	Leader   string            `dynamodbav:"leader"`
+	Token    string            `dynamodbav:"token"`
 	Loading  bool              `dynamodbav:"loading"`
 	Players  map[string]player `dynamodbav:"players"`
 	Answers  []answer          `dynamodbav:"answers"`
@@ -367,40 +367,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 				}
 			}
 
-			lambdaOutput, err := json.Marshal(hiScore)
+			taskOutput, err := json.Marshal(hiScore)
 			if err != nil {
 				return callErr(err)
 			}
 
 			stsi := sfn.SendTaskSuccessInput{
-				Output:    aws.String(string(lambdaOutput)),
-				TaskToken: new(string),
-			}
-
-			mj2, err := json.Marshal(lambdaInput{
-				HiScore: hiScore,
-				Region:  reg,
-			})
-			if err != nil {
-				return callErr(err)
-			}
-
-			ii2 := lamb.InvokeInput{
-				FunctionName: aws.String("ct-wrdJS"),
-				Payload:      mj2,
-			}
-
-			li2, err := svc2.Invoke(ctx, &ii2)
-
-			q := *li2
-			fmt.Printf("\n%s, %+v\n", "liii", q)
-			// fmt.Println(*li.FunctionError, li.Payload)
-			z := q.FunctionError
-			x := string(q.Payload)
-			fmt.Println("inv pyld", x)
-
-			if z != nil {
-				fmt.Println("inv err", *z, x)
+				Output:    aws.String(string(taskOutput)),
+				TaskToken: aws.String(gm2.Token),
 			}
 
 			if err != nil {

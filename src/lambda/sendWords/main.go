@@ -18,7 +18,7 @@ import (
 
 type sfnEvent struct {
 	Region, Endpoint, Word, Token, Gameno, TableName string
-	Conns                                            []int
+	Conns                                            []string
 	Index                                            int
 }
 
