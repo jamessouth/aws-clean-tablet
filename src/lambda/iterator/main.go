@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-lambda-go/lambda"
 )
@@ -10,24 +11,34 @@ import (
 // 	Iterator data `json:"iterator"`
 // }
 
+type data2 struct {
+	// Index int `json:"index"`
+	Word string `json:"word"`
+}
 type data struct {
 	// Index int `json:"index"`
-	W, C []string
-	S    int
+	Word   data2
+	Gameno string `json:"gameno"`
+	C      []string
+	S      int
 }
 
-// type output struct {
-// 	// Index    int  `json:"index"`
-// 	S int `json:"s"`
-// }
+type output struct {
+	Gameno string `json:"gameno"`
+	// Index    int  `json:"index"`
+	S int `json:"s"`
+	C []string
+}
 
-func handler(ctx context.Context, req data) (data, error) {
+func handler(ctx context.Context, req data) (output, error) {
 	s := (req.S + 1) * 2
 
-	return data{
-		W: req.W[1:],
-		C: req.C,
-		S: s,
+	fmt.Printf("%s%+v\n", "req: ", req)
+
+	return output{
+		Gameno: req.Gameno,
+		S:      s,
+		C:      req.C,
 	}, nil
 }
 
