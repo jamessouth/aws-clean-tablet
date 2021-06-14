@@ -7,25 +7,28 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
-func handler() ([]string, error) {
-	return shuffleList(words), nil
+func handler(length int) ([]string, error) {
+	if length < 1 || length > len(words) {
+		length = 50
+	}
+	return shuffleList(words, length), nil // error required by lambda
 }
 
 func main() {
 	lambda.Start(handler)
 }
 
-func shuffleList(l []string) []string {
+func shuffleList(words []string, length int) []string {
 	t := time.Now().UnixNano()
 	rand.Seed(t)
 
-	nl := append([]string(nil), l...)
+	nl := append([]string(nil), words...)
 
 	rand.Shuffle(len(nl), func(i, j int) {
 		nl[i], nl[j] = nl[j], nl[i]
 	})
 
-	return nl[:40]
+	return nl[:length]
 }
 
 var words = []string{
@@ -417,4 +420,116 @@ var words = []string{
 	"fat ____",
 	"____ fair",
 	"love ____",
+	"rubber ____",
+	"tight ____",
+	"bubble ____",
+	"____ chocolate",
+	"honey ____",
+	"____ room",
+	"pretty ____",
+	"string ____",
+	"salt ____",
+	"____ load",
+	"pin ____",
+	"spare ____",
+	"second ____",
+	"water ____",
+	"book ____",
+	"____ brush",
+	"deadly ____",
+	"ball ____",
+	"leading ____",
+	"____ drum",
+	"micro ____",
+	"____ town",
+	"nose ____",
+	"search ____",
+	"jet ____",
+	"flash ____",
+	"best ____",
+	"odd ____",
+	"picnic ____",
+	"french ____",
+	"great ____",
+	"cat ____",
+	"banana ____",
+	"pop ____",
+	"dirty ____",
+	"kick ____",
+	"even ____",
+	"lunch ____",
+	"____ flow",
+	"wine ____",
+	"____ down",
+	"____ flakes",
+	"stiff ____",
+	"____ basket",
+	"traffic ____",
+	"____ bowl",
+	"____ mouth",
+	"____ guy",
+	"____ glass",
+	"____ boat",
+	"____ luck",
+	"____ shot",
+	"up ____",
+	"sky ____",
+	"ice ____",
+	"make ____",
+	"candy ____",
+	"easter ____",
+	"apple ____",
+	"semi ____",
+	"man ____",
+	"pit ____",
+	"bare ____",
+	"jack ____",
+	"ground ____",
+	"wedding ____",
+	"dead ____",
+	"high ____",
+	"keep ____",
+	"security ____",
+	"jump ____",
+	"gift ____",
+	"hand ____",
+	"first ____",
+	"cream ____",
+	"over ____",
+	"get ____",
+	"house ____",
+	"lap ____",
+	"mountain ____",
+	"egg ____",
+	"check ____",
+	"foot ____",
+	"____ market",
+	"____ cream",
+	"window ____",
+	"show ____",
+	"____ drive",
+	"____ cut",
+	"____ office",
+	"snow ____",
+	"____ face",
+	"____ light",
+	"____ chance",
+	"____ board",
+	"____ date",
+	"what's ____",
+	"____ door",
+	"____ clock",
+	"____ feet",
+	"____ ball",
+	"____ pen",
+	"____ shrine",
+	"____ bear",
+	"spot ____",
+	"____ tag",
+	"____ power",
+	"____ ache",
+	"____ hole",
+	"____ control",
+	"____ table",
+	"____ seat",
 }

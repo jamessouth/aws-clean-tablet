@@ -6,28 +6,28 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
-type input struct {
-	Iterator data `json:"iterator"`
-}
+// type input struct {
+// 	Iterator data `json:"iterator"`
+// }
 
 type data struct {
-	Index int `json:"index"`
-	Count int `json:"count"`
+	// Index int `json:"index"`
+	W, C []string
+	S    int
 }
 
-type output struct {
-	Index    int  `json:"index"`
-	Count    int  `json:"count"`
-	Continue bool `json:"continue"`
-}
+// type output struct {
+// 	// Index    int  `json:"index"`
+// 	S int `json:"s"`
+// }
 
-func handler(ctx context.Context, req input) (output, error) {
-	index := req.Iterator.Index + 1
+func handler(ctx context.Context, req data) (data, error) {
+	s := (req.S + 1) * 2
 
-	return output{
-		Index:    index,
-		Count:    req.Iterator.Count,
-		Continue: index < req.Iterator.Count,
+	return data{
+		W: req.W[1:],
+		C: req.C,
+		S: s,
 	}, nil
 }
 
