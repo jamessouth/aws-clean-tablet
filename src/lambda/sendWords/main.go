@@ -17,14 +17,18 @@ import (
 )
 
 type sfnEvent struct {
-	Region, Endpoint, Word, Token, Gameno, TableName string
-	Conns                                            []string
-	Index                                            int
+	Region    string   `json:"region"`
+	Endpoint  string   `json:"endpoint"`
+	Word      string   `json:"word"`
+	Gameno    string   `json:"gameno"`
+	TableName string   `json:"tableName"`
+	Conns     []string `json:"conns"`
+	Token     string   `json:"token"`
 }
 
-func handler(ctx context.Context, req sfnEvent) (int, error) {
+func handler(ctx context.Context, req sfnEvent) error {
 
-	fmt.Println("plaaaaaaay", req)
+	fmt.Printf("%s%+v\n", "sndwords req ", req)
 
 	customResolver := aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
 		if service == apigatewaymanagementapi.ServiceID && region == req.Region {
@@ -85,7 +89,7 @@ func handler(ctx context.Context, req sfnEvent) (int, error) {
 
 	}
 
-	return 3, nil
+	return nil
 
 }
 
@@ -93,7 +97,7 @@ func main() {
 	lambda.Start(handler)
 }
 
-func callErr(err error) (int, error) {
+func callErr(err error) error {
 
 	var intServErr *types.InternalServerError
 	if errors.As(err, &intServErr) {
@@ -108,6 +112,6 @@ func callErr(err error) (int, error) {
 			apiErr.ErrorCode(), apiErr.ErrorMessage())
 	}
 
-	return 5, err
+	return err
 
 }

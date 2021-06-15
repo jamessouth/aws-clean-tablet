@@ -196,7 +196,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			return callErr(err)
 		}
 
-		fmt.Println("inv pyld", lambdaPayload)
+		fmt.Println("inv pyld", lambdaPayload, "err", lambdaErr)
 
 		if lambdaReturn.StatusCode != 200 {
 			fmt.Println("inv err", lambdaErr, lambdaPayload)
