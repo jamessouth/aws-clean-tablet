@@ -7,9 +7,11 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
+const amountOfWords int = 50
+
 func handler(length int) ([]string, error) {
 	if length < 1 || length > len(words) {
-		length = 50
+		length = amountOfWords
 	}
 	return shuffleList(words, length), nil // error required by lambda
 }

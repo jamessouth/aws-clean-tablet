@@ -17,6 +17,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	lamb "github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/sfn"
 	sfntypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
 
@@ -75,12 +76,6 @@ type body struct {
 	Gameno, Type, Answer, PlayersCount string
 }
 
-type lambdaInput struct {
-	Game    game    `json:"game,omitempty"`
-	Region  string  `json:"region"`
-	HiScore hiScore `json:"hiScore,omitempty"`
-}
-
 type sfnArrInput struct {
 	Id     string `json:"id"`
 	Color  string `json:"color"`
@@ -108,11 +103,11 @@ func getPlayersSlice(pm map[string]player) (res []sfnArrInput) {
 	return
 }
 
-type sfev struct {
-	Region, Endpoint, Word, Token string
-	Conns                         []int
-	Index                         int
-}
+// type sfev struct {
+// 	Region, Endpoint, Word, Token string
+// 	Conns                         []int
+// 	Index                         int
+// }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
@@ -159,9 +154,76 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	if body.Type == "start" {
 
-		gi, err := ddbsvc.GetItem(ctx, &dynamodb.GetItemInput{
+		const wordsAmount int = 40
+		lambdasvc := lamb.NewFromConfig(cfg)
+
+		wordsArg, err := json.Marshal(wordsAmount)
+		if err != nil {
+			fmt.Println("arg to words lambda marshal err", err)
+		}
+
+		lambdaInvInput := lamb.InvokeInput{
+			FunctionName: aws.String("ct-words"),
+			Payload:      wordsArg,
+		}
+
+		lambdaInv, err := lambdasvc.Invoke(ctx, &lambdaInvInput)
+		if err != nil {
+
+			var intServErr *types.InternalServerError
+			if errors.As(err, &intServErr) {
+				fmt.Printf("get item error, %v",
+					intServErr.ErrorMessage())
+			}
+
+			// To get any API error
+			var apiErr smithy.APIError
+			if errors.As(err, &apiErr) {
+				fmt.Printf("db error, Code: %v, Message: %v",
+					apiErr.ErrorCode(), apiErr.ErrorMessage())
+			}
+
+		}
+
+		lambdaReturn := *lambdaInv
+		fmt.Printf("\n%s, %+v\n", "liii", lambdaReturn)
+
+		lambdaErr := *lambdaReturn.FunctionError
+
+		var lambdaPayload []string
+		err = json.Unmarshal(lambdaReturn.Payload, &lambdaPayload)
+		if err != nil {
+			return callErr(err)
+		}
+
+		fmt.Println("inv pyld", lambdaPayload)
+
+		if lambdaReturn.StatusCode != 200 {
+			fmt.Println("inv err", lambdaErr, lambdaPayload)
+		}
+		// if lambdaErr != nil {
+		// 	fmt.Println("inv err", lambdaErr, lambdaPayload)
+		// }
+
+		words, err := attributevalue.Marshal(lambdaPayload)
+		if err != nil {
+			return callErr(err)
+		}
+
+		uia, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 			Key:       gameItemKey,
 			TableName: aws.String(tableName),
+			// ConditionExpression: aws.String("size (#AN) < :c"),
+			ExpressionAttributeNames: map[string]string{
+				// "#PL": "players",
+				// "#ID": id,
+				"#W": "wordList",
+			},
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":w": words,
+			},
+			UpdateExpression: aws.String("SET #W = :w)"),
+			ReturnValues:     types.ReturnValueAllNew,
 		})
 
 		if err != nil {
@@ -170,7 +232,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		}
 
 		var game game
-		err = attributevalue.UnmarshalMap(gi.Item, &game)
+		err = attributevalue.UnmarshalMap(uia.Attributes, &game)
 		if err != nil {
 			return callErr(err)
 		}
@@ -202,7 +264,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		if sseo.Status == sfntypes.SyncExecutionStatusFailed || sseo.Status == sfntypes.SyncExecutionStatusTimedOut {
 
-			err := fmt.Errorf("Step function %s, execution %s, failed with status %s. Error code: %s. Cause: %s. ", *sseo.StateMachineArn, *sseo.ExecutionArn, sseo.Status, *sseo.Error, *sseo.Cause)
+			err := fmt.Errorf("step function %s, execution %s, failed with status %s. error code: %s. cause: %s. ", *sseo.StateMachineArn, *sseo.ExecutionArn, sseo.Status, *sseo.Error, *sseo.Cause)
 			return callErr(err)
 
 		}
@@ -377,10 +439,9 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 				TaskToken: aws.String(gm2.Token),
 			}
 
+			_, err = sfnsvc.SendTaskSuccess(ctx, &stsi)
 			if err != nil {
-
 				return callErr(err)
-
 			}
 
 		}

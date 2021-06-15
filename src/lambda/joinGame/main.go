@@ -20,7 +20,7 @@ import (
 	"github.com/aws/smithy-go"
 )
 
-const maxPlayersPerGame = "8"
+const maxPlayersPerGame string = "8"
 
 // Key holds values to be put in db
 type Key struct {
@@ -106,14 +106,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		panic(fmt.Sprintf("failed to marshal gik Record, %v", err))
 	}
 
-	connItemKey, err := attributevalue.MarshalMap(Key{
-		Pk: "CONN#" + id,
-		Sk: name,
-	})
-	if err != nil {
-		panic(fmt.Sprintf("failed to marshal cik Record 3, %v", err))
-	}
-
 	if body.Type == "join" {
 
 		player := Player{
@@ -142,7 +134,10 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		}
 
 		updateConnInput := types.Update{
-			Key:                 connItemKey,
+			Key: map[string]types.AttributeValue{
+				"pk": &types.AttributeValueMemberS{Value: "CONN#" + id},
+				"sk": &types.AttributeValueMemberS{Value: name},
+			},
 			TableName:           aws.String(tableName),
 			ConditionExpression: aws.String("size (#IG) = :z"),
 			ExpressionAttributeNames: map[string]string{
@@ -217,7 +212,10 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	} else if body.Type == "leave" {
 
 		_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-			Key:       connItemKey,
+			Key: map[string]types.AttributeValue{
+				"pk": &types.AttributeValueMemberS{Value: "CONN#" + id},
+				"sk": &types.AttributeValueMemberS{Value: name},
+			},
 			TableName: aws.String(tableName),
 			ExpressionAttributeNames: map[string]string{
 				"#IG": "game",
