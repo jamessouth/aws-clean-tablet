@@ -255,7 +255,15 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested")
 		})
 
-		cfg, err := config.LoadDefaultConfig(ctx,
+		ddbcfg, err := config.LoadDefaultConfig(ctx,
+			config.WithRegion(rec.AWSRegion),
+			// config.WithLogger(logger),
+		)
+		if err != nil {
+			return callErr(err)
+		}
+
+		apigwcfg, err := config.LoadDefaultConfig(ctx,
 			config.WithRegion(rec.AWSRegion),
 			// config.WithLogger(logger),
 			config.WithEndpointResolver(customResolver),
@@ -264,8 +272,8 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			return callErr(err)
 		}
 
-		apigwsvc := apigatewaymanagementapi.NewFromConfig(cfg)
-		ddbsvc := dynamodb.NewFromConfig(cfg)
+		apigwsvc := apigatewaymanagementapi.NewFromConfig(apigwcfg)
+		ddbsvc := dynamodb.NewFromConfig(ddbcfg)
 
 		recType := item["pk"].(*types.AttributeValueMemberS).Value[:4]
 
