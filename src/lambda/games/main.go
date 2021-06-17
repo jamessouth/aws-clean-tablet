@@ -47,8 +47,8 @@ type connin struct {
 }
 
 type insertConnPayload struct {
-	Games []gameout `json:"games"`
-	Type  string    `json:"type"`
+	Games gameOutList `json:"games"`
+	Type  string      `json:"type"`
 }
 
 type modifyConnPayload struct {
@@ -132,6 +132,8 @@ func (p playerList) sort(fs ...lessFunc) playerList {
 }
 
 func (pm playerMap) getPlayersSlice() (res playerList) {
+	res = make(playerList, 0)
+
 	for _, v := range pm {
 		res = append(res, v)
 	}
@@ -139,12 +141,15 @@ func (pm playerMap) getPlayersSlice() (res playerList) {
 	return
 }
 
-type gamesList []gamein
+type gameInList []gamein
+type gameOutList []gameout
 type connsList []connin
 type playerList []player
 type playerMap map[string]player
 
-func (gl gamesList) mapGames() (res []gameout) {
+func (gl gameInList) mapGames() (res gameOutList) {
+	res = make(gameOutList, 0)
+
 	for _, g := range gl {
 		res = append(res, gameout{
 			Pk:       "",
@@ -308,7 +313,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 					return callErr(err)
 				}
 
-				var games gamesList
+				var games gameInList
 				err = attributevalue.UnmarshalListOfMaps(gamesResults.Items, &games)
 				if err != nil {
 					return callErr(err)

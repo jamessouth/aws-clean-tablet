@@ -7,7 +7,7 @@ const chk = String.fromCharCode(10003);
 
 export default function Game({ game, ingame, leadertoken, send, user }) {
     const gameReady = !!game.leader;
-    const leaderName = game.leader.split("_")[0];
+    const leaderName = gameReady && game.leader.split("_")[0];
     // const [connectedWS, setConnectedWS] = useState(false);
     const [ready, setReady] = useState(true);
     const [count, setCount] = useState(5);

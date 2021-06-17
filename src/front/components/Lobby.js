@@ -69,20 +69,20 @@ export default function Lobby({history: {action}, user}) {
                     send: val => send(val),
                     user,
                 }
-            ),
-            ce(
-                "p",
-                {
-                    className: "text-yellow-200 text-2xl font-bold ",
-                },
-                "Get Ready",
-                ce(
-                    "span",
-                    {
-                          className: "animate-spin"
-                    },
-                    circ
-                )
             )
+            // ce(
+            //     "p",
+            //     {
+            //         className: "text-yellow-200 text-2xl font-bold ",
+            //     },
+            //     "Get Ready",
+            //     ce(
+            //         "span",
+            //         {
+            //               className: "animate-spin"
+            //         },
+            //         circ
+            //     )
+            // )
         );
 }
