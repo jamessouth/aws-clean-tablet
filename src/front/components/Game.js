@@ -79,14 +79,14 @@ export default function Game({ game, ingame, leadertoken, send, user }) {
             return ce(
                 "p",
                 {
-                    key: p.connid.S,
+                    key: p.connid,
                 },
-                p.name.S,
-                p.ready.BOOL
+                p.name,
+                p.ready
                     ? ce(
                           "span",
                           {
-                              className: leaderName === p.name.S ? `text-red-200${chkstyl}` : `text-green-200${chkstyl}`
+                              className: leaderName === p.name ? `text-red-200${chkstyl}` : `text-green-200${chkstyl}`
                           },
                           chk
                       )

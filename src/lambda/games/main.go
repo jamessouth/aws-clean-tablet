@@ -24,11 +24,11 @@ import (
 )
 
 type player struct {
-	Name   string `dynamodbav:"name"`
-	ConnID string `dynamodbav:"connid"`
-	Ready  bool   `dynamodbav:"ready"`
-	Color  string `dynamodbav:"color,omitempty"`
-	Score  int    `dynamodbav:"score"`
+	Name   string `json:"name"`
+	ConnID string `json:"connid"`
+	Ready  bool   `json:"ready"`
+	Color  string `json:"color,omitempty"`
+	Score  int    `json:"score"`
 }
 
 type gameout struct {
@@ -167,6 +167,7 @@ func (gl gameInList) mapGames() (res gameOutList) {
 }
 
 func FromDynamoDBEventAVMap(m map[string]events.DynamoDBAttributeValue) (res map[string]types.AttributeValue, err error) {
+	fmt.Println("av map: ", m)
 	res = make(map[string]types.AttributeValue, len(m))
 
 	for k, v := range m {
@@ -179,21 +180,46 @@ func FromDynamoDBEventAVMap(m map[string]events.DynamoDBAttributeValue) (res map
 	return
 }
 
+func FromDynamoDBEventAVList(l []events.DynamoDBAttributeValue) (res []types.AttributeValue, err error) {
+	fmt.Println("av list: ", l)
+	res = make([]types.AttributeValue, len(l))
+
+	for i, v := range l {
+		res[i], err = FromDynamoDBEventAV(v)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return
+}
+
 func FromDynamoDBEventAV(av events.DynamoDBAttributeValue) (types.AttributeValue, error) {
+	fmt.Println("av type: ", av, av.DataType())
 	switch av.DataType() {
 
-	case events.DataTypeBoolean:
+	case events.DataTypeBoolean: // 1
 		return &types.AttributeValueMemberBOOL{Value: av.Boolean()}, nil
 
-	case events.DataTypeString:
-		return &types.AttributeValueMemberS{Value: av.String()}, nil
+	case events.DataTypeList: // 3
+		values, err := FromDynamoDBEventAVList(av.List())
+		if err != nil {
+			return nil, err
+		}
+		return &types.AttributeValueMemberL{Value: values}, nil
 
-	case events.DataTypeMap:
+	case events.DataTypeMap: // 4
 		values, err := FromDynamoDBEventAVMap(av.Map())
 		if err != nil {
 			return nil, err
 		}
 		return &types.AttributeValueMemberM{Value: values}, nil
+
+	case events.DataTypeNumber: // 5
+		return &types.AttributeValueMemberN{Value: av.Number()}, nil
+
+	case events.DataTypeString: // 8
+		return &types.AttributeValueMemberS{Value: av.String()}, nil
 
 	default:
 		return nil, fmt.Errorf("unknown AttributeValue union member, %T", av)
@@ -227,6 +253,7 @@ type gamein struct {
 func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayProxyResponse, error) {
 	// fmt.Println("reqqqq", req)
 	for _, rec := range req.Records {
+		fmt.Println("reccc: ", rec)
 		tableName := strings.Split(rec.EventSourceArn, "/")[1]
 		ni := rec.Change.NewImage
 		fmt.Printf("%s: %+v\n", "new db ni", ni)

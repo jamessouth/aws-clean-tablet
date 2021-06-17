@@ -20,11 +20,7 @@ export default function GamesList({ action, games, ingame, leadertoken, send, us
 
     // }, []);
 
-    function send(text) {
-        ws.send(JSON.stringify({
-            action: text,
-        }));
-    }
+    
 
     return ce(
         "ul",

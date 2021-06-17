@@ -71,18 +71,18 @@ export default function Scoreboard({
                     "bg-yellow-300 opacity-80 border-2 border-solid border-yellow-400 p-3 w-11/12 max-w-lg my-0 mx-auto flex flex-col justify-around items-center",
             },
             players.map((p) =>
-                !!p.color.S ? ce(
+                !!p.color ? ce(
                     "li",
                     {
                         className:
                             "w-full flex flex-row h-7 py-0 px-2 justify-between items-center text-xl",
                         style: {
-                            backgroundColor: p.color.S,
+                            backgroundColor: p.color,
                         },
-                        key: p.connid.S,
+                        key: p.connid,
                     },
-                    ce("p", null, p.name.S),
-                    ce("p", null, p.score.N)
+                    ce("p", null, p.name),
+                    ce("p", null, p.score)
                 ) : null
             )
         )
