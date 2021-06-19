@@ -254,6 +254,17 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 	// fmt.Println("reqqqq", req)
 	for _, rec := range req.Records {
 		fmt.Println("reccc: ", rec)
+
+		if rec.EventName == dynamodbstreams.OperationTypeRemove {
+			return events.APIGatewayProxyResponse{
+				StatusCode:        http.StatusOK,
+				Headers:           map[string]string{"Content-Type": "application/json"},
+				MultiValueHeaders: map[string][]string{},
+				Body:              "",
+				IsBase64Encoded:   false,
+			}, nil
+		}
+
 		tableName := strings.Split(rec.EventSourceArn, "/")[1]
 		ni := rec.Change.NewImage
 		fmt.Printf("%s: %+v\n", "new db ni", ni)
