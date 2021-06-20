@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -41,6 +42,10 @@ type game struct {
 	Leader   string            `dynamodbav:"leader"`
 	Loading  bool              `dynamodbav:"loading"`
 	Players  map[string]Player `dynamodbav:"players"`
+}
+
+type body struct {
+	Gameno string
 }
 
 // GameItemAttrs holds values to be put in db
@@ -83,11 +88,11 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		panic(fmt.Sprintf("%v", "cant find table name"))
 	}
 
-	op, err := svc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
+	_, err = svc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
 		Key:       connItemKey,
 		TableName: aws.String(tableName),
 
-		ReturnValues: types.ReturnValueAllOld,
+		// ReturnValues: types.ReturnValueAllOld,
 	})
 
 	if err != nil {
@@ -107,17 +112,25 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	}
 
-	var game string
-	err = attributevalue.Unmarshal(op.Attributes["game"], &game)
+	var body body
+	// var gameno string
+	// var game string
+
+	err = json.Unmarshal([]byte(req.Body), &body)
 	if err != nil {
-		fmt.Println("del item unmarshal err", err)
+		fmt.Println("unmarshal err")
 	}
 
-	if len(game) > 0 {
+	// err = attributevalue.Unmarshal(op.Attributes["game"], &game)
+	// if err != nil {
+	// 	fmt.Println("del item unmarshal err", err)
+	// }
+
+	if len(body.Gameno) > 0 {
 
 		gameItemKey, err := attributevalue.MarshalMap(Key{
 			Pk: "GAME",
-			Sk: game,
+			Sk: body.Gameno,
 		})
 		if err != nil {
 			panic(fmt.Sprintf("failed to marshal Record 7, %v", err))

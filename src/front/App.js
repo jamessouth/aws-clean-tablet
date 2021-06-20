@@ -12,7 +12,7 @@ import {
 } from "react-router-dom";
 
 import ProvideAuth from "./components/ProvideAuth";
-import AuthButton from "./components/AuthButton";
+// import AuthButton from "./components/AuthButton";
 
 import Routes from "./components/Routes";
 
@@ -34,7 +34,7 @@ export default function App() {
                 {
                     className: "mt-8",
                 },
-                ce(AuthButton),
+                // ce(AuthButton),
                 ce(Routes)
             )
         )

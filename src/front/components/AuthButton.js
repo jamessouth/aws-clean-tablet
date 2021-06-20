@@ -1,10 +1,22 @@
 import React, { useContext } from "react";
 import { useHistory } from "react-router-dom";
 import { authContext } from "./ProvideAuth";
+import { wsContext } from "./ProvideWS";
 
 import { AmplifySignOut } from "@aws-amplify/ui-react";
 
 export default function AuthButton() {
+    const {
+        // connectedWS,
+        // games,
+        ingame,
+        // leadertoken,
+        // playing,
+        send,
+        // wsError
+    } = useContext(wsContext);
+
+
     let history = useHistory();
     let auth = useContext(authContext);
 
@@ -13,6 +25,15 @@ export default function AuthButton() {
         auth.setAuthState(authState);
         auth.setUser(userData);
         localStorage.removeItem("user");
+
+
+        send({
+            action: "disconnect",
+            gameno: ingame,
+         
+        });
+
+
         return history.push("/");
     };
 

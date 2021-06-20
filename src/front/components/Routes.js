@@ -7,6 +7,7 @@ import PrivateRoute from "./PrivateRoute";
 import Lobby from "./Lobby";
 import { authContext } from "./ProvideAuth";
 import ProvideWS from "./ProvideWS";
+import AuthButton from "./AuthButton";
 
 const ce = React.createElement;
 
@@ -66,6 +67,7 @@ export default function Routes() {
         ce(
             ProvideWS,
             null,
+            ce(AuthButton),
             ce(
                 PrivateRoute,
                 {

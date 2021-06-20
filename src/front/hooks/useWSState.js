@@ -15,7 +15,7 @@ export default function useWSState() {
     const [currentWord, setCurrentWord] = useState("");
     const [previousWord, setPreviousWord] = useState("");
     const [game, setGame] = useState(null);
-    const [ingame, setInGame] = useState(false);
+    const [ingame, setInGame] = useState("");
     const [leadertoken, setLeadertoken] = useState("");
     // const [playing, setPlaying] = useState(false);
     const [
