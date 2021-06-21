@@ -6,15 +6,17 @@ import { wsContext } from "./ProvideWS";
 import { AmplifySignOut } from "@aws-amplify/ui-react";
 
 export default function AuthButton() {
-    const {
-        // connectedWS,
-        // games,
-        ingame,
-        // leadertoken,
-        // playing,
-        send,
-        // wsError
-    } = useContext(wsContext);
+    // const {
+    //     // connectedWS,
+    //     // games,
+    //     ingame,
+    //     // leadertoken,
+    //     // playing,
+    //     send,
+    //     // wsError
+    // } = useContext(wsContext);
+
+    const ws = useContext(wsContext);
 
 
     let history = useHistory();
@@ -27,11 +29,23 @@ export default function AuthButton() {
         localStorage.removeItem("user");
 
 
-        send({
-            action: "disconnect",
-            gameno: ingame,
-         
-        });
+        
+        if (ws.ingame) {
+
+            ws.send({
+                action: "lobby",
+                game: ws.ingame,
+                type: "game_disconnect",
+            });
+        } else {
+
+            ws.send({
+                action: "lobby",
+                // game: "new",
+                type: "nogame_disconnect",
+            });
+        }
+
 
 
         return history.push("/");
