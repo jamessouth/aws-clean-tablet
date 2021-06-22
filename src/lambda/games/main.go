@@ -250,20 +250,20 @@ type gamein struct {
 	Answers  []answer  `dynamodbav:"answers"`
 }
 
+func getReturnValue(status int) events.APIGatewayProxyResponse {
+	return events.APIGatewayProxyResponse{
+		StatusCode:        status,
+		Headers:           map[string]string{"Content-Type": "application/json"},
+		MultiValueHeaders: map[string][]string{},
+		Body:              "",
+		IsBase64Encoded:   false,
+	}
+}
+
 func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayProxyResponse, error) {
 	// fmt.Println("reqqqq", req)
 	for _, rec := range req.Records {
 		fmt.Println("reccc: ", rec)
-
-		if rec.EventName == dynamodbstreams.OperationTypeRemove {
-			return events.APIGatewayProxyResponse{
-				StatusCode:        http.StatusOK,
-				Headers:           map[string]string{"Content-Type": "application/json"},
-				MultiValueHeaders: map[string][]string{},
-				Body:              "",
-				IsBase64Encoded:   false,
-			}, nil
-		}
 
 		tableName := strings.Split(rec.EventSourceArn, "/")[1]
 		ni := rec.Change.NewImage
@@ -298,14 +298,6 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested")
 		})
 
-		ddbcfg, err := config.LoadDefaultConfig(ctx,
-			config.WithRegion(rec.AWSRegion),
-			// config.WithLogger(logger),
-		)
-		if err != nil {
-			return callErr(err)
-		}
-
 		apigwcfg, err := config.LoadDefaultConfig(ctx,
 			config.WithRegion(rec.AWSRegion),
 			// config.WithLogger(logger),
@@ -316,6 +308,42 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 		}
 
 		apigwsvc := apigatewaymanagementapi.NewFromConfig(apigwcfg)
+
+		if rec.EventName == dynamodbstreams.OperationTypeRemove {
+			oi := rec.Change.OldImage
+			fmt.Printf("%s: %+v\n", "old db oi", oi)
+
+			item, err := FromDynamoDBEventAVMap(oi)
+			if err != nil {
+				return callErr(err)
+			}
+
+			var connRecord connItem
+			err = attributevalue.UnmarshalMap(item, &connRecord)
+			if err != nil {
+				return callErr(err)
+			}
+
+			fmt.Printf("%s%+v\n", "connrecord ", connRecord)
+
+			_, err = apigwsvc.DeleteConnection(ctx, &apigatewaymanagementapi.DeleteConnectionInput{
+				ConnectionId: aws.String(connRecord.GSI1SK),
+			})
+			if err != nil {
+				return callErr(err)
+			}
+
+			return getReturnValue(http.StatusOK), nil
+		}
+
+		ddbcfg, err := config.LoadDefaultConfig(ctx,
+			config.WithRegion(rec.AWSRegion),
+			// config.WithLogger(logger),
+		)
+		if err != nil {
+			return callErr(err)
+		}
+
 		ddbsvc := dynamodb.NewFromConfig(ddbcfg)
 
 		recType := item["pk"].(*types.AttributeValueMemberS).Value[:4]
@@ -405,13 +433,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			fmt.Printf("%s%+v\n", "gammmmme ", gameRecord)
 
 			if len(gameRecord.Answers) > 0 && len(gameRecord.Answers) < len(gameRecord.Players) {
-				return events.APIGatewayProxyResponse{
-					StatusCode:        http.StatusOK,
-					Headers:           map[string]string{"Content-Type": "application/json"},
-					MultiValueHeaders: map[string][]string{},
-					Body:              "",
-					IsBase64Encoded:   false,
-				}, nil
+				return getReturnValue(http.StatusOK), nil
 			}
 
 			if rec.EventName == dynamodbstreams.OperationTypeInsert {
@@ -473,13 +495,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 	}
 
-	return events.APIGatewayProxyResponse{
-		StatusCode:        http.StatusOK,
-		Headers:           map[string]string{"Content-Type": "application/json"},
-		MultiValueHeaders: map[string][]string{},
-		Body:              "",
-		IsBase64Encoded:   false,
-	}, nil
+	return getReturnValue(http.StatusOK), nil
 }
 
 func main() {
@@ -593,12 +609,6 @@ func callErr(err error) (events.APIGatewayProxyResponse, error) {
 			apiErr.ErrorCode(), apiErr.ErrorMessage())
 	}
 
-	return events.APIGatewayProxyResponse{
-		StatusCode:        http.StatusBadRequest,
-		Headers:           map[string]string{"Content-Type": "application/json"},
-		MultiValueHeaders: map[string][]string{},
-		Body:              "",
-		IsBase64Encoded:   false,
-	}, err
+	return getReturnValue(http.StatusBadRequest), err
 
 }
