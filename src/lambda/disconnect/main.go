@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -156,8 +155,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		}
 
-		callFunction(ui2.Attributes, gameItemKey, tableName, ctx, svc)
-
 	}
 
 	return events.APIGatewayProxyResponse{
@@ -171,59 +168,4 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 func main() {
 	lambda.Start(handler)
-}
-
-func callFunction(rv, gik map[string]types.AttributeValue, tn string, ctx context.Context, svc *dynamodb.Client) {
-	var gm game
-	err := attributevalue.UnmarshalMap(rv, &gm)
-	if err != nil {
-		fmt.Println("unmarshal err", err)
-	}
-
-	if len(gm.Players) < 3 {
-		return
-	}
-
-	readyCount := 0
-	for k, v := range gm.Players {
-
-		fmt.Printf("%s, %v, %+v", "uicf", k, v)
-
-		if v.Ready {
-			readyCount++
-			if readyCount == len(gm.Players) {
-				time.Sleep(1000 * time.Millisecond)
-				_, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-					Key:       gik,
-					TableName: aws.String(tn),
-					ExpressionAttributeNames: map[string]string{
-						"#LE": "leader",
-					},
-					ExpressionAttributeValues: map[string]types.AttributeValue{
-						":l": &types.AttributeValueMemberS{Value: v.Name + "_" + v.ConnID},
-					},
-					UpdateExpression: aws.String("SET #LE = :l"),
-				})
-
-				if err != nil {
-
-					var intServErr *types.InternalServerError
-					if errors.As(err, &intServErr) {
-						fmt.Printf("get item error, %v",
-							intServErr.ErrorMessage())
-					}
-
-					// To get any API error
-					var apiErr smithy.APIError
-					if errors.As(err, &apiErr) {
-						fmt.Printf("db error, Code: %v, Message: %v",
-							apiErr.ErrorCode(), apiErr.ErrorMessage())
-					}
-
-				}
-			}
-		} else {
-			return
-		}
-	}
 }

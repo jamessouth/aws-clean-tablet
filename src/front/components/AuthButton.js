@@ -18,7 +18,6 @@ export default function AuthButton() {
 
     const ws = useContext(wsContext);
 
-
     let history = useHistory();
     let auth = useContext(authContext);
 
@@ -28,25 +27,11 @@ export default function AuthButton() {
         auth.setUser(userData);
         localStorage.removeItem("user");
 
-
-        
-        if (ws.ingame) {
-
-            ws.send({
-                action: "lobby",
-                game: ws.ingame,
-                type: "game_disconnect",
-            });
-        } else {
-
-            ws.send({
-                action: "lobby",
-                // game: "new",
-                type: "nogame_disconnect",
-            });
-        }
-
-
+        ws.send({
+            action: "lobby",
+            game: ws.ingame || "dc",
+            type: "disconnect",
+        });
 
         return history.push("/");
     };
