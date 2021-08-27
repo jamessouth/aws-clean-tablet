@@ -1,8 +1,13 @@
-const colors = require('tailwindcss/colors');
+const colors = require('windicss/colors');
+const typography = require('windicss/plugin/typography');
 
 module.exports = {
-  purge: [],
+  extract: {
+    include: ['./**/*.html'],
+  },
+  safelist: ['prose', 'prose-sm', 'm-auto'],
   darkMode: false, // or 'media' or 'class'
+  plugins: [typography],
   theme: {
     extend: {
       animation: {
@@ -37,10 +42,4 @@ module.exports = {
       },
     },
   },
-  variants: {
-    extend: {
-      cursor: ['disabled'],
-    },
-  },
-  plugins: [],
 }

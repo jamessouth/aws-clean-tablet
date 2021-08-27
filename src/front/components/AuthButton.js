@@ -3,49 +3,49 @@ import { useHistory } from "react-router-dom";
 import { authContext } from "./ProvideAuth";
 import { wsContext } from "./ProvideWS";
 
-import { AmplifySignOut } from "@aws-amplify/ui-react";
+//import { AmplifySignOut } from "@aws-amplify/ui-react";
 
 export default function AuthButton() {
-    // const {
-    //     // connectedWS,
-    //     // games,
-    //     ingame,
-    //     // leadertoken,
-    //     // playing,
-    //     send,
-    //     // wsError
-    // } = useContext(wsContext);
+  // const {
+  //     // connectedWS,
+  //     // games,
+  //     ingame,
+  //     // leadertoken,
+  //     // playing,
+  //     send,
+  //     // wsError
+  // } = useContext(wsContext);
 
-    const ws = useContext(wsContext);
+  const ws = useContext(wsContext);
 
-    let history = useHistory();
-    let auth = useContext(authContext);
+  let history = useHistory();
+  let auth = useContext(authContext);
 
-    const handleAuthChange = (authState, userData) => {
-        console.log("chgout b4", authState, userData);
-        auth.setAuthState(authState);
-        auth.setUser(userData);
-        localStorage.removeItem("user");
+  const handleAuthChange = (authState, userData) => {
+    console.log("chgout b4", authState, userData);
+    auth.setAuthState(authState);
+    auth.setUser(userData);
+    localStorage.removeItem("user");
 
-        ws.send({
-            action: "lobby",
-            game: ws.ingame || "dc",
-            type: "disconnect",
-        });
+    ws.send({
+      action: "lobby",
+      game: ws.ingame || "dc",
+      type: "disconnect",
+    });
 
-        return history.push("/");
-    };
+    return history.push("/");
+  };
 
-    const ce = React.createElement;
+  const ce = React.createElement;
 
-    return auth.user
-        ? ce(
-              React.Fragment,
-              null,
-              ce("p", null, "Welcome! " + auth.user),
-              ce(AmplifySignOut, {
-                  handleAuthStateChange: handleAuthChange,
-              })
-          )
-        : null;
+  return auth.user
+    ? ce(
+      React.Fragment,
+      null,
+      ce("p", null, "Welcome! " + auth.user),
+      ce(AmplifySignOut, {
+        handleAuthStateChange: handleAuthChange,
+      })
+    )
+    : null;
 }

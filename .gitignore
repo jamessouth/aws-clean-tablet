@@ -131,3 +131,5 @@ src/lambda/*/main
 src/lambda/*/*.zip
 src/lambda/authorizer/template.yaml
 src/sfn
+.merlin
+/lib

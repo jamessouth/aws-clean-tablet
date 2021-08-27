@@ -8,10 +8,9 @@ if (CSS.paintWorklet) {
     CSS.paintWorklet.addModule('paint.js');
 }
 
-const ce = React.createElement;
 
-ReactDOM.render(
-    ce(
+
+  
         React.Fragment,
         null,
         ce(
@@ -22,6 +21,6 @@ ReactDOM.render(
             "CLEAN TABLET"
         ),
         ce(App, null)
-    ),
+    
     document.querySelector("#root")
-);
+
