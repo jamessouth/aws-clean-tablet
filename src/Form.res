@@ -10,11 +10,21 @@ let make = (ANSWER_MAX_LENGTH, answered, inputText, onEnter, setInputText) => {
   let (isValidInput, setIsValidInput) = React.useState(_ => true)
   let (badChar, setBadChar) = React.useState(_ => Js.Nullable.null)
 
-  let onKeyPress = (~key, ~flag) => {
-    switch key, flag {
+  let onKeyPress = evt => {
+    let key = ReactEvent.Keyboard.key(evt)
+    switch key, disableSubmit {
     | 'Enter', false => onEnter()
     | _, _ => ()
     }
+  }
+
+  let onChange = evt => {
+    let value = ReactEvent.Form.currentTarget(evt)["value"]
+    value->setInputText
+  }
+
+  let onClick = _ => {
+    onEnter()
   }
 
   React.useEffect1(() => {
@@ -65,16 +75,27 @@ let make = (ANSWER_MAX_LENGTH, answered, inputText, onEnter, setInputText) => {
       ref={inputBox->ReactDOM.Ref.domRef}
       value={inputText}
       spellCheck="false"
-    
-
-
-
-
-
-    >
-    
-    </input>
+      onKeyPress
+      onChange
+      type_="text"
+      placeholder={`2 - ${ANSWER_MAX_LENGTH} letters`}
+      readOnly={switch answered {
+      | true => true
+      | false => false
+      }}
+    ></input>
   
+    <button
+      className="text-2xl text-smoke-700 bg-smoke-100 h-7 w-2/3 max-w-max cursor-pointer border-none disabled:cursor-not-allowed disabled:contrast-50"
+      type_: "button"
+      onClick
+      disabled={switch disableSubmit {
+      | true => true
+      | false => false
+      }}
+    >
+      "Submit"->React.string
+    </button>
   
   </section>
 }
