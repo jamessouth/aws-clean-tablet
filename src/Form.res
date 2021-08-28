@@ -87,7 +87,7 @@ let make = (ANSWER_MAX_LENGTH, answered, inputText, onEnter, setInputText) => {
   
     <button
       className="text-2xl text-smoke-700 bg-smoke-100 h-7 w-2/3 max-w-max cursor-pointer border-none disabled:cursor-not-allowed disabled:contrast-50"
-      type_: "button"
+      type_="button"
       onClick
       disabled={switch disableSubmit {
       | true => true
