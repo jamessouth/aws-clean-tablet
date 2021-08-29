@@ -1,7 +1,8 @@
 type sendPayload = {
-    action string
-    gameno int
-    type string
+    action: string,
+    gameno: string,
+    type_: string.
+    value: bool
 }
 
 
@@ -14,18 +15,39 @@ let make = (game, ingame, leadertoken, send) => {
   | None => false
   }
 
-  let onClick = _ => {
+  let onClick1 = _ => {
+      let pl = {
+          action: "lobby",
+          gameno: j`${game.no}`,
+          type_: leave or join,
+
+      }
+      pl->send
+      if..... true->setReady
     
   }
+
   let onClick2 = _ => {
+      let pl = {
+          action: "lobby",
+          gameno: j`${game.no}`,
+          type_: leave or join,
+          value: ready
+      }
+      pl->send
+      if..... !ready->setReady
     
   }
+
+
 
   let leaderName = gameReady && game.leader->Js.String2.split("_")[0]
 
   let (ready, setready) = React.useState(_ => true)
   let (count, setCount) = React.useState(_ => 5)
   let (leader, setLeader) = React.useState(_ => false)
+  let (disabled1, setDisabled1) = React.useState(_ => false)
+  let (disabled2, setDisabled2) = React.useState(_ => false)
   let (startGame, setStartGame) = React.useState(_ => false)
 
   let chkstyl = " text-2xl font-bold leading-3"
@@ -36,6 +58,24 @@ let make = (game, ingame, leadertoken, send) => {
     | Some(_), false | None, _ => ()
     }
   }, [game.leader, leadertoken])
+
+
+
+    React.useEffect3(() => {
+        switch ingame->Js.Nullable.toOption, ingame === game.no {
+        | Some(g), false => setDisabled1(true)
+        | pattern2 => expression
+        }
+    }, [ingame, game.no, game.players])
+
+
+
+    React.useEffect3(() => {
+        switch ingame->Js.Nullable.toOption, ingame === game.no {
+        | Some(g), false => setDisabled2(true)
+        | pattern2 => expression
+        }
+    }, [ingame, game.no, game.players])
    
    
    
@@ -76,6 +116,25 @@ let make = (game, ingame, leadertoken, send) => {
         <p className="text-xs col-span-2">
             "players"->React.string
         </p>
+
+{
+    game.players->Js.Array2.map((p) => {
+
+    switch p.ready {
+    | true => <p key=p.connid>{p.name->React.string}<span className=switch leaderName === p.name {
+    | true => `text-red-200${chkstyl}`
+    | false => `text-green-200${chkstyl}`
+    } >{chk->React.string}</span></p>
+    | false => <p key=p.connid>{p.name->React.string}</p>
+    }
+
+
+        
+    })
+}
+
+
+
         {
             switch gameReady {
             | true => switch ingame === game.no {
@@ -89,8 +148,8 @@ let make = (game, ingame, leadertoken, send) => {
 
         <button
             className="w-1/2 bottom-0 h-8 left-0 absolute pt-2 bg-smoke-700 bg-opacity-70"
-            disabled
-            onClick
+            disabled=disabled1
+            onClick1
         >
             {
                 switch value {
@@ -101,7 +160,7 @@ let make = (game, ingame, leadertoken, send) => {
         </button>
         <button
             className="w-1/2 bottom-0 h-8 right-0 absolute pt-2 bg-smoke-700 bg-opacity-70"
-            disabled
+            disabled=disabled2
             onClick2
         >{switch ready {
         | true => "ready"->React.string
