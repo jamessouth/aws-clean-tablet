@@ -1,7 +1,7 @@
 type sendPayload = {
     action: string,
     gameno: string,
-    type_: string.
+    type_: string,
     value: bool
 }
 
@@ -43,7 +43,7 @@ let make = (game, ingame, leadertoken, send) => {
 
   let leaderName = gameReady && game.leader->Js.String2.split("_")[0]
 
-  let (ready, setready) = React.useState(_ => true)
+  let (ready, setReady) = React.useState(_ => true)
   let (count, setCount) = React.useState(_ => 5)
   let (leader, setLeader) = React.useState(_ => false)
   let (disabled1, setDisabled1) = React.useState(_ => false)
