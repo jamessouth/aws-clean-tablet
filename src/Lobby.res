@@ -15,23 +15,23 @@ let make = () => {
     }
 
 switch wsError {
-| true => <p>"not connected: connection error"->React.string</p>
-| false => switch connectedWS, games->Js.Nullable.toOption {
-| false, _ | _, None => <p>"loading games..."->React.string</p>
-| true, Some(games) => <div
+| true => <p>{"not connected: connection error"->React.string}</p>
+| false => switch (connectedWS, games->Js.Nullable.toOption) {
+| (false, _) | (_, None) => <p>{"loading games..."->React.string}</p>
+| (true, Some(games)) => <div
 className="flex flex-col mt-8"
 ><button
-className=switch ingame {
+className={switch ingame {
 | true => `invisible${startBtnStyles}`
 | false => `visible${startBtnStyles}`
-}
+}}
 type_="button"
 onClick
->"start a new game"->React.string</button>
+>{"start a new game"->React.string}</button>
 {
     switch games->Js.Array2.length < 1 {
-    | true => <p>"no games found. start a new one!"->React.string</p>
-    | false => <GamesList action games ingame leadertoken send=(val) => val->send user></GamesList>
+    | true => <p>{"no games found. start a new one!"->React.string}</p>
+    | false => <GamesList action games ingame leadertoken send=((val) => val->send) user></GamesList>
     }
 }
 </div>

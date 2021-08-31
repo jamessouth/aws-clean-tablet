@@ -1,20 +1,20 @@
 @send external blur: Dom.element => unit = "blur"
 
 @react.component
-let make = (ANSWER_MAX_LENGTH, answered, inputText, onEnter, setInputText) => {
+let make = (~answer_max_length, ~answered, ~inputText, ~onEnter, ~setInputText) => {
   let inputBox = React.useRef(Js.Nullable.null)
-  let INPUT_MIN_LENGTH = 2
+  let input_min_length = 2
 
 
   let (disableSubmit, setDisableSubmit) = React.useState(_ => true)
   let (isValidInput, setIsValidInput) = React.useState(_ => true)
-  let (badChar, setBadChar) = React.useState(_ => Js.Nullable.null)
+  let (badChar, setBadChar) = React.useState(_ => "")
 
   let onKeyPress = evt => {
     let key = ReactEvent.Keyboard.key(evt)
-    switch key, disableSubmit {
-    | 'Enter', false => onEnter()
-    | _, _ => ()
+    switch (key, disableSubmit) {
+    | ("Enter", false) => onEnter()
+    | (_, _) => ()
     }
   }
 
@@ -30,7 +30,7 @@ let make = (ANSWER_MAX_LENGTH, answered, inputText, onEnter, setInputText) => {
   React.useEffect1(() => {
     switch Js.String.match_(%re("/[^a-z '-]+/i"), inputText) {
     | Some(arr) => {
-        arr[0]->setBadChar
+        arr[0]->Js.String2.get(0)->setBadChar
         false->setIsValidInput
       }
     | None => {
@@ -41,15 +41,15 @@ let make = (ANSWER_MAX_LENGTH, answered, inputText, onEnter, setInputText) => {
   }, [inputText])
 
   React.useEffect1(() => {
-    switch answered, inputBox.current->Js.Nullable.toOption {
-    | true, Some(inp) => inp->blur
-    | true, None | false, _ => ()
+    switch (answered, inputBox.current->Js.Nullable.toOption) {
+    | (true, Some(inp)) => inp->blur
+    | (true, None) | (false, _) => ()
     }
   }, [answered])
 
   React.useEffect4(() => {
-    ((inputText->Js.String2.length < INPUT_MIN_LENGTH || inputText->Js.String2.length > ANSWER_MAX_LENGTH) || answered || !isValidInput)->setDisableSubmit
-  }, [inputText, ANSWER_MAX_LENGTH, answered, isValidInput]])
+    ((inputText->Js.String2.length < input_min_length || inputText->Js.String2.length > answer_max_length) || answered || !isValidInput)->setDisableSubmit
+  }, (inputText, answer_max_length, answered, isValidInput))
 
 
 
@@ -63,8 +63,8 @@ let make = (ANSWER_MAX_LENGTH, answered, inputText, onEnter, setInputText) => {
       }}
       </p>
     }
-    <label ariaLive="assertive" for="inputbox">
-      "Enter your answer:"->React.string
+    <label ariaLive="assertive" htmlFor="inputbox">
+      {"Enter your answer:"->React.string}
     </label>
 
     <input
@@ -78,7 +78,7 @@ let make = (ANSWER_MAX_LENGTH, answered, inputText, onEnter, setInputText) => {
       onKeyPress
       onChange
       type_="text"
-      placeholder={`2 - ${ANSWER_MAX_LENGTH} letters`}
+      placeholder={`2 - ${answer_max_length} letters`}
       readOnly={switch answered {
       | true => true
       | false => false
@@ -94,7 +94,7 @@ let make = (ANSWER_MAX_LENGTH, answered, inputText, onEnter, setInputText) => {
       | false => false
       }}
     >
-      "Submit"->React.string
+      {"Submit"->React.string}
     </button>
   
   </section>

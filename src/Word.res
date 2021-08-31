@@ -2,7 +2,7 @@
 
 
 @react.component
-let make = (onAnimationEnd, playerColor, word) => {
+let make = (~onAnimationEnd, ~playerColor, ~word) => {
 
     let blankPos = switch word->Js.String2.startsWith("_") {
     | true => "a blank then a word"

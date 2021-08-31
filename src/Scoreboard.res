@@ -3,10 +3,12 @@
 
 
 @react.component
-let make = (playerName, players) => {
+let make = (~playerName, ~players) => {
 
-    <div className="w-full" style={ReactDOM.Style.make(~height=`calc(82px + (28px * ${players->JS.Array2.length}))`, ())}>
-        <h2 className="mb-5">"score"->React.string</h2>
+    let noplyrs = players->Js.Array2.length
+
+    <div className="w-full" style={ReactDOM.Style.make(~height=`calc(82px + (28px * ${noplyrs}))`, ())}>
+        <h2 className="mb-5">{"score"->React.string}</h2>
         <ul className="bg-yellow-300 opacity-80 border-2 border-solid border-yellow-400 p-3 w-11/12 max-w-lg my-0 mx-auto flex flex-col justify-around items-center">
         {
             players->JS.Array2.map((p) => {

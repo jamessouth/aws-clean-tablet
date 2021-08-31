@@ -3,10 +3,10 @@
 
 
 @react.component
-let make = (comp) => {
+let make = () => {
 
 
-
+React.null
 
 
 }

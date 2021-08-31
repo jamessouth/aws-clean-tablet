@@ -9,7 +9,7 @@ type answerPayload = {
 
 
 let circ = Js.String2.fromCharCode(9862)
-let ANSWER_MAX_LENGTH = 12
+let answer_max_length = 12
 
 @react.component
 let make = () => {
@@ -22,7 +22,7 @@ let make = () => {
         let pl = {
             action: "play",
             gameno: j`${game.no}`,
-            answer: inputText->Js.String2.slice(0, ANSWER_MAX_LENGTH),
+            answer: inputText->Js.String2.slice(0, answer_max_length),
             type_: "answer",
             playersCount: j`${game.players->Js.Array2.length}`
         }
@@ -47,29 +47,28 @@ let make = () => {
 
 
     React.useEffect2(() => {
-        switch currentWord->Js.Nullable.toOption, previousWord->Js.Nullable.toOption {
-        | Some(cw), _ | _, Some(pw) => true->setCurrPrevWord
-        | None, None => false->setCurrPrevWord
+        switch (currentWord->Js.Nullable.toOption, previousWord->Js.Nullable.toOption) {
+        | (Some(cw), _) | (_, Some(pw)) => true->setCurrPrevWord
+        | (None, None) => false->setCurrPrevWord
         }
-    
-    }, [currentWord, previousWord])
+    }, (currentWord, previousWord))
 
 
     <div>
         <Scoreboard playerName=user players=game.players></Scoreboard>
         {
-            switch game.playing, currPrevWord {
-            | true, false => <p className="text-yellow-200 text-2xl font-bold">"Get Ready"->React.string<span className="animate-spin">{circ->React.string}</span></p>
-            | false, _ | true, true => React.null
+            switch (game.playing, currPrevWord) {
+            | (true, false) => <p className="text-yellow-200 text-2xl font-bold">{"Get Ready"->React.string}<span className="animate-spin">{circ->React.string}</span></p>
+            | (false, _) | (true, true) => React.null
             }
         }
 
-        <Word className=switch answered {
+        <Word className={switch answered {
         | true => "animate-erase"
         | false => ""
-        } onAnimationEnd playerColor currentWord></Word>
+        }} onAnimationEnd playerColor currentWord></Word>
 
-        <Form ANSWER_MAX_LENGTH answered inputText onEnter setInputText></Form>
+        <Form answer_max_length answered inputText onEnter setInputText></Form>
 
         <Prompt></Prompt>
 

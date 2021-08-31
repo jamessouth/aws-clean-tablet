@@ -2,7 +2,7 @@
   "name": "aws-clean-tablet",
   "sources": [
     {
-      "dir": "src/front",
+      "dir": "src",
       "subdirs": true
     }
   ],

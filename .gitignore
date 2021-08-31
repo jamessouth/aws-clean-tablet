@@ -133,3 +133,4 @@ src/lambda/authorizer/template.yaml
 src/sfn
 .merlin
 /lib
+*.bs.js

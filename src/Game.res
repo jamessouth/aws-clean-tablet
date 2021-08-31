@@ -5,12 +5,17 @@ type sendPayload = {
     value: bool
 }
 
+type game = {
+    leader: option<string>,
+    no: string
+}
+
 
 let chk = Js.String2.fromCharCode(10003)
 
 @react.component
-let make = (game, ingame, leadertoken, send) => {
-  let gameReady = switch game.leader->Js.Nullable.toOption {
+let make = (~game, ~ingame, ~leadertoken, ~send) => {
+  let gameReady = switch game.leader {
   | Some(_) => true
   | None => false
   }
@@ -19,11 +24,12 @@ let make = (game, ingame, leadertoken, send) => {
       let pl = {
           action: "lobby",
           gameno: j`${game.no}`,
-          type_: leave or join,
+          type_: "leave or join",
+          value: true
 
       }
       pl->send
-      if..... true->setReady
+      //if..... true->setReady
     
   }
 
@@ -31,11 +37,11 @@ let make = (game, ingame, leadertoken, send) => {
       let pl = {
           action: "lobby",
           gameno: j`${game.no}`,
-          type_: leave or join,
-          value: ready
+          type_: "leave or join",
+          value: true
       }
       pl->send
-      if..... !ready->setReady
+      //if..... !ready->setReady
     
   }
 
@@ -53,56 +59,56 @@ let make = (game, ingame, leadertoken, send) => {
   let chkstyl = " text-2xl font-bold leading-3"
 
     React.useEffect2(() => {
-    switch game.leader->Js.Nullable.toOption, game.leader === leadertoken {
-    | Some(_), true => setLeader(true)
-    | Some(_), false | None, _ => ()
+    switch (game.leader->Js.Nullable.toOption, game.leader === leadertoken) {
+    | (Some(_), true) => setLeader(true)
+    | (Some(_), false) | (None, _) => ()
     }
-  }, [game.leader, leadertoken])
+  }, (game.leader, leadertoken))
 
 
 
     React.useEffect3(() => {
-        switch ingame->Js.Nullable.toOption, ingame === game.no {
-        | Some(g), false => setDisabled1(true)
-        | pattern2 => expression
+        switch (ingame->Js.Nullable.toOption, ingame === game.no) {
+        | (Some(g), false) => setDisabled1(true)
+        | None => setDisabled1(false)
         }
-    }, [ingame, game.no, game.players])
+    }, (ingame, game.no, game.players))
 
 
 
     React.useEffect3(() => {
-        switch ingame->Js.Nullable.toOption, ingame === game.no {
-        | Some(g), false => setDisabled2(true)
-        | pattern2 => expression
+        switch (ingame->Js.Nullable.toOption, ingame === game.no) {
+        | (Some(g), false) => setDisabled2(true)
+        | None => setDisabled2(false)
         }
-    }, [ingame, game.no, game.players])
+    }, (ingame, game.no, game.players))
    
    
    
     React.useEffect3(() => {
         let id = 0
-        switch gameReady, game.no === ingame {
-        | true, true => id = setInterval(() => {
+        switch (gameReady, game.no === ingame) {
+        | (true, true) => let id = setInterval(() => {
             setCount(c => c - 1)
         }, 1000)
-        | _, _ => ()
+        | (_, _) => ()
         }
-  }, [gameReady, game.no, ingame])
+  }, (gameReady, game.no, ingame))
 
 
 
     React.useEffect4(() => {
-        switch ingame === game.no, count === 0, leader {
-        | true, true, true => {
+        switch (ingame === game.no, count === 0, leader) {
+        | (true, true, true) => {
             setStartGame(true)
             send
         }
-        | pattern2 => expression
+        | _ => 1
         }
 
 
 
-  }, [count, game.no, ingame, leader])
+  }, (count, game.no, ingame, leader))
 
 
 
@@ -114,17 +120,17 @@ let make = (game, ingame, leadertoken, send) => {
         </p>
 
         <p className="text-xs col-span-2">
-            "players"->React.string
+            {"players"->React.string}
         </p>
 
 {
     game.players->Js.Array2.map((p) => {
 
     switch p.ready {
-    | true => <p key=p.connid>{p.name->React.string}<span className=switch leaderName === p.name {
+    | true => <p key=p.connid>{p.name->React.string}<span className={switch leaderName === p.name {
     | true => `text-red-200${chkstyl}`
     | false => `text-green-200${chkstyl}`
-    } >{chk->React.string}</span></p>
+    }}>{chk->React.string}</span></p>
     | false => <p key=p.connid>{p.name->React.string}</p>
     }
 
@@ -139,7 +145,7 @@ let make = (game, ingame, leadertoken, send) => {
             switch gameReady {
             | true => switch ingame === game.no {
                 | true => <p className="absolute text-yellow-200 text-2xl font-bold left-1/2 bottom-1/4 transform -translate-x-2/4">{count->React.string}</p>
-                | false => <p className="absolute text-yellow-200 text-2xl font-bold left-1/2 bottom-1/4 transform -translate-x-2/4">"Starting soon..."->React.string</p>
+                | false => <p className="absolute text-yellow-200 text-2xl font-bold left-1/2 bottom-1/4 transform -translate-x-2/4">{"Starting soon..."->React.string}</p>
                 }
             | false => React.null
             }
