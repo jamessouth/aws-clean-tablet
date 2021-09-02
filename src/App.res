@@ -15,5 +15,5 @@ type game = {
 let make = () => {
 
 
-    <div className="mt-8"></div>
+    <div className="mt-8 bg-red-700">{"hello"->React.string}</div>
 }

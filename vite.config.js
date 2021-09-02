@@ -1,0 +1,61 @@
+import { defineConfig } from 'vite'
+import reactRefresh from '@vitejs/plugin-react-refresh'
+import WindiCSS from 'vite-plugin-windicss'
+
+import pluginTypography from "windicss/plugin/typography";
+import colors from 'windicss/colors';
+
+export default defineConfig({
+  plugins: [
+    reactRefresh(),
+    WindiCSS({
+      scan: {
+        include: ['./**/*.html', 'src/**/*.{js}'],
+        exclude: [
+          'node_modules/**/*',
+          '.git/**/*',
+        ],
+      },
+      config: {
+        safelist: ['prose', 'prose-sm', 'm-auto'],
+        darkMode: false, // or 'media' or 'class'
+        plugins: [pluginTypography],
+        theme: {
+          extend: {
+            animation: {
+              'erase': 'erase 3s cubic-bezier(.03,.74,.03,1) forwards 1',
+              'change': 'change 35s linear forwards 1',
+            },
+            colors: {
+              smoke: colors.trueGray
+            },
+            fontFamily: {
+              'arch': 'Architects Daughter, cursive',
+              'fred': 'Fredericka the Great, cursive',
+              'luck': 'Luckiest Guy, cursive',
+              'perm': 'Permanent Marker, cursive',
+            },
+            gridTemplateRows: {
+              'gamebox': 'repeat(6, minmax(1.5rem, 1fr))',
+            },
+            height: {
+              // '40vh': '40vh',
+            },
+            keyframes: {
+              change: {
+                '100%': { 'stroke-dashoffset': '1000' },
+              },
+              erase: {
+                '100%': { opacity: '0' },
+              },
+            },
+            lineHeight: {
+              '12rem': '12rem',
+            },
+          },
+        },
+      },
+    }),
+  ],
+  clearScreen: false
+})
