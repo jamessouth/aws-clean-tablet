@@ -2,24 +2,23 @@ import { defineConfig } from 'vite'
 import reactRefresh from '@vitejs/plugin-react-refresh'
 import WindiCSS from 'vite-plugin-windicss'
 
-import pluginTypography from "windicss/plugin/typography";
+// import pluginTypography from "windicss/plugin/typography";
 import colors from 'windicss/colors';
 
 export default defineConfig({
   plugins: [
     reactRefresh(),
     WindiCSS({
+      // preflight: false,
       scan: {
-        include: ['./**/*.html', 'src/**/*.{js}'],
-        exclude: [
-          'node_modules/**/*',
-          '.git/**/*',
-        ],
+        dirs: ['./src'], // all files in the cwd
+        fileExtensions: ['bs.js'], // also enabled scanning for js/ts
       },
+
       config: {
-        safelist: ['prose', 'prose-sm', 'm-auto'],
+        // safelist: ['prose', 'prose-sm', 'm-auto'],
         darkMode: false, // or 'media' or 'class'
-        plugins: [pluginTypography],
+        // plugins: [pluginTypography],
         theme: {
           extend: {
             animation: {
@@ -55,7 +54,23 @@ export default defineConfig({
           },
         },
       },
+
+
     }),
   ],
   clearScreen: false
 })
+
+
+
+
+// {
+//   extract: {
+//     include: ['./**/*.html', 'src/**/*.{js}'],
+//     exclude: [
+//       'node_modules/**/*',
+//       '.git/**/*',
+//     ],
+//   },
+
+// }

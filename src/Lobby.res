@@ -37,6 +37,6 @@ let make = () => {
 // </div>
 // }
 // }
-
+<div>{"lobby"->React.string}</div>
 
 }
