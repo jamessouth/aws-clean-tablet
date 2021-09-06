@@ -6,51 +6,57 @@ let make = () => {
     let url = RescriptReactRouter.useUrl()
 
     let {token} = AuthHook.useAuth()
-
-    <div className="mt-8">
-
-        {
-
-            switch (url.path, token) {
-                | (list{}, Some(t)) => {
-                    RescriptReactRouter.replace("/lobby")
-                    React.null
-                    }
-                | (list{}, None) => <div className="flex flex-col items-center">
-                <a className="w-3/5 border border-smoke-100 block font-fred decay-mask text-5xl leading-12rem sm:mt-16 sm:text-8xl sm:leading-12rem" href="/login">{"ENTER"->React.string}</a>
-                <a className="w-3/5 border border-smoke-100 mb-28 mt-10 block text-xl sm:mt-16 sm:text-2xl" href="/leaderboards">{"Leaderboards"->React.string}</a>
-                
-                </div>
-
-                | (list{"leaderboards"}, _) => <div>{"leaderboard"->React.string}</div>
-
-                | (list{"login"}, Some(t)) => {
-                    RescriptReactRouter.replace("/lobby")
-                    React.null
-                    }
-
-                | (list{"login"}, None) => <LoginPage/>
-
-                | (list{"lobby"}, Some(t)) => <Lobby/>
-
-                | (list{"lobby"}, None) => {
-                    RescriptReactRouter.replace("/login")
-                    React.null
-                    }
-
-                | (list{"game", gameno}, Some(t)) => <Play/>
-
-                | (list{"game", gameno}, None) => {
-                    RescriptReactRouter.replace("/login")
-                    React.null
-                    }
+    <>
+        <h1 className="text-6xl mt-11 text-center font-arch decay-mask">{"CLEAN TABLET"->React.string}</h1>
 
 
-                | (_, _) => <div>{"other"->React.string}</div>// <PageNotFound/>
+        <div className="mt-10 sm:mt-20">
+
+            {
+
+                switch (url.path, token) {
+                    | (list{}, Some(t)) => {
+                        RescriptReactRouter.replace("/lobby")
+                        React.null
+                        }
+                    | (list{}, None) => <div className="flex flex-col items-center">
+                    <a className="w-3/5 border border-smoke-100 block font-fred decay-mask text-3xl p-2 mb-8 max-w-80 sm:mb-16" href="/login">{"SIGN IN"->React.string}</a>
+                    <a className="w-3/5 border border-smoke-100 block font-fred decay-mask text-3xl p-2 max-w-80" href="/login">{"SIGN UP"->React.string}</a>
+
+
+                    <a className="w-3/5 border border-smoke-100 block text-xl mt-40 max-w-80" href="/leaderboards">{"Leaderboards"->React.string}</a>
+                    
+                    </div>
+
+                    | (list{"leaderboards"}, _) => <div>{"leaderboard"->React.string}</div>
+
+                    | (list{"login"}, Some(t)) => {
+                        RescriptReactRouter.replace("/lobby")
+                        React.null
+                        }
+
+                    | (list{"login"}, None) => <LoginPage/>
+
+                    | (list{"lobby"}, Some(t)) => <Lobby/>
+
+                    | (list{"lobby"}, None) => {
+                        RescriptReactRouter.replace("/login")
+                        React.null
+                        }
+
+                    | (list{"game", gameno}, Some(t)) => <Play/>
+
+                    | (list{"game", gameno}, None) => {
+                        RescriptReactRouter.replace("/login")
+                        React.null
+                        }
+
+
+                    | (_, _) => <div>{"other"->React.string}</div>// <PageNotFound/>
+                }
             }
-        }
 
 
-    </div>
-
+        </div>
+    </>
 }
