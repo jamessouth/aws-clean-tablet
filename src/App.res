@@ -7,7 +7,7 @@ let make = () => {
 
     let {token} = AuthHook.useAuth()
     <>
-        <h1 className="text-6xl mt-11 text-center font-arch decay-mask">{"CLEAN TABLET"->React.string}</h1>
+        <h1 className="text-6xl mt-11 text-center font-arch decay-mask text-warm-gray-100">{"CLEAN TABLET"->React.string}</h1>
 
 
         <div className="mt-10 sm:mt-20">

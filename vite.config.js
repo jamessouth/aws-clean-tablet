@@ -29,7 +29,9 @@ export default defineConfig({
               smoke: colors.trueGray
             },
             fontFamily: {
+              'anon': 'Anonymous Pro, monospace',
               'arch': 'Architects Daughter, cursive',
+              'flow': 'Indie Flower, cursive',
               'fred': 'Fredericka the Great, cursive',
               'luck': 'Luckiest Guy, cursive',
               'perm': 'Permanent Marker, cursive',
