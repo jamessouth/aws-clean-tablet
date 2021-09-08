@@ -10,7 +10,7 @@ let make = () => {
 
   <main>
     <form className="w-4/5 m-auto" action="">
-      <fieldset className="flex flex-col items-center justify-around h-72">
+      <fieldset className="flex flex-col items-center justify-around h-80">
         <legend className="text-warm-gray-100 m-auto mb-6 text-3xl font-fred"> {"Sign in"->React.string} </legend>
         <div>
           <label className="text-2xl text-warm-gray-100 font-flow" htmlFor="username">
@@ -50,8 +50,11 @@ let make = () => {
             value={pwInputText}
           />
         </div>
+        <Link url="/resetpwd" className="self-end text-sm cursor-pointer font-anon text-warm-gray-100" content="forgot password?"/>
       </fieldset>
-      <button className="text-gray-700 mt-20 bg-warm-gray-100 block font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7"> {"Submit"->React.string} </button>
+
+
+      <button className="text-gray-700 mt-16 bg-warm-gray-100 block font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7"> {"Submit"->React.string} </button>
     </form>
   </main>
 }
