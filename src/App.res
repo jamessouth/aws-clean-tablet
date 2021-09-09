@@ -42,12 +42,20 @@ let make = () => {
                     | (list{"signin"}, None) => <Signin/>
 
 
-                    // | (list{"login"}, Some(t)) => {
-                    //     RescriptReactRouter.replace("/lobby")
-                    //     React.null
-                    //     }
+                    | (list{"signup"}, Some(t)) => {
+                        RescriptReactRouter.replace("/lobby")
+                        React.null
+                        }
 
-                    // | (list{"login"}, None) => <LoginPage/>
+                    | (list{"signup"}, None) => <Signup/>
+
+
+                    | (list{"resetpwd"}, Some(t)) => {
+                        RescriptReactRouter.replace("/lobby")
+                        React.null
+                        }
+
+                    | (list{"resetpwd"}, None) => <Resetpwd/>
 
                     | (list{"lobby"}, Some(t)) => <Lobby/>
 
