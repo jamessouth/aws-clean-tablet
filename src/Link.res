@@ -7,6 +7,6 @@ let make = (~url, ~className, ~content) => {
         e->ReactEvent.Mouse.preventDefault
         url->RescriptReactRouter.push
     }
-
+Js.log(url)
     <a onClick className href={url}>{content->React.string}</a>
 }

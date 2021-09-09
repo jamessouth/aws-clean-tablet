@@ -20,33 +20,17 @@
   /* font-family: 'Anonymous Pro', monospace; */
   /* color: #f5f5f5;  */
 }
-:root{
-  
-  /* --amplify-primary-color: #404040; */
-  /* --amplify-primary-shade: #008000; */
-  
-}
-/* amplify-authenticator{ */
-/*   --container-height: 80vh; */
-/*   --border-radius: 0; */
-/*   --box-shadow: none; */
-/*   --margin-bottom: 0; */
-/* } */
-/*  */
+
+
+
 
 *:disabled{
   cursor: not-allowed;
   filter: contrast(0.25);
 }
 
-[slot="sign-out"] {
-  /* --amplify-primary-color: var(--amplify-smoke-white); */
-  /* width: 20px; */
-  position: absolute;
-  top: 1px;
-  /* height: 3rem; */
-  /* background-color: red; */
-}
+
+
 
 ul li{
   background-image: paint(bod);

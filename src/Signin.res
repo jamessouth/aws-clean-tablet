@@ -1,15 +1,32 @@
 @react.component
 let make = () => {
 
-    let (userInputText, setUserInputText) = React.useState(_ => "")
-    let (pwInputText, setPwInputText) = React.useState(_ => "")
+    let (disabled, setDisabled) = React.useState(_ => true)
+    let (username, setUsername) = React.useState(_ => "")
+    let (password, setPassword) = React.useState(_ => "")
     let onChange = (func, e) => {
         let value = ReactEvent.Form.target(e)["value"]
         (_ => value)->func
     }
 
+    let handleSubmit = e => {
+      e->ReactEvent.Form.preventDefault
+
+    }
+
+    React.useEffect2(() => {
+      switch (username->Js.String2.length > 3, password->Js.String.length > 7) {
+      | (true, true) => (_ => false)->setDisabled
+      | (false, true) | (true, false) | (false, false) => (_ => true)->setDisabled
+      }
+
+      None
+    }, (username, password))
+
+
+
   <main>
-    <form className="w-4/5 m-auto" action="">
+    <form className="w-4/5 m-auto" onSubmit={handleSubmit}>
       <fieldset className="flex flex-col items-center justify-around h-80">
         <legend className="text-warm-gray-100 m-auto mb-6 text-3xl font-fred"> {"Sign in"->React.string} </legend>
         <div>
@@ -23,12 +40,12 @@ let make = () => {
             id="username"
             minLength=4
             name="username"
-            onChange=onChange(setUserInputText)
+            onChange=onChange(setUsername)
             // placeholder="Enter username"
             required=true
             spellCheck=false
             type_="text"
-            value={userInputText}
+            value={username}
           />
         </div>
         <div>
@@ -42,19 +59,19 @@ let make = () => {
             id="password"
             minLength=8
             name="password"
-            onChange=onChange(setPwInputText)
+            onChange=onChange(setPassword)
             // placeholder="Enter password"
             required=true
             spellCheck=false
             type_="password"
-            value={pwInputText}
+            value={password}
           />
         </div>
         <Link url="/resetpwd" className="self-end text-sm cursor-pointer font-anon text-warm-gray-100" content="forgot password?"/>
       </fieldset>
 
 
-      <button className="text-gray-700 mt-16 bg-warm-gray-100 block font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7"> {"Submit"->React.string} </button>
+      <button disabled className="text-gray-700 mt-16 bg-warm-gray-100 block font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7"> {"submit"->React.string} </button>
     </form>
   </main>
 }

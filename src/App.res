@@ -21,13 +21,14 @@ let make = () => {
                         }
                     | (list{}, None) => <div className="flex flex-col items-center">
 
-                    <Link url="/signin" className="w-3/5 border border-smoke-100 block font-fred decay-mask text-3xl p-2 mb-8 max-w-80 sm:mb-16" content="SIGN IN"/>
-
-                    // <a onClick=onClick("/signin")  href="/signin">{->React.string}</a>
-                    <a className="w-3/5 border border-smoke-100 block font-fred decay-mask text-3xl p-2 max-w-80" href="/login">{"SIGN UP"->React.string}</a>
+                    <Link url="/signin" className="w-3/5 border border-warm-gray-100 block font-fred text-center text-warm-gray-100 decay-mask text-3xl p-2 mb-8 max-w-80 sm:mb-16" content="SIGN IN"/>
 
 
-                    <a className="w-3/5 border border-smoke-100 block text-xl mt-40 max-w-80" href="/leaderboards">{"Leaderboards"->React.string}</a>
+                    <Link url="/signup" className="w-3/5 border border-warm-gray-100 block font-fred text-center text-warm-gray-100 decay-mask text-3xl p-2 max-w-80" content="SIGN UP"/>
+
+
+
+                    <Link url="/leaderboards" className="w-3/5 border border-warm-gray-100 text-center text-warm-gray-100 block font-anon text-xl mt-40 max-w-80" content="Leaderboards"/>
                     
                     </div>
 
