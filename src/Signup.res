@@ -1,3 +1,24 @@
+type t
+
+type poolData = {
+    userPoolId: string,
+    clientId: string
+}
+
+// @module("amazon-cognito-identity-js") @new external CognitoUserPool: poolData => t = "Foo"
+
+
+// type t
+@new @module("amazon-cognito-identity-js") external constructor : poolData => t = "CognitoUserPool"
+
+
+
+let pool = {
+  userPoolId: "",
+  clientId: ""
+}
+let userpool = constructor(pool)
+
 @react.component
 let make = () => {
 
