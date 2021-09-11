@@ -60,7 +60,10 @@ export default defineConfig({
 
     }),
   ],
-  clearScreen: false
+  clearScreen: false,
+  define: {
+    "global": {},
+  }
 })
 
 
