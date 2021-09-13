@@ -1,24 +1,55 @@
 type t
 
 type poolData = {
-    userPoolId: string,
-    clientId: string,
-    advancedSecurityDataCollectionFlag: bool
+    @as("UserPoolId") userPoolId: string,
+    @as("ClientId") clientId: string,
+    @as("AdvancedSecurityDataCollectionFlag") advancedSecurityDataCollectionFlag: bool
+}
+
+type attributeData = {
+    name: string,
+    value: string
+}
+
+type userData = {
+    username: string,
+    pool: poolData
 }
 
 
-@new @module("amazon-cognito-identity-js") external userPoolConstructor : poolData => t = "CognitoUserPool"
+
+@new @module("amazon-cognito-identity-js")
+external userPoolConstructor : poolData => t = "CognitoUserPool"
 
 
 
+
+external userAttributeConstructor : attributeData => t = "CognitoUserAttribute"
+external userConstructor : userData => t = "CognitoUser"
+
+
+
+@val @scope(("import", "meta", "env"))
+external upid: string = "VITE_UPID"
+@val @scope(("import", "meta", "env"))
+external cid: string = "VITE_CID"
+
+
+// type attrArr = 
+
+// type document
+@send external signUp: (t, string, string, array<attributeData>, ) => Dom.element = "getElementById"
+// @val external doc: document = "document"
+
+getElementById(doc, "myId")
 
 
 
 
 let pool = {
-  userPoolId: "",
-  clientId: "",
-  advancedSecurityDataCollectionFlag: false
+    userPoolId: upid,
+    clientId: cid,
+    advancedSecurityDataCollectionFlag: false
 }
 let userpool = userPoolConstructor(pool)
 
@@ -36,6 +67,10 @@ let make = () => {
 
     let handleSubmit = e => {
       e->ReactEvent.Form.preventDefault
+
+
+
+      
 
     }
 
