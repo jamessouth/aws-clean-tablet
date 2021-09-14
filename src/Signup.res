@@ -35,15 +35,17 @@ external upid: string = "VITE_UPID"
 external cid: string = "VITE_CID"
 
 
-// type attrArr = 
-
-// type document
-@send external signUp: (t, string, string, array<attributeData>, ) => Dom.element = "getElementById"
-// @val external doc: document = "document"
-
-getElementById(doc, "myId")
 
 
+// type err
+// type res
+type clientMetadata = {
+    key: string
+}
+// type tt
+type signUpCB = (. Js.nullable<Js.Exn.t>, Js.nullable<t>) => unit
+
+@send external signUp: (t, string, string, Js.null<array<attributeData>>, Js.null<array<attributeData>>, signUpCB, Js.null<clientMetadata>) => unit = "signUp"
 
 
 let pool = {
@@ -68,9 +70,10 @@ let make = () => {
     let handleSubmit = e => {
       e->ReactEvent.Form.preventDefault
 
+let k = [{name: "a", value: "b"}]
+let g = Js.Null.return(k)
 
-
-      
+      signUp(userpool, "ddd", "eee", Js.null, Js.null, (. _err, _res) => (), Js.null)
 
     }
 
