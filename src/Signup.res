@@ -7,23 +7,19 @@ type poolData = {
 }
 
 type attributeData = {
-    name: string,
-    value: string
+    @as("Name") name: string,
+    @as("Value") value: string
 }
 
 type userData = {
-    username: string,
-    pool: poolData
+    @as("Username") username: string,
+    @as("Pool") pool: poolData
 }
 
 
 
 @new @module("amazon-cognito-identity-js")
 external userPoolConstructor : poolData => t = "CognitoUserPool"
-
-
-
-
 external userAttributeConstructor : attributeData => t = "CognitoUserAttribute"
 external userConstructor : userData => t = "CognitoUser"
 
@@ -36,13 +32,9 @@ external cid: string = "VITE_CID"
 
 
 
-
-// type err
-// type res
 type clientMetadata = {
     key: string
 }
-// type tt
 type signUpCB = (. Js.nullable<Js.Exn.t>, Js.nullable<t>) => unit
 
 @send external signUp: (t, string, string, Js.null<array<attributeData>>, Js.null<array<attributeData>>, signUpCB, Js.null<clientMetadata>) => unit = "signUp"
@@ -69,11 +61,16 @@ let make = () => {
 
     let handleSubmit = e => {
       e->ReactEvent.Form.preventDefault
+      let emailData = {
+        name: "email",
+        value: email
+      }
 
-let k = [{name: "a", value: "b"}]
-let g = Js.Null.return(k)
+      let emailAttr = userAttributeConstructor(emailData)
 
-      signUp(userpool, "ddd", "eee", Js.null, Js.null, (. _err, _res) => (), Js.null)
+      userpool->signUp(username, password, [emailAttr], Js.null, (. err, res) => {
+        
+      }, Js.null)
 
     }
 
