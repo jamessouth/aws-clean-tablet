@@ -1,27 +1,33 @@
 type t
 
-type poolData = {
+type poolData
+type poolDataInput = {
     @as("UserPoolId") userPoolId: string,
     @as("ClientId") clientId: string,
     @as("AdvancedSecurityDataCollectionFlag") advancedSecurityDataCollectionFlag: bool
 }
 
-type attributeData = {
+type attributeData
+type attributeDataInput = {
     @as("Name") name: string,
     @as("Value") value: string
 }
 
-type userData = {
+type userData
+type userDataInput = {
     @as("Username") username: string,
-    @as("Pool") pool: poolData
+    @as("Pool") pool: poolDataInput
 }
 
+@send external focus: Dom.element => unit = "focus"
 
 
 @new @module("amazon-cognito-identity-js")
-external userPoolConstructor : poolData => t = "CognitoUserPool"
-external userAttributeConstructor : attributeData => t = "CognitoUserAttribute"
-external userConstructor : userData => t = "CognitoUser"
+external userPoolConstructor : poolDataInput => poolData = "CognitoUserPool"
+@new @module("amazon-cognito-identity-js")
+external userAttributeConstructor : attributeDataInput => attributeData = "CognitoUserAttribute"
+@new @module("amazon-cognito-identity-js")
+external userConstructor : userDataInput => userData = "CognitoUser"
 
 
 
@@ -32,12 +38,39 @@ external cid: string = "VITE_CID"
 
 
 
+// @val @scope("window")
+// external alert: string => unit = "alert"
+
+
+let cbToOption = (f) => (. err, result) =>
+  switch (Js.Nullable.toOption(err), Js.Nullable.toOption(result)) {
+  | (Some(err), _) => f(Error(err))
+  | (_, Some(result)) => f(Ok(result))
+  | _ => invalid_arg("invalid argument for cbToOption")
+  }
+
+
+let signupcallback = cbToOption(result =>
+  switch result {
+  | Ok(val) => {
+      Js.log(val)
+      ()
+    }
+  | Error(ex) => {
+      Js.log(ex)
+      ()
+    }
+  })
+
+
+
+
 type clientMetadata = {
     key: string
 }
-type signUpCB = (. Js.nullable<Js.Exn.t>, Js.nullable<t>) => unit
+type signUpCB = (. Js.Nullable.t<Js.Exn.t>, Js.Nullable.t<t>) => unit
 
-@send external signUp: (t, string, string, Js.null<array<attributeData>>, Js.null<array<attributeData>>, signUpCB, Js.null<clientMetadata>) => unit = "signUp"
+@send external signUp: (poolData, string, string, Js.Nullable.t<array<attributeData>>, Js.Nullable.t<array<attributeData>>, signUpCB, Js.Nullable.t<clientMetadata>) => unit = "signUp"
 
 
 let pool = {
@@ -49,6 +82,8 @@ let userpool = userPoolConstructor(pool)
 
 @react.component
 let make = () => {
+
+    let pwInput = React.useRef(Js.Nullable.null)
 
     let (disabled, setDisabled) = React.useState(_ => true)
     let (username, setUsername) = React.useState(_ => "")
@@ -68,9 +103,8 @@ let make = () => {
 
       let emailAttr = userAttributeConstructor(emailData)
 
-      userpool->signUp(username, password, [emailAttr], Js.null, (. err, res) => {
-        
-      }, Js.null)
+
+      userpool->signUp(username, password, Js.Nullable.return([emailAttr]), Js.Nullable.null, signupcallback, Js.Nullable.null)
 
     }
 
@@ -121,6 +155,7 @@ let make = () => {
             name="password"
             onChange=onChange(setPassword)
             // placeholder="Enter password"
+            ref={pwInput->ReactDOM.Ref.domRef}
             required=true
             spellCheck=false
             type_="password"
