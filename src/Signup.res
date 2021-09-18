@@ -83,7 +83,11 @@ let userpool = userPoolConstructor(pool)
 @react.component
 let make = () => {
 
-    let pwInput = React.useRef(Js.Nullable.null)
+    // let pwInput = React.useRef(Js.Nullable.null)
+
+    let (pwVisited, setPwVisited) = React.useState(_ => false)
+    let (pwErrs, setPwErrs) = React.useState(_ => [])
+
 
     let (disabled, setDisabled) = React.useState(_ => true)
     let (username, setUsername) = React.useState(_ => "")
@@ -94,19 +98,40 @@ let make = () => {
         (_ => value)->func
     }
 
+    let onBlur = e => {
+      (_ => true)->setPwVisited
+    }
+
     let handleSubmit = e => {
       e->ReactEvent.Form.preventDefault
       let emailData = {
         name: "email",
         value: email
       }
-
       let emailAttr = userAttributeConstructor(emailData)
-
-
       userpool->signUp(username, password, Js.Nullable.return([emailAttr]), Js.Nullable.null, signupcallback, Js.Nullable.null)
-
     }
+
+    React.useEffect1(() => {
+      
+      switch password->Js.String2.length < 8 {
+      | true => (prev => Js.Array2.concat(prev, ["must be longer"]))->setPwErrs
+      | false => (_ => [])->setPwErrs
+      }
+
+      None
+    }, [password])
+
+
+    // React.useEffect1(() => {
+      
+    //   switch pwVisited {
+    //   | false => expression
+    //   | true => expression
+    //   }
+
+    //   None
+    // }, [pwVisited])
 
     React.useEffect3(() => {
       switch (username->Js.String2.length > 3, password->Js.String2.length > 7, email->Js.String2.length > 0) {
@@ -116,7 +141,6 @@ let make = () => {
 
       None
     }, (username, password, email))
-
 
 
   <main>
@@ -143,7 +167,10 @@ let make = () => {
           />
         </div>
         <div>
-          <label className="text-2xl text-warm-gray-100 font-flow" htmlFor="password">
+          <label className={switch (pwVisited, pwErrs->Js.Array2.length > 0) {
+          | (true, true) => "text-2xl text-red-500 font-bold font-flow" 
+          | (false, _) | (true, false) => "text-2xl text-warm-gray-100 font-flow" 
+          }} htmlFor="password">
             {"password:"->React.string}
           </label>
           <input
@@ -153,9 +180,10 @@ let make = () => {
             id="password"
             minLength=8
             name="password"
+            onBlur
             onChange=onChange(setPassword)
             // placeholder="Enter password"
-            ref={pwInput->ReactDOM.Ref.domRef}
+            // ref={pwInput->ReactDOM.Ref.domRef}
             required=true
             spellCheck=false
             type_="password"
@@ -170,7 +198,7 @@ let make = () => {
           </label>
           <input
             autoComplete="email"
-            autoFocus=true
+            autoFocus=false
             className="h-6 w-full text-base pl-1 text-left font-anon outline-none text-warm-gray-100 bg-transparent border-b-1 border-warm-gray-100"
             id="email"
             // minLength=4
