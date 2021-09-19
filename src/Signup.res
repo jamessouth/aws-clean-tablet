@@ -80,6 +80,21 @@ let pool = {
 }
 let userpool = userPoolConstructor(pool)
 
+type pwError = 
+  | Good(string)
+  | Invalid(string)
+
+let checkLength = (~pw, ~pw2): pwError => {
+    switch pw->Js.String2.length < 8 {
+    | true => Invalid("8+ chars")
+    | false => Good(pw)
+    }
+    switch pw2->Js.String2.length < 8 {
+    | true => Invalid("8+ chars")
+    | false => Good(pw)
+    }
+}
+
 @react.component
 let make = () => {
 
@@ -98,7 +113,7 @@ let make = () => {
         (_ => value)->func
     }
 
-    let onBlur = e => {
+    let onBlur = _e => {
       (_ => true)->setPwVisited
     }
 

@@ -15,7 +15,7 @@ let make = () => {
             {
 
                 switch (url.path, token) {
-                    | (list{}, Some(t)) => {
+                    | (list{}, Some(_t)) => {
                         RescriptReactRouter.replace("/lobby")
                         React.null
                         }
@@ -34,7 +34,7 @@ let make = () => {
 
                     | (list{"leaderboards"}, _) => <div>{"leaderboard"->React.string}</div>
 
-                    | (list{"signin"}, Some(t)) => {
+                    | (list{"signin"}, Some(_t)) => {
                         RescriptReactRouter.replace("/lobby")
                         React.null
                         }
@@ -42,7 +42,7 @@ let make = () => {
                     | (list{"signin"}, None) => <Signin/>
 
 
-                    | (list{"signup"}, Some(t)) => {
+                    | (list{"signup"}, Some(_t)) => {
                         RescriptReactRouter.replace("/lobby")
                         React.null
                         }
@@ -50,23 +50,23 @@ let make = () => {
                     | (list{"signup"}, None) => <Signup/>
 
 
-                    | (list{"resetpwd"}, Some(t)) => {
+                    | (list{"resetpwd"}, Some(_t)) => {
                         RescriptReactRouter.replace("/lobby")
                         React.null
                         }
 
                     | (list{"resetpwd"}, None) => <Resetpwd/>
 
-                    | (list{"lobby"}, Some(t)) => <Lobby/>
+                    | (list{"lobby"}, Some(_t)) => <Lobby/>
 
                     | (list{"lobby"}, None) => {
                         RescriptReactRouter.replace("/login")
                         React.null
                         }
 
-                    | (list{"game", gameno}, Some(t)) => <Play/>
+                    | (list{"game", _gameno}, Some(_t)) => <Play/>
 
-                    | (list{"game", gameno}, None) => {
+                    | (list{"game", _gameno}, None) => {
                         RescriptReactRouter.replace("/login")
                         React.null
                         }

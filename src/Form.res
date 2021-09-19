@@ -8,7 +8,7 @@ let make = (~answer_max_length, ~answered, ~inputText, ~onEnter, ~setInputText) 
 
   let (disableSubmit, setDisableSubmit) = React.useState(_ => true)
   let (isValidInput, setIsValidInput) = React.useState(_ => true)
-  let (badChar: option<string>, setBadChar) = React.useState(_ => None)
+  let (_badChar: option<string>, setBadChar) = React.useState(_ => None)
 
   let onKeyPress = evt => {
     let key = ReactEvent.Keyboard.key(evt)

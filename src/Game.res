@@ -53,9 +53,9 @@ let make = (~game: Types.game, ~leadertoken: string) => {//~ingame, ~send
   
   
 
-  let (ready, setReady) = React.useState(_ => true)
-  let (count, setCount) = React.useState(_ => 5)
-  let (leader, setLeader) = React.useState(_ => false)
+  let (ready, _setReady) = React.useState(_ => true)
+  let (count, _setCount) = React.useState(_ => 5)
+  let (_leader, setLeader) = React.useState(_ => false)
 //   let (disabled1, setDisabled1) = React.useState(_ => false)
 //   let (disabled2, setDisabled2) = React.useState(_ => false)
 //   let (startGame, setStartGame) = React.useState(_ => false)
