@@ -9,7 +9,7 @@ type player = {
 
 
 @react.component
-let make = (~playerName, ~players) => {
+let make = (~_playerName, ~players) => {
 
     let noplyrs = players->Js.Array2.length->Js.Int.toString
 

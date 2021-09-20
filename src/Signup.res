@@ -80,20 +80,7 @@ let pool = {
 }
 let userpool = userPoolConstructor(pool)
 
-type pwError = 
-  | Good(string)
-  | Invalid(string)
 
-let checkLength = (~pw, ~pw2): pwError => {
-    switch pw->Js.String2.length < 8 {
-    | true => Invalid("8+ chars")
-    | false => Good(pw)
-    }
-    switch pw2->Js.String2.length < 8 {
-    | true => Invalid("8+ chars")
-    | false => Good(pw)
-    }
-}
 
 @react.component
 let make = () => {
@@ -101,13 +88,91 @@ let make = () => {
     // let pwInput = React.useRef(Js.Nullable.null)
 
     let (pwVisited, setPwVisited) = React.useState(_ => false)
-    let (pwErrs, setPwErrs) = React.useState(_ => [])
+    let (pwErr, setPwErr) = React.useState(_ => None)
 
 
+    let (showPassword, setShowPassword) = React.useState(_ => false)
     let (disabled, setDisabled) = React.useState(_ => true)
     let (username, setUsername) = React.useState(_ => "")
     let (password, setPassword) = React.useState(_ => "")
     let (email, setEmail) = React.useState(_ => "")
+
+
+
+
+
+    let checkForbiddenChars = pw => {
+      let r = %re("/[-=+]/")
+
+      switch Js.String2.match_(pw, r) {
+      | Some(_) => (_ => Some("no +, -, or = ..."))->setPwErr
+      | None => (_ => None)->setPwErr
+      }
+    }
+
+    let checkMaxLength = pw => {
+      switch pw->Js.String2.length > 98 {
+      | true => (_ => Some("too long..."))->setPwErr
+      | false => pw->checkForbiddenChars
+      }
+    }
+
+    let checkNoWhitespace = pw => {
+      let r = %re("/\s/")
+
+      switch Js.String2.match_(pw, r) {
+      | Some(_) => (_ => Some("no whitespace..."))->setPwErr
+      | None => pw->checkMaxLength
+      }
+    }
+
+    let checkSymbol = pw => {
+      let r = %re("/[!-*\[-`{-~./,:;<>?@]/")
+
+      switch Js.String2.match_(pw, r) {
+      | None => (_ => Some("add symbol..."))->setPwErr
+      | Some(_) => pw->checkNoWhitespace
+      }
+    }
+
+    let checkNumber = pw => {
+      let r = %re("/\d/")
+
+      switch Js.String2.match_(pw, r) {
+      | None => (_ => Some("add number..."))->setPwErr
+      | Some(_) => pw->checkSymbol
+      }
+    }
+
+    let checkUpper = pw => {
+      let r = %re("/[A-Z]/")
+
+      switch Js.String2.match_(pw, r) {
+      | None => (_ => Some("add uppercase..."))->setPwErr
+      | Some(_) => pw->checkNumber
+      }
+    }
+
+    let checkLower = pw => {
+      let r = %re("/[a-z]/")
+
+      switch Js.String2.match_(pw, r) {
+      | None => (_ => Some("add lowercase..."))->setPwErr
+      | Some(_) => pw->checkUpper
+      }
+    }
+
+    let checkLength = pw => {
+        switch pw->Js.String2.length < 8 {
+        | true => (_ => Some("too short..."))->setPwErr
+        | false => pw->checkLower
+        }
+    }
+
+    let onClick = _e => {
+      (prev => not prev)->setShowPassword
+    }
+
     let onChange = (func, e) => {
         let value = ReactEvent.Form.target(e)["value"]
         (_ => value)->func
@@ -127,26 +192,15 @@ let make = () => {
       userpool->signUp(username, password, Js.Nullable.return([emailAttr]), Js.Nullable.null, signupcallback, Js.Nullable.null)
     }
 
-    React.useEffect1(() => {
-      
-      switch password->Js.String2.length < 8 {
-      | true => (prev => Js.Array2.concat(prev, ["must be longer"]))->setPwErrs
-      | false => (_ => [])->setPwErrs
+    React.useEffect2(() => {
+      switch pwVisited {
+      | true => password->checkLength
+      | false => (_ => None)->setPwErr
       }
-
       None
-    }, [password])
+    }, (password, pwVisited))
 
 
-    // React.useEffect1(() => {
-      
-    //   switch pwVisited {
-    //   | false => expression
-    //   | true => expression
-    //   }
-
-    //   None
-    // }, [pwVisited])
 
     React.useEffect3(() => {
       switch (username->Js.String2.length > 3, password->Js.String2.length > 7, email->Js.String2.length > 0) {
@@ -181,17 +235,31 @@ let make = () => {
             value={username}
           />
         </div>
-        <div>
-          <label className={switch (pwVisited, pwErrs->Js.Array2.length > 0) {
-          | (true, true) => "text-2xl text-red-500 font-bold font-flow" 
-          | (false, _) | (true, false) => "text-2xl text-warm-gray-100 font-flow" 
+        <div className="relative">
+          <label className={switch (pwVisited, pwErr) {
+          | (true, Some(_)) => "text-2xl text-red-500 font-bold font-flow"
+          | (false, _) | (true, None) => "text-2xl text-warm-gray-100 font-flow"
           }} htmlFor="password">
             {"password:"->React.string}
           </label>
+          {
+              switch (pwVisited, pwErr) {
+          | (true, Some(err)) => <span className="absolute right-0 text-2xl text-red-500 font-bold font-flow">{err->React.string}</span>
+          | (false, _) | (true, None) => React.null
+          }
+            }
           <input
             autoComplete="current-password"
             autoFocus=false
-            className="h-6 w-full text-xl pl-1 text-left outline-none text-warm-gray-100 bg-transparent border-b-1 border-warm-gray-100"
+
+            className={switch (pwVisited, pwErr) {
+              | (true, Some(_)) => "h-6 w-4/5 text-xl pl-1 text-left outline-none text-red-500 bg-transparent border-b-1 border-red-500"
+              | (false, _) | (true, None) => "h-6 w-4/5 text-xl pl-1 text-left outline-none text-warm-gray-100 bg-transparent border-b-1 border-warm-gray-100"
+              }}
+
+
+
+            // className="h-6 w-full text-xl pl-1 text-left outline-none text-warm-gray-100 bg-transparent border-b-1 border-warm-gray-100"
             id="password"
             minLength=8
             name="password"
@@ -204,6 +272,8 @@ let make = () => {
             type_="password"
             value={password}
           />
+          
+          <button onClick>{"show"->React.string}</button>
         </div>
 
 

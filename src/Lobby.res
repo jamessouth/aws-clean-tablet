@@ -4,15 +4,15 @@ let startBtnStyles = " mx-auto mb-8 w-1/2 bg-smoke-100 text-gray-700"
 @react.component
 let make = () => {
 
-    let onClick = _ => {
-        let pl: Game.sendPayload = {
-            action: "lobby",
-            gameno: "new",
-            type_: "join",
-            value: false
-        }
-        // pl->send
-    }
+    // let onClick = _ => {
+    //     let pl: Game.sendPayload = {
+    //         action: "lobby",
+    //         gameno: "new",
+    //         type_: "join",
+    //         value: false
+    //     }
+    //     // pl->send
+    // }
 
 // switch wsError {
 // | true => <p>{"not connected: connection error"->React.string}</p>

@@ -64,7 +64,7 @@ let make = () => {
                         React.null
                         }
 
-                    | (list{"game", _gameno}, Some(_t)) => <Play/>
+                    // | (list{"game", _gameno}, Some(_t)) => <Play/>
 
                     | (list{"game", _gameno}, None) => {
                         RescriptReactRouter.replace("/login")
