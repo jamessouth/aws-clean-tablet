@@ -170,7 +170,7 @@ let make = () => {
     }
 
     let onClick = _e => {
-      (prev => not prev)->setShowPassword
+      (prev => !prev)->setShowPassword
     }
 
     let onChange = (func, e) => {
@@ -239,7 +239,7 @@ let make = () => {
           <label className={switch (pwVisited, pwErr) {
           | (true, Some(_)) => "text-2xl text-red-500 font-bold font-flow"
           | (false, _) | (true, None) => "text-2xl text-warm-gray-100 font-flow"
-          }} htmlFor="password">
+          }} htmlFor="new-password">
             {"password:"->React.string}
           </label>
           {
@@ -249,18 +249,18 @@ let make = () => {
           }
             }
           <input
-            autoComplete="current-password"
+            autoComplete="new-password"
             autoFocus=false
 
             className={switch (pwVisited, pwErr) {
-              | (true, Some(_)) => "h-6 w-4/5 text-xl pl-1 text-left outline-none text-red-500 bg-transparent border-b-1 border-red-500"
-              | (false, _) | (true, None) => "h-6 w-4/5 text-xl pl-1 text-left outline-none text-warm-gray-100 bg-transparent border-b-1 border-warm-gray-100"
+              | (true, Some(_)) => "h-6 w-3/4 text-xl pl-1 text-left outline-none text-red-500 bg-transparent border-b-1 border-red-500"
+              | (false, _) | (true, None) => "h-6 w-3/4 text-xl pl-1 text-left outline-none text-warm-gray-100 bg-transparent border-b-1 border-warm-gray-100"
               }}
 
 
 
             // className="h-6 w-full text-xl pl-1 text-left outline-none text-warm-gray-100 bg-transparent border-b-1 border-warm-gray-100"
-            id="password"
+            id="new-password"
             minLength=8
             name="password"
             onBlur
@@ -269,11 +269,17 @@ let make = () => {
             // ref={pwInput->ReactDOM.Ref.domRef}
             required=true
             spellCheck=false
-            type_="password"
+            type_={switch showPassword {
+            | true => "text"
+            | false => "password"
+            }}
             value={password}
           />
           
-          <button onClick>{"show"->React.string}</button>
+          <button type_="button" className="font-arch bg-transparent text-warm-gray-100 text-2xl absolute right-0 cursor-pointer" onClick>{switch showPassword {
+          | true => "hide"->React.string
+          | false => "show"->React.string
+          }}</button>
         </div>
 
 
