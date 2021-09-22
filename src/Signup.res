@@ -87,7 +87,9 @@ let make = () => {
 
     // let pwInput = React.useRef(Js.Nullable.null)
 
+    let (unVisited, setUnVisited) = React.useState(_ => false)
     let (pwVisited, setPwVisited) = React.useState(_ => false)
+    let (unErr, setUnErr) = React.useState(_ => None)
     let (pwErr, setPwErr) = React.useState(_ => None)
 
 
@@ -101,7 +103,16 @@ let make = () => {
 
 
 
-    let checkForbiddenChars = pw => {
+    let checkUnForbiddenChars = un => {
+      let r = %re("/\W/")
+
+      switch Js.String2.match_(un, r) {
+      | Some(_) => (_ => Some("alphanumeric..."))->setUnErr
+      | None => (_ => None)->setUnErr
+      }
+    }
+
+    let checkPwForbiddenChars = pw => {
       let r = %re("/[-=+]/")
 
       switch Js.String2.match_(pw, r) {
@@ -110,19 +121,35 @@ let make = () => {
       }
     }
 
-    let checkMaxLength = pw => {
-      switch pw->Js.String2.length > 98 {
-      | true => (_ => Some("too long..."))->setPwErr
-      | false => pw->checkForbiddenChars
+    let checkUnMaxLength = un => {
+      switch un->Js.String2.length > 10 {
+      | true => (_ => Some("too long..."))->setUnErr
+      | false => un->checkUnForbiddenChars
       }
     }
 
-    let checkNoWhitespace = pw => {
+    let checkPwMaxLength = pw => {
+      switch pw->Js.String2.length > 98 {
+      | true => (_ => Some("too long..."))->setPwErr
+      | false => pw->checkPwForbiddenChars
+      }
+    }
+
+    let checkNoUnWhitespace = un => {
+      let r = %re("/\s/")
+
+      switch Js.String2.match_(un, r) {
+      | Some(_) => (_ => Some("no whitespace..."))->setUnErr
+      | None => un->checkUnMaxLength
+      }
+    }
+
+    let checkNoPwWhitespace = pw => {
       let r = %re("/\s/")
 
       switch Js.String2.match_(pw, r) {
       | Some(_) => (_ => Some("no whitespace..."))->setPwErr
-      | None => pw->checkMaxLength
+      | None => pw->checkPwMaxLength
       }
     }
 
@@ -131,7 +158,7 @@ let make = () => {
 
       switch Js.String2.match_(pw, r) {
       | None => (_ => Some("add symbol..."))->setPwErr
-      | Some(_) => pw->checkNoWhitespace
+      | Some(_) => pw->checkNoPwWhitespace
       }
     }
 
@@ -162,7 +189,14 @@ let make = () => {
       }
     }
 
-    let checkLength = pw => {
+    let checkUnLength = un => {
+        switch un->Js.String2.length < 4 {
+        | true => (_ => Some("too short..."))->setUnErr
+        | false => un->checkNoUnWhitespace
+        }
+    }
+
+    let checkPwLength = pw => {
         switch pw->Js.String2.length < 8 {
         | true => (_ => Some("too short..."))->setPwErr
         | false => pw->checkLower
@@ -178,8 +212,12 @@ let make = () => {
         (_ => value)->func
     }
 
-    let onBlur = _e => {
-      (_ => true)->setPwVisited
+    let onBlur = (input, _e) => {
+      switch input {
+      | "username" => (_ => true)->setUnVisited
+      | "password" => (_ => true)->setPwVisited
+      | _ => ()
+      }
     }
 
     let handleSubmit = e => {
@@ -193,8 +231,16 @@ let make = () => {
     }
 
     React.useEffect2(() => {
+      switch unVisited {
+      | true => username->checkUnLength
+      | false => (_ => None)->setUnErr
+      }
+      None
+    }, (username, unVisited))
+
+    React.useEffect2(() => {
       switch pwVisited {
-      | true => password->checkLength
+      | true => password->checkPwLength
       | false => (_ => None)->setPwErr
       }
       None
@@ -217,14 +263,14 @@ let make = () => {
       <fieldset className="flex flex-col items-center justify-around h-80">
         <legend className="text-warm-gray-100 m-auto mb-6 text-3xl font-fred"> {"Sign up"->React.string} </legend>
         <div className="relative">
-          <label className={switch (pwVisited, pwErr) {
+          <label className={switch (unVisited, unErr) {
           | (true, Some(_)) => "text-2xl text-red-500 font-bold font-flow"
           | (false, _) | (true, None) => "text-2xl text-warm-gray-100 font-flow"
           }} htmlFor="username">
             {"username:"->React.string}
           </label>
           {
-              switch (pwVisited, pwErr) {
+              switch (unVisited, unErr) {
           | (true, Some(err)) => <span className="absolute right-0 text-2xl text-red-500 font-bold font-flow">{err->React.string}</span>
           | (false, _) | (true, None) => React.null
           }
@@ -232,12 +278,14 @@ let make = () => {
           <input
             autoComplete="username"
             autoFocus=true
-            className={switch (pwVisited, pwErr) {
-              | (true, Some(_)) => "h-6 w-3/4 text-xl pl-1 text-left outline-none text-red-500 bg-transparent border-b-1 border-red-500"
-              | (false, _) | (true, None) => "h-6 w-3/4 text-xl pl-1 text-left outline-none text-warm-gray-100 bg-transparent border-b-1 border-warm-gray-100"
+            className={switch (unVisited, unErr) {
+              | (true, Some(_)) => "h-6 w-full text-xl pl-1 text-left outline-none text-red-500 bg-transparent border-b-1 border-red-500"
+              | (false, _) | (true, None) => "h-6 w-full text-xl pl-1 text-left outline-none text-warm-gray-100 bg-transparent border-b-1 border-warm-gray-100"
               }}
+            id="username"
             minLength=4
             name="username"
+            onBlur=onBlur("username")
             onChange=onChange(setUsername)
             // placeholder="Enter username"
             required=true
@@ -274,7 +322,7 @@ let make = () => {
             id="new-password"
             minLength=8
             name="password"
-            onBlur
+            onBlur=onBlur("password")
             onChange=onChange(setPassword)
             // placeholder="Enter password"
             // ref={pwInput->ReactDOM.Ref.domRef}
