@@ -248,14 +248,22 @@ let make = () => {
 
 
 
-    React.useEffect3(() => {
-      switch (username->Js.String2.length > 3, password->Js.String2.length > 7, email->Js.String2.length > 0) {
-      | (true, true, true) => (_ => false)->setDisabled
-      | (false, _, _) | (_, false, _) | (_, _, false) => (_ => true)->setDisabled
+
+
+
+
+    React.useEffect5(() => {
+      switch (unErr, pwErr, username->Js.String2.length < 4, password->Js.String2.length < 8, email->Js.String2.length < 3) {
+      | (None, None, false, false, false) => (_ => false)->setDisabled
+      | (Some(_), _, _, _, _)
+      | (_, Some(_), _, _, _)
+      | (_, _, true, _, _)
+      | (_, _, _, true, _)
+      | (_, _, _, _, true) => (_ => true)->setDisabled
       }
 
       None
-    }, (username, password, email))
+    }, (unErr, pwErr, username, password, email))
 
 
   <main>
