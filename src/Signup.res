@@ -54,6 +54,23 @@ let pool = {
 }
 let userpool = userPoolConstructor(pool)
 
+type cdd = {
+    @as("AttributeName") attributeName: string,
+    @as("DeliveryMedium") deliveryMedium: string,
+    @as("Destination") destination: string
+}
+
+type usr = {
+    @as("Session") session: string,
+}
+
+type signupOk = {
+    codeDeliveryDetails: cdd,
+    user: usr,
+}
+type myResult<'a> = result<signupOk<'a>, string>
+
+
 @react.component
 let make = () => {
   // let pwInput = React.useRef(Js.Nullable.null)
