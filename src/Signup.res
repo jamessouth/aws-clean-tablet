@@ -70,6 +70,7 @@ let make = () => {
   let (email, setEmail) = React.useState(_ => "")
 
   let (cognitoErr, setCognitoErr) = React.useState(_ => None)
+  // let (cognitoResult, setCognitoResult) = React.useState(_ => false)
 
   let cbToOption = (f, . err, result) =>
     switch (Js.Nullable.toOption(err), Js.Nullable.toOption(result)) {
@@ -81,7 +82,12 @@ let make = () => {
   let signupcallback = cbToOption(result =>
     switch result {
     | Ok(val) => {
-        Js.log(val)
+        (_ => None)->setCognitoErr
+        // (_ => true)->setCognitoResult
+        RescriptReactRouter.push("/confirm")
+
+
+        Js.log2("res", val)
         ()
       }
     | Error(ex) => {
@@ -385,7 +391,7 @@ let make = () => {
       </fieldset>
       {
         switch cognitoErr {
-        | Some(msg) => <span className="text-sm text-warm-gray-100 absolute left-4 right-4 bg-red-500">{msg->React.string}</span>
+        | Some(msg) => <span className="text-sm text-warm-gray-100 absolute bg-red-500 text-center w-full left-1/2 transform max-w-lg -translate-x-1/2">{msg->React.string}</span>
         | None => React.null
         }
       }
