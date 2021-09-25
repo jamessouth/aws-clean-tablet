@@ -34,7 +34,46 @@ external upid: string = "VITE_UPID"
 external cid: string = "VITE_CID"
 
 type clientMetadata = {key: string}
-type signUpCB = (. Js.Nullable.t<Js.Exn.t>, Js.Nullable.t<t>) => unit
+type cdd = {
+    @as("AttributeName") attributeName: string,
+    @as("DeliveryMedium") deliveryMedium: string,
+    @as("Destination") destination: string
+}
+
+type clnt = {
+    endpoint: string,
+    fetchOptions: {}
+}
+
+type pl = {
+    advancedSecurityDataCollectionFlag: bool,
+    client: clnt,
+    clientId: string,
+    storage: {"length": float},
+    userPoolId: string
+}
+
+type usr = {
+    @as("Session") session: Js.Nullable.t<string>,
+    authenticationFlowType: string,
+    client: clnt,
+    keyPrefix: string,
+    pool: pl,
+    signInUserSession: Js.Nullable.t<string>,
+    storage: {"length": float},
+    userDataKey: string,
+    username: string
+}
+
+type signupOk = {
+    codeDeliveryDetails: cdd,
+    user: usr,
+    userConfirmed: bool,
+    userSub: string
+}
+// type signupResult = result<signupOk, Js.Exn.t>
+
+type signUpCB = (. Js.Nullable.t<Js.Exn.t>, Js.Nullable.t<signupOk>) => unit
 
 @send
 external signUp: (
@@ -53,22 +92,6 @@ let pool = {
   advancedSecurityDataCollectionFlag: false,
 }
 let userpool = userPoolConstructor(pool)
-
-type cdd = {
-    @as("AttributeName") attributeName: string,
-    @as("DeliveryMedium") deliveryMedium: string,
-    @as("Destination") destination: string
-}
-
-type usr = {
-    @as("Session") session: string,
-}
-
-type signupOk = {
-    codeDeliveryDetails: cdd,
-    user: usr,
-}
-type myResult<'a> = result<signupOk<'a>, string>
 
 
 @react.component
@@ -89,23 +112,23 @@ let make = () => {
   let (cognitoErr, setCognitoErr) = React.useState(_ => None)
   // let (cognitoResult, setCognitoResult) = React.useState(_ => false)
 
-  let cbToOption = (f, . err, result) =>
-    switch (Js.Nullable.toOption(err), Js.Nullable.toOption(result)) {
+  let cbToOption = (f, . err, res) =>
+    switch (Js.Nullable.toOption(err), Js.Nullable.toOption(res)) {
     | (Some(err), _) => f(Error(err))
-    | (_, Some(result)) => f(Ok(result))
+    | (_, Some(res)) => f(Ok(res))
     | _ => invalid_arg("invalid argument for cbToOption")
     }
 
-  let signupcallback = cbToOption(result =>
-    switch result {
+  let signupCallback = cbToOption(res =>
+    switch res {
     | Ok(val) => {
         (_ => None)->setCognitoErr
         // (_ => true)->setCognitoResult
         RescriptReactRouter.push("/confirm")
 
 
-        Js.log2("res", val)
-        ()
+        Js.log2("res", val.user.username)
+        // ()
       }
     | Error(ex) => {
         switch Js.Exn.message(ex) {
@@ -114,7 +137,7 @@ let make = () => {
         }
 
         Js.log2("problem", ex)
-        ()
+        // ()
       }
     }
   )
@@ -248,7 +271,7 @@ let make = () => {
       password,
       Js.Nullable.return([emailAttr]),
       Js.Nullable.null,
-      signupcallback,
+      signupCallback,
       Js.Nullable.null,
     )
   }
