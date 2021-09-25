@@ -1,6 +1,6 @@
 @react.component
-let make = () => {
-
+let make = (~cognitoUser) => {
+Js.log2("user", cognitoUser)
     let (showVerifCode, setShowVerifCode) = React.useState(_ => false)
     let (verifCode, setVerifCode) = React.useState(_ => "")
 

@@ -95,7 +95,7 @@ let userpool = userPoolConstructor(pool)
 
 
 @react.component
-let make = () => {
+let make = (~setCognitoUser) => {
   // let pwInput = React.useRef(Js.Nullable.null)
 
   let (unVisited, setUnVisited) = React.useState(_ => false)
@@ -104,7 +104,7 @@ let make = () => {
   let (pwErr, setPwErr) = React.useState(_ => None)
 
   let (showPassword, setShowPassword) = React.useState(_ => false)
-  let (disabled, setDisabled) = React.useState(_ => false)
+  let (disabled, _setDisabled) = React.useState(_ => false)
   let (username, setUsername) = React.useState(_ => "")
   let (password, setPassword) = React.useState(_ => "")
   let (email, setEmail) = React.useState(_ => "")
@@ -123,7 +123,7 @@ let make = () => {
     switch res {
     | Ok(val) => {
         (_ => None)->setCognitoErr
-        // (_ => true)->setCognitoResult
+        (_ => Some(val.user))->setCognitoUser
         RescriptReactRouter.push("/confirm")
 
 

@@ -1,7 +1,10 @@
 
-
 @react.component
 let make = () => {
+
+// Js.Nullable.t<Signup.usr>
+
+    let (cognitoUser, setCognitoUser) = React.useState(_ => None)
 
     let url = RescriptReactRouter.useUrl()
 
@@ -49,7 +52,7 @@ let make = () => {
                         React.null
                         }
 
-                    | (list{"confirm"}, None) => <Confirm/>
+                    | (list{"confirm"}, None) => <Confirm cognitoUser/>
 
 
 
@@ -59,7 +62,7 @@ let make = () => {
                         React.null
                         }
 
-                    | (list{"signup"}, None) => <Signup/>
+                    | (list{"signup"}, None) => <Signup setCognitoUser/>
 
 
                     | (list{"resetpwd"}, Some(_t)) => {
