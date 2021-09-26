@@ -1,3 +1,18 @@
+type t
+
+type confirmRegistrationCB = (. Js.Nullable.t<Js.Exn.t>, Js.Nullable.t<t>) => unit
+
+@send
+external confirmRegistration: (
+  Js.Nullable.t<Signup.usr>,
+  string,
+  bool,
+  confirmRegistrationCB,
+  Js.Nullable.t<Signup.clientMetadata>,
+) => unit = "confirmRegistration"
+
+
+
 @react.component
 let make = (~cognitoUser) => {
 Js.log2("user", cognitoUser)
@@ -24,8 +39,40 @@ Js.log2("user", cognitoUser)
     }, [verifCode])
 
 
+  let confirmregistrationCallback = Signup.cbToOption(res =>
+    switch res {
+    | Ok(val) => {
+        // (_ => None)->setCognitoErr
+        // (_ => Some(val.user))->setCognitoUser
+        // RescriptReactRouter.push("/confirm")
+
+
+        Js.log2("conf rego res", val)
+      }
+    | Error(ex) => {
+        // switch Js.Exn.message(ex) {
+        // | Some(msg) => (_ => Some(msg))->setCognitoErr
+        // | None => (_ => None)->setCognitoErr
+        // }
+
+        Js.log2("conf rego problem", ex)
+      }
+    }
+  )
+
+
+
+
+
+
     let handleSubmit = e => {
       e->ReactEvent.Form.preventDefault
+      cognitoUser->confirmRegistration(
+        verifCode,
+        false,
+        confirmregistrationCallback,
+        Js.Nullable.null,
+      )
 
     }
 

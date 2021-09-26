@@ -4,7 +4,7 @@ let make = () => {
 
 // Js.Nullable.t<Signup.usr>
 
-    let (cognitoUser, setCognitoUser) = React.useState(_ => None)
+    let (cognitoUser: Js.Nullable.t<Signup.usr>, setCognitoUser) = React.useState(_ => Js.Nullable.null)
 
     let url = RescriptReactRouter.useUrl()
 

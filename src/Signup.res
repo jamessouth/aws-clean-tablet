@@ -93,6 +93,12 @@ let pool = {
 }
 let userpool = userPoolConstructor(pool)
 
+  let cbToOption = (f, . err, res) =>
+    switch (Js.Nullable.toOption(err), Js.Nullable.toOption(res)) {
+    | (Some(err), _) => f(Error(err))
+    | (_, Some(res)) => f(Ok(res))
+    | _ => invalid_arg("invalid argument for cbToOption")
+    }
 
 @react.component
 let make = (~setCognitoUser) => {
@@ -112,18 +118,13 @@ let make = (~setCognitoUser) => {
   let (cognitoErr, setCognitoErr) = React.useState(_ => None)
   // let (cognitoResult, setCognitoResult) = React.useState(_ => false)
 
-  let cbToOption = (f, . err, res) =>
-    switch (Js.Nullable.toOption(err), Js.Nullable.toOption(res)) {
-    | (Some(err), _) => f(Error(err))
-    | (_, Some(res)) => f(Ok(res))
-    | _ => invalid_arg("invalid argument for cbToOption")
-    }
+
 
   let signupCallback = cbToOption(res =>
     switch res {
     | Ok(val) => {
         (_ => None)->setCognitoErr
-        (_ => Some(val.user))->setCognitoUser
+        (_ => Js.Nullable.return(val.user))->setCognitoUser
         RescriptReactRouter.push("/confirm")
 
 
