@@ -30,7 +30,7 @@ let make = () => {
                     <Link url="/signup" className="w-3/5 border border-warm-gray-100 block font-fred text-center text-warm-gray-100 decay-mask text-3xl p-2 max-w-80" content="SIGN UP"/>
 
 
-                    <Link url="/confirm" className="w-3/5 text-center text-warm-gray-100 block font-anon text-sm mt-4 max-w-80" content="Verification code?"/>
+                    <Link url="/getusername" className="w-3/5 text-center text-warm-gray-100 block font-anon text-sm mt-4 max-w-80" content="Verification code?"/>
 
 
                     <Link url="/leaderboards" className="w-3/5 border border-warm-gray-100 text-center text-warm-gray-100 block font-anon text-xl mt-40 max-w-80" content="Leaderboards"/>
@@ -53,6 +53,15 @@ let make = () => {
                         }
 
                     | (list{"confirm"}, None) => <Confirm cognitoUser/>
+
+
+
+                    | (list{"getusername"}, Some(_t)) => {
+                        RescriptReactRouter.replace("/lobby")
+                        React.null
+                        }
+
+                    | (list{"getusername"}, None) => <GetUsername setCognitoUser/>
 
 
 

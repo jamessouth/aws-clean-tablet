@@ -38,7 +38,7 @@ let make = (~cognitoUser) => {
     None
   }, [verifCode])
 
-  // testtest1!T
+  
   let confirmregistrationCallback = Signup.cbToOption(res =>
     switch res {
     | Ok(val) => {
@@ -79,52 +79,6 @@ let make = (~cognitoUser) => {
         <legend className="text-warm-gray-100 m-auto mb-8 text-3xl font-fred">
           {"Confirm"->React.string}
         </legend>
-        {switch Js.Nullable.isNullable(cognitoUser) {
-        | true =>
-          <div className="relative">
-            <label
-              className={switch (unVisited, unErr) {
-              | (true, Some(_)) => "text-2xl text-red-500 font-bold font-flow"
-              | (false, _) | (true, None) => "text-2xl text-warm-gray-100 font-flow"
-              }}
-              htmlFor="username">
-              {"username:"->React.string}
-            </label>
-            {switch (unVisited, unErr) {
-            | (true, Some(err)) =>
-              <span className="absolute right-0 text-2xl text-red-500 font-bold font-flow">
-                {err->React.string}
-              </span>
-            | (false, _) | (true, None) => React.null
-            }}
-            <input
-              autoComplete="username"
-              autoFocus=true
-              className={switch (unVisited, unErr) {
-              | (
-                  true,
-                  Some(_),
-                ) => "h-6 w-full text-xl pl-1 text-left outline-none text-red-500 bg-transparent border-b-1 border-red-500"
-              | (false, _)
-              | (
-                true,
-                None,
-              ) => "h-6 w-full text-xl pl-1 text-left outline-none text-warm-gray-100 bg-transparent border-b-1 border-warm-gray-100"
-              }}
-              id="username"
-              minLength=4
-              name="username"
-              onBlur={onBlur("username")}
-              onChange={onChange(setUsername)}
-              // placeholder="Enter username"
-              required=true
-              spellCheck=false
-              type_="text"
-              value={username}
-            />
-          </div>
-        | false => React.null
-        }}
         <div className="relative">
           <label className="block text-2xl text-warm-gray-100 font-flow" htmlFor="verif-code">
             {"enter code:"->React.string}
