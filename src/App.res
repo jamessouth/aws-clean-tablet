@@ -1,3 +1,19 @@
+@val @scope(("import", "meta", "env"))
+external upid: string = "VITE_UPID"
+@val @scope(("import", "meta", "env"))
+external cid: string = "VITE_CID"
+
+
+@new @module("amazon-cognito-identity-js")
+external userPoolConstructor: Types.poolDataInput => Types.poolData = "CognitoUserPool"
+
+let pool: Types.poolDataInput = {
+  userPoolId: upid,
+  clientId: cid,
+  advancedSecurityDataCollectionFlag: false,
+}
+let userpool = userPoolConstructor(pool)
+
 
 @react.component
 let make = () => {
@@ -30,7 +46,7 @@ let make = () => {
                     <Link url="/signup" className="w-3/5 border border-warm-gray-100 block font-fred text-center text-warm-gray-100 decay-mask text-3xl p-2 max-w-80" content="SIGN UP"/>
 
 
-                    <Link url="/getusername" className="w-3/5 text-center text-warm-gray-100 block font-anon text-sm mt-4 max-w-80" content="Verification code?"/>
+                    <Link url="/getusername" className="w-3/5 text-center text-warm-gray-100 block font-anon text-sm mt-4 max-w-80" content="verification code?"/>
 
 
                     <Link url="/leaderboards" className="w-3/5 border border-warm-gray-100 text-center text-warm-gray-100 block font-anon text-xl mt-40 max-w-80" content="Leaderboards"/>
@@ -61,7 +77,7 @@ let make = () => {
                         React.null
                         }
 
-                    | (list{"getusername"}, None) => <GetUsername setCognitoUser/>
+                    | (list{"getusername"}, None) => <GetUsername userpool setCognitoUser/>
 
 
 
@@ -71,7 +87,7 @@ let make = () => {
                         React.null
                         }
 
-                    | (list{"signup"}, None) => <Signup setCognitoUser/>
+                    | (list{"signup"}, None) => <Signup userpool setCognitoUser/>
 
 
                     | (list{"resetpwd"}, Some(_t)) => {

@@ -1,3 +1,23 @@
+
+type authDetails = {
+  @as("ValidationData") validationData: Js.Nullable.t<array<Types.attributeData>>,
+  @as("Username") username: string,
+  @as("Password") password: string,
+  @as("AuthParameters") authParameters: Js.Nullable.t<array<Types.attributeData>>,
+  @as("ClientMetadata") clientMetadata: Js.Nullable.t<clientMetadata>
+}
+
+@new @module("amazon-cognito-identity-js")
+external authenticationDetailsConstructor: authDetails => authDetails = "authenticationDetailsConstructor"
+
+@send
+external authenticateUser: (
+  authDetails,
+
+) => unit = "authenticateUser"
+
+
+
 @react.component
 let make = () => {
 

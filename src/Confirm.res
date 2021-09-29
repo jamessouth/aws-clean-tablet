@@ -38,13 +38,14 @@ let make = (~cognitoUser) => {
     None
   }, [verifCode])
 
-  
   let confirmregistrationCallback = Signup.cbToOption(res =>
     switch res {
     | Ok(val) => {
         (_ => None)->setCognitoErr
         // (_ => Some(val.user))->setCognitoUser
         // RescriptReactRouter.push("/confirm")
+
+        // sign in
 
         Js.log2("conf rego res", val)
       }

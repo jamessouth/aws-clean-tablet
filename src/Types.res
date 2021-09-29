@@ -34,7 +34,7 @@ type attributeDataInput = {
 type userData
 type userDataInput = {
   @as("Username") username: string,
-  @as("Pool") pool: poolDataInput,
+  @as("Pool") pool: poolData,
 }
 
 

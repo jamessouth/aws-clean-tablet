@@ -1,73 +1,57 @@
-
-
-
-
-
+@new @module("amazon-cognito-identity-js")
+external userConstructor: Types.userDataInput => Signup.usr = "CognitoUser"
 
 type cdd = {
-    @as("AttributeName") attributeName: string,
-    @as("DeliveryMedium") deliveryMedium: string,
-    @as("Destination") destination: string
+  @as("AttributeName") attributeName: string,
+  @as("DeliveryMedium") deliveryMedium: string,
+  @as("Destination") destination: string,
 }
 
 type clnt = {
-    endpoint: string,
-    fetchOptions: {}
+  endpoint: string,
+  fetchOptions: {.},
 }
 
 type pl = {
-    advancedSecurityDataCollectionFlag: bool,
-    client: clnt,
-    clientId: string,
-    storage: {"length": float},
-    userPoolId: string
+  advancedSecurityDataCollectionFlag: bool,
+  client: clnt,
+  clientId: string,
+  storage: {"length": float},
+  userPoolId: string,
 }
 
 type usr = {
-    @as("Session") session: Js.Nullable.t<string>,
-    authenticationFlowType: string,
-    client: clnt,
-    keyPrefix: string,
-    pool: pl,
-    signInUserSession: Js.Nullable.t<string>,
-    storage: {"length": float},
-    userDataKey: string,
-    username: string
+  @as("Session") session: Js.Nullable.t<string>,
+  authenticationFlowType: string,
+  client: clnt,
+  keyPrefix: string,
+  pool: pl,
+  signInUserSession: Js.Nullable.t<string>,
+  storage: {"length": float},
+  userDataKey: string,
+  username: string,
 }
 
 type signupOk = {
-    codeDeliveryDetails: cdd,
-    user: usr,
-    userConfirmed: bool,
-    userSub: string
+  codeDeliveryDetails: cdd,
+  user: usr,
+  userConfirmed: bool,
+  userSub: string,
 }
 
-
-
-
-
 @react.component
-let make = (~setCognitoUser) => {
+let make = (~userpool, ~setCognitoUser) => {
   // let pwInput = React.useRef(Js.Nullable.null)
 
   let (unVisited, setUnVisited) = React.useState(_ => false)
-  
-  
-  let (unErr, setUnErr) = React.useState(_ => None)
-  
 
-  
+  let (unErr, setUnErr) = React.useState(_ => None)
+
   let (disabled, _setDisabled) = React.useState(_ => false)
   let (username, setUsername) = React.useState(_ => "")
-  
-  
 
-  let (cognitoErr, setCognitoErr) = React.useState(_ => None)
+  let (cognitoErr, _setCognitoErr) = React.useState(_ => None)
   // let (cognitoResult, setCognitoResult) = React.useState(_ => false)
-
-
-
-
 
   let checkUnForbiddenChars = un => {
     let r = %re("/\W/")
@@ -78,16 +62,12 @@ let make = (~setCognitoUser) => {
     }
   }
 
-
-
   let checkUnMaxLength = un => {
     switch un->Js.String2.length > 10 {
     | true => (_ => Some("too long..."))->setUnErr
     | false => un->checkUnForbiddenChars
     }
   }
-
-
 
   let checkNoUnWhitespace = un => {
     let r = %re("/\s/")
@@ -98,12 +78,6 @@ let make = (~setCognitoUser) => {
     }
   }
 
-
-
-
-
-
-
   let checkUnLength = un => {
     switch un->Js.String2.length < 4 {
     | true => (_ => Some("too short..."))->setUnErr
@@ -111,40 +85,23 @@ let make = (~setCognitoUser) => {
     }
   }
 
-
-
-  let onClick = _e => {
-    (prev => !prev)->setShowPassword
-  }
-
-  let onChange = (func, e) => {
+  let onChange = e => {
     let value = ReactEvent.Form.target(e)["value"]
-    (_ => value)->func
+    setUsername(_ => value)
   }
 
-  let onBlur = (input, _e) => {
-    switch input {
-    | "username" => (_ => true)->setUnVisited
-    | "password" => (_ => true)->setPwVisited
-    | _ => ()
-    }
+  let onBlur = _e => {
+    setUnVisited(_ => true)
   }
 
   let handleSubmit = e => {
     e->ReactEvent.Form.preventDefault
-    let emailData = {
-      name: "email",
-      value: email,
-    }
-    let emailAttr = userAttributeConstructor(emailData)
-    userpool->signUp(
+    let userdata: Types.userDataInput = {
       username,
-      password,
-      Js.Nullable.return([emailAttr]),
-      Js.Nullable.null,
-      signupCallback,
-      Js.Nullable.null,
-    )
+      pool: userpool
+    }
+    setCognitoUser(_ => Js.Nullable.return(userConstructor(userdata)))
+    RescriptReactRouter.push("/confirm")
   }
 
   React.useEffect2(() => {
@@ -154,8 +111,6 @@ let make = (~setCognitoUser) => {
     }
     None
   }, (username, unVisited))
-
-
 
   // React.useEffect5(() => {
   //   switch (unErr, pwErr, username->Js.String2.length < 4, password->Js.String2.length < 8, email->Js.String2.length < 3) {
@@ -172,9 +127,9 @@ let make = (~setCognitoUser) => {
 
   <main>
     <form className="w-4/5 m-auto" onSubmit={handleSubmit}>
-      <fieldset className="flex flex-col items-center justify-around h-80">
+      <fieldset className="flex flex-col items-center justify-around h-40">
         <legend className="text-warm-gray-100 m-auto mb-6 text-3xl font-fred">
-          {"Sign up"->React.string}
+          {"Enter name"->React.string}
         </legend>
         <div className="relative">
           <label
@@ -209,8 +164,8 @@ let make = (~setCognitoUser) => {
             id="username"
             minLength=4
             name="username"
-            onBlur={onBlur("username")}
-            onChange={onChange(setUsername)}
+            onBlur
+            onChange
             // placeholder="Enter username"
             required=true
             spellCheck=false
@@ -219,16 +174,18 @@ let make = (~setCognitoUser) => {
           />
         </div>
       </fieldset>
-      {
-        switch cognitoErr {
-        | Some(msg) => <span className="text-sm text-warm-gray-100 absolute bg-red-500 text-center w-full left-1/2 transform max-w-lg -translate-x-1/2">{msg->React.string}</span>
-        | None => React.null
-        }
-      }
+      {switch cognitoErr {
+      | Some(msg) =>
+        <span
+          className="text-sm text-warm-gray-100 absolute bg-red-500 text-center w-full left-1/2 transform max-w-lg -translate-x-1/2">
+          {msg->React.string}
+        </span>
+      | None => React.null
+      }}
       <button
         disabled
         className="text-gray-700 mt-16 bg-warm-gray-100 block font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7">
-        {"create"->React.string}
+        {"submit"->React.string}
       </button>
     </form>
   </main>

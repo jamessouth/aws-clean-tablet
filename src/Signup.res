@@ -2,17 +2,12 @@
 
 @send external focus: Dom.element => unit = "focus"
 
-@new @module("amazon-cognito-identity-js")
-external userPoolConstructor: poolDataInput => poolData = "CognitoUserPool"
-@new @module("amazon-cognito-identity-js")
-external userAttributeConstructor: attributeDataInput => attributeData = "CognitoUserAttribute"
-@new @module("amazon-cognito-identity-js")
-external userConstructor: userDataInput => userData = "CognitoUser"
 
-@val @scope(("import", "meta", "env"))
-external upid: string = "VITE_UPID"
-@val @scope(("import", "meta", "env"))
-external cid: string = "VITE_CID"
+@new @module("amazon-cognito-identity-js")
+external userAttributeConstructor: Types.attributeDataInput => Types.attributeData = "CognitoUserAttribute"
+
+
+
 
 type clientMetadata = {key: string}
 type cdd = {
@@ -58,21 +53,16 @@ type signUpCB = (. Js.Nullable.t<Js.Exn.t>, Js.Nullable.t<signupOk>) => unit
 
 @send
 external signUp: (
-  poolData,
+  Types.poolData,
   string,
   string,
-  Js.Nullable.t<array<attributeData>>,
-  Js.Nullable.t<array<attributeData>>,
+  Js.Nullable.t<array<Types.attributeData>>,
+  Js.Nullable.t<array<Types.attributeData>>,
   signUpCB,
   Js.Nullable.t<clientMetadata>,
 ) => unit = "signUp"
 
-let pool = {
-  userPoolId: upid,
-  clientId: cid,
-  advancedSecurityDataCollectionFlag: false,
-}
-let userpool = userPoolConstructor(pool)
+
 
   let cbToOption = (f, . err, res) =>
     switch (Js.Nullable.toOption(err), Js.Nullable.toOption(res)) {
@@ -82,7 +72,7 @@ let userpool = userPoolConstructor(pool)
     }
 
 @react.component
-let make = (~setCognitoUser) => {
+let make = (~userpool, ~setCognitoUser) => {
   // let pwInput = React.useRef(Js.Nullable.null)
 
   let (unVisited, setUnVisited) = React.useState(_ => false)
@@ -243,7 +233,7 @@ let make = (~setCognitoUser) => {
 
   let handleSubmit = e => {
     e->ReactEvent.Form.preventDefault
-    let emailData = {
+    let emailData: Types.attributeDataInput = {
       name: "email",
       value: email,
     }
