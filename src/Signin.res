@@ -10,6 +10,19 @@ type authDetails = {
 @new @module("amazon-cognito-identity-js")
 external authenticationDetailsConstructor: authDetails => authDetails = "authenticationDetailsConstructor"
 
+
+
+
+type callback = {
+  onFailure: Js.Exn.t => unit,
+  newPasswordRequired: (array<Types.attributeData>, array<Types.attributeData>) => unit,
+  mfaRequired: (string, string) => unit,
+  customChallenge: string => unit,
+  onSuccess: Signup.userSession => unit
+}
+
+
+
 @send
 external authenticateUser: (
   authDetails,

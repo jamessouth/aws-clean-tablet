@@ -29,8 +29,15 @@ type pl = {
     userPoolId: string
 }
 
+type userSession = {
+    @as("IdToken") idToken: string,
+    @as("RefreshToken") refreshToken: string,
+    @as("AccessToken") accessToken: string,
+    @as("ClockDrift") clockDrift: int
+}
+
 type usr = {
-    @as("Session") session: Js.Nullable.t<string>,
+    @as("Session") session: Js.Nullable.t<userSession>,
     authenticationFlowType: string,
     client: clnt,
     keyPrefix: string,
