@@ -10,49 +10,55 @@ external userAttributeConstructor: Types.attributeDataInput => Types.attributeDa
 
 
 type clientMetadata = {key: string}
-type cdd = {
-    @as("AttributeName") attributeName: string,
-    @as("DeliveryMedium") deliveryMedium: string,
-    @as("Destination") destination: string
-}
+// type cdd = {
+//     @as("AttributeName") attributeName: string,
+//     @as("DeliveryMedium") deliveryMedium: string,
+//     @as("Destination") destination: string
+// }
 
-type clnt = {
-    endpoint: string,
-    fetchOptions: {}
-}
+// type clnt = {
+//     endpoint: string,
+//     fetchOptions: {}
+// }
 
-type pl = {
-    advancedSecurityDataCollectionFlag: bool,
-    client: clnt,
-    clientId: string,
-    storage: {"length": float},
-    userPoolId: string
+// type pl = {
+//     advancedSecurityDataCollectionFlag: bool,
+//     client: clnt,
+//     clientId: string,
+//     storage: {"length": float},
+//     userPoolId: string
+// }
+
+
+
+type accessToken = {
+  jwtToken: string
 }
 
 type userSession = {
-    @as("IdToken") idToken: string,
-    @as("RefreshToken") refreshToken: string,
-    @as("AccessToken") accessToken: string,
-    @as("ClockDrift") clockDrift: int
+    // @as("IdToken") idToken: idToken,
+    // @as("RefreshToken") refreshToken: string,
+    @as("AccessToken") accessToken
+    // @as("ClockDrift") clockDrift: int
 }
 
 type usr = {
-    @as("Session") session: Js.Nullable.t<userSession>,
-    authenticationFlowType: string,
-    client: clnt,
-    keyPrefix: string,
-    pool: pl,
-    signInUserSession: Js.Nullable.t<string>,
-    storage: {"length": float},
-    userDataKey: string,
+    // @as("Session") session: Js.Nullable.t<userSession>,
+    // authenticationFlowType: string,
+    // client: clnt,
+    // keyPrefix: string,
+    // pool: pl,
+    // signInUserSession: Js.Nullable.t<string>,
+    // storage: {"length": float},
+    // userDataKey: string,
     username: string
 }
 
 type signupOk = {
-    codeDeliveryDetails: cdd,
+    // codeDeliveryDetails: cdd,
     user: usr,
-    userConfirmed: bool,
-    userSub: string
+    // userConfirmed: bool,
+    // userSub: string
 }
 // type signupResult = result<signupOk, Js.Exn.t>
 

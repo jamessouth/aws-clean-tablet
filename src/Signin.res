@@ -1,4 +1,3 @@
-
 @new @module("amazon-cognito-identity-js")
 external userConstructor: Types.userDataInput => Signup.usr = "CognitoUser"
 
@@ -7,64 +6,56 @@ type authDetails = {
   @as("Username") username: string,
   @as("Password") password: string,
   @as("AuthParameters") authParameters: Js.Nullable.t<array<Types.attributeData>>,
-  @as("ClientMetadata") clientMetadata: Js.Nullable.t<Signup.clientMetadata>
+  @as("ClientMetadata") clientMetadata: Js.Nullable.t<Signup.clientMetadata>,
 }
 
 @new @module("amazon-cognito-identity-js")
-external authenticationDetailsConstructor: authDetails => authDetails = "authenticationDetailsConstructor"
-
-
-
+external authenticationDetailsConstructor: authDetails => authDetails = "AuthenticationDetails"
 
 type callback = {
   onFailure: Js.Exn.t => unit,
-  newPasswordRequired: Js.Nullable.t<(array<Types.attributeData>, array<Types.attributeData>) => unit>,
+  newPasswordRequired: Js.Nullable.t<
+    (array<Types.attributeData>, array<Types.attributeData>) => unit,
+  >,
   mfaRequired: Js.Nullable.t<(string, string) => unit>,
   customChallenge: Js.Nullable.t<string => unit>,
-  onSuccess: Signup.userSession => unit
+  onSuccess: Signup.userSession => unit,
 }
 
-
-
 @send
-external authenticateUser: (
-  Js.Nullable.t<Signup.usr>,
-  authDetails,
-  callback
-) => unit = "authenticateUser"
-
-
+external authenticateUser: (Js.Nullable.t<Signup.usr>, authDetails, callback) => unit =
+  "authenticateUser"
 
 @react.component
-let make = (~userpool, ~setCognitoUser, ~cognitoUser) => {
+let make = (~userpool, ~setCognitoUser, ~setToken) => {
+  let (_cognitoErr, setCognitoErr) = React.useState(_ => None)
 
-    let (_cognitoErr, setCognitoErr) = React.useState(_ => None)
+  let (disabled, setDisabled) = React.useState(_ => true)
+  let (username, setUsername) = React.useState(_ => "")
+  let (password, setPassword) = React.useState(_ => "")
+  let onChange = (func, e) => {
+    let value = ReactEvent.Form.target(e)["value"]
+    (_ => value)->func
+  }
 
-    let (disabled, setDisabled) = React.useState(_ => true)
-    let (username, setUsername) = React.useState(_ => "")
-    let (password, setPassword) = React.useState(_ => "")
-    let onChange = (func, e) => {
-        let value = ReactEvent.Form.target(e)["value"]
-        (_ => value)->func
+  let handleSubmit = e => {
+    e->ReactEvent.Form.preventDefault
+    let authnData = {
+      username: username,
+      password: password,
+      validationData: Js.Nullable.null,
+      authParameters: Js.Nullable.null,
+      clientMetadata: Js.Nullable.null,
     }
-
-    let handleSubmit = e => {
-      e->ReactEvent.Form.preventDefault
-      let authnData = {
-        username,
-        password,
-        validationData: Js.Nullable.null,
-        authParameters: Js.Nullable.null,
-        clientMetadata: Js.Nullable.null
-      }
-      let authnDetails = authenticationDetailsConstructor(authnData)
-      let userdata: Types.userDataInput = {
+    let authnDetails = authenticationDetailsConstructor(authnData)
+    let userdata: Types.userDataInput = {
       username,
-      pool: userpool
+      pool: userpool,
     }
     let cbs = {
       onSuccess: res => {
         Js.log2("signin result:", res)
+        setToken(res.accessToken.jwtToken)
       },
       onFailure: ex => {
         switch Js.Exn.message(ex) {
@@ -76,28 +67,28 @@ let make = (~userpool, ~setCognitoUser, ~cognitoUser) => {
       },
       newPasswordRequired: Js.Nullable.null,
       mfaRequired: Js.Nullable.null,
-      customChallenge: Js.Nullable.null
+      customChallenge: Js.Nullable.null,
     }
-    setCognitoUser(_ => Js.Nullable.return(userConstructor(userdata)))
-    cognitoUser->authenticateUser(authnDetails, cbs)
+    let user = Js.Nullable.return(userConstructor(userdata))
+    user->authenticateUser(authnDetails, cbs)
+    setCognitoUser(_ => user)
+  }
 
+  React.useEffect2(() => {
+    switch (username->Js.String2.length > 3, password->Js.String2.length > 7) {
+    | (true, true) => (_ => false)->setDisabled
+    | (false, true) | (true, false) | (false, false) => (_ => true)->setDisabled
     }
 
-    React.useEffect2(() => {
-      switch (username->Js.String2.length > 3, password->Js.String2.length > 7) {
-      | (true, true) => (_ => false)->setDisabled
-      | (false, true) | (true, false) | (false, false) => (_ => true)->setDisabled
-      }
-
-      None
-    }, (username, password))
-
-
+    None
+  }, (username, password))
 
   <main>
     <form className="w-4/5 m-auto" onSubmit={handleSubmit}>
       <fieldset className="flex flex-col items-center justify-around h-80">
-        <legend className="text-warm-gray-100 m-auto mb-6 text-3xl font-fred"> {"Sign in"->React.string} </legend>
+        <legend className="text-warm-gray-100 m-auto mb-6 text-3xl font-fred">
+          {"Sign in"->React.string}
+        </legend>
         <div>
           <label className="text-2xl text-warm-gray-100 font-flow" htmlFor="username">
             {"username:"->React.string}
@@ -109,7 +100,7 @@ let make = (~userpool, ~setCognitoUser, ~cognitoUser) => {
             id="username"
             minLength=4
             name="username"
-            onChange=onChange(setUsername)
+            onChange={onChange(setUsername)}
             // placeholder="Enter username"
             required=true
             spellCheck=false
@@ -128,7 +119,7 @@ let make = (~userpool, ~setCognitoUser, ~cognitoUser) => {
             id="password"
             minLength=8
             name="password"
-            onChange=onChange(setPassword)
+            onChange={onChange(setPassword)}
             // placeholder="Enter password"
             required=true
             spellCheck=false
@@ -136,11 +127,17 @@ let make = (~userpool, ~setCognitoUser, ~cognitoUser) => {
             value={password}
           />
         </div>
-        <Link url="/resetpwd" className="self-end text-sm cursor-pointer font-anon text-warm-gray-100" content="forgot password?"/>
+        <Link
+          url="/resetpwd"
+          className="self-end text-sm cursor-pointer font-anon text-warm-gray-100"
+          content="forgot password?"
+        />
       </fieldset>
-
-
-      <button disabled className="text-gray-700 mt-16 bg-warm-gray-100 block font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7"> {"submit"->React.string} </button>
+      <button
+        disabled
+        className="text-gray-700 mt-16 bg-warm-gray-100 block font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7">
+        {"submit"->React.string}
+      </button>
     </form>
   </main>
 }

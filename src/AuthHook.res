@@ -8,7 +8,7 @@ type returnVal = {
 }
 
 let useAuth = () => {
-
+Js.log("authhook")
     let storedToken = localStorage->Dom.Storage2.getItem("token")
     
     
