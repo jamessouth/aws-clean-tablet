@@ -56,7 +56,7 @@ let make = (~userpool, ~setCognitoUser, ~setToken, ~clearCognitoKeys) => {
       onSuccess: res => {
         Js.log2("signin result:", res)
         setToken(res.accessToken.jwtToken)
-        clearCognitoKeys()
+        clearCognitoKeys(.)
       },
       onFailure: ex => {
         switch Js.Exn.message(ex) {
