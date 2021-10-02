@@ -38,7 +38,7 @@ type accessToken = {
 type userSession = {
     // @as("IdToken") idToken: idToken,
     // @as("RefreshToken") refreshToken: string,
-    @as("AccessToken") accessToken
+    accessToken
     // @as("ClockDrift") clockDrift: int
 }
 

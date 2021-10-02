@@ -24,7 +24,7 @@ let make = () => {
 
   let url = RescriptReactRouter.useUrl()
 
-  let {setToken, token} = AuthHook.useAuth()
+  let {setToken, clearCognitoKeys, token} = AuthHook.useAuth()
   <>
     <h1 className="text-6xl mt-11 text-center font-arch decay-mask text-warm-gray-100">
       {"CLEAN TABLET"->React.string}
@@ -61,12 +61,12 @@ let make = () => {
 
       | (list{"leaderboards"}, _) => <div> {"leaderboard"->React.string} </div>
 
-      | (list{"signin"}, Some(_t)) => {
+      | (list{"signin"}, Some(_)) => {
           RescriptReactRouter.replace("/lobby")
           React.null
         }
 
-      | (list{"signin"}, None) => <Signin userpool setCognitoUser setToken/>
+      | (list{"signin"}, None) => <Signin userpool setCognitoUser setToken clearCognitoKeys/>
 
       | (list{"confirm"}, Some(_t)) => {
           RescriptReactRouter.replace("/lobby")
@@ -96,7 +96,7 @@ let make = () => {
 
       | (list{"resetpwd"}, None) => <Resetpwd />
 
-      | (list{"lobby"}, Some(_t)) => <Lobby />
+      | (list{"lobby"}, Some(_)) => <Lobby />
 
       | (list{"lobby"}, None) => {
           RescriptReactRouter.replace("/login")
