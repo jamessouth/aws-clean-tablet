@@ -29,7 +29,7 @@ external authenticateUser: (Js.Nullable.t<Signup.usr>, authDetails, callback) =>
 @react.component
 let make = (~userpool, ~setCognitoUser, ~setToken, ~clearCognitoKeys) => {
   let (_cognitoErr, setCognitoErr) = React.useState(_ => None)
-
+  let (showPassword, setShowPassword) = React.useState(_ => false)
   let (disabled, setDisabled) = React.useState(_ => true)
   let (username, setUsername) = React.useState(_ => "")
   let (password, setPassword) = React.useState(_ => "")
@@ -73,6 +73,10 @@ let make = (~userpool, ~setCognitoUser, ~setToken, ~clearCognitoKeys) => {
     let user = Js.Nullable.return(userConstructor(userdata))
     user->authenticateUser(authnDetails, cbs)
     setCognitoUser(_ => user)
+  }
+
+  let onClick = _e => {
+    (prev => !prev)->setShowPassword
   }
 
   React.useEffect2(() => {
@@ -124,9 +128,21 @@ let make = (~userpool, ~setCognitoUser, ~setToken, ~clearCognitoKeys) => {
             // placeholder="Enter password"
             required=true
             spellCheck=false
-            type_="password"
+            type_={switch showPassword {
+            | true => "text"
+            | false => "password"
+            }}
             value={password}
           />
+          <button
+            type_="button"
+            className="font-arch bg-transparent text-warm-gray-100 text-2xl absolute right-0 cursor-pointer"
+            onClick>
+            {switch showPassword {
+            | true => "hide"->React.string
+            | false => "show"->React.string
+            }}
+          </button>
         </div>
         <Link
           url="/resetpwd"
