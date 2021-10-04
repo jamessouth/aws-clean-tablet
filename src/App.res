@@ -3,6 +3,8 @@ external upid: string = "VITE_UPID"
 @val @scope(("import", "meta", "env"))
 external cid: string = "VITE_CID"
 
+// @module external signoutimg: string = 
+
 @new @module("amazon-cognito-identity-js")
 external userPoolConstructor: Types.poolDataInput => Types.poolData = "CognitoUserPool"
 
@@ -22,10 +24,17 @@ let make = () => {
     Js.Nullable.null
   )
 
+  let onClick = e => {
+    Js.log2("btn clck", e)
+  }
+
   let url = RescriptReactRouter.useUrl()
 
   let {setToken, clearCognitoKeys, token} = AuthHook.useAuth()
   <>
+    <button className="absolute top-5px right-5px bg-transparent cursor-pointer" onClick type_="button">
+      <img className="block" src="../assets/signout.png"/>
+    </button>
     <h1 className="text-6xl mt-11 text-center font-arch decay-mask text-warm-gray-100">
       {"CLEAN TABLET"->React.string}
     </h1>
