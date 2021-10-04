@@ -3,6 +3,9 @@ external upid: string = "VITE_UPID"
 @val @scope(("import", "meta", "env"))
 external cid: string = "VITE_CID"
 
+@val external localStorage: Dom.Storage2.t = "localStorage"
+external getItem: (Dom.Storage2.t, string) => option<string> = "getItem"
+
 // @module external signoutimg: string = 
 
 @new @module("amazon-cognito-identity-js")
@@ -18,23 +21,30 @@ let userpool = userPoolConstructor(pool)
 @react.component
 let make = () => {
   Js.log("app")
-  // Js.Nullable.t<Signup.usr>
+  let url = RescriptReactRouter.useUrl()
+  
 
   let (cognitoUser: Js.Nullable.t<Signup.usr>, setCognitoUser) = React.useState(_ =>
     Js.Nullable.null
   )
 
-  let onClick = e => {
-    Js.log2("btn clck", e)
-  }
+  let (username, setUsername) = React.useState(_ => "")
 
-  let url = RescriptReactRouter.useUrl()
 
-  let {setToken, clearCognitoKeys, token} = AuthHook.useAuth()
+  React.useEffect1(() => {
+    switch Js.Nullable.toOption(cognitoUser) {
+    | None => setUsername(_ => "")
+    | Some(user) => setUsername(_ => user.username)
+    }
+  None
+}, [cognitoUser])
+
+
+
+  let key = `CognitoIdentityServiceProvider.${upid}.${username}.accessToken`
+  let token = localStorage->Dom.Storage2.getItem(key)
   <>
-    <button className="absolute top-5px right-5px bg-transparent cursor-pointer" onClick type_="button">
-      <img className="block" src="../assets/signout.png"/>
-    </button>
+    <SignOut cognitoUser/>
     <h1 className="text-6xl mt-11 text-center font-arch decay-mask text-warm-gray-100">
       {"CLEAN TABLET"->React.string}
     </h1>
@@ -75,7 +85,7 @@ let make = () => {
           React.null
         }
 
-      | (list{"signin"}, None) => <Signin userpool setCognitoUser setToken clearCognitoKeys/>
+      | (list{"signin"}, None) => <Signin userpool setCognitoUser/>
 
       | (list{"confirm"}, Some(_t)) => {
           RescriptReactRouter.replace("/lobby")

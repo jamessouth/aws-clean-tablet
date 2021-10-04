@@ -27,7 +27,7 @@ external authenticateUser: (Js.Nullable.t<Signup.usr>, authDetails, callback) =>
   "authenticateUser"
 
 @react.component
-let make = (~userpool, ~setCognitoUser, ~setToken, ~clearCognitoKeys) => {
+let make = (~userpool, ~setCognitoUser) => {
   let (_cognitoErr, setCognitoErr) = React.useState(_ => None)
   let (showPassword, setShowPassword) = React.useState(_ => false)
   let (disabled, setDisabled) = React.useState(_ => true)
@@ -55,8 +55,6 @@ let make = (~userpool, ~setCognitoUser, ~setToken, ~clearCognitoKeys) => {
     let cbs = {
       onSuccess: res => {
         Js.log2("signin result:", res)
-        setToken(res.accessToken.jwtToken)
-        clearCognitoKeys(.)
       },
       onFailure: ex => {
         switch Js.Exn.message(ex) {
