@@ -28,21 +28,20 @@ let make = () => {
     Js.Nullable.null
   )
 
-  let (username, setUsername) = React.useState(_ => "")
+  // let (username, setUsername) = React.useState(_ => "")
+  let (token, setToken) = React.useState(_ => None)
 
 
-  React.useEffect1(() => {
-    switch Js.Nullable.toOption(cognitoUser) {
-    | None => setUsername(_ => "")
-    | Some(user) => setUsername(_ => user.username)
-    }
-  None
-}, [cognitoUser])
+//   React.useEffect1(() => {
+//     switch Js.Nullable.toOption(cognitoUser) {
+//     | None => setToken(_ => None)
+//     | Some(user) => setToken(_ => localStorage->Dom.Storage2.getItem(`CognitoIdentityServiceProvider.${upid}.${user.username}.accessToken`))
+//     }
+//   None
+// }, [cognitoUser])
 
 
 
-  let key = `CognitoIdentityServiceProvider.${upid}.${username}.accessToken`
-  let token = localStorage->Dom.Storage2.getItem(key)
   <>
     <SignOut cognitoUser/>
     <h1 className="text-6xl mt-11 text-center font-arch decay-mask text-warm-gray-100">
@@ -85,7 +84,7 @@ let make = () => {
           React.null
         }
 
-      | (list{"signin"}, None) => <Signin userpool setCognitoUser/>
+      | (list{"signin"}, None) => <Signin userpool setCognitoUser setToken/>
 
       | (list{"confirm"}, Some(_t)) => {
           RescriptReactRouter.replace("/lobby")
