@@ -84,7 +84,7 @@ let make = () => {
           React.null
         }
 
-      | (list{"signin"}, None) => <Signin userpool setCognitoUser setToken/>
+      | (list{"signin"}, None) => <Signin userpool setCognitoUser setToken cognitoUser/>
 
       | (list{"confirm"}, Some(_t)) => {
           RescriptReactRouter.replace("/lobby")

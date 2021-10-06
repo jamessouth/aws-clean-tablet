@@ -42,11 +42,7 @@ let make = (~cognitoUser) => {
     switch res {
     | Ok(val) => {
         (_ => None)->setCognitoErr
-        // (_ => Some(val.user))->setCognitoUser
-        // RescriptReactRouter.push("/confirm")
-
-        // sign in
-
+        RescriptReactRouter.push("/signin")
         Js.log2("conf rego res", val)
       }
     | Error(ex) => {
