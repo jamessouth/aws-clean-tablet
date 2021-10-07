@@ -20,42 +20,59 @@ type state = {
     games: array<game>
 }
 
+type action =
+  | AddGame(game)
+  | RemoveGame(game)
+  | UpdateGame(game)
+
 
 type returnVal = {
-  setToken: string => unit,
-  token: option<string>,
+  initialState: state,
+  reducer: (state, action) => state
 }
 
 
-let mergeGame = (arr, ni) => {
-    let list = [...arr]
-    for i in 0 to Js.Array2.length(list) - 1 {
-        switch (list[i].no == ni.no, ni.starting) {
-        | (true, true) => Js.Array2.spliceInPlace(list, ~pos=i, ~remove=1, ~add=[])
-        | (true, false) => {
-            list[i] = ni
-            list
-        }
-        | (false, _) => [ni, ...list]
-        }
-    
-    }
-
-}
+// let mergeGame = (arr, ni) => {
+//     let list = Js.Array2.copy(arr)
+//     for i in 0 to Js.Array2.length(arr) - 1 {
+//       if arr[i].no == ni.no {
+//         switch ni.starting {
+//         | true => list->Js.Array2.spliceInPlace(~pos=i, ~remove=1, ~add=[])
+//         | false => {
+//           list[i] = ni
+//             list
+//         }
+//         }
+//       }
+//     }
+//     Js.Array2.concat([ni], list)
+// }
 
 let appState= () => {
   Js.log("appState")
-  
-  
-
-  let (playerColor, setPlayerColor) = React.Uncurried.useState(_ => "")
-
-
-
-  let return = {
-    setToken: saveToken,
-    token: token,
+  let initialState = {
+    games: []
   }
+  let reducer = (state, action) =>
+    switch action {
+    | AddGame(game) =>
+      {games: [game]->Js.Array2.concat(state.games)}
+    | RemoveGame(game) =>
+      {games: state.games->Js.Array2.filter(gm => gm.no !== game.no)}
+    | UpdateGame(game) =>
+      {games: state.games->Js.Array2.map(gm => switch gm.no === game.no {
+      | true => game
+      | false => gm
+      })}
+    }
+  
 
-  return
+
+
+
+{
+  initialState: initialState,
+  reducer: (state, string) => unit
+}
+
 }
