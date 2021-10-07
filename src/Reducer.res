@@ -1,36 +1,29 @@
-
 type player = {
-    name: string,
-    connid: string,
-    ready: bool,
-    color: string,
-    score: int
+  name: string,
+  connid: string,
+  ready: bool,
+  color: string,
+  score: int,
 }
-
 
 type game = {
-    leader: string,
-    no: string,
-    starting: bool,
-    players: array<player>
+  leader: string,
+  no: string,
+  starting: bool,
+  players: array<player>,
 }
 
-
-type state = {
-    games: array<game>
-}
+type state = {games: array<game>}
 
 type action =
   | AddGame(game)
   | RemoveGame(game)
   | UpdateGame(game)
 
-
-type returnVal = {
+type return = {
   initialState: state,
-  reducer: (state, action) => state
+  reducer: (state, action) => state,
 }
-
 
 // let mergeGame = (arr, ni) => {
 //     let list = Js.Array2.copy(arr)
@@ -48,31 +41,27 @@ type returnVal = {
 //     Js.Array2.concat([ni], list)
 // }
 
-let appState= () => {
+let appState = () => {
   Js.log("appState")
   let initialState = {
-    games: []
+    games: [],
   }
   let reducer = (state, action) =>
     switch action {
-    | AddGame(game) =>
-      {games: [game]->Js.Array2.concat(state.games)}
-    | RemoveGame(game) =>
-      {games: state.games->Js.Array2.filter(gm => gm.no !== game.no)}
-    | UpdateGame(game) =>
-      {games: state.games->Js.Array2.map(gm => switch gm.no === game.no {
-      | true => game
-      | false => gm
-      })}
+    | AddGame(game) => {games: [game]->Js.Array2.concat(state.games)}
+    | RemoveGame(game) => {games: state.games->Js.Array2.filter(gm => gm.no !== game.no)}
+    | UpdateGame(game) => {
+        games: state.games->Js.Array2.map(gm =>
+          switch gm.no === game.no {
+          | true => game
+          | false => gm
+          }
+        ),
+      }
     }
-  
 
-
-
-
-{
-  initialState: initialState,
-  reducer: (state, string) => unit
-}
-
+  {
+    initialState: initialState,
+    reducer: reducer,
+  }
 }

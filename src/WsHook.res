@@ -4,8 +4,8 @@ type t
 type messageEvent = {data: string}
 type messageEventHandler = messageEvent => unit
 
-@new external new_: string => t = "WebSocket"
-@set external set_onmessage: (t, messageEventHandler) => unit = "onmessage"
+@new external newWs: string => t = "WebSocket"
+@set external onMessage: (Js.Nullable.t<t>, messageEventHandler) => unit = "onmessage"
 
 
 type returnVal = {
@@ -13,10 +13,10 @@ type returnVal = {
   token: option<string>,
 }
 
-let useWs= () => {
+let useWs= (token) => {
   Js.log("wshook")
   
-  
+  let (ws, setWs) = React.Uncurried.useState(_ => Js.Nullable.null)
 
   let (playerColor, setPlayerColor) = React.Uncurried.useState(_ => "")
   let (wsConnected, setWsConnected) = React.Uncurried.useState(_ => false)
@@ -27,15 +27,39 @@ let useWs= () => {
   let (ingame, setIngame) = React.Uncurried.useState(_ => "")
   let (leadertoken, setLeadertoken) = React.Uncurried.useState(_ => "")
 
-  let saveToken = token => {
-    localStorage->Dom.Storage2.setItem("token", token)
-    setToken(._ => Some(token))
-  }
+  let {initialState, reducer} = Reducer.appState()
 
-  let return = {
-    setToken: saveToken,
-    token: token,
-  }
+  let (state, dispatch) = React.useReducer(reducer, initialState)
 
-  return
+  React.useEffect1(() => {
+    switch token {
+    | None => ()
+    | Some(token) => {
+      // let mystr = `wss://${process.env.CT_APIID}.execute-api.${process.env.CT_REGION}.amazonaws.com/${process.env.CT_STAGE}?auth=${token}`
+      let sock = Js.Nullable.return(newWs("mystr"))
+      setWs(. _ => sock)
+
+switch Js.Nullable.isNullable(ws) {
+| true => ()
+| false => ws->onMessage(({data}) => Js.log(data))
+}
+      
+    }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+    None
+  }, [token])
+
+
 }
