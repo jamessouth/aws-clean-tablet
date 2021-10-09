@@ -40,7 +40,18 @@ let make = () => {
 //   None
 // }, [cognitoUser])
 
-  // let {} = WsHook.useWs(token, setToken)
+  let {
+    playerColor,
+    wsConnected,
+    game,
+    games,
+    ingame,
+    leadertoken,
+    currentWord,
+    previousWord,
+    send,
+    wsError
+  } = WsHook.useWs(token, setToken)
 
   <>
     <SignOut cognitoUser/>
@@ -114,7 +125,7 @@ let make = () => {
 
       | (list{"resetpwd"}, None) => <Resetpwd />
 
-      | (list{"lobby"}, Some(_)) => <Lobby />
+      | (list{"lobby"}, Some(_)) => <Lobby cognitoUser wsConnected ingame leadertoken games send wsError/>
 
       | (list{"lobby"}, None) => {
           RescriptReactRouter.replace("/login")

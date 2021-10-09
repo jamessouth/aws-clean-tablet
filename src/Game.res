@@ -10,7 +10,7 @@ type sendPayload = {
 let chk = Js.String2.fromCharCode(10003)
 
 @react.component
-let make = (~game: Types.game, ~leadertoken: string) => {//~ingame, ~send
+let make = (~game: Types.game, ~leadertoken: string, ~ingame, ~send, ~user) => {
   let gameReady = switch game.leader {
   | Some(_) => true
   | None => false
