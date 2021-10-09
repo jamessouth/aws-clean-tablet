@@ -40,7 +40,7 @@ let make = () => {
 //   None
 // }, [cognitoUser])
 
-  // let {} = WsHook.useWs(token)
+  // let {} = WsHook.useWs(token, setToken)
 
   <>
     <SignOut cognitoUser/>
