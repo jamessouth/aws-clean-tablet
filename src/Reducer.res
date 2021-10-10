@@ -7,7 +7,7 @@ type player = {
 }
 
 type game = {
-  leader: string,
+  leader: option<string>,
   no: string,
   starting: bool,
   players: array<player>,
@@ -20,7 +20,7 @@ type action =
   | RemoveGame(game)
   | UpdateGame(game)
 
-type return = {
+type return2 = {
   initialState: state,
   reducer: (state, action) => state,
 }

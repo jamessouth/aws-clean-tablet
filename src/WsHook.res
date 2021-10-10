@@ -33,9 +33,9 @@ type closeEventHandler = closeEvent => unit
 type return = {
   playerColor: string,
   wsConnected: bool,
-  game: string,
-  games: array<string>,
-  ingame: string,
+  game: Reducer.game,
+  games: array<Reducer.game>,
+  ingame: option<string>,
   leadertoken: string,
   currentWord: string,
   previousWord: string,
@@ -46,6 +46,13 @@ type return = {
 let useWs = (token, setToken) => {
   Js.log("wshook")
 
+  let emptyGame: Reducer.game = {
+  leader: None,
+  no: "",
+  starting: false,
+  players: [],
+}
+
   let (ws, setWs) = React.Uncurried.useState(_ => Js.Nullable.null)
 
   let (playerColor, _setPlayerColor) = React.Uncurried.useState(_ => "")
@@ -53,13 +60,13 @@ let useWs = (token, setToken) => {
   let (wsError, setWsError) = React.Uncurried.useState(_ => "")
   let (currentWord, _setCurrentWord) = React.Uncurried.useState(_ => "")
   let (previousWord, _setPreviousWord) = React.Uncurried.useState(_ => "")
-  let (game, _setGame) = React.Uncurried.useState(_ => "")
-  let (ingame, _setIngame) = React.Uncurried.useState(_ => "")
+  let (game, _setGame) = React.Uncurried.useState(_ => emptyGame)
+  let (ingame, _setIngame) = React.Uncurried.useState(_ => None)
   let (leadertoken, _setLeadertoken) = React.Uncurried.useState(_ => "")
 
-  // let {initialState, reducer} = Reducer.appState()
+  let {initialState, reducer} = Reducer.appState()
 
-  // let (state, dispatch) = React.useReducer(reducer, initialState)
+  let (state, _dispatch) = React.useReducer(reducer, initialState)
 
   React.useEffect1(() => {
     switch token {
@@ -103,14 +110,18 @@ let useWs = (token, setToken) => {
     
   }, [token])
 
-  let send = obj => {
+  let send = str => {
 // let dict = Js.Dict.empty()
 // Js.Dict.set(dict, "name", Js.Json.string("John Doe"))
 // Js.Dict.set(dict, "age", Js.Json.number(30.0))
 // Js.Dict.set(dict, "likes", Js.Json.stringArray(["bucklescript", "ocaml", "js"]))
 
 // ws->sendString(Js.Json.stringify(Js.Json.object_(dict)))
-    ws->sendString(obj)
+    switch str {
+    | None => ()
+    | Some(s) => ws->sendString(s)
+    }
+
   }
 
 
@@ -118,7 +129,7 @@ let useWs = (token, setToken) => {
     playerColor: playerColor,
     wsConnected: wsConnected,
     game: game,
-    games: games,
+    games: state.games,
     ingame: ingame,
     leadertoken: leadertoken,
     currentWord: currentWord,

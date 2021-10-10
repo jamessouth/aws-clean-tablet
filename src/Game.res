@@ -10,57 +10,59 @@ type sendPayload = {
 let chk = Js.String2.fromCharCode(10003)
 
 @react.component
-let make = (~game: Types.game, ~leadertoken: string, ~ingame, ~send, ~user) => {
+let make = (~game: Reducer.game, ~leadertoken: string, ~ingame, ~send) => {
   let gameReady = switch game.leader {
   | Some(_) => true
   | None => false
   }
 
-//   let onClick1 = _ => {
-//       let pl = {
-//           action: "lobby",
-//           gameno: j`${game.no}`,
-//           type_: "leave or join",
-//           value: true
+  let _onClick1 = _ => {
+      let pl = {
+          action: "lobby",
+          gameno: j`${game.no}`,
+          type_: "leave or join",
+          value: true
 
-//       }
-//       pl->send
-//       //if..... true->setReady
+      }
+      Js.Json.stringifyAny(pl)->send
+      //if..... true->setReady
     
-//   }
+  }
 
-//   let onClick2 = _ => {
-//       let pl = {
-//           action: "lobby",
-//           gameno: j`${game.no}`,
-//           type_: "leave or join",
-//           value: true
-//       }
-//       pl->send
-//       //if..... !ready->setReady
+  let _onClick2 = _ => {
+      let pl = {
+          action: "lobby",
+          gameno: j`${game.no}`,
+          type_: "leave or join",
+          value: true
+      }
+      Js.Json.stringifyAny(pl)->send
+      //if..... !ready->setReady
     
-//   }
+  }
 
     let ldr = switch game.leader {
     | Some(l) => l->Js.String2.split("_")
     | None => [""]
     }
 
-//   let leaderName = switch gameReady {
-//   | true => ldr[0]
-//   | false => ""
-//   }
+  let leaderName = switch gameReady {
+  | true => ldr[0]
+  | false => ""
+  }
   
   
 
   let (ready, _setReady) = React.useState(_ => true)
   let (count, _setCount) = React.useState(_ => 5)
   let (_leader, setLeader) = React.useState(_ => false)
-//   let (disabled1, setDisabled1) = React.useState(_ => false)
-//   let (disabled2, setDisabled2) = React.useState(_ => false)
-//   let (startGame, setStartGame) = React.useState(_ => false)
+  let (_disabled1, _setDisabled1) = React.useState(_ => false)
+  let (_disabled2, _setDisabled2) = React.useState(_ => false)
+  let (_startGame, _setStartGame) = React.useState(_ => false)
+  let (prop1, setProp1) = React.useState(_ => false)
+  let (ingameVal, setIngameVal) = React.useState(_ => "")
 
-//   let chkstyl = " text-2xl font-bold leading-3"
+  let chkstyl = " text-2xl font-bold leading-3"
 
     React.useEffect2(() => {
     switch (game.leader, ldr[0] === leadertoken) {
@@ -73,7 +75,7 @@ let make = (~game: Types.game, ~leadertoken: string, ~ingame, ~send, ~user) => {
 
 
     // React.useEffect3(() => {
-    //     switch (ingame->Js.Nullable.toOption, ingame === game.no) {
+    //     switch (ingame, ingame === game.no) {
     //     | (Some(g), false) => setDisabled1(_ => true)
     //     | None => setDisabled1(_ => false)
     //     }
@@ -83,7 +85,7 @@ let make = (~game: Types.game, ~leadertoken: string, ~ingame, ~send, ~user) => {
 
 
     // React.useEffect3(() => {
-    //     switch (ingame->Js.Nullable.toOption, ingame === game.no) {
+    //     switch (ingame, ingame === game.no) {
     //     | (Some(g), false) => setDisabled2(_ => true)
     //     | None => setDisabled2(_ => false)
     //     }
@@ -102,6 +104,27 @@ let make = (~game: Types.game, ~leadertoken: string, ~ingame, ~send, ~user) => {
 //         }
 //         None
 //   }, (gameReady, game.no, ingame))
+
+
+
+    React.useEffect1(() => {
+        switch ingame {
+        | None => setIngameVal(_ => "")
+        | Some(s) => setIngameVal(_ => s)
+        }
+        
+        None
+  }, [ingame])
+
+
+    React.useEffect3(() => {
+        switch (ingame, gameReady, game.no) {
+        | pattern1 => expression
+        | pattern2 => expression
+        }
+        
+        None
+  }, (gameReady, game.no, ingame))
 
 
 
@@ -132,20 +155,20 @@ let make = (~game: Types.game, ~leadertoken: string, ~ingame, ~send, ~user) => {
             {"players"->React.string}
         </p>
 
-    // <>
-    //     {
-    //         game.players->Js.Array2.map((p) => {
+    <>
+        {
+            game.players->Js.Array2.map((p) => {
 
-    //         switch p.ready {
-    //         | true => <p key=p.connid>{p.name->React.string}<span className={switch leaderName === p.name {
-    //         | true => `text-red-200${chkstyl}`
-    //         | false => `text-green-200${chkstyl}`
-    //         }}>{chk->React.string}</span></p>
-    //         | false => <p key=p.connid>{p.name->React.string}</p>
-    //         }
-    //         })
-    //     }
-    // </>
+            switch p.ready {
+            | true => <p key=p.connid>{p.name->React.string}<span className={switch leaderName === p.name {
+            | true => `text-red-200${chkstyl}`
+            | false => `text-green-200${chkstyl}`
+            }}>{chk->React.string}</span></p>
+            | false => <p key=p.connid>{p.name->React.string}</p>
+            }
+            })->React.array
+        }
+    </>
 
 
 
