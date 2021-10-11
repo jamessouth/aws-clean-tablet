@@ -35,7 +35,7 @@ type return = {
   wsConnected: bool,
   game: Reducer.game,
   games: array<Reducer.game>,
-  ingame: option<string>,
+  ingame: string,
   leadertoken: string,
   currentWord: string,
   previousWord: string,
@@ -61,7 +61,7 @@ let useWs = (token, setToken) => {
   let (currentWord, _setCurrentWord) = React.Uncurried.useState(_ => "")
   let (previousWord, _setPreviousWord) = React.Uncurried.useState(_ => "")
   let (game, _setGame) = React.Uncurried.useState(_ => emptyGame)
-  let (ingame, _setIngame) = React.Uncurried.useState(_ => None)
+  let (ingame, _setIngame) = React.Uncurried.useState(_ => "")
   let (leadertoken, _setLeadertoken) = React.Uncurried.useState(_ => "")
 
   let {initialState, reducer} = Reducer.appState()

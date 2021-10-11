@@ -3,11 +3,10 @@ let startBtnStyles = " mx-auto mb-8 w-1/2 bg-smoke-100 text-gray-700"
 @react.component
 let make = (~wsConnected, ~ingame, ~leadertoken, ~games, ~send, ~wsError) => {
   let onClick = _ => {
-    let pl: Game.sendPayload = {
+    let pl: Game.routePayload = {
       action: "lobby",
       gameno: "new",
-      type_: "join",
-      value: false,
+      tipe: "join"
     }
     Js.Json.stringifyAny(pl)->send
   }
@@ -22,9 +21,9 @@ let make = (~wsConnected, ~ingame, ~leadertoken, ~games, ~send, ~wsError) => {
     | (true, false) =>
       <div className="flex flex-col mt-8">
         <button
-          className={switch ingame {
-          | None => `invisible${startBtnStyles}`
-          | Some(_) => `visible${startBtnStyles}`
+          className={switch ingame === "" {
+          | true => `visible${startBtnStyles}`
+          | false => `invisible${startBtnStyles}`
           }}
           type_="button"
           onClick>

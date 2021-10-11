@@ -1,8 +1,7 @@
-type sendPayload = {
-    action: string,
-    gameno: string,
-    type_: string,
-    value: bool
+type routePayload = {
+  action: string,
+  gameno: string,
+  tipe: string
 }
 
 
@@ -11,201 +10,176 @@ let chk = Js.String2.fromCharCode(10003)
 
 @react.component
 let make = (~game: Reducer.game, ~leadertoken: string, ~ingame, ~send) => {
+  let (ready, setReady) = React.useState(_ => true)
+  let (count, setCount) = React.useState(_ => 5)
+  let (disabled1, setDisabled1) = React.useState(_ => false)
+  let (disabled2, setDisabled2) = React.useState(_ => false)
+  let (startGame, setStartGame) = React.useState(_ => false)
+  let (leader, setLeader) = React.useState(_ => "")
+  //   let (prop1, setProp1) = React.useState(_ => false)
+  //   let (inThisGame, setInThisGame) = React.useState(_ => false)
+
+  let chkstyl = " text-2xl font-bold leading-3"
+
   let gameReady = switch game.leader {
   | Some(_) => true
   | None => false
   }
 
-  let _onClick1 = _ => {
-      let pl = {
-          action: "lobby",
-          gameno: j`${game.no}`,
-          type_: "leave or join",
-          value: true
-
+  let onClick1 = _e => {
+    let pl = {
+      action: "lobby",
+      gameno: game.no,
+      tipe: switch (ingame == "", ingame === game.no) {
+      | (false, true) => "leave"
+      | (_, _) => "join"
       }
-      Js.Json.stringifyAny(pl)->send
-      //if..... true->setReady
-    
-  }
-
-  let _onClick2 = _ => {
-      let pl = {
-          action: "lobby",
-          gameno: j`${game.no}`,
-          type_: "leave or join",
-          value: true
-      }
-      Js.Json.stringifyAny(pl)->send
-      //if..... !ready->setReady
-    
-  }
-
-    let ldr = switch game.leader {
-    | Some(l) => l->Js.String2.split("_")
-    | None => [""]
     }
+    Js.Json.stringifyAny(pl)->send
+    switch (ingame == "", ingame === game.no) {
+      | (false, true) => setReady(_ => true)
+      | (_, _) => ()
+      }
+    
+  }
+
+  let onClick2 = _e => {
+    let pl = {
+      action: "lobby",
+      gameno: game.no,
+      tipe: switch ready {
+      | true => "ready_true"
+      | false => "ready_false"
+      }
+    }
+    Js.Json.stringifyAny(pl)->send
+    setReady(_ => !ready)
+  }
+
+  let ldr = switch game.leader {
+  | Some(l) => l->Js.String2.split("_")
+  | None => [""]
+  }
 
   let leaderName = switch gameReady {
   | true => ldr[0]
   | false => ""
   }
-  
-  
 
-  let (ready, _setReady) = React.useState(_ => true)
-  let (count, _setCount) = React.useState(_ => 5)
-  let (_leader, setLeader) = React.useState(_ => false)
-  let (_disabled1, _setDisabled1) = React.useState(_ => false)
-  let (_disabled2, _setDisabled2) = React.useState(_ => false)
-  let (_startGame, _setStartGame) = React.useState(_ => false)
-  let (prop1, setProp1) = React.useState(_ => false)
-  let (ingameVal, setIngameVal) = React.useState(_ => "")
+  React.useEffect1(() => {
+  switch game.leader {
+  | None => setLeader(_ => "")
+  | Some(l) => setLeader(_ => l)
+  }
+  None
+}, [game.leader])
 
-  let chkstyl = " text-2xl font-bold leading-3"
-
-    React.useEffect2(() => {
-    switch (game.leader, ldr[0] === leadertoken) {
-    | (Some(_), true) => setLeader(_ => true)
-    | (Some(_), false) | (None, _) => setLeader(_ => false)
+  React.useEffect3(() => {
+    switch (ingame == "", ingame === game.no, Js.Array2.length(game.players) > 7) {
+    | (false, false, _) | (true, _, true) => setDisabled1(_ => true)
+    | (_, _, _) => setDisabled1(_ => false)
     }
     None
-  }, (game.leader, leadertoken))
+  }, (ingame, game.no, game.players))
 
+  React.useEffect3(() => {
+    switch (ingame == "", ingame === game.no, Js.Array2.length(game.players) < 3) {
+    | (false, false, _) | (true, _, _) | (_, _, true) => setDisabled2(_ => true)
+    | (_, _, _) => setDisabled2(_ => false)
+    }
+    None
+  }, (ingame, game.no, game.players))
 
+  React.useEffect3(() => {
+    let id = if gameReady && game.no === ingame {
+      Js.Global.setInterval(() => {
+        setCount(c => c - 1)
+      }, 1000)
+    } else {
+      Js.Global.setInterval(() => (), 3600000)
+    }
 
-    // React.useEffect3(() => {
-    //     switch (ingame, ingame === game.no) {
-    //     | (Some(g), false) => setDisabled1(_ => true)
-    //     | None => setDisabled1(_ => false)
-    //     }
-    //     None
-    // }, (ingame, game.no, game.players))
-
-
-
-    // React.useEffect3(() => {
-    //     switch (ingame, ingame === game.no) {
-    //     | (Some(g), false) => setDisabled2(_ => true)
-    //     | None => setDisabled2(_ => false)
-    //     }
-    //     None
-    // }, (ingame, game.no, game.players))
-   
-   
-   
-//     React.useEffect3(() => {
-//         let id = 0
-//         switch (gameReady, game.no === ingame) {
-//         | (true, true) => let id = setInterval(() => {
-//             setCount(c => c - 1)
-//         }, 1000)
-//         | (_, _) => ()
-//         }
-//         None
-//   }, (gameReady, game.no, ingame))
-
-
-
-    React.useEffect1(() => {
-        switch ingame {
-        | None => setIngameVal(_ => "")
-        | Some(s) => setIngameVal(_ => s)
-        }
-        
-        None
-  }, [ingame])
-
-
-    React.useEffect3(() => {
-        switch (ingame, gameReady, game.no) {
-        | pattern1 => expression
-        | pattern2 => expression
-        }
-        
-        None
+    Some(
+      () => {
+        setCount(_ => 5)
+        Js.Global.clearInterval(id)
+      },
+    )
   }, (gameReady, game.no, ingame))
 
+  React.useEffect5(() => {
+    switch (ingame === game.no && count === 0, leader !== "" && leader === leadertoken) {
+    | (true, true) => {
+        setStartGame(_ => true)
+        let pl = {
+          action: "play",
+          gameno: game.no,
+          tipe: "start",
+        }
+        Js.Json.stringifyAny(pl)->send
+      }
+    | (true, false) => setStartGame(_ => true)
+    | (false, _) => ()
+    }
+    None
+  }, (count, game.no, ingame, leadertoken, leader))
 
-
-//     React.useEffect4(() => {
-//         switch (ingame === game.no, count === 0, leader) {
-//         | (true, true, true) => {
-//             setStartGame(true)
-//             send
-//             ()
-//         }
-//         | _ => ()
-//         }
-
-
-//     None
-//   }, (count, game.no, ingame, leader))
-
-
-
-    <li
-        className="mb-8 w-10/12 mx-auto grid grid-cols-2 grid-rows-gamebox relative pb-8"
-    >
-        <p className="text-xs col-span-2">
-            {game.no->React.string}
+  <li className="mb-8 w-10/12 mx-auto grid grid-cols-2 grid-rows-gamebox relative pb-8">
+    <p className="text-xs col-span-2"> {game.no->React.string} </p>
+    <p className="text-xs col-span-2"> {"players"->React.string} </p>
+    {<>
+      {game.players
+      ->Js.Array2.map(p => {
+        switch p.ready {
+        | true =>
+          <p key=p.connid>
+            {p.name->React.string}
+            <span
+              className={switch leaderName === p.name {
+              | true => `text-red-200${chkstyl}`
+              | false => `text-green-200${chkstyl}`
+              }}>
+              {chk->React.string}
+            </span>
+          </p>
+        | false => <p key=p.connid> {p.name->React.string} </p>
+        }
+      })
+      ->React.array}
+    </>}
+    {switch (gameReady, ingame !== game.no) {
+    | (true, true) =>
+        <p
+          className="absolute text-yellow-200 text-2xl font-bold left-1/2 bottom-1/4 transform -translate-x-2/4">
+          {"Starting soon..."->React.string}
         </p>
 
-        <p className="text-xs col-span-2">
-            {"players"->React.string}
+        
+      | (true, false) =>
+        <p
+          className="absolute text-yellow-200 text-2xl font-bold left-1/2 bottom-1/4 transform -translate-x-2/4">
+          {count->Js.Int.toString->React.string}
         </p>
-
-    <>
-        {
-            game.players->Js.Array2.map((p) => {
-
-            switch p.ready {
-            | true => <p key=p.connid>{p.name->React.string}<span className={switch leaderName === p.name {
-            | true => `text-red-200${chkstyl}`
-            | false => `text-green-200${chkstyl}`
-            }}>{chk->React.string}</span></p>
-            | false => <p key=p.connid>{p.name->React.string}</p>
-            }
-            })->React.array
-        }
-    </>
-
-
-
-        {
-            switch gameReady {
-            | true => switch true { //ingame === game.no
-                | true => <p className="absolute text-yellow-200 text-2xl font-bold left-1/2 bottom-1/4 transform -translate-x-2/4">{count->Js.Int.toString->React.string}</p>
-                | false => <p className="absolute text-yellow-200 text-2xl font-bold left-1/2 bottom-1/4 transform -translate-x-2/4">{"Starting soon..."->React.string}</p>
-                }
-            | false => React.null
-            }
-        }
-
-
-        <button
-            className="w-1/2 bottom-0 h-8 left-0 absolute pt-2 bg-smoke-700 bg-opacity-70"
-            // disabled=disabled1
-            // onClick1
-        >
-            // {
-                // switch value {
-                // | pattern1 => expression
-                // | pattern2 => expression
-                // }
-            // }
-        </button>
-        <button
-            className="w-1/2 bottom-0 h-8 right-0 absolute pt-2 bg-smoke-700 bg-opacity-70"
-            // disabled=disabled2
-            // onClick2
-        >{switch ready {
-        | true => "ready"->React.string
-        | false => "not ready"->React.string
-        }}</button>
-    </li>
-
-
-
-
+      
+    | (false, _) => React.null
+    }}
+    <button
+        onClick=onClick1
+      className="w-1/2 bottom-0 h-8 left-0 absolute pt-2 bg-smoke-700 bg-opacity-70"
+      disabled=disabled1>
+      {switch (ingame == "", ingame === game.no) {
+      | (false, true) => React.string("leave")
+      | (_, _) => React.string("join")
+      }}
+    </button>
+    <button
+        onClick=onClick2
+      className="w-1/2 bottom-0 h-8 right-0 absolute pt-2 bg-smoke-700 bg-opacity-70"
+      disabled=disabled2>
+      {switch ready {
+      | true => "ready"->React.string
+      | false => "not ready"->React.string
+      }}
+    </button>
+  </li>
 }
