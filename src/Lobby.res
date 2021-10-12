@@ -13,7 +13,7 @@ let make = (~wsConnected, ~ingame, ~leadertoken, ~games, ~send, ~wsError) => {
 
   // let sendfunc = val => val->send
 
-  switch wsError {
+  switch wsError !== "" {
   | true => <p> {"not connected: connection error"->React.string} </p>
   | false =>
     switch (wsConnected, games->Js.Array2.length === 0) {

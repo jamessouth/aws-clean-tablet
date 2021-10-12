@@ -39,7 +39,7 @@ type return = {
   leadertoken: string,
   currentWord: string,
   previousWord: string,
-  send: string => unit,
+  send: option<string> => unit,
   wsError: string
 }
 

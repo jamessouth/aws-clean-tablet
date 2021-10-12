@@ -2,8 +2,8 @@ type player = {
   name: string,
   connid: string,
   ready: bool,
-  color: string,
-  score: int,
+  color: option<string>,
+  score: string,
 }
 
 type game = {

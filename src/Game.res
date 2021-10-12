@@ -14,7 +14,6 @@ let make = (~game: Reducer.game, ~leadertoken: string, ~ingame, ~send) => {
   let (count, setCount) = React.useState(_ => 5)
   let (disabled1, setDisabled1) = React.useState(_ => false)
   let (disabled2, setDisabled2) = React.useState(_ => false)
-  let (startGame, setStartGame) = React.useState(_ => false)
   let (leader, setLeader) = React.useState(_ => "")
   //   let (prop1, setProp1) = React.useState(_ => false)
   //   let (inThisGame, setInThisGame) = React.useState(_ => false)
@@ -110,7 +109,10 @@ let make = (~game: Reducer.game, ~leadertoken: string, ~ingame, ~send) => {
   React.useEffect5(() => {
     switch (ingame === game.no && count === 0, leader !== "" && leader === leadertoken) {
     | (true, true) => {
-        setStartGame(_ => true)
+        
+        RescriptReactRouter.push(`/game/${game.no}`)
+
+
         let pl = {
           action: "play",
           gameno: game.no,
@@ -118,7 +120,11 @@ let make = (~game: Reducer.game, ~leadertoken: string, ~ingame, ~send) => {
         }
         Js.Json.stringifyAny(pl)->send
       }
-    | (true, false) => setStartGame(_ => true)
+    | (true, false) => RescriptReactRouter.push(`/game/${game.no}`)
+    
+
+
+
     | (false, _) => ()
     }
     None

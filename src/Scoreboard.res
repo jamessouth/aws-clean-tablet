@@ -1,20 +1,17 @@
 
-type player = {
-    name: string,
-    connid: string,
-    score: string,
-    color: option<string>,
-    ready: bool
-}
+
 
 
 @react.component
-let make = (~_playerName, ~players) => {
+let make = (~playerName, ~players) => {
 
-    let noplyrs = players->Js.Array2.length->Js.Int.toString
+    let noplrs = players->Js.Array2.length
 
-    <div className="w-full" style={ReactDOM.Style.make(~height=`calc(82px + (28px * ${noplyrs}))`, ())}>
+    <div className="w-full" style={ReactDOM.Style.make(~height=j`calc(82px + (28px * $noplrs))`, ())}>
         <h2 className="mb-5">{"score"->React.string}</h2>
+
+        <p>{React.string(playerName)}</p>
+
         <ul className="bg-yellow-300 opacity-80 border-2 border-solid border-yellow-400 p-3 w-11/12 max-w-lg my-0 mx-auto flex flex-col justify-around items-center">
         // {
         //     players->Js.Array2.map((p) => {
@@ -25,7 +22,7 @@ let make = (~_playerName, ~players) => {
         //         </li>
         //         | None => React.null
         //         }
-        //     })
+        //     })->React.array
         // }
         </ul>
     </div>

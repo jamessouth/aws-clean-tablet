@@ -28,17 +28,17 @@ let make = () => {
     Js.Nullable.null
   )
 
-  // let (username, setUsername) = React.useState(_ => "")
+  let (playerName, setPlayerName) = React.useState(_ => "")
   let (token, setToken) = React.useState(_ => None)
 
 
-//   React.useEffect1(() => {
-//     switch Js.Nullable.toOption(cognitoUser) {
-//     | None => setToken(_ => None)
-//     | Some(user) => setToken(_ => localStorage->Dom.Storage2.getItem(`CognitoIdentityServiceProvider.${upid}.${user.username}.accessToken`))
-//     }
-//   None
-// }, [cognitoUser])
+  React.useEffect1(() => {
+    switch Js.Nullable.toOption(cognitoUser) {
+    | None => setPlayerName(_ => "")
+    | Some(user) => setPlayerName(_ => user.username)
+    }
+  None
+}, [cognitoUser])
 
   let {
     playerColor,
@@ -125,7 +125,7 @@ let make = () => {
 
       | (list{"resetpwd"}, None) => <Resetpwd />
 
-      | (list{"lobby"}, Some(_)) => <Lobby cognitoUser wsConnected ingame leadertoken games send wsError/>
+      | (list{"lobby"}, Some(_)) => <Lobby wsConnected ingame leadertoken games send wsError/>
 
       | (list{"lobby"}, None) => {
           RescriptReactRouter.replace("/login")
@@ -136,6 +136,9 @@ let make = () => {
           RescriptReactRouter.replace("/login")
           React.null
         }
+
+
+      | (list{"game", _gameno}, Some(_)) => <Play playerName wsConnected game leadertoken playerColor send wsError currentWord previousWord/>
 
       | (_, _) => <div> {"other"->React.string} </div> // <PageNotFound/>
       }}
