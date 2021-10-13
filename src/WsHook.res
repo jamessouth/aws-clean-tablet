@@ -103,7 +103,10 @@ let useWs = (token, setToken) => {
       setWsConnected(._ => false)
       setWsError(._ => "temp error placehold")
       setToken(_ => None)
-      ws->closeCode(1000)
+      switch Js.Nullable.isNullable(ws) {
+        | true => ()
+        | false => ws->closeCode(1000)
+      }
     }
 
     Some(cleanup)

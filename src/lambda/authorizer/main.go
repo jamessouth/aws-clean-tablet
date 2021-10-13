@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"os"
@@ -38,7 +37,7 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 
 	region := strings.Split(req.MethodArn, ":")[3]
 
-	keyset, err := jwk.Fetch("https://cognito-idp." + region + ".amazonaws.com/" + userPoolID + "/.well-known/jwks.json")
+	keyset, err := jwk.Fetch(ctx, "https://cognito-idp."+region+".amazonaws.com/"+userPoolID+"/.well-known/jwks.json")
 	if err != nil {
 		return events.APIGatewayCustomAuthorizerResponse{}, errors.New("fetch error - cannot find keyset")
 	}
@@ -46,7 +45,7 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 	token := []byte(req.QueryStringParameters["auth"])
 
 	parsedToken, err := jwt.Parse(
-		bytes.NewReader(token),
+		token,
 		jwt.WithKeySet(keyset),
 		jwt.WithValidate(true),
 		jwt.WithIssuer("https://cognito-idp."+region+".amazonaws.com/"+userPoolID),
