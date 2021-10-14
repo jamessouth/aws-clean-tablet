@@ -17,7 +17,7 @@ import (
 func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
 
 	// fmt.Printf("%s: %+v\n", "request", req.QueryStringParameters["auth"])
-	if req.Headers["Origin"] != "http://localhost:4200" {
+	if req.Headers["Origin"] != "http://localhost:8000" {
 		return events.APIGatewayCustomAuthorizerResponse{}, errors.New("header error - request from wrong domain")
 	}
 
