@@ -128,12 +128,12 @@ let make = () => {
       | (list{"lobby"}, Some(_)) => <Lobby wsConnected ingame leadertoken games send wsError/>
 
       | (list{"lobby"}, None) => {
-          RescriptReactRouter.replace("/login")
+          RescriptReactRouter.replace("/")
           React.null
         }
 
       | (list{"game", _gameno}, None) => {
-          RescriptReactRouter.replace("/login")
+          RescriptReactRouter.replace("/")
           React.null
         }
 

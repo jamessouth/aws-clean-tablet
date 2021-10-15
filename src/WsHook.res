@@ -86,6 +86,7 @@ let useWs = (token, setToken) => {
             Js.log2("open", e)
           })
           ws->onError(e => {
+            Js.log2("errrr", e)
             setWsError(._ => "temp error placehold")
             Js.log2("error", e)
           })
@@ -101,7 +102,7 @@ let useWs = (token, setToken) => {
 
     let cleanup = () => {
       setWsConnected(._ => false)
-      setWsError(._ => "temp error placehold")
+      setWsError(._ => "temp error placehold2")
       setToken(_ => None)
       switch Js.Nullable.isNullable(ws) {
         | true => ()
