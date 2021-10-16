@@ -13,7 +13,7 @@ type game = {
   players: array<player>,
 }
 
-type state = {games: array<game>}
+type state = {games: Js.Nullable.t<array<game>>}
 
 type action =
   | AddGame(game)
@@ -44,19 +44,22 @@ type return2 = {
 let appState = () => {
   Js.log("appState")
   let initialState = {
-    games: [],
+    games: Js.Nullable.null,
   }
-  let reducer = (state, action) =>
-    switch action {
-    | AddGame(game) => {games: [game]->Js.Array2.concat(state.games)}
-    | RemoveGame(game) => {games: state.games->Js.Array2.filter(gm => gm.no !== game.no)}
-    | UpdateGame(game) => {
-        games: state.games->Js.Array2.map(gm =>
+  let reducer = ({games}, action) =>
+    switch (Js.Nullable.toOption(games), action) {
+    | (None, AddGame(game)) => {games: Js.Nullable.return([game])}
+    | (None, RemoveGame(_)) => {games: games}
+    | (None, UpdateGame(_)) => {games: games}
+    | (Some(gs), AddGame(game)) => {games: Js.Nullable.return([game]->Js.Array2.concat(gs))}
+    | (Some(gs), RemoveGame(game)) => {games: Js.Nullable.return(gs->Js.Array2.filter(gm => gm.no !== game.no))}
+    | (Some(gs), UpdateGame(game)) => {
+        games: Js.Nullable.return(gs->Js.Array2.map(gm =>
           switch gm.no === game.no {
           | true => game
           | false => gm
           }
-        ),
+        )),
       }
     }
 

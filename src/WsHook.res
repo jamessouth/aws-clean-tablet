@@ -34,24 +34,24 @@ type return = {
   playerColor: string,
   wsConnected: bool,
   game: Reducer.game,
-  games: array<Reducer.game>,
+  games: Js.Nullable.t<array<Reducer.game>>,
   ingame: string,
   leadertoken: string,
   currentWord: string,
   previousWord: string,
   send: option<string> => unit,
-  wsError: string
+  wsError: string,
 }
 
-let useWs = (token, setToken) => {
-  Js.log("wshook")
+let useWs = (token) => {
+  Js.log2("wshook ", token)
 
   let emptyGame: Reducer.game = {
-  leader: None,
-  no: "",
-  starting: false,
-  players: [],
-}
+    leader: None,
+    no: "",
+    starting: false,
+    players: [],
+  }
 
   let (ws, setWs) = React.Uncurried.useState(_ => Js.Nullable.null)
 
@@ -69,65 +69,64 @@ let useWs = (token, setToken) => {
   let (state, _dispatch) = React.useReducer(reducer, initialState)
 
   React.useEffect1(() => {
+    Js.log2("effect ", token)
     switch token {
     | None => ()
-    | Some(token) => {
-        setWs(._ =>
-          Js.Nullable.return(
-            newWs(`wss://${apiid}.execute-api.${region}.amazonaws.com/${stage}?auth=${token}`),
-          )
+    | Some(token) =>
+      setWs(._ =>
+        Js.Nullable.return(
+          newWs(`wss://${apiid}.execute-api.${region}.amazonaws.com/${stage}?auth=${token}`),
         )
+      )
+    }
 
-        switch Js.Nullable.isNullable(ws) {
-        | true => ()
-        | false =>
-          ws->onOpen(e => {
-            setWsConnected(._ => true)
-            Js.log2("open", e)
-          })
-          ws->onError(e => {
-            Js.log2("errrr", e)
-            setWsError(._ => "temp error placehold")
-            Js.log2("error", e)
-          })
-          ws->onMessage(({data}) => {
-            Js.log2("msg", data)
-          })
-          ws->onClose(({code, reason, wasClean}) => {
-            Js.log4("close", code, reason, wasClean)
-          })
-        }
-      }
+    None
+  }, [token])
+
+  React.useEffect1(() => {
+    switch Js.Nullable.isNullable(ws) {
+    | true => ()
+    | false =>
+      ws->onOpen(e => {
+        setWsConnected(._ => true)
+        Js.log2("open", e)
+      })
+      ws->onError(e => {
+        Js.log2("errrr", e)
+        setWsError(._ => "temp error placehold")
+      })
+      ws->onMessage(({data}) => {
+        Js.log2("msg", data)
+      })
+      ws->onClose(({code, reason, wasClean}) => {
+        Js.log4("close", code, reason, wasClean)
+      })
     }
 
     let cleanup = () => {
       setWsConnected(._ => false)
-      setWsError(._ => "temp error placehold2")
-      setToken(_ => None)
+      setWsError(._ => "")
+      // setToken(_ => None)
       switch Js.Nullable.isNullable(ws) {
-        | true => ()
-        | false => ws->closeCode(1000)
+      | true => ()
+      | false => ws->closeCode(1000)
       }
     }
-
     Some(cleanup)
-    
-  }, [token])
+  }, [ws])
 
   let send = str => {
-// let dict = Js.Dict.empty()
-// Js.Dict.set(dict, "name", Js.Json.string("John Doe"))
-// Js.Dict.set(dict, "age", Js.Json.number(30.0))
-// Js.Dict.set(dict, "likes", Js.Json.stringArray(["bucklescript", "ocaml", "js"]))
+    // let dict = Js.Dict.empty()
+    // Js.Dict.set(dict, "name", Js.Json.string("John Doe"))
+    // Js.Dict.set(dict, "age", Js.Json.number(30.0))
+    // Js.Dict.set(dict, "likes", Js.Json.stringArray(["bucklescript", "ocaml", "js"]))
 
-// ws->sendString(Js.Json.stringify(Js.Json.object_(dict)))
+    // ws->sendString(Js.Json.stringify(Js.Json.object_(dict)))
     switch str {
     | None => ()
     | Some(s) => ws->sendString(s)
     }
-
   }
-
 
   {
     playerColor: playerColor,
@@ -139,8 +138,6 @@ let useWs = (token, setToken) => {
     currentWord: currentWord,
     previousWord: previousWord,
     send: send,
-    wsError: wsError
+    wsError: wsError,
   }
-
-
 }

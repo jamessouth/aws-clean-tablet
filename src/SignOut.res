@@ -5,10 +5,11 @@ external signOut: (Js.Nullable.t<Signup.usr>, Js.Nullable.t<revokeTokenCallback>
   "signOut"
 
 @react.component
-let make = (~cognitoUser) => {
+let make = (~cognitoUser, ~setToken) => {
   let onClick = e => {
     Js.log2("btn clck", e)
     cognitoUser->signOut(Js.Nullable.null)
+    setToken(_ => None)
   }
 
   <button

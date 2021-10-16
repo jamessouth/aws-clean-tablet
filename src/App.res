@@ -51,10 +51,10 @@ let make = () => {
     previousWord,
     send,
     wsError
-  } = WsHook.useWs(token, setToken)
+  } = WsHook.useWs(token)
 
   <>
-    <SignOut cognitoUser/>
+    <SignOut cognitoUser setToken/>
     <h1 className="text-6xl mt-11 text-center font-arch decay-mask text-warm-gray-100">
       {"CLEAN TABLET"->React.string}
     </h1>

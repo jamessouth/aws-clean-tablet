@@ -16,9 +16,9 @@ let make = (~wsConnected, ~ingame, ~leadertoken, ~games, ~send, ~wsError) => {
   switch wsError !== "" {
   | true => <p> {"not connected: connection error"->React.string} </p>
   | false =>
-    switch (wsConnected, games->Js.Array2.length === 0) {
-    | (false, _) | (_, true) => <p> {"loading games..."->React.string} </p>
-    | (true, false) =>
+    switch (wsConnected, Js.Nullable.toOption(games)) {
+    | (false, _) | (_, None) => <p> {"loading games..."->React.string} </p>
+    | (true, Some(gs)) =>
       <div className="flex flex-col mt-8">
         <button
           className={switch ingame === "" {
@@ -29,9 +29,9 @@ let make = (~wsConnected, ~ingame, ~leadertoken, ~games, ~send, ~wsError) => {
           onClick>
           {"start a new game"->React.string}
         </button>
-        {switch games->Js.Array2.length < 1 {
+        {switch gs->Js.Array2.length < 1 {
         | true => <p> {"no games found. start a new one!"->React.string} </p>
-        | false => <GamesList games ingame leadertoken send/>
+        | false => <GamesList games=gs ingame leadertoken send/>
         }}
       </div>
     }
