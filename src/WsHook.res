@@ -43,8 +43,17 @@ type return = {
   wsError: string,
 }
 
+type listGamesData = {
+  listGames: array<Reducer.game>
+}
+@scope("JSON") @val
+external parseGamesList: string => listGamesData = "parse"
+
+
+
+
 let useWs = (token) => {
-  Js.log2("wshook ", token)
+  // Js.log2("wshook ", token)
 
   let emptyGame: Reducer.game = {
     leader: None,
@@ -66,10 +75,10 @@ let useWs = (token) => {
 
   let {initialState, reducer} = Reducer.appState()
 
-  let (state, _dispatch) = React.useReducer(reducer, initialState)
+  let (state, dispatch) = React.useReducer(reducer, initialState)
 
   React.useEffect1(() => {
-    Js.log2("effect ", token)
+    // Js.log2("effect ", token)
     switch token {
     | None => ()
     | Some(token) =>
@@ -97,6 +106,11 @@ let useWs = (token) => {
       })
       ws->onMessage(({data}) => {
         Js.log2("msg", data)
+
+        let {listGames} = parseGamesList(data)
+        Js.log2("parsed", listGames)
+        dispatch(ListGames(Js.Nullable.return(listGames)))
+
       })
       ws->onClose(({code, reason, wasClean}) => {
         Js.log4("close", code, reason, wasClean)
@@ -132,7 +146,7 @@ let useWs = (token) => {
     playerColor: playerColor,
     wsConnected: wsConnected,
     game: game,
-    games: state.games,
+    games: state.gamesList,
     ingame: ingame,
     leadertoken: leadertoken,
     currentWord: currentWord,

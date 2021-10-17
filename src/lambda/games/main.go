@@ -47,9 +47,10 @@ type connin struct {
 }
 
 type insertConnPayload struct {
-	Games gameOutList `json:"games"`
-	Type  string      `json:"type"`
+	ListGames gameOutList `json:"listGames"`
 }
+
+// Type  string      `json:"type"`
 
 type modifyConnPayload struct {
 	Ingame      string `json:"ingame"`
@@ -386,9 +387,9 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				}
 
 				payload, err := json.Marshal(insertConnPayload{
-					Games: games.mapGames(),
-					Type:  "games",
+					ListGames: games.mapGames(),
 				})
+				// Type:  "games",
 				if err != nil {
 					return callErr(err)
 				}

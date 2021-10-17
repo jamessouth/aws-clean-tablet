@@ -52,8 +52,7 @@ type game struct {
 }
 
 type body struct {
-	Game, Type string
-	Value      bool
+	Action, Gameno, Tipe string
 }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -94,9 +93,9 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	// var gameItemKey map[string]types.AttributeValue
 
-	if len(body.Game) > 3 {
-		gameno = body.Game
-	} else if body.Game == "new" {
+	if len(body.Gameno) > 3 {
+		gameno = body.Gameno
+	} else if body.Gameno == "new" {
 		gameno = fmt.Sprintf("%d", time.Now().UnixNano())
 	}
 
@@ -123,7 +122,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		ReturnValues:     types.ReturnValueAllNew,
 	}
 
-	if body.Type == "join" {
+	if body.Tipe == "join" {
 
 		player := Player{
 			Name:   name,
@@ -226,7 +225,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		})
 		callErr(err)
 
-	} else if body.Type == "leave" {
+	} else if body.Tipe == "leave" {
 
 		_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 			Key: map[string]types.AttributeValue{
@@ -249,52 +248,52 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		callFunction(ui2.Attributes, gameItemKey, tableName, ctx, svc)
 
-	} else if body.Type == "ready" {
+	} else if body.Tipe == "ready" {
 
-		if body.Value {
+		// if body.Value {
 
-			ui2, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-				Key:       gameItemKey,
-				TableName: aws.String(tableName),
-				ExpressionAttributeNames: map[string]string{
-					"#PL": "players",
-					"#ID": id,
-					"#RD": "ready",
-				},
-				ExpressionAttributeValues: map[string]types.AttributeValue{
-					":t": &types.AttributeValueMemberBOOL{Value: true},
-				},
-				UpdateExpression: aws.String("SET #PL.#ID.#RD = :t"),
-				ReturnValues:     types.ReturnValueAllNew,
-			})
+		ui2, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+			Key:       gameItemKey,
+			TableName: aws.String(tableName),
+			ExpressionAttributeNames: map[string]string{
+				"#PL": "players",
+				"#ID": id,
+				"#RD": "ready",
+			},
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":t": &types.AttributeValueMemberBOOL{Value: true},
+			},
+			UpdateExpression: aws.String("SET #PL.#ID.#RD = :t"),
+			ReturnValues:     types.ReturnValueAllNew,
+		})
 
-			callErr(err)
+		callErr(err)
 
-			callFunction(ui2.Attributes, gameItemKey, tableName, ctx, svc)
+		callFunction(ui2.Attributes, gameItemKey, tableName, ctx, svc)
 
-		} else {
+		// } else {
 
-			_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-				Key:       gameItemKey,
-				TableName: aws.String(tableName),
-				ExpressionAttributeNames: map[string]string{
-					"#PL": "players",
-					"#ID": id,
-					"#RD": "ready",
-					"#LE": "leader",
-				},
-				ExpressionAttributeValues: map[string]types.AttributeValue{
-					":e": &types.AttributeValueMemberS{Value: ""},
-					":f": &types.AttributeValueMemberBOOL{Value: false},
-				},
-				UpdateExpression: aws.String("SET #PL.#ID.#RD = :f, #LE = :e"),
-			})
-			callErr(err)
+		// 	_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		// 		Key:       gameItemKey,
+		// 		TableName: aws.String(tableName),
+		// 		ExpressionAttributeNames: map[string]string{
+		// 			"#PL": "players",
+		// 			"#ID": id,
+		// 			"#RD": "ready",
+		// 			"#LE": "leader",
+		// 		},
+		// 		ExpressionAttributeValues: map[string]types.AttributeValue{
+		// 			":e": &types.AttributeValueMemberS{Value: ""},
+		// 			":f": &types.AttributeValueMemberBOOL{Value: false},
+		// 		},
+		// 		UpdateExpression: aws.String("SET #PL.#ID.#RD = :f, #LE = :e"),
+		// 	})
+		// 	callErr(err)
 
-		}
+		// }
 
-	} else if body.Type == "disconnect" {
-		if body.Game != "dc" {
+	} else if body.Tipe == "disconnect" {
+		if body.Gameno != "dc" {
 
 			ui2, err := svc.UpdateItem(ctx, &removePlayerInput)
 

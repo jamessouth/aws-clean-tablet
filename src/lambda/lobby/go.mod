@@ -1,4 +1,4 @@
-module joinGame
+module lobby
 
 go 1.17
 
