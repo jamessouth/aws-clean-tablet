@@ -106,6 +106,15 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			Body:              "",
 			IsBase64Encoded:   false,
 		}, err
+	} else if len(body.Gameno) != 19 {
+		err = errors.New("invalid game number")
+		return events.APIGatewayProxyResponse{
+			StatusCode:        http.StatusBadRequest,
+			Headers:           map[string]string{"Content-Type": "application/json"},
+			MultiValueHeaders: map[string][]string{},
+			Body:              "",
+			IsBase64Encoded:   false,
+		}, err
 	} else {
 		gameno = body.Gameno
 	}
@@ -259,49 +268,45 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		callFunction(ui2.Attributes, gameItemKey, tableName, ctx, svc)
 
-	} else if body.Tipe == "ready" {
+	} else if body.Tipe == "ready_true" {
 
-		if body.Value {
+		ui2, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+			Key:       gameItemKey,
+			TableName: aws.String(tableName),
+			ExpressionAttributeNames: map[string]string{
+				"#PL": "players",
+				"#ID": id,
+				"#RD": "ready",
+			},
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":t": &types.AttributeValueMemberBOOL{Value: true},
+			},
+			UpdateExpression: aws.String("SET #PL.#ID.#RD = :t"),
+			ReturnValues:     types.ReturnValueAllNew,
+		})
 
-			ui2, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-				Key:       gameItemKey,
-				TableName: aws.String(tableName),
-				ExpressionAttributeNames: map[string]string{
-					"#PL": "players",
-					"#ID": id,
-					"#RD": "ready",
-				},
-				ExpressionAttributeValues: map[string]types.AttributeValue{
-					":t": &types.AttributeValueMemberBOOL{Value: true},
-				},
-				UpdateExpression: aws.String("SET #PL.#ID.#RD = :t"),
-				ReturnValues:     types.ReturnValueAllNew,
-			})
+		callErr(err)
 
-			callErr(err)
+		callFunction(ui2.Attributes, gameItemKey, tableName, ctx, svc)
 
-			callFunction(ui2.Attributes, gameItemKey, tableName, ctx, svc)
+	} else if body.Tipe == "ready_false" {
 
-		} else {
-
-			_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-				Key:       gameItemKey,
-				TableName: aws.String(tableName),
-				ExpressionAttributeNames: map[string]string{
-					"#PL": "players",
-					"#ID": id,
-					"#RD": "ready",
-					"#LE": "leader",
-				},
-				ExpressionAttributeValues: map[string]types.AttributeValue{
-					":e": &types.AttributeValueMemberS{Value: ""},
-					":f": &types.AttributeValueMemberBOOL{Value: false},
-				},
-				UpdateExpression: aws.String("SET #PL.#ID.#RD = :f, #LE = :e"),
-			})
-			callErr(err)
-
-		}
+		_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+			Key:       gameItemKey,
+			TableName: aws.String(tableName),
+			ExpressionAttributeNames: map[string]string{
+				"#PL": "players",
+				"#ID": id,
+				"#RD": "ready",
+				"#LE": "leader",
+			},
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":e": &types.AttributeValueMemberS{Value: ""},
+				":f": &types.AttributeValueMemberBOOL{Value: false},
+			},
+			UpdateExpression: aws.String("SET #PL.#ID.#RD = :f, #LE = :e"),
+		})
+		callErr(err)
 
 	} else if body.Tipe == "disconnect" {
 		if body.Gameno != "dc" {
