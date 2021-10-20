@@ -21,6 +21,8 @@ import (
 	"github.com/aws/smithy-go"
 )
 
+// export CGO_ENABLED=0 | go build -o main main.go | zip main.zip main | aws lambda update-function-code --function-name ct-lobby --zip-file fileb://main.zip
+
 const maxPlayersPerGame string = "8"
 
 // Key holds values to be put in db

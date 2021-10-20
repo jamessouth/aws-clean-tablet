@@ -92,6 +92,11 @@ let useWs = (token) => {
     None
   }, [token])
 
+//  msg {"ingame":"163470931","leadertoken":"test_HfOJPg=","type":"user"}
+
+//  msg {"games":{"no":"163470931","players":[{"name":"test","connid":"HfOJPg=","ready":false,"score":0}]},"type":"games"}
+
+
   React.useEffect1(() => {
     switch Js.Nullable.isNullable(ws) {
     | true => ()
@@ -104,14 +109,22 @@ let useWs = (token) => {
         Js.log2("errrr", e)
         setWsError(._ => "temp error placehold")
       })
+
+
+
       ws->onMessage(({data}) => {
         Js.log2("msg", data)
+        
 
         let {listGames} = parseGamesList(data)
         Js.log2("parsed", listGames)
         dispatch(ListGames(Js.Nullable.return(listGames)))
 
       })
+
+
+
+
       ws->onClose(({code, reason, wasClean}) => {
         Js.log4("close", code, reason, wasClean)
       })

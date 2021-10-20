@@ -53,10 +53,11 @@ type insertConnPayload struct {
 // Type  string      `json:"type"`
 
 type modifyConnPayload struct {
-	Ingame      string `json:"ingame"`
+	ModifyConn  string `json:"modifyConn"`
 	Leadertoken string `json:"leadertoken"`
-	Type        string `json:"type"`
 }
+
+// Type        string `json:"type"`
 
 type insertGamePayload struct {
 	Games gameout `json:"games"`
@@ -404,10 +405,10 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			} else if rec.EventName == dynamodbstreams.OperationTypeModify && !connRecord.Playing {
 
 				payload, err := json.Marshal(modifyConnPayload{
-					Ingame:      connRecord.Game,
+					ModifyConn:  connRecord.Game,
 					Leadertoken: connRecord.Sk + "_" + connRecord.GSI1SK,
-					Type:        "user",
 				})
+				// Type:        "user",
 				if err != nil {
 					return callErr(err)
 				}
