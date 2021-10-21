@@ -57,14 +57,14 @@ type modifyConnPayload struct {
 	ModConnGm string `json:"modConnGm"`
 }
 
+// Type  string  `json:"type"`
 type insertGamePayload struct {
-	Games gameout `json:"games"`
-	Type  string  `json:"type"`
+	AddGame gameout `json:"addGame__"`
 }
 
+// Type string  `json:"type"`
 type modifyGamePayload struct {
-	Game gameout `json:"game"`
-	Type string  `json:"type"`
+	ModGame gameout `json:"modGame__"`
 }
 
 type lessFunc func(p1, p2 *player) int
@@ -448,7 +448,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 				if gameRecord.Loading {
 					gp := modifyGamePayload{
-						Game: gameout{
+						ModGame: gameout{
 							Pk:       "",
 							No:       gameRecord.Sk,
 							Leader:   gameRecord.Leader,
@@ -458,7 +458,6 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 							Players:  gameRecord.Players.getPlayersSlice().sort(score, name),
 							Answers:  gameRecord.Answers,
 						},
-						Type: "playing",
 					}
 
 					payload, err := json.Marshal(gp)
@@ -466,7 +465,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 						return callErr(err)
 					}
 
-					for _, v := range gp.Game.Players {
+					for _, v := range gp.ModGame.Players {
 
 						conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.ConnID), Data: payload}
 
@@ -505,7 +504,7 @@ func main() {
 
 func getGamePayload(g gamein) ([]byte, error) {
 	payload, err := json.Marshal(insertGamePayload{
-		Games: gameout{
+		AddGame: gameout{
 			Pk:       "",
 			No:       g.Sk,
 			Leader:   g.Leader,
@@ -515,7 +514,6 @@ func getGamePayload(g gamein) ([]byte, error) {
 			Players:  g.Players.getPlayersSlice().sort(name),
 			Answers:  g.Answers,
 		},
-		Type: "games",
 	})
 	if err != nil {
 		return nil, fmt.Errorf("error marshalling payload: %w", err)

@@ -57,7 +57,18 @@ type modConnData = {
 // @scope("JSON") @val
 external parseModConn: string => modConnData = "parse"
 
+type addGameData = {
+  addGame__: Reducer.game
+}
+// @scope("JSON") @val
+external parseAddGame: string => addGameData = "parse"
 
+
+type modGameData = {
+  modGame__: Reducer.game
+}
+// @scope("JSON") @val
+external parseModGame: string => modGameData = "parse"
 
 
 let useWs = (token) => {
@@ -129,13 +140,27 @@ let useWs = (token) => {
             Js.log2("parsedlistgames", listGames, connID)
             dispatch(ListGames(Js.Nullable.return(listGames)))
             setConnID(_ => connID)
-        }
+          }
         | "modConnGm" => {
             let {modConnGm} = parseModConn(data)
             Js.log2("parsedmodconn", modConnGm)
             setModConnGm(._ => modConnGm)
+          }
+        | "addGame__" => {
+            let {addGame__} = parseAddGame(data)
+            Js.log2("parsedaddgame", addGame__)
+            dispatch(AddGame(addGame__))
+          }
+        | "modGame__" => {
+            let {modGame__} = parseModGame(data)
+            Js.log2("parsedmodgame", modGame__)
+            dispatch(UpdateGame(modGame__))
+          }
 
-        }
+
+
+
+
         }
         
 
