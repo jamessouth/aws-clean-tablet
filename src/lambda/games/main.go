@@ -46,18 +46,16 @@ type connin struct {
 	GSI1SK string `json:"gsi1sk"`
 }
 
+// Tipe  string      `json:"tipe"`
 type insertConnPayload struct {
 	ListGames gameOutList `json:"listGames"`
+	ConnID    string      `json:"connID"`
 }
 
-// Type  string      `json:"type"`
-
+// Tipe   string `json:"tipe"`
 type modifyConnPayload struct {
-	ModifyConn  string `json:"modifyConn"`
-	Leadertoken string `json:"leadertoken"`
+	ModConnGm string `json:"modConnGm"`
 }
-
-// Type        string `json:"type"`
 
 type insertGamePayload struct {
 	Games gameout `json:"games"`
@@ -387,10 +385,11 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 					return callErr(err)
 				}
 
+				// Tipe:  "listGames",
 				payload, err := json.Marshal(insertConnPayload{
 					ListGames: games.mapGames(),
+					ConnID:    connRecord.GSI1SK,
 				})
-				// Type:  "games",
 				if err != nil {
 					return callErr(err)
 				}
@@ -404,11 +403,11 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			} else if rec.EventName == dynamodbstreams.OperationTypeModify && !connRecord.Playing {
 
+				// Tipe:   "modifyConn",
 				payload, err := json.Marshal(modifyConnPayload{
-					ModifyConn:  connRecord.Game,
-					Leadertoken: connRecord.Sk + "_" + connRecord.GSI1SK,
+					ModConnGm: connRecord.Game,
 				})
-				// Type:        "user",
+
 				if err != nil {
 					return callErr(err)
 				}

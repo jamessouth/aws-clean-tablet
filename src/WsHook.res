@@ -44,10 +44,18 @@ type return = {
 }
 
 type listGamesData = {
-  listGames: array<Reducer.game>
+  listGames: array<Reducer.game>,
+  connID: string
 }
 @scope("JSON") @val
-external parseGamesList: string => listGamesData = "parse"
+external parseListGames: string => listGamesData = "parse"
+
+
+type modConnData = {
+  modConnGm: string
+}
+// @scope("JSON") @val
+external parseModConn: string => modConnData = "parse"
 
 
 
@@ -70,8 +78,8 @@ let useWs = (token) => {
   let (currentWord, _setCurrentWord) = React.Uncurried.useState(_ => "")
   let (previousWord, _setPreviousWord) = React.Uncurried.useState(_ => "")
   let (game, _setGame) = React.Uncurried.useState(_ => emptyGame)
-  let (ingame, _setIngame) = React.Uncurried.useState(_ => "")
-  let (leadertoken, _setLeadertoken) = React.Uncurried.useState(_ => "")
+  let (modConnGm, setModConnGm) = React.Uncurried.useState(_ => "")
+  // let (leadertoken, _setLeadertoken) = React.Uncurried.useState(_ => "")
 
   let {initialState, reducer} = Reducer.appState()
 
@@ -114,11 +122,23 @@ let useWs = (token) => {
 
       ws->onMessage(({data}) => {
         Js.log2("msg", data)
+
+        switch data->Js.String2.slice(from=2, to_=11) {
+        | "listGames" => {
+            let {listGames, connID} = parseListGames(data)
+            Js.log2("parsedlistgames", listGames, connID)
+            dispatch(ListGames(Js.Nullable.return(listGames)))
+            setConnID(_ => connID)
+        }
+        | "modConnGm" => {
+            let {modConnGm} = parseModConn(data)
+            Js.log2("parsedmodconn", modConnGm)
+            setModConnGm(._ => modConnGm)
+
+        }
+        }
         
 
-        let {listGames} = parseGamesList(data)
-        Js.log2("parsed", listGames)
-        dispatch(ListGames(Js.Nullable.return(listGames)))
 
       })
 

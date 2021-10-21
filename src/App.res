@@ -29,6 +29,8 @@ let make = () => {
   )
 
   let (playerName, setPlayerName) = React.useState(_ => "")
+  let (connID, setConnID) = React.useState(_ => "")
+  
   let (token, setToken) = React.useState(_ => None)
 
 
