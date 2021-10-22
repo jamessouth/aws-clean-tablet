@@ -67,6 +67,10 @@ type modifyGamePayload struct {
 	ModGame gameout `json:"modGame__"`
 }
 
+type removeGamePayload struct {
+	RemoveGame gameout `json:"removeGme"`
+}
+
 type lessFunc func(p1, p2 *player) int
 
 type multiSorter struct {
@@ -439,7 +443,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			if rec.EventName == dynamodbstreams.OperationTypeInsert {
 
-				err = sendGamesToConns(ctx, ddbsvc, apigwsvc, gameRecord, tableName)
+				err = sendGamesToConns(ctx, ddbsvc, apigwsvc, gameRecord, tableName, "add")
 				if err != nil {
 					return callErr(err)
 				}
@@ -477,12 +481,20 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 					}
 
 				} else {
+					if gameRecord.Starting {
 
-					err = sendGamesToConns(ctx, ddbsvc, apigwsvc, gameRecord, tableName)
-					if err != nil {
-						return callErr(err)
+						err = sendGamesToConns(ctx, ddbsvc, apigwsvc, gameRecord, tableName, "rem")
+						if err != nil {
+							return callErr(err)
+						}
+
+					} else {
+						err = sendGamesToConns(ctx, ddbsvc, apigwsvc, gameRecord, tableName, "mod")
+						if err != nil {
+							return callErr(err)
+						}
+
 					}
-
 				}
 
 			} else {
@@ -502,19 +514,36 @@ func main() {
 	lambda.Start(handler)
 }
 
-func getGamePayload(g gamein) ([]byte, error) {
-	payload, err := json.Marshal(insertGamePayload{
-		AddGame: gameout{
-			Pk:       "",
-			No:       g.Sk,
-			Leader:   g.Leader,
-			Starting: g.Starting,
-			Loading:  g.Loading,
-			Playing:  g.Playing,
-			Players:  g.Players.getPlayersSlice().sort(name),
-			Answers:  g.Answers,
-		},
-	})
+func getGamePayload(g gamein, opt string) (payload []byte, err error) {
+
+	pl := gameout{
+		Pk:       "",
+		No:       g.Sk,
+		Leader:   g.Leader,
+		Starting: g.Starting,
+		Loading:  g.Loading,
+		Playing:  g.Playing,
+		Players:  g.Players.getPlayersSlice().sort(name),
+		Answers:  g.Answers,
+	}
+
+	if opt == "add" {
+		payload, err = json.Marshal(insertGamePayload{
+			AddGame: pl,
+		})
+	} else if opt == "mod" {
+		payload, err = json.Marshal(modifyGamePayload{
+			ModGame: pl,
+		})
+	} else if opt == "rem" {
+		payload, err = json.Marshal(removeGamePayload{
+			RemoveGame: pl,
+		})
+
+	} else {
+		return nil, errors.New("invalid payload option provided")
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("error marshalling payload: %w", err)
 	}
@@ -567,9 +596,9 @@ func unmarshalConns(ctx context.Context, ddbsvc *dynamodb.Client, tn string) (co
 
 }
 
-func sendGamesToConns(ctx context.Context, ddbsvc *dynamodb.Client, apigwsvc *apigatewaymanagementapi.Client, gr gamein, tn string) error {
+func sendGamesToConns(ctx context.Context, ddbsvc *dynamodb.Client, apigwsvc *apigatewaymanagementapi.Client, gr gamein, tn, opt string) error {
 
-	payload, err := getGamePayload(gr)
+	payload, err := getGamePayload(gr, opt)
 	if err != nil {
 		return fmt.Errorf("could not get payload: %w", err)
 	}

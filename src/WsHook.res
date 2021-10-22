@@ -71,6 +71,13 @@ type modGameData = {
 external parseModGame: string => modGameData = "parse"
 
 
+type remGameData = {
+  removeGme: Reducer.game
+}
+// @scope("JSON") @val
+external parseRemGame: string => remGameData = "parse"
+
+
 let useWs = (token) => {
   // Js.log2("wshook ", token)
 
@@ -155,6 +162,11 @@ let useWs = (token) => {
             let {modGame__} = parseModGame(data)
             Js.log2("parsedmodgame", modGame__)
             dispatch(UpdateGame(modGame__))
+          }
+        | "removeGme" => {
+            let {removeGme} = parseRemGame(data)
+            Js.log2("parsedremgame", removeGme)
+            dispatch(RemoveGame(removeGme))
           }
 
 
