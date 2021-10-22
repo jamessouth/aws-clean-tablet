@@ -270,7 +270,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		callFunction(ui2.Attributes, gameItemKey, tableName, ctx, svc)
 
-	} else if body.Tipe == "ready_true" {
+	} else if body.Tipe == "ready" {
 
 		ui2, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 			Key:       gameItemKey,
@@ -291,7 +291,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		callFunction(ui2.Attributes, gameItemKey, tableName, ctx, svc)
 
-	} else if body.Tipe == "ready_false" {
+	} else if body.Tipe == "unready" {
 
 		_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 			Key:       gameItemKey,

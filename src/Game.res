@@ -47,8 +47,8 @@ let make = (~game: Reducer.game, ~leadertoken: string, ~ingame, ~send) => {
       action: "lobby",
       gameno: game.no,
       tipe: switch ready {
-      | true => "ready_true"
-      | false => "ready_false"
+      | true => "ready"
+      | false => "unready"
       }
     }
     Js.Json.stringifyAny(pl)->send

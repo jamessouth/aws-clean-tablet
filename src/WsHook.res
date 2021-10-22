@@ -44,7 +44,7 @@ type return = {
 }
 
 type listGamesData = {
-  listGames: array<Reducer.game>,
+  list: array<Reducer.game>,
   connID: string
 }
 @scope("JSON") @val
@@ -52,27 +52,27 @@ external parseListGames: string => listGamesData = "parse"
 
 
 type modConnData = {
-  modConnGm: string
+  modC: string
 }
 // @scope("JSON") @val
 external parseModConn: string => modConnData = "parse"
 
 type addGameData = {
-  addGame__: Reducer.game
+  addG: Reducer.game
 }
 // @scope("JSON") @val
 external parseAddGame: string => addGameData = "parse"
 
 
 type modGameData = {
-  modGame__: Reducer.game
+  modG: Reducer.game
 }
 // @scope("JSON") @val
 external parseModGame: string => modGameData = "parse"
 
 
 type remGameData = {
-  removeGme: Reducer.game
+  remG: Reducer.game
 }
 // @scope("JSON") @val
 external parseRemGame: string => remGameData = "parse"
@@ -141,32 +141,32 @@ let useWs = (token) => {
       ws->onMessage(({data}) => {
         Js.log2("msg", data)
 
-        switch data->Js.String2.slice(from=2, to_=11) {
-        | "listGames" => {
-            let {listGames, connID} = parseListGames(data)
-            Js.log2("parsedlistgames", listGames, connID)
-            dispatch(ListGames(Js.Nullable.return(listGames)))
+        switch data->Js.String2.slice(from=2, to_=6) {
+        | "list" => {
+            let {list, connID} = parseListGames(data)
+            Js.log2("parsedlistgames", list, connID)
+            dispatch(ListGames(Js.Nullable.return(list)))
             setConnID(_ => connID)
           }
-        | "modConnGm" => {
-            let {modConnGm} = parseModConn(data)
-            Js.log2("parsedmodconn", modConnGm)
-            setModConnGm(._ => modConnGm)
+        | "modC" => {
+            let {modC} = parseModConn(data)
+            Js.log2("parsedmodconn", modC)
+            setModConnGm(._ => modC)
           }
-        | "addGame__" => {
-            let {addGame__} = parseAddGame(data)
-            Js.log2("parsedaddgame", addGame__)
-            dispatch(AddGame(addGame__))
+        | "addG" => {
+            let {addG} = parseAddGame(data)
+            Js.log2("parsedaddgame", addG)
+            dispatch(AddGame(addG))
           }
-        | "modGame__" => {
-            let {modGame__} = parseModGame(data)
-            Js.log2("parsedmodgame", modGame__)
-            dispatch(UpdateGame(modGame__))
+        | "modG" => {
+            let {modG} = parseModGame(data)
+            Js.log2("parsedmodgame", modG)
+            dispatch(UpdateGame(modG))
           }
-        | "removeGme" => {
-            let {removeGme} = parseRemGame(data)
-            Js.log2("parsedremgame", removeGme)
-            dispatch(RemoveGame(removeGme))
+        | "remG" => {
+            let {remG} = parseRemGame(data)
+            Js.log2("parsedremgame", remG)
+            dispatch(RemoveGame(remG))
           }
 
 
