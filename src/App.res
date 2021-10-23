@@ -29,7 +29,7 @@ let make = () => {
   )
 
   let (playerName, setPlayerName) = React.useState(_ => "")
-  let (connID, setConnID) = React.useState(_ => "")
+  
   
   let (token, setToken) = React.useState(_ => None)
 
@@ -47,10 +47,10 @@ let make = () => {
     wsConnected,
     game,
     games,
-    ingame,
-    leadertoken,
+    playerGame,
     currentWord,
     previousWord,
+    connID,
     send,
     wsError
   } = WsHook.useWs(token)
@@ -127,7 +127,7 @@ let make = () => {
 
       | (list{"resetpwd"}, None) => <Resetpwd />
 
-      | (list{"lobby"}, Some(_)) => <Lobby wsConnected ingame leadertoken games send wsError/>
+      | (list{"lobby"}, Some(_)) => <Lobby wsConnected playerGame leadertoken=(playerName ++ "_" ++ connID) games send wsError/>
 
       | (list{"lobby"}, None) => {
           RescriptReactRouter.replace("/")
@@ -140,7 +140,7 @@ let make = () => {
         }
 
 
-      | (list{"game", _gameno}, Some(_)) => <Play playerName wsConnected game leadertoken playerColor send wsError currentWord previousWord/>
+      | (list{"game", _gameno}, Some(_)) => <Play playerName wsConnected game leadertoken="nnn" playerColor send wsError currentWord previousWord/>
 
       | (_, _) => <div> {"other"->React.string} </div> // <PageNotFound/>
       }}

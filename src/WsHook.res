@@ -35,10 +35,10 @@ type return = {
   wsConnected: bool,
   game: Reducer.game,
   games: Js.Nullable.t<array<Reducer.game>>,
-  ingame: string,
-  leadertoken: string,
+  playerGame: string,
   currentWord: string,
   previousWord: string,
+  connID: string,
   send: option<string> => unit,
   wsError: string,
 }
@@ -54,27 +54,27 @@ external parseListGames: string => listGamesData = "parse"
 type modConnData = {
   modC: string
 }
-// @scope("JSON") @val
+@scope("JSON") @val
 external parseModConn: string => modConnData = "parse"
 
 type addGameData = {
   addG: Reducer.game
 }
-// @scope("JSON") @val
+@scope("JSON") @val
 external parseAddGame: string => addGameData = "parse"
 
 
 type modGameData = {
   modG: Reducer.game
 }
-// @scope("JSON") @val
+@scope("JSON") @val
 external parseModGame: string => modGameData = "parse"
 
 
 type remGameData = {
   remG: Reducer.game
 }
-// @scope("JSON") @val
+@scope("JSON") @val
 external parseRemGame: string => remGameData = "parse"
 
 
@@ -96,8 +96,8 @@ let useWs = (token) => {
   let (currentWord, _setCurrentWord) = React.Uncurried.useState(_ => "")
   let (previousWord, _setPreviousWord) = React.Uncurried.useState(_ => "")
   let (game, _setGame) = React.Uncurried.useState(_ => emptyGame)
-  let (modConnGm, setModConnGm) = React.Uncurried.useState(_ => "")
-  // let (leadertoken, _setLeadertoken) = React.Uncurried.useState(_ => "")
+  let (playerGame, setPlayerGame) = React.Uncurried.useState(_ => "")
+  let (connID, setConnID) = React.Uncurried.useState(_ => "")
 
   let {initialState, reducer} = Reducer.appState()
 
@@ -141,17 +141,17 @@ let useWs = (token) => {
       ws->onMessage(({data}) => {
         Js.log2("msg", data)
 
-        switch data->Js.String2.slice(from=2, to_=6) {
+        switch data->Js.String2.slice(~from=2, ~to_=6) {
         | "list" => {
             let {list, connID} = parseListGames(data)
-            Js.log2("parsedlistgames", list, connID)
+            Js.log3("parsedlistgames", list, connID)
             dispatch(ListGames(Js.Nullable.return(list)))
-            setConnID(_ => connID)
+            setConnID(._ => connID)
           }
         | "modC" => {
             let {modC} = parseModConn(data)
             Js.log2("parsedmodconn", modC)
-            setModConnGm(._ => modC)
+            setPlayerGame(._ => modC)
           }
         | "addG" => {
             let {addG} = parseAddGame(data)
@@ -217,10 +217,10 @@ let useWs = (token) => {
     wsConnected: wsConnected,
     game: game,
     games: state.gamesList,
-    ingame: ingame,
-    leadertoken: leadertoken,
+    playerGame: playerGame,
     currentWord: currentWord,
     previousWord: previousWord,
+    connID: connID,
     send: send,
     wsError: wsError,
   }

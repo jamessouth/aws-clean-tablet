@@ -9,7 +9,7 @@ type routePayload = {
 let chk = Js.String2.fromCharCode(10003)
 
 @react.component
-let make = (~game: Reducer.game, ~leadertoken: string, ~ingame, ~send) => {
+let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send) => {
   let (ready, setReady) = React.useState(_ => true)
   let (count, setCount) = React.useState(_ => 5)
   let (disabled1, setDisabled1) = React.useState(_ => false)
@@ -29,13 +29,13 @@ let make = (~game: Reducer.game, ~leadertoken: string, ~ingame, ~send) => {
     let pl = {
       action: "lobby",
       gameno: game.no,
-      tipe: switch (ingame == "", ingame === game.no) {
+      tipe: switch (playerGame == "", playerGame === game.no) {
       | (false, true) => "leave"
       | (_, _) => "join"
       }
     }
     Js.Json.stringifyAny(pl)->send
-    switch (ingame == "", ingame === game.no) {
+    switch (playerGame == "", playerGame === game.no) {
       | (false, true) => setReady(_ => true)
       | (_, _) => ()
       }
@@ -74,23 +74,23 @@ let make = (~game: Reducer.game, ~leadertoken: string, ~ingame, ~send) => {
 }, [game.leader])
 
   React.useEffect3(() => {
-    switch (ingame == "", ingame === game.no, Js.Array2.length(game.players) > 7) {
+    switch (playerGame == "", playerGame === game.no, Js.Array2.length(game.players) > 7) {
     | (false, false, _) | (true, _, true) => setDisabled1(_ => true)
     | (_, _, _) => setDisabled1(_ => false)
     }
     None
-  }, (ingame, game.no, game.players))
+  }, (playerGame, game.no, game.players))
 
   React.useEffect3(() => {
-    switch (ingame == "", ingame === game.no, Js.Array2.length(game.players) < 3) {
+    switch (playerGame == "", playerGame === game.no, Js.Array2.length(game.players) < 3) {
     | (false, false, _) | (true, _, _) | (_, _, true) => setDisabled2(_ => true)
     | (_, _, _) => setDisabled2(_ => false)
     }
     None
-  }, (ingame, game.no, game.players))
+  }, (playerGame, game.no, game.players))
 
   React.useEffect3(() => {
-    let id = if gameReady && game.no === ingame {
+    let id = if gameReady && game.no === playerGame {
       Js.Global.setInterval(() => {
         setCount(c => c - 1)
       }, 1000)
@@ -104,10 +104,10 @@ let make = (~game: Reducer.game, ~leadertoken: string, ~ingame, ~send) => {
         Js.Global.clearInterval(id)
       },
     )
-  }, (gameReady, game.no, ingame))
+  }, (gameReady, game.no, playerGame))
 
   React.useEffect5(() => {
-    switch (ingame === game.no && count === 0, leader !== "" && leader === leadertoken) {
+    switch (playerGame === game.no && count === 0, leader !== "" && leader === leadertoken) {
     | (true, true) => {
         
         RescriptReactRouter.push(`/game/${game.no}`)
@@ -128,7 +128,7 @@ let make = (~game: Reducer.game, ~leadertoken: string, ~ingame, ~send) => {
     | (false, _) => ()
     }
     None
-  }, (count, game.no, ingame, leadertoken, leader))
+  }, (count, game.no, playerGame, leadertoken, leader))
 
   <li className="mb-8 w-10/12 mx-auto grid grid-cols-2 grid-rows-gamebox relative pb-8">
     <p className="text-xs col-span-2"> {game.no->React.string} </p>
@@ -153,7 +153,7 @@ let make = (~game: Reducer.game, ~leadertoken: string, ~ingame, ~send) => {
       })
       ->React.array}
     </>}
-    {switch (gameReady, ingame !== game.no) {
+    {switch (gameReady, playerGame !== game.no) {
     | (true, true) =>
         <p
           className="absolute text-yellow-200 text-2xl font-bold left-1/2 bottom-1/4 transform -translate-x-2/4">
@@ -173,7 +173,7 @@ let make = (~game: Reducer.game, ~leadertoken: string, ~ingame, ~send) => {
         onClick=onClick1
       className="w-1/2 bottom-0 h-8 left-0 absolute pt-2 bg-smoke-700 bg-opacity-70"
       disabled=disabled1>
-      {switch (ingame == "", ingame === game.no) {
+      {switch (playerGame == "", playerGame === game.no) {
       | (false, true) => React.string("leave")
       | (_, _) => React.string("join")
       }}
