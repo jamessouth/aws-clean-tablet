@@ -131,14 +131,14 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send) => {
   }, (count, game.no, playerGame, leadertoken, leader))
 
   <li className="mb-8 w-10/12 mx-auto grid grid-cols-2 grid-rows-gamebox relative pb-8">
-    <p className="text-xs col-span-2"> {game.no->React.string} </p>
-    <p className="text-xs col-span-2"> {"players"->React.string} </p>
+    <p className="text-center font-anon text-xs col-span-2"> {game.no->React.string} </p>
+    <p className="text-center font-anon text-xs col-span-2"> {"players"->React.string} </p>
     {<>
       {game.players
       ->Js.Array2.map(p => {
         switch p.ready {
         | true =>
-          <p key=p.connid>
+          <p className="text-center font-anon" key=p.connid>
             {p.name->React.string}
             <span
               className={switch leaderName === p.name {
@@ -171,7 +171,7 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send) => {
     }}
     <button
         onClick=onClick1
-      className="w-1/2 bottom-0 h-8 left-0 absolute pt-2 bg-smoke-700 bg-opacity-70"
+      className="cursor-pointer font-anon w-1/2 bottom-0 h-8 left-0 absolute pt-2 bg-smoke-700 bg-opacity-70"
       disabled=disabled1>
       {switch (playerGame == "", playerGame === game.no) {
       | (false, true) => React.string("leave")
@@ -180,7 +180,7 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send) => {
     </button>
     <button
         onClick=onClick2
-      className="w-1/2 bottom-0 h-8 right-0 absolute pt-2 bg-smoke-700 bg-opacity-70"
+      className="cursor-pointer font-anon w-1/2 bottom-0 h-8 right-0 absolute pt-2 bg-smoke-700 bg-opacity-70"
       disabled=disabled2>
       {switch ready {
       | true => "ready"->React.string
