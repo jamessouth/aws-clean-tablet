@@ -45,40 +45,47 @@ type return = {
 
 type listGamesData = {
   list: array<Reducer.game>,
-  connID: string
+  connID: string,
 }
 @scope("JSON") @val
 external parseListGames: string => listGamesData = "parse"
 
-
-type modConnData = {
-  modC: string
-}
+type modConnData = {modC: string}
 @scope("JSON") @val
 external parseModConn: string => modConnData = "parse"
 
-type addGameData = {
-  addG: Reducer.game
-}
+type addGameData = {addG: Reducer.game}
 @scope("JSON") @val
 external parseAddGame: string => addGameData = "parse"
 
-
-type modGameData = {
-  modG: Reducer.game
-}
+type modGameData = {modG: Reducer.game}
 @scope("JSON") @val
 external parseModGame: string => modGameData = "parse"
 
-
-type remGameData = {
-  remG: Reducer.game
-}
+type remGameData = {remG: Reducer.game}
 @scope("JSON") @val
 external parseRemGame: string => remGameData = "parse"
 
+type msgType =
+  | InsertConn
+  | ModifyConn
+  | InsertGame
+  | ModifyGame
+  | RemoveGame
+  | Other
 
-let useWs = (token) => {
+        let getMsgType = tag => {
+        switch tag->Js.String2.slice(~from=2, ~to_=6) {
+        | "list" => InsertConn
+        | "modC" => ModifyConn
+        | "addG" => InsertGame
+        | "modG" => ModifyGame
+        | "remG" => RemoveGame
+        | _ => Other
+        }
+      }
+
+let useWs = token => {
   // Js.log2("wshook ", token)
 
   let emptyGame: Reducer.game = {
@@ -118,10 +125,9 @@ let useWs = (token) => {
     None
   }, [token])
 
-//  msg {"ingame":"163470931","leadertoken":"test_HfOJPg=","type":"user"}
+  //  msg {"ingame":"163470931","leadertoken":"test_HfOJPg=","type":"user"}
 
-//  msg {"games":{"no":"163470931","players":[{"name":"test","connid":"HfOJPg=","ready":false,"score":0}]},"type":"games"}
-
+  //  msg {"games":{"no":"163470931","players":[{"name":"test","connid":"HfOJPg=","ready":false,"score":0}]},"type":"games"}
 
   React.useEffect1(() => {
     switch Js.Nullable.isNullable(ws) {
@@ -141,46 +147,36 @@ let useWs = (token) => {
       ws->onMessage(({data}) => {
         Js.log2("msg", data)
 
-        switch data->Js.String2.slice(~from=2, ~to_=6) {
-        | "list" => {
+        switch getMsgType(data) {
+        | InsertConn => {
             let {list, connID} = parseListGames(data)
             Js.log3("parsedlistgames", list, connID)
             dispatch(ListGames(Js.Nullable.return(list)))
             setConnID(._ => connID)
           }
-        | "modC" => {
+        | ModifyConn => {
             let {modC} = parseModConn(data)
             Js.log2("parsedmodconn", modC)
             setPlayerGame(._ => modC)
           }
-        | "addG" => {
+        | InsertGame => {
             let {addG} = parseAddGame(data)
             Js.log2("parsedaddgame", addG)
             dispatch(AddGame(addG))
           }
-        | "modG" => {
+        | ModifyGame => {
             let {modG} = parseModGame(data)
             Js.log2("parsedmodgame", modG)
             dispatch(UpdateGame(modG))
           }
-        | "remG" => {
+        | RemoveGame => {
             let {remG} = parseRemGame(data)
             Js.log2("parsedremgame", remG)
             dispatch(RemoveGame(remG))
           }
-
-
-
-
-
+        | Other => Js.log2("unknown json data", data)
         }
-        
-
-
       })
-
-
-
 
       ws->onClose(({code, reason, wasClean}) => {
         Js.log4("close", code, reason, wasClean)
