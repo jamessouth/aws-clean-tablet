@@ -5,11 +5,20 @@ external signOut: (Js.Nullable.t<Signup.usr>, Js.Nullable.t<revokeTokenCallback>
   "signOut"
 
 @react.component
-let make = (~cognitoUser, ~setToken) => {
+let make = (~cognitoUser, ~setToken, ~send, ~playerGame) => {
   let onClick = e => {
     Js.log2("btn clck", e)
     cognitoUser->signOut(Js.Nullable.null)
     setToken(_ => None)
+    let pl: Game.routePayload = {
+      action: "lobby",
+      gameno: switch Js.String2.length(playerGame) == 0 {
+      | true => "dc"
+      | false => playerGame
+      },
+      tipe: "disconnect",
+    }
+    Js.Json.stringifyAny(pl)->send
   }
 
   <button

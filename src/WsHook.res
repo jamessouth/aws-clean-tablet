@@ -74,16 +74,16 @@ type msgType =
   | RemoveGame
   | Other
 
-        let getMsgType = tag => {
-        switch tag->Js.String2.slice(~from=2, ~to_=6) {
-        | "list" => InsertConn
-        | "modC" => ModifyConn
-        | "addG" => InsertGame
-        | "modG" => ModifyGame
-        | "remG" => RemoveGame
-        | _ => Other
-        }
-      }
+let getMsgType = tag => {
+  switch tag->Js.String2.slice(~from=2, ~to_=6) {
+  | "list" => InsertConn
+  | "modC" => ModifyConn
+  | "addG" => InsertGame
+  | "modG" => ModifyGame
+  | "remG" => RemoveGame
+  | _ => Other
+  }
+}
 
 let useWs = token => {
   // Js.log2("wshook ", token)
@@ -141,8 +141,6 @@ let useWs = token => {
         Js.log2("errrr", e)
         setWsError(._ => "temp error placehold")
       })
-
-
 
       ws->onMessage(({data}) => {
         Js.log2("msg", data)
