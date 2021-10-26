@@ -1,10 +1,8 @@
 type routePayload = {
   action: string,
   gameno: string,
-  tipe: string
+  tipe: string,
 }
-
-
 
 let chk = Js.String2.fromCharCode(10003)
 
@@ -32,14 +30,13 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send) => {
       tipe: switch (playerGame == "", playerGame === game.no) {
       | (false, true) => "leave"
       | (_, _) => "join"
-      }
+      },
     }
     Js.Json.stringifyAny(pl)->send
     switch (playerGame == "", playerGame === game.no) {
-      | (false, true) => setReady(_ => true)
-      | (_, _) => ()
-      }
-    
+    | (false, true) => setReady(_ => true)
+    | (_, _) => ()
+    }
   }
 
   let onClick2 = _e => {
@@ -49,7 +46,7 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send) => {
       tipe: switch ready {
       | true => "ready"
       | false => "unready"
-      }
+      },
     }
     Js.Json.stringifyAny(pl)->send
     setReady(_ => !ready)
@@ -66,12 +63,12 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send) => {
   }
 
   React.useEffect1(() => {
-  switch game.leader {
-  | None => setLeader(_ => "")
-  | Some(l) => setLeader(_ => l)
-  }
-  None
-}, [game.leader])
+    switch game.leader {
+    | None => setLeader(_ => "")
+    | Some(l) => setLeader(_ => l)
+    }
+    None
+  }, [game.leader])
 
   React.useEffect3(() => {
     switch (playerGame == "", playerGame === game.no, Js.Array2.length(game.players) > 7) {
@@ -109,9 +106,7 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send) => {
   React.useEffect5(() => {
     switch (playerGame === game.no && count === 0, leader !== "" && leader === leadertoken) {
     | (true, true) => {
-        
         RescriptReactRouter.push(`/game/${game.no}`)
-
 
         let pl = {
           action: "play",
@@ -121,25 +116,26 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send) => {
         Js.Json.stringifyAny(pl)->send
       }
     | (true, false) => RescriptReactRouter.push(`/game/${game.no}`)
-    
-
-
 
     | (false, _) => ()
     }
     None
   }, (count, game.no, playerGame, leadertoken, leader))
 
-  <li className="mb-8 w-10/12 mx-auto grid grid-cols-2 grid-rows-gamebox relative pb-8">
-    <p className="text-center font-anon text-xs col-span-2"> {game.no->React.string} </p>
-    <p className="text-center font-anon text-xs col-span-2"> {"players"->React.string} </p>
-    {<>
-      {game.players
+  <li className="mb-8 mx-auto grid grid-cols-2 grid-rows-gamebox relative pb-8">
+    <p className="text-center text-warm-gray-100 font-anon text-sm col-span-2">
+      {game.no->React.string}
+    </p>
+    <p className="text-center text-warm-gray-100 font-anon text-sm col-span-2">
+      {"players"->React.string}
+    </p>
+    {
+      game.players
       ->Js.Array2.map(p => {
-        switch p.ready {
-        | true =>
-          <p className="text-center font-anon" key=p.connid>
-            {p.name->React.string}
+        <p className="text-center text-warm-gray-100 font-anon" key=p.connid>
+          {p.name->React.string}
+          {switch p.ready {
+          | true =>
             <span
               className={switch leaderName === p.name {
               | true => `text-red-200${chkstyl}`
@@ -147,31 +143,32 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send) => {
               }}>
               {chk->React.string}
             </span>
-          </p>
-        | false => <p key=p.connid> {p.name->React.string} </p>
-        }
+          | false => React.null
+          }}
+        </p>
       })
-      ->React.array}
-    </>}
-    {switch (gameReady, playerGame !== game.no) {
-    | (true, true) =>
+      ->React.array
+    }
+    {
+      switch (gameReady, playerGame !== game.no) {
+      | (true, true) =>
         <p
           className="absolute text-yellow-200 text-2xl font-bold left-1/2 bottom-1/4 transform -translate-x-2/4">
           {"Starting soon..."->React.string}
         </p>
 
-        
       | (true, false) =>
         <p
           className="absolute text-yellow-200 text-2xl font-bold left-1/2 bottom-1/4 transform -translate-x-2/4">
           {count->Js.Int.toString->React.string}
         </p>
-      
-    | (false, _) => React.null
-    }}
+
+      | (false, _) => React.null
+      }
+    }
     <button
-        onClick=onClick1
-      className="cursor-pointer font-anon w-1/2 bottom-0 h-8 left-0 absolute pt-2 bg-smoke-700 bg-opacity-70"
+      onClick=onClick1
+      className="cursor-pointer text-warm-gray-100 font-anon w-1/2 bottom-0 h-8 left-0 absolute pt-2 bg-smoke-700 bg-opacity-70"
       disabled=disabled1>
       {switch (playerGame == "", playerGame === game.no) {
       | (false, true) => React.string("leave")
@@ -179,8 +176,8 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send) => {
       }}
     </button>
     <button
-        onClick=onClick2
-      className="cursor-pointer font-anon w-1/2 bottom-0 h-8 right-0 absolute pt-2 bg-smoke-700 bg-opacity-70"
+      onClick=onClick2
+      className="cursor-pointer text-warm-gray-100 font-anon w-1/2 bottom-0 h-8 right-0 absolute pt-2 bg-smoke-700 bg-opacity-70"
       disabled=disabled2>
       {switch ready {
       | true => "ready"->React.string

@@ -33,6 +33,7 @@
 
 
 ul li{
+  background-image: linear-gradient(to left, #8e9eab55, #eef2f388);
   background-image: paint(bod);
   /* height: 200px; */
 }
