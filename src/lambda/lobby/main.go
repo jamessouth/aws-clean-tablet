@@ -98,6 +98,8 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	if body.Gameno == "new" {
 		gameno = fmt.Sprintf("%d", time.Now().UnixNano())
+	} else if body.Gameno == "dc" {
+		gameno = body.Gameno
 	} else if _, err = strconv.ParseInt(body.Gameno, 10, 64); err != nil {
 		fmt.Println("ParseInt error: ", err)
 
@@ -311,7 +313,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		callErr(err)
 
 	} else if body.Tipe == "disconnect" {
-		if body.Gameno != "dc" {
+		if gameno != "dc" {
 
 			ui2, err := svc.UpdateItem(ctx, &removePlayerInput)
 
