@@ -23,7 +23,7 @@ type closeEventHandler = closeEvent => unit
 @set external onMessage: (Js.Nullable.t<t>, messageEventHandler) => unit = "onmessage"
 @set external onClose: (Js.Nullable.t<t>, closeEventHandler) => unit = "onclose"
 
-@send external close: (Js.Nullable.t<t>, unit) => unit = "close"
+@send external closeNiladic: (Js.Nullable.t<t>, unit) => unit = "close"
 @send external closeCode: (Js.Nullable.t<t>, int) => unit = "close"
 @send external closeReason: (Js.Nullable.t<t>, string) => unit = "close"
 @send external closeCodeReason: (Js.Nullable.t<t>, int, string) => unit = "close"
@@ -40,6 +40,7 @@ type return = {
   previousWord: string,
   connID: string,
   send: option<string> => unit,
+  close: (int, string) => unit,
   wsError: string,
 }
 
@@ -206,6 +207,8 @@ let useWs = token => {
     }
   }
 
+  let close = (code, reason) => ws->closeCodeReason(code, reason)
+
   {
     playerColor: playerColor,
     wsConnected: wsConnected,
@@ -216,6 +219,7 @@ let useWs = token => {
     previousWord: previousWord,
     connID: connID,
     send: send,
+    close: close,
     wsError: wsError,
   }
 }

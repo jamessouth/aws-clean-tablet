@@ -7,7 +7,7 @@ type routePayload = {
 let chk = Js.String2.fromCharCode(10003)
 
 @react.component
-let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send) => {
+let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send, ~class) => {
   let (ready, setReady) = React.useState(_ => true)
   let (count, setCount) = React.useState(_ => 5)
   let (disabled1, setDisabled1) = React.useState(_ => false)
@@ -122,7 +122,7 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send) => {
     None
   }, (count, game.no, playerGame, leadertoken, leader))
 
-  <li className="mb-8 mx-auto grid grid-cols-2 grid-rows-gamebox relative pb-8">
+  <li className=`mb-8 mx-auto grid grid-cols-2 grid-rows-gamebox relative pb-8 ${class}`>
     <p className="text-center text-warm-gray-100 font-anon text-sm col-span-2">
       {game.no->React.string}
     </p>
@@ -168,7 +168,7 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send) => {
     }
     <button
       onClick=onClick1
-      className="cursor-pointer text-warm-gray-100 font-anon w-1/2 bottom-0 h-8 left-0 absolute pt-2 bg-smoke-700 bg-opacity-70"
+      className="cursor-pointer text-sm text-warm-gray-100 font-anon w-1/2 bottom-0 h-8 left-0 absolute pt-2 bg-smoke-700 bg-opacity-70"
       disabled=disabled1>
       {switch (playerGame == "", playerGame === game.no) {
       | (false, true) => React.string("leave")
@@ -177,7 +177,7 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send) => {
     </button>
     <button
       onClick=onClick2
-      className="cursor-pointer text-warm-gray-100 font-anon w-1/2 bottom-0 h-8 right-0 absolute pt-2 bg-smoke-700 bg-opacity-70"
+      className="cursor-pointer text-sm text-warm-gray-100 font-anon w-1/2 bottom-0 h-8 right-0 absolute pt-2 bg-smoke-700 bg-opacity-70"
       disabled=disabled2>
       {switch ready {
       | true => "ready"->React.string
