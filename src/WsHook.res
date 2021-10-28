@@ -86,7 +86,7 @@ let getMsgType = tag => {
   }
 }
 
-let useWs = token => {
+let useWs = (token, setToken) => {
   // Js.log2("wshook ", token)
 
   let emptyGame: Reducer.game = {
@@ -114,7 +114,7 @@ let useWs = token => {
   React.useEffect1(() => {
     // Js.log2("effect ", token)
     switch token {
-    | None => ()
+    | None => setWs(._ => Js.Nullable.null)
     | Some(token) =>
       setWs(._ =>
         Js.Nullable.return(
@@ -179,13 +179,13 @@ let useWs = token => {
 
       ws->onClose(({code, reason, wasClean}) => {
         Js.log4("close", code, reason, wasClean)
+        setToken(_ => None)
       })
     }
 
     let cleanup = () => {
       setWsConnected(._ => false)
       setWsError(._ => "")
-      // setToken(_ => None)
       switch Js.Nullable.isNullable(ws) {
       | true => ()
       | false => ws->closeCode(1000)

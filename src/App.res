@@ -54,7 +54,7 @@ let make = () => {
     send,
     close,
     wsError
-  } = WsHook.useWs(token)
+  } = WsHook.useWs(token, setToken)
 
   <>
     <SignOut cognitoUser setToken send playerGame close/>

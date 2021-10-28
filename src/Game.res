@@ -168,7 +168,7 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send, ~class) => {
     }
     <button
       onClick=onClick1
-      className="cursor-pointer text-sm text-warm-gray-100 font-anon w-1/2 bottom-0 h-8 left-0 absolute pt-2 bg-smoke-700 bg-opacity-70"
+      className="cursor-pointer text-base text-warm-gray-100 font-anon w-1/2 bottom-0 h-8 left-0 absolute bg-smoke-700 bg-opacity-70"
       disabled=disabled1>
       {switch (playerGame == "", playerGame === game.no) {
       | (false, true) => React.string("leave")
@@ -177,7 +177,7 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send, ~class) => {
     </button>
     <button
       onClick=onClick2
-      className="cursor-pointer text-sm text-warm-gray-100 font-anon w-1/2 bottom-0 h-8 right-0 absolute pt-2 bg-smoke-700 bg-opacity-70"
+      className="cursor-pointer text-base text-warm-gray-100 font-anon w-1/2 bottom-0 h-8 right-0 absolute bg-smoke-700 bg-opacity-70"
       disabled=disabled2>
       {switch ready {
       | true => "ready"->React.string
