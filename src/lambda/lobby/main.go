@@ -45,14 +45,13 @@ type answer struct {
 }
 
 type game struct {
-	Pk       string `dynamodbav:"pk"`
-	Sk       string `dynamodbav:"sk"`
-	Starting bool   `dynamodbav:"starting"`
-	// Leader   string            `dynamodbav:"leader"`
-	Loading   bool              `dynamodbav:"loading"`
-	Players   map[string]Player `dynamodbav:"players"`
-	Answers   []answer          `dynamodbav:"answers"`
-	Countdown int               `dynamodbav:"countdown"`
+	Pk       string            `dynamodbav:"pk"`
+	Sk       string            `dynamodbav:"sk"`
+	Starting bool              `dynamodbav:"starting"`
+	Leader   string            `dynamodbav:"leader"`
+	Loading  bool              `dynamodbav:"loading"`
+	Players  map[string]Player `dynamodbav:"players"`
+	Answers  []answer          `dynamodbav:"answers"`
 }
 
 type body struct {
@@ -138,12 +137,12 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		ExpressionAttributeNames: map[string]string{
 			"#PL": "players",
 			"#ID": id,
-			// "#LE": "leader",
+			"#LE": "leader",
 		},
-		// ExpressionAttributeValues: map[string]types.AttributeValue{
-		// 	":e": &types.AttributeValueMemberS{Value: ""},
-		// },
-		UpdateExpression: aws.String("REMOVE #PL.#ID"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":e": &types.AttributeValueMemberS{Value: ""},
+		},
+		UpdateExpression: aws.String("REMOVE #PL.#ID SET #LE = :e"),
 		ReturnValues:     types.ReturnValueAllNew,
 	}
 
@@ -203,14 +202,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 							"#ID": id,
 							// "#ST": "starting",#ST = :f
 							// "#LO": "loading",#LO = :f
-							// "#LE": "leader",
+							"#LE": "leader",
 						},
 						ExpressionAttributeValues: map[string]types.AttributeValue{
-							// ":e": &types.AttributeValueMemberS{Value: ""},
+							":e": &types.AttributeValueMemberS{Value: ""},
 							":m": &types.AttributeValueMemberN{Value: maxPlayersPerGame},
 							":p": marshalledPlayer,
 						},
-						UpdateExpression: aws.String("SET #PL.#ID = :p"),
+						UpdateExpression: aws.String("SET #PL.#ID = :p, #LE = :e"),
 					},
 				},
 				{
@@ -231,18 +230,16 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 							"#PL": "players",
 							"#ST": "starting",
 							"#LO": "loading",
-							// "#LE": "leader",
+							"#LE": "leader",
 							"#AN": "answers",
-							"#CD": "countdown",
 						},
 						ExpressionAttributeValues: map[string]types.AttributeValue{
 							":p": marshalledPlayersMap,
 							":a": marshalledAnswersList,
-							// ":e": &types.AttributeValueMemberS{Value: ""},
+							":e": &types.AttributeValueMemberS{Value: ""},
 							":f": &types.AttributeValueMemberBOOL{Value: false},
-							":t": &types.AttributeValueMemberN{Value: "5"},
 						},
-						UpdateExpression: aws.String("SET #PL = :p, #ST = :f, #LO = :f, #AN = :a, #CD = :t"),
+						UpdateExpression: aws.String("SET #PL = :p, #ST = :f, #LO = :f, #LE = :e, #AN = :a"),
 					},
 				},
 				{
@@ -305,13 +302,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 				"#PL": "players",
 				"#ID": id,
 				"#RD": "ready",
-				// "#LE": "leader",
+				"#LE": "leader",
 			},
 			ExpressionAttributeValues: map[string]types.AttributeValue{
-				// ":e": &types.AttributeValueMemberS{Value: ""},
+				":e": &types.AttributeValueMemberS{Value: ""},
 				":f": &types.AttributeValueMemberBOOL{Value: false},
 			},
-			UpdateExpression: aws.String("SET #PL.#ID.#RD = :f"),
+			UpdateExpression: aws.String("SET #PL.#ID.#RD = :f, #LE = :e"),
 		})
 		callErr(err)
 
@@ -372,40 +369,18 @@ func callFunction(rv, gik map[string]types.AttributeValue, tn string, ctx contex
 			readyCount++
 			if readyCount == len(gm.Players) {
 				time.Sleep(1000 * time.Millisecond)
-
-				// func main() {
-				// 	ticker := time.NewTicker(time.Second)
-				// 	defer ticker.Stop()
-
-				// 	done := make(chan bool)
-				// 	defer close(done)
-				// 	go func() {
-				// 		time.Sleep(6 * time.Second)
-				// 		done <- true
-				// 	}()
-				// 	for {
-				// 		select {
-				// 		case <-done:
-				// 			fmt.Println("Done!")
-				// 			return
-				// 		case t := <-ticker.C:
-				// 			fmt.Println(6 - t.Second())
-				// 		}
-				// 	}
-				// }
-
-				// _, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-				// 	Key:       gik,
-				// 	TableName: aws.String(tn),
-				// 	ExpressionAttributeNames: map[string]string{
-				// 		"#LE": "leader",
-				// 	},
-				// 	ExpressionAttributeValues: map[string]types.AttributeValue{
-				// 		":l": &types.AttributeValueMemberS{Value: v.Name + "_" + v.ConnID},
-				// 	},
-				// 	UpdateExpression: aws.String("SET #LE = :l"),
-				// })
-				// callErr(err)
+				_, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+					Key:       gik,
+					TableName: aws.String(tn),
+					ExpressionAttributeNames: map[string]string{
+						"#LE": "leader",
+					},
+					ExpressionAttributeValues: map[string]types.AttributeValue{
+						":l": &types.AttributeValueMemberS{Value: v.Name + "_" + v.ConnID},
+					},
+					UpdateExpression: aws.String("SET #LE = :l"),
+				})
+				callErr(err)
 			}
 		} else {
 			return
