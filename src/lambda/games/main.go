@@ -34,7 +34,7 @@ type player struct {
 type gameout struct {
 	Pk       string     `json:"pk,omitempty"`
 	No       string     `json:"no"`
-	Leader   string     `json:"leader,omitempty"`
+	Ready    bool       `json:"ready"`
 	Starting bool       `json:"starting,omitempty"`
 	Loading  bool       `json:"loading,omitempty"`
 	Playing  bool       `json:"playing,omitempty"`
@@ -158,7 +158,7 @@ func (gl gameInList) mapGames() (res gameOutList) {
 		res = append(res, gameout{
 			Pk:       "",
 			No:       g.Sk,
-			Leader:   g.Leader,
+			Ready:    g.Ready,
 			Starting: false,
 			Loading:  false,
 			Playing:  false,
@@ -246,7 +246,7 @@ type connItem struct {
 type gamein struct {
 	Pk       string    `dynamodbav:"pk"`
 	Sk       string    `dynamodbav:"sk"`
-	Leader   string    `dynamodbav:"leader"`
+	Ready    bool      `dynamodbav:"ready"`
 	Starting bool      `dynamodbav:"starting"`
 	Loading  bool      `dynamodbav:"loading"`
 	Playing  bool      `dynamodbav:"playing,omitempty"`
@@ -455,7 +455,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 						ModGame: gameout{
 							Pk:       "",
 							No:       gameRecord.Sk,
-							Leader:   gameRecord.Leader,
+							Ready:    gameRecord.Ready,
 							Starting: gameRecord.Starting,
 							Loading:  gameRecord.Loading,
 							Playing:  gameRecord.Playing,
@@ -519,7 +519,7 @@ func getGamePayload(g gamein, opt string) (payload []byte, err error) {
 	pl := gameout{
 		Pk:       "",
 		No:       g.Sk,
-		Leader:   g.Leader,
+		Ready:    g.Ready,
 		Starting: g.Starting,
 		Loading:  g.Loading,
 		Playing:  g.Playing,

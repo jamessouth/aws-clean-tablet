@@ -48,7 +48,7 @@ type game struct {
 	Pk       string            `dynamodbav:"pk"`
 	Sk       string            `dynamodbav:"sk"`
 	Starting bool              `dynamodbav:"starting"`
-	Leader   string            `dynamodbav:"leader"`
+	Ready    bool              `dynamodbav:"ready"`
 	Loading  bool              `dynamodbav:"loading"`
 	Players  map[string]Player `dynamodbav:"players"`
 	Answers  []answer          `dynamodbav:"answers"`
@@ -137,12 +137,12 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		ExpressionAttributeNames: map[string]string{
 			"#PL": "players",
 			"#ID": id,
-			"#LE": "leader",
+			"#RE": "ready",
 		},
 		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":e": &types.AttributeValueMemberS{Value: ""},
+			":f": &types.AttributeValueMemberBOOL{Value: false},
 		},
-		UpdateExpression: aws.String("REMOVE #PL.#ID SET #LE = :e"),
+		UpdateExpression: aws.String("REMOVE #PL.#ID SET #RE = :f"),
 		ReturnValues:     types.ReturnValueAllNew,
 	}
 
@@ -202,14 +202,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 							"#ID": id,
 							// "#ST": "starting",#ST = :f
 							// "#LO": "loading",#LO = :f
-							"#LE": "leader",
+							"#RE": "ready",
 						},
 						ExpressionAttributeValues: map[string]types.AttributeValue{
-							":e": &types.AttributeValueMemberS{Value: ""},
+							":f": &types.AttributeValueMemberBOOL{Value: false},
 							":m": &types.AttributeValueMemberN{Value: maxPlayersPerGame},
 							":p": marshalledPlayer,
 						},
-						UpdateExpression: aws.String("SET #PL.#ID = :p, #LE = :e"),
+						UpdateExpression: aws.String("SET #PL.#ID = :p, #RE = :f"),
 					},
 				},
 				{
@@ -230,16 +230,15 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 							"#PL": "players",
 							"#ST": "starting",
 							"#LO": "loading",
-							"#LE": "leader",
+							"#RE": "ready",
 							"#AN": "answers",
 						},
 						ExpressionAttributeValues: map[string]types.AttributeValue{
 							":p": marshalledPlayersMap,
 							":a": marshalledAnswersList,
-							":e": &types.AttributeValueMemberS{Value: ""},
 							":f": &types.AttributeValueMemberBOOL{Value: false},
 						},
-						UpdateExpression: aws.String("SET #PL = :p, #ST = :f, #LO = :f, #LE = :e, #AN = :a"),
+						UpdateExpression: aws.String("SET #PL = :p, #ST = :f, #LO = :f, #RE = :f, #AN = :a"),
 					},
 				},
 				{
@@ -302,13 +301,12 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 				"#PL": "players",
 				"#ID": id,
 				"#RD": "ready",
-				"#LE": "leader",
+				// "#RE": "ready",
 			},
 			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":e": &types.AttributeValueMemberS{Value: ""},
 				":f": &types.AttributeValueMemberBOOL{Value: false},
 			},
-			UpdateExpression: aws.String("SET #PL.#ID.#RD = :f, #LE = :e"),
+			UpdateExpression: aws.String("SET #PL.#ID.#RD = :f, #RD = :f"),
 		})
 		callErr(err)
 
@@ -373,12 +371,12 @@ func callFunction(rv, gik map[string]types.AttributeValue, tn string, ctx contex
 					Key:       gik,
 					TableName: aws.String(tn),
 					ExpressionAttributeNames: map[string]string{
-						"#LE": "leader",
+						"#RE": "ready",
 					},
 					ExpressionAttributeValues: map[string]types.AttributeValue{
-						":l": &types.AttributeValueMemberS{Value: v.Name + "_" + v.ConnID},
+						":t": &types.AttributeValueMemberBOOL{Value: true},
 					},
-					UpdateExpression: aws.String("SET #LE = :l"),
+					UpdateExpression: aws.String("SET #RE = :t"),
 				})
 				callErr(err)
 			}

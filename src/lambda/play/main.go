@@ -65,7 +65,7 @@ type game struct {
 	Pk       string            `dynamodbav:"pk"`
 	Sk       string            `dynamodbav:"sk"`
 	Starting bool              `dynamodbav:"starting"`
-	Leader   string            `dynamodbav:"leader"`
+	Ready    bool              `dynamodbav:"ready"`
 	Token    string            `dynamodbav:"token"`
 	Loading  bool              `dynamodbav:"loading"`
 	Players  map[string]player `dynamodbav:"players"`
