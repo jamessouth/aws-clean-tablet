@@ -128,7 +128,7 @@ let make = () => {
 
       | (list{"resetpwd"}, None) => <Resetpwd />
 
-      | (list{"lobby"}, Some(_)) => <Lobby wsConnected playerGame leadertoken=(playerName ++ "_" ++ connID) games send wsError/>
+      | (list{"lobby"}, Some(_)) => <Lobby wsConnected playerGame leadertoken=(playerName ++ connID) games send wsError/>
 
       | (list{"lobby"}, None) => {
           RescriptReactRouter.replace("/")

@@ -90,7 +90,7 @@ let useWs = (token, setToken) => {
   // Js.log2("wshook ", token)
 
   let emptyGame: Reducer.game = {
-    leader: None,
+    ready: false,
     no: "",
     starting: false,
     players: [],
@@ -126,9 +126,7 @@ let useWs = (token, setToken) => {
     None
   }, [token])
 
-  //  msg {"ingame":"163470931","leadertoken":"test_HfOJPg=","type":"user"}
 
-  //  msg {"games":{"no":"163470931","players":[{"name":"test","connid":"HfOJPg=","ready":false,"score":0}]},"type":"games"}
 
   React.useEffect1(() => {
     switch Js.Nullable.isNullable(ws) {

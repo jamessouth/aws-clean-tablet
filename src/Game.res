@@ -12,16 +12,13 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send, ~class) => {
   let (count, setCount) = React.useState(_ => 5)
   let (disabled1, setDisabled1) = React.useState(_ => false)
   let (disabled2, setDisabled2) = React.useState(_ => false)
-  let (leader, setLeader) = React.useState(_ => "")
+  let (leader, setLeader) = React.useState(_ => false)
   //   let (prop1, setProp1) = React.useState(_ => false)
   //   let (inThisGame, setInThisGame) = React.useState(_ => false)
 
   let chkstyl = " text-2xl font-bold leading-3"
 
-  let gameReady = switch game.leader {
-  | Some(_) => true
-  | None => false
-  }
+
 
   let onClick1 = _e => {
     let pl = {
@@ -52,23 +49,7 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send, ~class) => {
     setReady(_ => !ready)
   }
 
-  let ldr = switch game.leader {
-  | Some(l) => l->Js.String2.split("_")
-  | None => [""]
-  }
 
-  let leaderName = switch gameReady {
-  | true => ldr[0]
-  | false => ""
-  }
-
-  React.useEffect1(() => {
-    switch game.leader {
-    | None => setLeader(_ => "")
-    | Some(l) => setLeader(_ => l)
-    }
-    None
-  }, [game.leader])
 
   React.useEffect3(() => {
     switch (playerGame == "", playerGame === game.no, Js.Array2.length(game.players) > 7) {
@@ -87,7 +68,7 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send, ~class) => {
   }, (playerGame, game.no, game.players))
 
   React.useEffect3(() => {
-    let id = if gameReady && game.no === playerGame {
+    let id = if game.ready && game.no === playerGame {
       Js.Global.setInterval(() => {
         setCount(c => c - 1)
       }, 1000)
@@ -101,10 +82,10 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send, ~class) => {
         Js.Global.clearInterval(id)
       },
     )
-  }, (gameReady, game.no, playerGame))
+  }, (game.ready, game.no, playerGame))
 
-  React.useEffect5(() => {
-    switch (playerGame === game.no && count === 0, leader !== "" && leader === leadertoken) {
+  React.useEffect4(() => {
+    switch (playerGame === game.no && count === 0, leader) {
     | (true, true) => {
         RescriptReactRouter.push(`/game/${game.no}`)
 
@@ -120,7 +101,7 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send, ~class) => {
     | (false, _) => ()
     }
     None
-  }, (count, game.no, playerGame, leadertoken, leader))
+  }, (count, game.no, playerGame, leader))
 
   <li className=`mb-8 mx-auto grid grid-cols-2 grid-rows-gamebox relative pb-8 ${class}`>
     <p className="text-center text-warm-gray-100 font-anon text-sm col-span-2">
@@ -132,12 +113,16 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send, ~class) => {
     {
       game.players
       ->Js.Array2.map(p => {
+        switch (game.players[0].name ++ game.players[0].connid) == leadertoken {
+        | true => setLeader(_ => true)
+        | false => setLeader(_ => false)
+        }
         <p className="text-center text-warm-gray-100 font-anon" key=p.connid>
           {p.name->React.string}
           {switch p.ready {
           | true =>
             <span
-              className={switch leaderName === p.name {
+              className={switch leader {
               | true => `text-red-200${chkstyl}`
               | false => `text-green-200${chkstyl}`
               }}>
@@ -150,7 +135,7 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send, ~class) => {
       ->React.array
     }
     {
-      switch (gameReady, playerGame !== game.no) {
+      switch (game.ready, playerGame !== game.no) {
       | (true, true) =>
         <p
           className="absolute text-yellow-200 text-2xl font-bold left-1/2 bottom-1/4 transform -translate-x-2/4">

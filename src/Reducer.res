@@ -7,7 +7,7 @@ type player = {
 }
 
 type game = {
-  leader: option<string>,
+  ready: bool,
   no: string,
   starting: bool,
   players: array<player>,
@@ -26,21 +26,7 @@ type return2 = {
   reducer: (state, action) => state,
 }
 
-// let mergeGame = (arr, ni) => {
-//     let list = Js.Array2.copy(arr)
-//     for i in 0 to Js.Array2.length(arr) - 1 {
-//       if arr[i].no == ni.no {
-//         switch ni.starting {
-//         | true => list->Js.Array2.spliceInPlace(~pos=i, ~remove=1, ~add=[])
-//         | false => {
-//           list[i] = ni
-//             list
-//         }
-//         }
-//       }
-//     }
-//     Js.Array2.concat([ni], list)
-// }
+
 
 let appState = () => {
   Js.log("appState")
