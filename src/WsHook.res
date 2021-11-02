@@ -42,6 +42,7 @@ type return = {
   send: (. option<string>) => unit,
   close: (int, string) => unit,
   wsError: string,
+  setWs: (. Js.Nullable.t<t> => Js.Nullable.t<t>) => unit,
 }
 
 type listGamesData = {
@@ -219,5 +220,6 @@ let useWs = (token, setToken) => {
     send: send,
     close: close,
     wsError: wsError,
+    setWs: setWs,
   }
 }

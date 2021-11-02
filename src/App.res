@@ -53,11 +53,12 @@ let make = () => {
     connID,
     send,
     close,
-    wsError
+    wsError,
+    setWs
   } = WsHook.useWs(token, setToken)
 
   <>
-    <SignOut cognitoUser setToken send playerGame close/>
+    <SignOut cognitoUser setToken send playerGame close setCognitoUser setPlayerName setWs/>
     <h1 className="text-6xl mt-11 text-center font-arch decay-mask text-warm-gray-100">
       {"CLEAN TABLET"->React.string}
     </h1>

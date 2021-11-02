@@ -7,7 +7,7 @@ type routePayload = {
 let chk = Js.String2.fromCharCode(10003)
 
 @react.component
-let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send, ~class) => {
+let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send, ~class, ~textcolor) => {
   let (ready, setReady) = React.Uncurried.useState(_ => true)
   let (count, setCount) = React.useState(_ => 5)
   let (disabled1, setDisabled1) = React.useState(_ => false)
@@ -80,8 +80,12 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send, ~class) => {
   }, (game.ready, game.no, playerGame))
 
   React.useEffect2(() => {
-    switch game.players[0].name ++ game.players[0].connid == leadertoken {
-    | true => setLeader(_ => true)
+    switch Js.Array2.length(game.players) > 0 {
+    | true =>
+      switch game.players[0].name ++ game.players[0].connid == leadertoken {
+      | true => setLeader(_ => true)
+      | false => setLeader(_ => false)
+      }
     | false => setLeader(_ => false)
     }
     None
@@ -107,15 +111,15 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send, ~class) => {
   }, (count, game.no, playerGame, leader))
 
   <li className={`mb-8 mx-auto grid grid-cols-2 grid-rows-gamebox relative pb-8 ${class}`}>
-    <p className="text-center text-warm-gray-100 font-anon text-sm col-span-2">
+    <p className=`text-center font-bold ${textcolor} font-anon text-sm col-span-2`>
       {game.no->React.string}
     </p>
-    <p className="text-center text-warm-gray-100 font-anon text-sm col-span-2">
+    <p className=`text-center font-bold ${textcolor} font-anon text-sm col-span-2`>
       {"players"->React.string}
     </p>
     {game.players
     ->Js.Array2.map(p => {
-      <p className="text-center text-warm-gray-100 font-anon" key=p.connid>
+      <p className=`text-center font-bold ${textcolor} font-anon` key=p.connid>
         {p.name->React.string}
         {switch p.ready {
         | true =>
