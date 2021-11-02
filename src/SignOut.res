@@ -17,7 +17,7 @@ let make = (~cognitoUser, ~setToken, ~send, ~playerGame, ~close) => {
       },
       tipe: "disconnect",
     }
-    Js.Json.stringifyAny(pl)->send
+    send(. Js.Json.stringifyAny(pl))
 
     close(1000, "user sign-out")
     cognitoUser->signOut(Js.Nullable.null)

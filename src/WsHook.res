@@ -39,7 +39,7 @@ type return = {
   currentWord: string,
   previousWord: string,
   connID: string,
-  send: option<string> => unit,
+  send: (. option<string>) => unit,
   close: (int, string) => unit,
   wsError: string,
 }
@@ -192,7 +192,7 @@ let useWs = (token, setToken) => {
     Some(cleanup)
   }, [ws])
 
-  let send = str => {
+  let send = (. str) => {
     // let dict = Js.Dict.empty()
     // Js.Dict.set(dict, "name", Js.Json.string("John Doe"))
     // Js.Dict.set(dict, "age", Js.Json.number(30.0))

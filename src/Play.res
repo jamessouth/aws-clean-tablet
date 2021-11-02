@@ -29,7 +29,7 @@ let make = (~playerName, ~wsConnected, ~game: Reducer.game, ~leadertoken, ~playe
             tipe: "answer",
             playersCount: j`$noplrs`
         }
-        Js.Json.stringifyAny(pl)->send
+        send(. Js.Json.stringifyAny(pl))
         (_ => true)->setAnswered
         (_ => "")->setInputText
     }

@@ -8,10 +8,10 @@ let make = (~wsConnected, ~playerGame, ~leadertoken, ~games, ~send, ~wsError) =>
       gameno: "new",
       tipe: "join"
     }
-    Js.Json.stringifyAny(pl)->send
+    send(. Js.Json.stringifyAny(pl))
   }
 
-  // let sendfunc = val => val->send
+
 
   switch wsError !== "" {
   | true => <p className="text-center text-warm-gray-100 font-anon text-lg"> {"not connected: connection error"->React.string} </p>

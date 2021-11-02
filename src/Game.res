@@ -8,7 +8,7 @@ let chk = Js.String2.fromCharCode(10003)
 
 @react.component
 let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send, ~class) => {
-  let (ready, setReady) = React.useState(_ => true)
+  let (ready, setReady) = React.Uncurried.useState(_ => true)
   let (count, setCount) = React.useState(_ => 5)
   let (disabled1, setDisabled1) = React.useState(_ => false)
   let (disabled2, setDisabled2) = React.useState(_ => false)
@@ -18,25 +18,23 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send, ~class) => {
 
   let chkstyl = " text-2xl font-bold leading-3"
 
-
-
-  let onClick1 = _e => {
+  let onClick1 = _ => {
     let pl = {
       action: "lobby",
       gameno: game.no,
-      tipe: switch (playerGame == "", playerGame === game.no) {
-      | (false, true) => "leave"
-      | (_, _) => "join"
+      tipe: switch playerGame === game.no {
+      | true => "leave"
+      | false => "join"
       },
     }
-    Js.Json.stringifyAny(pl)->send
-    switch (playerGame == "", playerGame === game.no) {
-    | (false, true) => setReady(_ => true)
-    | (_, _) => ()
+    send(. Js.Json.stringifyAny(pl))
+    switch playerGame === game.no {
+    | true => setReady(._ => true)
+    | false => ()
     }
   }
 
-  let onClick2 = _e => {
+  let onClick2 = _ => {
     let pl = {
       action: "lobby",
       gameno: game.no,
@@ -45,11 +43,9 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send, ~class) => {
       | false => "unready"
       },
     }
-    Js.Json.stringifyAny(pl)->send
-    setReady(_ => !ready)
+    send(. Js.Json.stringifyAny(pl))
+    setReady(._ => !ready)
   }
-
-
 
   React.useEffect3(() => {
     switch (playerGame == "", playerGame === game.no, Js.Array2.length(game.players) > 7) {
@@ -75,7 +71,6 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send, ~class) => {
     } else {
       Js.Global.setInterval(() => (), 3600000)
     }
-
     Some(
       () => {
         setCount(_ => 5)
@@ -83,6 +78,14 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send, ~class) => {
       },
     )
   }, (game.ready, game.no, playerGame))
+
+  React.useEffect2(() => {
+    switch game.players[0].name ++ game.players[0].connid == leadertoken {
+    | true => setLeader(_ => true)
+    | false => setLeader(_ => false)
+    }
+    None
+  }, (game.players, leadertoken))
 
   React.useEffect4(() => {
     switch (playerGame === game.no && count === 0, leader) {
@@ -94,7 +97,7 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send, ~class) => {
           gameno: game.no,
           tipe: "start",
         }
-        Js.Json.stringifyAny(pl)->send
+        send(. Js.Json.stringifyAny(pl))
       }
     | (true, false) => RescriptReactRouter.push(`/game/${game.no}`)
 
@@ -103,61 +106,53 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send, ~class) => {
     None
   }, (count, game.no, playerGame, leader))
 
-  <li className=`mb-8 mx-auto grid grid-cols-2 grid-rows-gamebox relative pb-8 ${class}`>
+  <li className={`mb-8 mx-auto grid grid-cols-2 grid-rows-gamebox relative pb-8 ${class}`}>
     <p className="text-center text-warm-gray-100 font-anon text-sm col-span-2">
       {game.no->React.string}
     </p>
     <p className="text-center text-warm-gray-100 font-anon text-sm col-span-2">
       {"players"->React.string}
     </p>
-    {
-      game.players
-      ->Js.Array2.map(p => {
-        switch (game.players[0].name ++ game.players[0].connid) == leadertoken {
-        | true => setLeader(_ => true)
-        | false => setLeader(_ => false)
-        }
-        <p className="text-center text-warm-gray-100 font-anon" key=p.connid>
-          {p.name->React.string}
-          {switch p.ready {
-          | true =>
-            <span
-              className={switch leader {
-              | true => `text-red-200${chkstyl}`
-              | false => `text-green-200${chkstyl}`
-              }}>
-              {chk->React.string}
-            </span>
-          | false => React.null
-          }}
-        </p>
-      })
-      ->React.array
-    }
-    {
-      switch (game.ready, playerGame !== game.no) {
-      | (true, true) =>
-        <p
-          className="absolute text-yellow-200 text-2xl font-bold left-1/2 bottom-1/4 transform -translate-x-2/4">
-          {"Starting soon..."->React.string}
-        </p>
+    {game.players
+    ->Js.Array2.map(p => {
+      <p className="text-center text-warm-gray-100 font-anon" key=p.connid>
+        {p.name->React.string}
+        {switch p.ready {
+        | true =>
+          <span
+            className={switch leader {
+            | true => `text-red-200${chkstyl}`
+            | false => `text-green-200${chkstyl}`
+            }}>
+            {chk->React.string}
+          </span>
+        | false => React.null
+        }}
+      </p>
+    })
+    ->React.array}
+    {switch (game.ready, playerGame !== game.no) {
+    | (true, true) =>
+      <p
+        className="absolute text-yellow-200 text-2xl font-bold left-1/2 bottom-1/4 transform -translate-x-2/4">
+        {"Starting soon..."->React.string}
+      </p>
 
-      | (true, false) =>
-        <p
-          className="absolute text-yellow-200 text-2xl font-bold left-1/2 bottom-1/4 transform -translate-x-2/4">
-          {count->Js.Int.toString->React.string}
-        </p>
+    | (true, false) =>
+      <p
+        className="absolute text-yellow-200 text-2xl font-bold left-1/2 bottom-1/4 transform -translate-x-2/4">
+        {count->Js.Int.toString->React.string}
+      </p>
 
-      | (false, _) => React.null
-      }
-    }
+    | (false, _) => React.null
+    }}
     <button
       onClick=onClick1
       className="cursor-pointer text-base text-warm-gray-100 font-anon w-1/2 bottom-0 h-8 left-0 absolute bg-smoke-700 bg-opacity-70"
       disabled=disabled1>
-      {switch (playerGame == "", playerGame === game.no) {
-      | (false, true) => React.string("leave")
-      | (_, _) => React.string("join")
+      {switch playerGame === game.no {
+      | true => React.string("leave")
+      | false => React.string("join")
       }}
     </button>
     <button
