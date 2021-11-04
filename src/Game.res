@@ -16,8 +16,6 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send, ~class, ~text
   //   let (prop1, setProp1) = React.useState(_ => false)
   //   let (inThisGame, setInThisGame) = React.useState(_ => false)
 
-  let chkstyl = " text-2xl font-bold leading-3"
-
   let onClick1 = _ => {
     let pl = {
       action: "lobby",
@@ -111,25 +109,19 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send, ~class, ~text
   }, (count, game.no, playerGame, leader))
 
   <li className={`mb-8 mx-auto grid grid-cols-2 grid-rows-gamebox relative pb-8 ${class}`}>
-    <p className=`text-center font-bold ${textcolor} font-anon text-sm col-span-2`>
+    <p className={`text-center font-bold ${textcolor} font-anon text-sm col-span-2`}>
       {game.no->React.string}
     </p>
-    <p className=`text-center font-bold ${textcolor} font-anon text-sm col-span-2`>
+    <p className={`text-center font-bold ${textcolor} font-anon text-sm col-span-2`}>
       {"players"->React.string}
     </p>
     {game.players
     ->Js.Array2.map(p => {
-      <p className=`text-center font-bold ${textcolor} font-anon` key=p.connid>
+      <p className={`text-center font-bold ${textcolor} font-anon`} key=p.connid>
         {p.name->React.string}
         {switch p.ready {
         | true =>
-          <span
-            className={switch leader {
-            | true => `text-red-200${chkstyl}`
-            | false => `text-green-200${chkstyl}`
-            }}>
-            {chk->React.string}
-          </span>
+          <span className="text-hex-006400 text-2xl font-bold leading-3"> {React.string(chk)} </span>
         | false => React.null
         }}
       </p>
@@ -138,13 +130,13 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send, ~class, ~text
     {switch (game.ready, playerGame !== game.no) {
     | (true, true) =>
       <p
-        className="absolute text-yellow-200 text-2xl font-bold left-1/2 bottom-1/4 transform -translate-x-2/4">
+        className={`absolute ${textcolor} text-3xl font-bold left-1/2 bottom-1/4 transform -translate-x-2/4`}>
         {"Starting soon..."->React.string}
       </p>
 
     | (true, false) =>
       <p
-        className="absolute text-yellow-200 text-2xl font-bold left-1/2 bottom-1/4 transform -translate-x-2/4">
+        className={`absolute ${textcolor} text-3xl font-bold left-1/2 bottom-1/4 transform -translate-x-2/4`}>
         {count->Js.Int.toString->React.string}
       </p>
 

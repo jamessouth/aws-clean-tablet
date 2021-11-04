@@ -317,27 +317,27 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			oi := rec.Change.OldImage
 			fmt.Printf("%s: %+v\n", "old db oi", oi)
 
-			item, err := FromDynamoDBEventAVMap(oi)
-			if err != nil {
-				return callErr(err)
-			}
+			// item, err := FromDynamoDBEventAVMap(oi)
+			// if err != nil {
+			// 	return callErr(err)
+			// }
 
-			var connRecord connItem
-			err = attributevalue.UnmarshalMap(item, &connRecord)
-			if err != nil {
-				return callErr(err)
-			}
+			// var connRecord connItem
+			// err = attributevalue.UnmarshalMap(item, &connRecord)
+			// if err != nil {
+			// 	return callErr(err)
+			// }
 
-			fmt.Printf("%s%+v\n", "connrecord ", connRecord)
+			// fmt.Printf("%s%+v\n", "connrecord ", connRecord)
 
-			_, err = apigwsvc.DeleteConnection(ctx, &apigatewaymanagementapi.DeleteConnectionInput{
-				ConnectionId: aws.String(connRecord.GSI1SK),
-			})
-			if err != nil {
-				return callErr(err)
-			}
+			// _, err = apigwsvc.DeleteConnection(ctx, &apigatewaymanagementapi.DeleteConnectionInput{
+			// 	ConnectionId: aws.String(connRecord.GSI1SK),
+			// })
+			// if err != nil {
+			// 	return callErr(err)
+			// }
 
-			return getReturnValue(http.StatusOK), nil
+			// return getReturnValue(http.StatusOK), nil
 		}
 
 		ddbcfg, err := config.LoadDefaultConfig(ctx,

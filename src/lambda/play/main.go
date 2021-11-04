@@ -73,7 +73,7 @@ type game struct {
 }
 
 type body struct {
-	Gameno, Type, Answer, PlayersCount string
+	Gameno, Tipe, Answer, PlayersCount string
 }
 
 type sfnArrInput struct {
@@ -152,7 +152,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		return callErr(err)
 	}
 
-	if body.Type == "start" {
+	if body.Tipe == "start" {
 
 		const wordsAmount int = 40
 		lambdasvc := lamb.NewFromConfig(cfg)
@@ -269,7 +269,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		}
 
-	} else if body.Type == "answer" {
+	} else if body.Tipe == "answer" {
 
 		ans, err := attributevalue.MarshalList(answer{
 			PlayerID: id,
