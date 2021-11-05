@@ -53,6 +53,9 @@ export default defineConfig({
             lineHeight: {
               '12rem': '12rem',
             },
+            textShadow: {
+              '2xl': '1px 0px 4px #f5f5f4bb',
+            },
           },
         },
       },

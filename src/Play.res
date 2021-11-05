@@ -14,14 +14,15 @@ let answer_max_length = 12
 @react.component
 let make = (~playerName, ~wsConnected, ~game: Reducer.game, ~leadertoken, ~playerColor, ~send, ~wsError, ~currentWord, ~previousWord) => {
   
-    Js.log4(wsConnected, leadertoken, wsError, previousWord)
+    Js.log4("play", wsConnected, leadertoken, wsError)
+    Js.log3("play2", previousWord, game)
     let (answered, setAnswered) = React.useState(_ => false)
     let (inputText, setInputText) = React.useState(_ => "")
     // let (currPrevWord, setCurrPrevWord) = React.useState(_ => false)
 
     let noplrs = Js.Array2.length(game.players)
 
-    let sendAnswer = _ => {
+    let _sendAnswer = _ => {
         let pl = {
             action: "play",
             gameno: game.no,
@@ -35,11 +36,13 @@ let make = (~playerName, ~wsConnected, ~game: Reducer.game, ~leadertoken, ~playe
     }
 
     let onAnimationEnd = _ => {
-        sendAnswer()
+        // sendAnswer()
+        Js.log("onanimend")
     }
 
     let onEnter = _ => {
-        sendAnswer()
+        // sendAnswer()
+        Js.log("onenter")
     }
 
 

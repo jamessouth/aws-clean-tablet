@@ -5,6 +5,7 @@
 @react.component
 let make = (~playerName, ~players: array<Reducer.player>) => {
 
+    Js.log2("score", players)
     let noplrs = players->Js.Array2.length
 
     <div className="w-full" style={ReactDOM.Style.make(~height=j`calc(82px + (28px * $noplrs))`, ())}>

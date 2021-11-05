@@ -154,10 +154,10 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	if body.Tipe == "start" {
 
-		const wordsAmount int = 40
+		const numberOfWords int = 40
 		lambdasvc := lamb.NewFromConfig(cfg)
 
-		wordsArg, err := json.Marshal(wordsAmount)
+		wordsArg, err := json.Marshal(numberOfWords)
 		if err != nil {
 			fmt.Println("arg to words lambda marshal err", err)
 		}
@@ -188,22 +188,17 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		lambdaReturn := *lambdaInv
 		fmt.Printf("\n%s, %+v\n", "liii", lambdaReturn)
 
-		lambdaErr := *lambdaReturn.FunctionError
+		if lambdaReturn.FunctionError != nil || lambdaReturn.StatusCode != 200 {
+			fmt.Println("inv pyld err ", *lambdaReturn.FunctionError)
+			var errPayload []string
+			err = json.Unmarshal(lambdaReturn.Payload, &errPayload)
+			if err != nil {
+				return callErr(err)
+			}
+			fmt.Println("err pyld ", errPayload)
+		}
 
 		var lambdaPayload []string
-		err = json.Unmarshal(lambdaReturn.Payload, &lambdaPayload)
-		if err != nil {
-			return callErr(err)
-		}
-
-		fmt.Println("inv pyld", lambdaPayload, "err", lambdaErr)
-
-		if lambdaReturn.StatusCode != 200 {
-			fmt.Println("inv err", lambdaErr, lambdaPayload)
-		}
-		// if lambdaErr != nil {
-		// 	fmt.Println("inv err", lambdaErr, lambdaPayload)
-		// }
 
 		words, err := attributevalue.Marshal(lambdaPayload)
 		if err != nil {
@@ -222,7 +217,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			ExpressionAttributeValues: map[string]types.AttributeValue{
 				":w": words,
 			},
-			UpdateExpression: aws.String("SET #W = :w)"),
+			UpdateExpression: aws.String("SET #W = :w"),
 			ReturnValues:     types.ReturnValueAllNew,
 		})
 

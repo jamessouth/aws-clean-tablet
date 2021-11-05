@@ -121,7 +121,7 @@ let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send, ~class, ~text
         {p.name->React.string}
         {switch p.ready {
         | true =>
-          <span className="text-hex-006400 text-2xl font-bold leading-3"> {React.string(chk)} </span>
+          <span className="text-hex-006400 text-2xl text-shadow-2xl font-bold leading-3"> {React.string(chk)} </span>
         | false => React.null
         }}
       </p>
