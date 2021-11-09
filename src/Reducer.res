@@ -6,14 +6,25 @@ type player = {
   score: string,
 }
 
-type game = {
-  ready: bool,
-  no: string,
-  starting: bool,
-  players: array<player>,
+type answer = {
+  playerid: string,
+  answer: string,
 }
 
-type state = {gamesList: Js.Nullable.t<array<game>>}
+type game = {
+  no: string,
+  ready: bool,
+  starting: bool,
+  loading: bool,
+  playing: bool,
+  players: array<player>,
+  answers: array<answer>,
+}
+
+type state = {
+  gamesList: Js.Nullable.t<array<game>>,
+  game: game,
+}
 
 type action =
   | ListGames(Js.Nullable.t<array<game>>)
@@ -26,41 +37,57 @@ type return2 = {
   reducer: (state, action) => state,
 }
 
-
-
 let appState = () => {
   Js.log("appState")
-  let initialState = {
-    gamesList: Js.Nullable.null,
-  }
-  let reducer = ({gamesList}, action) =>
-    switch (Js.Nullable.toOption(gamesList), action) {
-    | (None, ListGames(games)) => {gamesList: games}
+  let reducer = (state, action) =>
+    switch (Js.Nullable.toOption(state.gamesList), action) {
+    | (None, ListGames(games)) => {...state, gamesList: games}
 
-    | (None, _) => {gamesList: gamesList}
+    | (None, _) | (Some(_), ListGames(_)) => state
 
-    | (Some(gl), AddGame(game)) => {gamesList: Js.Nullable.return([game]->Js.Array2.concat(gl))}
+    | (Some(gl), AddGame(game)) => {
+        ...state,
+        gamesList: Js.Nullable.return([game]->Js.Array2.concat(gl)),
+      }
 
     | (Some(gl), RemoveGame(game)) => {
+        ...state,
         gamesList: Js.Nullable.return(gl->Js.Array2.filter(gm => gm.no !== game.no)),
       }
 
-    | (Some(gl), UpdateGame(game)) => {
-        gamesList: Js.Nullable.return(
-          gl->Js.Array2.map(gm =>
-            switch gm.no === game.no {
-            | true => game
-            | false => gm
-            }
+    | (Some(gl), UpdateGame(game)) =>
+      switch game.loading {
+      | true => {
+          ...state,
+          game: game,
+        }
+      | false => {
+          ...state,
+          gamesList: Js.Nullable.return(
+            gl->Js.Array2.map(gm =>
+              switch gm.no === game.no {
+              | true => game
+              | false => gm
+              }
+            ),
           ),
-        ),
+        }
       }
-
-    | (Some(_), ListGames(_)) => {gamesList: gamesList}
     }
 
   {
-    initialState: initialState,
+    initialState: {
+      gamesList: Js.Nullable.null,
+      game: {
+        no: "",
+        ready: false,
+        starting: false,
+        loading: false,
+        playing: false,
+        players: [],
+        answers: [],
+      },
+    },
     reducer: reducer,
   }
 }

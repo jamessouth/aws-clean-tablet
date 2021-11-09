@@ -231,7 +231,8 @@ func FromDynamoDBEventAV(av events.DynamoDBAttributeValue) (types.AttributeValue
 }
 
 type answer struct {
-	PlayerID, Answer string
+	PlayerID string `json:"playerid"`
+	Answer   string `json:"answer"`
 }
 
 type connItem struct {

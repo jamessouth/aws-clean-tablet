@@ -90,12 +90,6 @@ let getMsgType = tag => {
 let useWs = (token, setToken) => {
   // Js.log2("wshook ", token)
 
-  let emptyGame: Reducer.game = {
-    ready: false,
-    no: "",
-    starting: false,
-    players: [],
-  }
 
   let (ws, setWs) = React.Uncurried.useState(_ => Js.Nullable.null)
 
@@ -104,7 +98,7 @@ let useWs = (token, setToken) => {
   let (wsError, setWsError) = React.Uncurried.useState(_ => "")
   let (currentWord, _setCurrentWord) = React.Uncurried.useState(_ => "")
   let (previousWord, _setPreviousWord) = React.Uncurried.useState(_ => "")
-  let (game, _setGame) = React.Uncurried.useState(_ => emptyGame)
+  // let (game, setGame) = React.Uncurried.useState(_ => emptyGame)
   let (playerGame, setPlayerGame) = React.Uncurried.useState(_ => "")
   let (connID, setConnID) = React.Uncurried.useState(_ => "")
 
@@ -211,7 +205,7 @@ let useWs = (token, setToken) => {
   {
     playerColor: playerColor,
     wsConnected: wsConnected,
-    game: game,
+    game: state.game,
     games: state.gamesList,
     playerGame: playerGame,
     currentWord: currentWord,
