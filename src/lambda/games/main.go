@@ -222,6 +222,9 @@ func FromDynamoDBEventAV(av events.DynamoDBAttributeValue) (types.AttributeValue
 	case events.DataTypeNumber: // 5
 		return &types.AttributeValueMemberN{Value: av.Number()}, nil
 
+	case events.DataTypeNull: // 7
+		return &types.AttributeValueMemberNULL{Value: av.IsNull()}, nil
+
 	case events.DataTypeString: // 8
 		return &types.AttributeValueMemberS{Value: av.String()}, nil
 
@@ -338,7 +341,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			// 	return callErr(err)
 			// }
 
-			// return getReturnValue(http.StatusOK), nil
+			return getReturnValue(http.StatusOK), nil
 		}
 
 		ddbcfg, err := config.LoadDefaultConfig(ctx,
