@@ -11,8 +11,9 @@ type answerPayload = {
 let circ = Js.String2.fromCharCode(9862)
 let answer_max_length = 12
 
+// ~playerName, 
 @react.component
-let make = (~playerName, ~wsConnected, ~game: Reducer.game, ~leadertoken, ~playerColor, ~send, ~wsError, ~currentWord, ~previousWord) => {
+let make = (~wsConnected, ~game: Reducer.game, ~leadertoken, ~playerColor, ~send, ~wsError, ~currentWord, ~previousWord) => {
   
     Js.log4("play", wsConnected, leadertoken, wsError)
     Js.log3("play2", previousWord, game)
@@ -62,7 +63,8 @@ let make = (~playerName, ~wsConnected, ~game: Reducer.game, ~leadertoken, ~playe
 
 
     <div>
-        <Scoreboard playerName players=game.players />
+    // playerName
+        <Scoreboard players=game.players />
         // {
         //     switch (true, currPrevWord) {//game.playing
         //     | (true, false) => <p className="text-yellow-200 text-2xl font-bold">{"Get Ready"->React.string}<span className="animate-spin">{circ->React.string}</span></p>

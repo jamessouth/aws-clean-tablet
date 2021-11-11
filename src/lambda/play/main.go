@@ -70,6 +70,7 @@ type game struct {
 	Loading  bool              `dynamodbav:"loading"`
 	Players  map[string]player `dynamodbav:"players"`
 	Answers  []answer          `dynamodbav:"answers"`
+	Wordlist []string          `dynamodbav:"wordList"`
 }
 
 type body struct {

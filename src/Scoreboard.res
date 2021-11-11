@@ -3,7 +3,7 @@
 
 
 @react.component
-let make = (~playerName, ~players: array<Reducer.player>) => {
+let make = (~players: array<Reducer.player>) => {
 
     Js.log2("score", players)
     let noplrs = players->Js.Array2.length
@@ -11,7 +11,7 @@ let make = (~playerName, ~players: array<Reducer.player>) => {
     <div className="w-full" style={ReactDOM.Style.make(~height=j`calc(82px + (28px * $noplrs))`, ())}>
         <h2 className="text-center mb-5">{React.string("score")}</h2>
 
-        <p>{React.string(playerName)}</p>
+        // <p className="absolute">{React.string(playerName)}</p>
 
         <ul className="bg-yellow-300 opacity-80 border-2 border-solid border-yellow-400 p-3 w-11/12 max-w-lg my-0 mx-auto flex flex-col justify-around items-center">
         {

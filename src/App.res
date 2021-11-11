@@ -141,8 +141,8 @@ let make = () => {
           React.null
         }
 
-
-      | (list{"game", _gameno}, Some(_)) => <Play playerName wsConnected game leadertoken="nnn" playerColor send wsError currentWord previousWord/>
+// playerName
+      | (list{"game", _gameno}, Some(_)) => <Play wsConnected game leadertoken="nnn" playerColor send wsError currentWord previousWord/>
 
       | (_, _) => <div> {"other"->React.string} </div> // <PageNotFound/>
       }}

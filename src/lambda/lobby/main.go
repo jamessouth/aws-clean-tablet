@@ -52,6 +52,7 @@ type game struct {
 	Loading  bool              `dynamodbav:"loading"`
 	Players  map[string]Player `dynamodbav:"players"`
 	Answers  []answer          `dynamodbav:"answers"`
+	Wordlist []string          `dynamodbav:"wordList"`
 }
 
 type body struct {
@@ -232,13 +233,15 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 							"#LO": "loading",
 							"#RE": "ready",
 							"#AN": "answers",
+							"#WL": "wordList",
 						},
 						ExpressionAttributeValues: map[string]types.AttributeValue{
 							":p": marshalledPlayersMap,
 							":a": marshalledAnswersList,
 							":f": &types.AttributeValueMemberBOOL{Value: false},
+							":w": &types.AttributeValueMemberL{Value: []string{}},
 						},
-						UpdateExpression: aws.String("SET #PL = :p, #ST = :f, #LO = :f, #RE = :f, #AN = :a"),
+						UpdateExpression: aws.String("SET #PL = :p, #ST = :f, #LO = :f, #RE = :f, #AN = :a, #WL = :w"),
 					},
 				},
 				{
