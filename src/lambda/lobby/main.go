@@ -174,6 +174,11 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			panic(fmt.Sprintf("failed to marshal ans list 122, %v", err))
 		}
 
+		marshalledWordsList, err := attributevalue.Marshal([]string{})
+		if err != nil {
+			panic(fmt.Sprintf("failed to marshal word list 777, %v", err))
+		}
+
 		updateConnInput := types.Update{
 			Key: map[string]types.AttributeValue{
 				"pk": &types.AttributeValueMemberS{Value: "CONN#" + id},
@@ -239,7 +244,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 							":p": marshalledPlayersMap,
 							":a": marshalledAnswersList,
 							":f": &types.AttributeValueMemberBOOL{Value: false},
-							":w": &types.AttributeValueMemberL{Value: []string{}},
+							":w": marshalledWordsList,
 						},
 						UpdateExpression: aws.String("SET #PL = :p, #ST = :f, #LO = :f, #RE = :f, #AN = :a, #WL = :w"),
 					},

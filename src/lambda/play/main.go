@@ -200,6 +200,12 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		}
 
 		var lambdaPayload []string
+		err = json.Unmarshal(lambdaReturn.Payload, &lambdaPayload)
+		if err != nil {
+			return callErr(err)
+		}
+
+		fmt.Println(lambdaPayload)
 
 		words, err := attributevalue.Marshal(lambdaPayload)
 		if err != nil {
