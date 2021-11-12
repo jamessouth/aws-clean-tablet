@@ -100,7 +100,7 @@ let make = (~userpool, ~setCognitoUser) => {
       username,
       pool: userpool
     }
-    setCognitoUser(_ => Js.Nullable.return(userConstructor(userdata)))
+    setCognitoUser(._ => Js.Nullable.return(userConstructor(userdata)))
     RescriptReactRouter.push("/confirm")
   }
 

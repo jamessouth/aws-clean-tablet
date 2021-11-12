@@ -24,20 +24,20 @@ let make = () => {
   let url = RescriptReactRouter.useUrl()
   
 
-  let (cognitoUser: Js.Nullable.t<Signup.usr>, setCognitoUser) = React.useState(_ =>
+  let (cognitoUser: Js.Nullable.t<Signup.usr>, setCognitoUser) = React.Uncurried.useState(_ =>
     Js.Nullable.null
   )
 
-  let (playerName, setPlayerName) = React.useState(_ => "")
+  let (playerName, setPlayerName) = React.Uncurried.useState(_ => "")
   
   
-  let (token, setToken) = React.useState(_ => None)
+  let (token, setToken) = React.Uncurried.useState(_ => None)
 
 
   React.useEffect1(() => {
     switch Js.Nullable.toOption(cognitoUser) {
-    | None => setPlayerName(_ => "")
-    | Some(user) => setPlayerName(_ => user.username)
+    | None => setPlayerName(._ => "")
+    | Some(user) => setPlayerName(._ => user.username)
     }
   None
 }, [cognitoUser])

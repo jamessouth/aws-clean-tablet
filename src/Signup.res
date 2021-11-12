@@ -108,7 +108,7 @@ let make = (~userpool, ~setCognitoUser) => {
     switch res {
     | Ok(val) => {
         (_ => None)->setCognitoErr
-        (_ => Js.Nullable.return(val.user))->setCognitoUser
+        setCognitoUser(._ => Js.Nullable.return(val.user))
         RescriptReactRouter.push("/confirm")
 
 

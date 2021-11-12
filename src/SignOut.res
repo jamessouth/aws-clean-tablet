@@ -19,11 +19,11 @@ let make = (~cognitoUser, ~setToken, ~send, ~playerGame, ~close, ~setCognitoUser
     }
     send(. Js.Json.stringifyAny(pl))
 
-    close(1000, "user sign-out")
+    close(. 1000, "user sign-out")
     cognitoUser->signOut(Js.Nullable.null)
-    setCognitoUser(_ => Js.Nullable.null)
-    setPlayerName(_ => "")
-    setToken(_ => None)
+    setCognitoUser(._ => Js.Nullable.null)
+    setPlayerName(._ => "")
+    setToken(._ => None)
     setWs(._ => Js.Nullable.null)
   }
 

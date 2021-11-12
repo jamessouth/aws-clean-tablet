@@ -43,7 +43,7 @@ let make = (~userpool, ~setCognitoUser, ~setToken, ~cognitoUser) => {
     let cbs = {
       onSuccess: res => {
         Js.log2("signin result:", res)
-        setToken(_ => Some(res.accessToken.jwtToken))
+        setToken(._ => Some(res.accessToken.jwtToken))
       },
       onFailure: ex => {
         switch Js.Exn.message(ex) {
@@ -74,7 +74,7 @@ let make = (~userpool, ~setCognitoUser, ~setToken, ~cognitoUser) => {
         }
         let user = Js.Nullable.return(userConstructor(userdata))
         user->authenticateUser(authnDetails, cbs)
-        setCognitoUser(_ => user)
+        setCognitoUser(._ => user)
       }
     | false => cognitoUser->authenticateUser(authnDetails, cbs)
     }

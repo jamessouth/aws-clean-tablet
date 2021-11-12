@@ -40,7 +40,7 @@ type return = {
   previousWord: string,
   connID: string,
   send: (. option<string>) => unit,
-  close: (int, string) => unit,
+  close: (. int, string) => unit,
   wsError: string,
   setWs: (. Js.Nullable.t<t> => Js.Nullable.t<t>) => unit,
 }
@@ -172,7 +172,7 @@ let useWs = (token, setToken) => {
 
       ws->onClose(({code, reason, wasClean}) => {
         Js.log4("close", code, reason, wasClean)
-        setToken(_ => None)
+        setToken(._ => None)
       })
     }
 
@@ -200,7 +200,7 @@ let useWs = (token, setToken) => {
     }
   }
 
-  let close = (code, reason) => ws->closeCodeReason(code, reason)
+  let close = (. code, reason) => ws->closeCodeReason(code, reason)
 
   {
     playerColor: playerColor,
