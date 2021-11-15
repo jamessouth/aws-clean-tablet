@@ -24,6 +24,8 @@ type game = {
 type state = {
   gamesList: Js.Nullable.t<array<game>>,
   game: game,
+  currentWord: string,
+  previousWord: string,
 }
 
 type action =
@@ -31,6 +33,7 @@ type action =
   | AddGame(game)
   | RemoveGame(game)
   | UpdateGame(game)
+  | Word(string)
 
 type return2 = {
   initialState: state,
@@ -73,6 +76,24 @@ let appState = () => {
           ),
         }
       }
+    | (Some(gl), Word(word)) =>
+      switch game.loading {
+      | true => {
+          ...state,
+          game: game,
+        }
+      | false => {
+          ...state,
+          gamesList: Js.Nullable.return(
+            gl->Js.Array2.map(gm =>
+              switch gm.no === game.no {
+              | true => game
+              | false => gm
+              }
+            ),
+          ),
+        }
+      }
     }
 
   {
@@ -87,6 +108,8 @@ let appState = () => {
         players: [],
         answers: [],
       },
+      currentWord: "",
+      previousWord: "",
     },
     reducer: reducer,
   }

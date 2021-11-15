@@ -68,12 +68,17 @@ type remGameData = {remG: Reducer.game}
 @scope("JSON") @val
 external parseRemGame: string => remGameData = "parse"
 
+type wordData = {word: string}
+@scope("JSON") @val
+external parseWord: string => wordData = "parse"
+
 type msgType =
   | InsertConn
   | ModifyConn
   | InsertGame
   | ModifyGame
   | RemoveGame
+  | Word
   | Other
 
 let getMsgType = tag => {
@@ -83,6 +88,7 @@ let getMsgType = tag => {
   | "addG" => InsertGame
   | "modG" => ModifyGame
   | "remG" => RemoveGame
+  | "word" => Word
   | _ => Other
   }
 }
@@ -164,6 +170,11 @@ let useWs = (token, setToken) => {
         | RemoveGame => {
             let {remG} = parseRemGame(data)
             Js.log2("parsedremgame", remG)
+            dispatch(RemoveGame(remG))
+          }
+        | Word => {
+            let {word} = parseWord(data)
+            Js.log2("parsedword", word)
             dispatch(RemoveGame(remG))
           }
         | Other => Js.log2("unknown json data", data)
