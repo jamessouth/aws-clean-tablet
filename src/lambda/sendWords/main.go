@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -26,6 +27,10 @@ type sfnEvent struct {
 	Token     string   `json:"token"`
 }
 
+type word struct {
+	Word string `json:"word"`
+}
+
 func handler(ctx context.Context, req sfnEvent) error {
 
 	fmt.Printf("%s%+v\n", "sndwords req ", req)
@@ -43,7 +48,7 @@ func handler(ctx context.Context, req sfnEvent) error {
 		return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested")
 	})
 
-	cfg, err := config.LoadDefaultConfig(ctx,
+	apigwcfg, err := config.LoadDefaultConfig(ctx,
 		config.WithRegion(req.Region),
 		// config.WithLogger(logger),
 		config.WithEndpointResolver(customResolver),
@@ -52,8 +57,16 @@ func handler(ctx context.Context, req sfnEvent) error {
 		return callErr(err)
 	}
 
-	ddbsvc := dynamodb.NewFromConfig(cfg)
-	apigwsvc := apigatewaymanagementapi.NewFromConfig(cfg)
+	ddbcfg, err := config.LoadDefaultConfig(ctx,
+		config.WithRegion(req.Region),
+		// config.WithLogger(logger),
+	)
+	if err != nil {
+		return callErr(err)
+	}
+
+	ddbsvc := dynamodb.NewFromConfig(ddbcfg)
+	apigwsvc := apigatewaymanagementapi.NewFromConfig(apigwcfg)
 
 	_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 		Key: map[string]types.AttributeValue{
@@ -70,7 +83,7 @@ func handler(ctx context.Context, req sfnEvent) error {
 		ExpressionAttributeValues: map[string]types.AttributeValue{
 			":t": &types.AttributeValueMemberS{Value: req.Token},
 		},
-		UpdateExpression: aws.String("SET #T = :t)"),
+		UpdateExpression: aws.String("SET #T = :t"),
 		// ReturnValues:     types.ReturnValueAllNew,
 	})
 
@@ -78,9 +91,16 @@ func handler(ctx context.Context, req sfnEvent) error {
 		return callErr(err)
 	}
 
+	marshalledWord, err := json.Marshal(word{
+		Word: req.Word,
+	})
+	if err != nil {
+		fmt.Println("word object marshal err", err)
+	}
+
 	for _, v := range req.Conns {
 
-		conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v), Data: []byte(req.Word)}
+		conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v), Data: marshalledWord}
 
 		_, err = apigwsvc.PostToConnection(ctx, &conn)
 		if err != nil {
