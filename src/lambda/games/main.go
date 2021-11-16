@@ -248,14 +248,15 @@ type connItem struct {
 }
 
 type gamein struct {
-	Pk       string    `dynamodbav:"pk"`
-	Sk       string    `dynamodbav:"sk"`
-	Ready    bool      `dynamodbav:"ready"`
-	Starting bool      `dynamodbav:"starting"`
-	Loading  bool      `dynamodbav:"loading"`
-	Playing  bool      `dynamodbav:"playing,omitempty"`
-	Players  playerMap `dynamodbav:"players"`
-	Answers  []answer  `dynamodbav:"answers"`
+	Pk           string    `dynamodbav:"pk"`
+	Sk           string    `dynamodbav:"sk"`
+	Starting     bool      `dynamodbav:"starting"`
+	Ready        bool      `dynamodbav:"ready"`
+	Loading      bool      `dynamodbav:"loading"`
+	Playing      bool      `dynamodbav:"playing,omitempty"`
+	Players      playerMap `dynamodbav:"players"`
+	AnswersCount int       `dynamodbav:"answersCount"`
+	SendToFront  bool      `dynamodbav:"sendToFront"`
 }
 
 func getReturnValue(status int) events.APIGatewayProxyResponse {
@@ -454,50 +455,53 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			} else if rec.EventName == dynamodbstreams.OperationTypeModify {
 
-				if gameRecord.Loading {
-					gp := modifyGamePayload{
-						ModGame: gameout{
-							Pk:       "",
-							No:       gameRecord.Sk,
-							Ready:    gameRecord.Ready,
-							Starting: gameRecord.Starting,
-							Loading:  gameRecord.Loading,
-							Playing:  gameRecord.Playing,
-							Players:  gameRecord.Players.getPlayersSlice().sort(score, name),
-							Answers:  gameRecord.Answers,
-						},
-					}
+				if gameRecord.SendToFront {
 
-					payload, err := json.Marshal(gp)
-					if err != nil {
-						return callErr(err)
-					}
+					if gameRecord.Loading {
+						gp := modifyGamePayload{
+							ModGame: gameout{
+								Pk:       "",
+								No:       gameRecord.Sk,
+								Ready:    gameRecord.Ready,
+								Starting: gameRecord.Starting,
+								Loading:  gameRecord.Loading,
+								Playing:  gameRecord.Playing,
+								Players:  gameRecord.Players.getPlayersSlice().sort(score, name),
+								Answers:  gameRecord.Answers,
+							},
+						}
 
-					for _, v := range gp.ModGame.Players {
-
-						conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.ConnID), Data: payload}
-
-						_, err = apigwsvc.PostToConnection(ctx, &conn)
+						payload, err := json.Marshal(gp)
 						if err != nil {
 							return callErr(err)
 						}
 
-					}
+						for _, v := range gp.ModGame.Players {
 
-				} else {
-					if gameRecord.Starting {
+							conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.ConnID), Data: payload}
 
-						err = sendGamesToConns(ctx, ddbsvc, apigwsvc, gameRecord, tableName, "rem")
-						if err != nil {
-							return callErr(err)
+							_, err = apigwsvc.PostToConnection(ctx, &conn)
+							if err != nil {
+								return callErr(err)
+							}
+
 						}
 
 					} else {
-						err = sendGamesToConns(ctx, ddbsvc, apigwsvc, gameRecord, tableName, "mod")
-						if err != nil {
-							return callErr(err)
-						}
+						if gameRecord.Starting {
 
+							err = sendGamesToConns(ctx, ddbsvc, apigwsvc, gameRecord, tableName, "rem")
+							if err != nil {
+								return callErr(err)
+							}
+
+						} else {
+							err = sendGamesToConns(ctx, ddbsvc, apigwsvc, gameRecord, tableName, "mod")
+							if err != nil {
+								return callErr(err)
+							}
+
+						}
 					}
 				}
 

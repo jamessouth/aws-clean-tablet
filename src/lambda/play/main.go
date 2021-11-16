@@ -72,6 +72,7 @@ type game struct {
 	Players      map[string]player `dynamodbav:"players"`
 	AnswersCount int               `dynamodbav:"answersCount"`
 	Wordlist     []string          `dynamodbav:"wordList"`
+	SendToFront  bool              `dynamodbav:"sendToFront"`
 }
 
 type body struct {
@@ -221,11 +222,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 				// "#PL": "players",
 				// "#ID": id,
 				"#W": "wordList",
+				"#S": "sendToFront",
 			},
 			ExpressionAttributeValues: map[string]types.AttributeValue{
 				":w": words,
+				":f": &types.AttributeValueMemberBOOL{Value: false},
 			},
-			UpdateExpression: aws.String("SET #W = :w"),
+			UpdateExpression: aws.String("SET #W = :w, #S = :f"),
 			ReturnValues:     types.ReturnValueAllNew,
 		})
 
@@ -301,9 +304,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		})
 
 		if err != nil {
-
 			return callErr(err)
-
 		}
 
 		var gm game
@@ -313,6 +314,24 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		}
 
 		if len(gm.Players) == gm.AnswersCount {
+
+			_, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+				Key:       gameItemKey,
+				TableName: aws.String(tableName),
+				// ConditionExpression: aws.String("size (#AN) < :c"),
+				ExpressionAttributeNames: map[string]string{
+					"#S": "sendToFront",
+				},
+				ExpressionAttributeValues: map[string]types.AttributeValue{
+					":t": &types.AttributeValueMemberBOOL{Value: true},
+				},
+				UpdateExpression: aws.String("SET #S = :t"),
+				// ReturnValues:     types.ReturnValueAllNew,
+			})
+
+			if err != nil {
+				return callErr(err)
+			}
 
 			answers := map[string][]string{}
 			for i, v := range gm.Players {
@@ -396,20 +415,18 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 				ExpressionAttributeNames: map[string]string{
 					// "#PL": "players",
 					// "#ID": id,
-					"#AN": "answers",
+					"#AC": "answersCount",
 				},
 				ExpressionAttributeValues: map[string]types.AttributeValue{
-					":a": &types.AttributeValueMemberL{Value: []types.AttributeValue{}},
+					":z": &types.AttributeValueMemberN{Value: "0"},
 					// ":c": &types.AttributeValueMemberN{Value: body.PlayersCount},
 				},
-				UpdateExpression: aws.String("SET #AN = :a"),
+				UpdateExpression: aws.String("SET #AC = :z"),
 				ReturnValues:     types.ReturnValueAllNew,
 			})
 
 			if err != nil {
-
 				return callErr(err)
-
 			}
 
 			var gm2 game
