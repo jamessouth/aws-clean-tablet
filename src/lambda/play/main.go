@@ -50,6 +50,7 @@ type player struct {
 	Ready  bool   `dynamodbav:"ready"`
 	Color  string `dynamodbav:"color,omitempty"`
 	Score  int    `dynamodbav:"score"`
+	Answer answer `dynamodbav:"answer"`
 }
 
 type answer struct {
@@ -62,15 +63,15 @@ type hiScore struct {
 }
 
 type game struct {
-	Pk       string            `dynamodbav:"pk"`
-	Sk       string            `dynamodbav:"sk"`
-	Starting bool              `dynamodbav:"starting"`
-	Ready    bool              `dynamodbav:"ready"`
-	Token    string            `dynamodbav:"token"`
-	Loading  bool              `dynamodbav:"loading"`
-	Players  map[string]player `dynamodbav:"players"`
-	Answers  []answer          `dynamodbav:"answers"`
-	Wordlist []string          `dynamodbav:"wordList"`
+	Pk           string            `dynamodbav:"pk"`
+	Sk           string            `dynamodbav:"sk"`
+	Starting     bool              `dynamodbav:"starting"`
+	Ready        bool              `dynamodbav:"ready"`
+	Token        string            `dynamodbav:"token"`
+	Loading      bool              `dynamodbav:"loading"`
+	Players      map[string]player `dynamodbav:"players"`
+	AnswersCount int               `dynamodbav:"answersCount"`
+	Wordlist     []string          `dynamodbav:"wordList"`
 }
 
 type body struct {
@@ -273,7 +274,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	} else if body.Tipe == "answer" {
 
-		ans, err := attributevalue.MarshalList(answer{
+		ans, err := attributevalue.Marshal(answer{
 			PlayerID: id,
 			Answer:   body.Answer,
 		})
@@ -282,19 +283,20 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		}
 
 		ui, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-			Key:                 gameItemKey,
-			TableName:           aws.String(tableName),
-			ConditionExpression: aws.String("size (#AN) < :c"),
+			Key:       gameItemKey,
+			TableName: aws.String(tableName),
+			// ConditionExpression: aws.String("size (#AN) < :c"),
 			ExpressionAttributeNames: map[string]string{
-				// "#PL": "players",
-				// "#ID": id,
-				"#AN": "answers",
+				"#PL": "players",
+				"#ID": id,
+				"#AN": "answer",
+				"#AC": "answersCount",
 			},
 			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":a": &types.AttributeValueMemberL{Value: ans},
-				":c": &types.AttributeValueMemberN{Value: body.PlayersCount},
+				":a": ans,
+				":o": &types.AttributeValueMemberN{Value: "1"},
 			},
-			UpdateExpression: aws.String("SET #AN = list_append(#AN, :a)"),
+			UpdateExpression: aws.String("SET #PL.#ID.#AN = :a ADD #AC :o"),
 			ReturnValues:     types.ReturnValueAllNew,
 		})
 
@@ -310,14 +312,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			return callErr(err)
 		}
 
-		if len(gm.Players) == len(gm.Answers) {
+		if len(gm.Players) == gm.AnswersCount {
 
 			answers := map[string][]string{}
-			for i, v := range gm.Answers {
+			for i, v := range gm.Players {
 
 				fmt.Printf("%s, %v, %+v", "anssss", i, v)
 
-				answers[v.Answer] = append(answers[v.Answer], v.PlayerID)
+				answers[v.Answer.Answer] = append(answers[v.Answer.Answer], v.Answer.PlayerID)
 
 			}
 
