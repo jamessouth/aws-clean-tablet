@@ -29,6 +29,7 @@ type player struct {
 	Ready  bool   `json:"ready"`
 	Color  string `json:"color,omitempty"`
 	Score  int    `json:"score"`
+	Answer answer `json:"answer"`
 }
 
 type gameout struct {
@@ -39,7 +40,6 @@ type gameout struct {
 	Loading  bool       `json:"loading,omitempty"`
 	Playing  bool       `json:"playing,omitempty"`
 	Players  playerList `json:"players"`
-	Answers  []answer   `json:"answers,omitempty"`
 }
 
 type connin struct {
@@ -163,7 +163,6 @@ func (gl gameInList) mapGames() (res gameOutList) {
 			Loading:  false,
 			Playing:  false,
 			Players:  g.Players.getPlayersSlice().sort(name),
-			Answers:  []answer{},
 		})
 	}
 
@@ -442,9 +441,9 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			fmt.Printf("%s%+v\n", "gammmmme ", gameRecord)
 
-			if len(gameRecord.Answers) > 0 && len(gameRecord.Answers) < len(gameRecord.Players) {
-				return getReturnValue(http.StatusOK), nil
-			}
+			// if len(gameRecord.Answers) > 0 && len(gameRecord.Answers) < len(gameRecord.Players) {
+			// 	return getReturnValue(http.StatusOK), nil
+			// }
 
 			if rec.EventName == dynamodbstreams.OperationTypeInsert {
 
@@ -467,7 +466,6 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 								Loading:  gameRecord.Loading,
 								Playing:  gameRecord.Playing,
 								Players:  gameRecord.Players.getPlayersSlice().sort(score, name),
-								Answers:  gameRecord.Answers,
 							},
 						}
 
@@ -532,7 +530,6 @@ func getGamePayload(g gamein, opt string) (payload []byte, err error) {
 		Loading:  g.Loading,
 		Playing:  g.Playing,
 		Players:  g.Players.getPlayersSlice().sort(name),
-		Answers:  g.Answers,
 	}
 
 	if opt == "add" {

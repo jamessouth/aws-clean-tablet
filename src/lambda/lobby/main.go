@@ -40,10 +40,6 @@ type Player struct {
 	Score  int    `dynamodbav:"score"`
 }
 
-type answer struct {
-	PlayerID, Answer string
-}
-
 type game struct {
 	Pk       string            `dynamodbav:"pk"`
 	Sk       string            `dynamodbav:"sk"`
@@ -51,7 +47,6 @@ type game struct {
 	Ready    bool              `dynamodbav:"ready"`
 	Loading  bool              `dynamodbav:"loading"`
 	Players  map[string]Player `dynamodbav:"players"`
-	Answers  []answer          `dynamodbav:"answers"`
 	Wordlist []string          `dynamodbav:"wordList"`
 }
 
@@ -169,11 +164,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			panic(fmt.Sprintf("failed to marshal indiv Record 22, %v", err))
 		}
 
-		marshalledAnswersList, err := attributevalue.Marshal([]answer{})
-		if err != nil {
-			panic(fmt.Sprintf("failed to marshal ans list 122, %v", err))
-		}
-
 		marshalledWordsList, err := attributevalue.Marshal([]string{})
 		if err != nil {
 			panic(fmt.Sprintf("failed to marshal word list 777, %v", err))
@@ -237,12 +227,10 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 							"#ST": "starting",
 							"#LO": "loading",
 							"#RE": "ready",
-							"#AN": "answers",
 							"#WL": "wordList",
 						},
 						ExpressionAttributeValues: map[string]types.AttributeValue{
 							":p": marshalledPlayersMap,
-							":a": marshalledAnswersList,
 							":f": &types.AttributeValueMemberBOOL{Value: false},
 							":w": marshalledWordsList,
 						},
