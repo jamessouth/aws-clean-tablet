@@ -41,13 +41,14 @@ type Player struct {
 }
 
 type game struct {
-	Pk       string            `dynamodbav:"pk"`
-	Sk       string            `dynamodbav:"sk"`
-	Starting bool              `dynamodbav:"starting"`
-	Ready    bool              `dynamodbav:"ready"`
-	Loading  bool              `dynamodbav:"loading"`
-	Players  map[string]Player `dynamodbav:"players"`
-	Wordlist []string          `dynamodbav:"wordList"`
+	Pk          string            `dynamodbav:"pk"`
+	Sk          string            `dynamodbav:"sk"`
+	Starting    bool              `dynamodbav:"starting"`
+	Ready       bool              `dynamodbav:"ready"`
+	Loading     bool              `dynamodbav:"loading"`
+	Players     map[string]Player `dynamodbav:"players"`
+	Wordlist    []string          `dynamodbav:"wordList"`
+	SendToFront bool              `dynamodbav:"sendToFront"`
 }
 
 type body struct {
@@ -228,13 +229,15 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 							"#LO": "loading",
 							"#RE": "ready",
 							"#WL": "wordList",
+							"#S":  "sendToFront",
 						},
 						ExpressionAttributeValues: map[string]types.AttributeValue{
 							":p": marshalledPlayersMap,
 							":f": &types.AttributeValueMemberBOOL{Value: false},
+							":t": &types.AttributeValueMemberBOOL{Value: true},
 							":w": marshalledWordsList,
 						},
-						UpdateExpression: aws.String("SET #PL = :p, #ST = :f, #LO = :f, #RE = :f, #AN = :a, #WL = :w"),
+						UpdateExpression: aws.String("SET #PL = :p, #ST = :f, #LO = :f, #RE = :f, #AN = :a, #WL = :w, #S = :t"),
 					},
 				},
 				{

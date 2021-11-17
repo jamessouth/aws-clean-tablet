@@ -26,6 +26,7 @@ type state = {
   game: game,
   currentWord: string,
   previousWord: string,
+  showAnswers: bool,
 }
 
 type action =
@@ -76,23 +77,10 @@ let appState = () => {
           ),
         }
       }
-    | (Some(gl), Word(word)) =>
-      switch game.loading {
-      | true => {
-          ...state,
-          game: game,
-        }
-      | false => {
-          ...state,
-          gamesList: Js.Nullable.return(
-            gl->Js.Array2.map(gm =>
-              switch gm.no === game.no {
-              | true => game
-              | false => gm
-              }
-            ),
-          ),
-        }
+    | (Some(gl), Word(word)) => {
+        ...state,
+        currentWord: word,
+        showAnswers: false,
       }
     }
 
@@ -110,6 +98,7 @@ let appState = () => {
       },
       currentWord: "",
       previousWord: "",
+      showAnswers: false,
     },
     reducer: reducer,
   }
