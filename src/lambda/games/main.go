@@ -46,23 +46,19 @@ type connin struct {
 	GSI1SK string `json:"gsi1sk"`
 }
 
-// Tipe  string      `json:"tipe"`
 type insertConnPayload struct {
 	ListGames gameOutList `json:"list"`
 	ConnID    string      `json:"connID"`
 }
 
-// Tipe   string `json:"tipe"`
 type modifyConnPayload struct {
 	ModConnGm string `json:"modC"`
 }
 
-// Type  string  `json:"type"`
 type insertGamePayload struct {
 	AddGame gameout `json:"addG"`
 }
 
-// Type string  `json:"type"`
 type modifyGamePayload struct {
 	ModGame gameout `json:"modG"`
 }

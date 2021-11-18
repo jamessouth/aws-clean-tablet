@@ -4,6 +4,7 @@ type player = {
   ready: bool,
   color: option<string>,
   score: string,
+  answer: answer,
 }
 
 type answer = {
@@ -11,32 +12,35 @@ type answer = {
   answer: string,
 }
 
-type game = {
+type listGame = {
   no: string,
   ready: bool,
-  starting: bool,
-  loading: bool,
+  players: array<player>,
+}
+
+type liveGame = {
+  no: string,
   playing: bool,
   players: array<player>,
-  answers: array<answer>,
 }
 
 type state = {
-  gamesList: Js.Nullable.t<array<game>>,
-  game: game,
+  gamesList: Js.Nullable.t<array<listGame>>,
+  game: liveGame,
   currentWord: string,
   previousWord: string,
   showAnswers: bool,
 }
 
 type action =
-  | ListGames(Js.Nullable.t<array<game>>)
-  | AddGame(game)
-  | RemoveGame(game)
-  | UpdateGame(game)
+  | ListGames(Js.Nullable.t<array<listGame>>)
+  | AddGame(listGame)
+  | RemoveGame(listGame)
+  | UpdateListGame(listGame)
+  | UpdateLiveGame(liveGame)
   | Word(string)
 
-type return2 = {
+type return = {
   initialState: state,
   reducer: (state, action) => state,
 }
@@ -59,24 +63,35 @@ let appState = () => {
         gamesList: Js.Nullable.return(gl->Js.Array2.filter(gm => gm.no !== game.no)),
       }
 
-    | (Some(gl), UpdateGame(game)) =>
-      switch game.loading {
-      | true => {
-          ...state,
-          game: game,
-        }
-      | false => {
-          ...state,
-          gamesList: Js.Nullable.return(
-            gl->Js.Array2.map(gm =>
-              switch gm.no === game.no {
-              | true => game
-              | false => gm
-              }
-            ),
+    | (Some(gl), UpdateListGame(game)) => {
+        ...state,
+        gamesList: Js.Nullable.return(
+          gl->Js.Array2.map(gm =>
+            switch gm.no === game.no {
+            | true => game
+            | false => gm
+            }
           ),
-        }
+        ),
       }
+
+    | (Some(gl), UpdateLiveGame(game)) => switch value {
+    | pattern1 => expression
+    | pattern2 => expression
+    }
+    
+    
+    
+    
+    
+    
+    {
+        ...state,
+        previousWord: currentWord,
+        game: game,
+        showAnswers: true,
+      }
+
     | (Some(gl), Word(word)) => {
         ...state,
         currentWord: word,
@@ -89,12 +104,8 @@ let appState = () => {
       gamesList: Js.Nullable.null,
       game: {
         no: "",
-        ready: false,
-        starting: false,
-        loading: false,
         playing: false,
         players: [],
-        answers: [],
       },
       currentWord: "",
       previousWord: "",
