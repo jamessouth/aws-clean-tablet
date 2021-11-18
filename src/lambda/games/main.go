@@ -33,13 +33,13 @@ type player struct {
 }
 
 type gameout struct {
-	Pk       string     `json:"pk,omitempty"`
-	No       string     `json:"no"`
-	Ready    bool       `json:"ready"`
-	Starting bool       `json:"starting,omitempty"`
-	Loading  bool       `json:"loading,omitempty"`
-	Playing  bool       `json:"playing,omitempty"`
-	Players  playerList `json:"players"`
+	Pk       string `json:"pk,omitempty"`
+	No       string `json:"no"`
+	Ready    bool   `json:"ready"`
+	Starting bool   `json:"starting,omitempty"`
+	Loading  bool   `json:"loading,omitempty"`
+
+	Players playerList `json:"players"`
 }
 
 type connin struct {
@@ -157,8 +157,8 @@ func (gl gameInList) mapGames() (res gameOutList) {
 			Ready:    g.Ready,
 			Starting: false,
 			Loading:  false,
-			Playing:  false,
-			Players:  g.Players.getPlayersSlice().sort(name),
+
+			Players: g.Players.getPlayersSlice().sort(name),
 		})
 	}
 
@@ -243,12 +243,12 @@ type connItem struct {
 }
 
 type gamein struct {
-	Pk           string    `dynamodbav:"pk"`
-	Sk           string    `dynamodbav:"sk"`
-	Starting     bool      `dynamodbav:"starting"`
-	Ready        bool      `dynamodbav:"ready"`
-	Loading      bool      `dynamodbav:"loading"`
-	Playing      bool      `dynamodbav:"playing,omitempty"`
+	Pk       string `dynamodbav:"pk"`
+	Sk       string `dynamodbav:"sk"`
+	Starting bool   `dynamodbav:"starting"`
+	Ready    bool   `dynamodbav:"ready"`
+	Loading  bool   `dynamodbav:"loading"`
+
 	Players      playerMap `dynamodbav:"players"`
 	AnswersCount int       `dynamodbav:"answersCount"`
 	SendToFront  bool      `dynamodbav:"sendToFront"`
@@ -460,8 +460,8 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 								Ready:    gameRecord.Ready,
 								Starting: gameRecord.Starting,
 								Loading:  gameRecord.Loading,
-								Playing:  gameRecord.Playing,
-								Players:  gameRecord.Players.getPlayersSlice().sort(score, name),
+
+								Players: gameRecord.Players.getPlayersSlice().sort(score, name),
 							},
 						}
 
@@ -524,8 +524,8 @@ func getGamePayload(g gamein, opt string) (payload []byte, err error) {
 		Ready:    g.Ready,
 		Starting: g.Starting,
 		Loading:  g.Loading,
-		Playing:  g.Playing,
-		Players:  g.Players.getPlayersSlice().sort(name),
+
+		Players: g.Players.getPlayersSlice().sort(name),
 	}
 
 	if opt == "add" {

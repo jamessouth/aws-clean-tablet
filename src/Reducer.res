@@ -20,16 +20,15 @@ type listGame = {
 
 type liveGame = {
   no: string,
-  playing: bool,
   players: array<player>,
 }
 
 type state = {
   gamesList: Js.Nullable.t<array<listGame>>,
   game: liveGame,
+  showAnswers: bool,
   currentWord: string,
   previousWord: string,
-  showAnswers: bool,
 }
 
 type action =
@@ -75,21 +74,15 @@ let appState = () => {
         ),
       }
 
-    | (Some(gl), UpdateLiveGame(game)) => switch value {
-    | pattern1 => expression
-    | pattern2 => expression
-    }
-    
-    
-    
-    
-    
-    
-    {
-        ...state,
-        previousWord: currentWord,
-        game: game,
-        showAnswers: true,
+    | (Some(gl), UpdateLiveGame(game)) =>
+      switch game.showAnswers {
+      | true => {
+          ...state,
+          previousWord: currentWord,
+          game: game,
+          showAnswers: true,
+        }
+      | false => state
       }
 
     | (Some(gl), Word(word)) => {
@@ -104,12 +97,11 @@ let appState = () => {
       gamesList: Js.Nullable.null,
       game: {
         no: "",
-        playing: false,
         players: [],
       },
+      showAnswers: false,
       currentWord: "",
       previousWord: "",
-      showAnswers: false,
     },
     reducer: reducer,
   }
