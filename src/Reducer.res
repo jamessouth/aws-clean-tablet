@@ -1,34 +1,39 @@
-type player = {
-  name: string,
-  connid: string,
-  ready: bool,
-  color: option<string>,
-  score: string,
-  answer: answer,
-}
-
 type answer = {
   playerid: string,
   answer: string,
 }
 
+type listPlayer = {
+  name: string,
+  connid: string,
+  ready: bool,
+}
+
+type livePlayer = {
+  name: string,
+  connid: string,
+  color: string,
+  score: string,
+  answer: answer,
+}
+
 type listGame = {
   no: string,
   ready: bool,
-  players: array<player>,
+  players: array<listPlayer>,
 }
 
 type liveGame = {
   no: string,
-  players: array<player>,
+  showAnswers: bool,
+  currentWord: string,
+  previousWord: string,
+  players: array<livePlayer>,
 }
 
 type state = {
   gamesList: Js.Nullable.t<array<listGame>>,
   game: liveGame,
-  showAnswers: bool,
-  currentWord: string,
-  previousWord: string,
 }
 
 type action =
@@ -37,7 +42,6 @@ type action =
   | RemoveGame(listGame)
   | UpdateListGame(listGame)
   | UpdateLiveGame(liveGame)
-  | Word(string)
 
 type return = {
   initialState: state,
@@ -74,21 +78,9 @@ let appState = () => {
         ),
       }
 
-    | (Some(gl), UpdateLiveGame(game)) =>
-      switch game.showAnswers {
-      | true => {
-          ...state,
-          previousWord: currentWord,
-          game: game,
-          showAnswers: true,
-        }
-      | false => state
-      }
-
-    | (Some(gl), Word(word)) => {
+    | (Some(gl), UpdateLiveGame(game)) => {
         ...state,
-        currentWord: word,
-        showAnswers: false,
+        game: game,
       }
     }
 
@@ -98,10 +90,10 @@ let appState = () => {
       game: {
         no: "",
         players: [],
+        showAnswers: false,
+        currentWord: "",
+        previousWord: "",
       },
-      showAnswers: false,
-      currentWord: "",
-      previousWord: "",
     },
     reducer: reducer,
   }

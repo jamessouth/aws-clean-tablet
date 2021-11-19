@@ -33,8 +33,8 @@ type closeEventHandler = closeEvent => unit
 type return = {
   playerColor: string,
   wsConnected: bool,
-  game: Reducer.game,
-  games: Js.Nullable.t<array<Reducer.game>>,
+  game: Reducer.liveGame,
+  games: Js.Nullable.t<array<Reducer.listGame>>,
   playerGame: string,
   currentWord: string,
   previousWord: string,
@@ -46,7 +46,7 @@ type return = {
 }
 
 type listGamesData = {
-  list: array<Reducer.game>,
+  list: array<Reducer.listGame>,
   connID: string,
 }
 @scope("JSON") @val
@@ -56,15 +56,15 @@ type modConnData = {modC: string}
 @scope("JSON") @val
 external parseModConn: string => modConnData = "parse"
 
-type addGameData = {addG: Reducer.game}
+type addGameData = {addG: Reducer.listGame}
 @scope("JSON") @val
 external parseAddGame: string => addGameData = "parse"
 
-type modGameData = {modG: Reducer.game}
+type modGameData = {modG: Reducer.listGame}
 @scope("JSON") @val
 external parseModGame: string => modGameData = "parse"
 
-type remGameData = {remG: Reducer.game}
+type remGameData = {remG: Reducer.listGame}
 @scope("JSON") @val
 external parseRemGame: string => remGameData = "parse"
 
