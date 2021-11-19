@@ -7,7 +7,7 @@ type routePayload = {
 let chk = Js.String2.fromCharCode(10003)
 
 @react.component
-let make = (~game: Reducer.game, ~leadertoken, ~playerGame, ~send, ~class, ~textcolor) => {
+let make = (~game: Reducer.listGame, ~leadertoken, ~playerGame, ~send, ~class, ~textcolor) => {
   let (ready, setReady) = React.Uncurried.useState(_ => true)
   let (count, setCount) = React.useState(_ => 5)
   let (disabled1, setDisabled1) = React.useState(_ => false)

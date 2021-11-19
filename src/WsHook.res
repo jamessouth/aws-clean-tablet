@@ -46,49 +46,49 @@ type return = {
 }
 
 type listGamesData = {
-  list: array<Reducer.listGame>,
+  listGms: array<Reducer.listGame>,
   connID: string,
 }
 @scope("JSON") @val
 external parseListGames: string => listGamesData = "parse"
 
-type modConnData = {modC: string}
+type modConnData = {modConn: string}
 @scope("JSON") @val
 external parseModConn: string => modConnData = "parse"
 
-type addGameData = {addG: Reducer.listGame}
+type addGameData = {addGame: Reducer.listGame}
 @scope("JSON") @val
 external parseAddGame: string => addGameData = "parse"
 
-type modGameData = {modG: Reducer.listGame}
+type modListGameData = {mdLstGm: Reducer.listGame}
 @scope("JSON") @val
-external parseModGame: string => modGameData = "parse"
+external parseModListGame: string => modListGameData = "parse"
 
-type remGameData = {remG: Reducer.listGame}
+type modLiveGameData = {mdLveGm: Reducer.liveGame}
 @scope("JSON") @val
-external parseRemGame: string => remGameData = "parse"
+external parseModLiveGame: string => modLiveGameData = "parse"
 
-type wordData = {word: string}
+type rmvGameData = {rmvGame: Reducer.listGame}
 @scope("JSON") @val
-external parseWord: string => wordData = "parse"
+external parseRmvGame: string => rmvGameData = "parse"
 
 type msgType =
   | InsertConn
   | ModifyConn
   | InsertGame
-  | ModifyGame
+  | ModifyListGame
+  | ModifyLiveGame
   | RemoveGame
-  | Word
   | Other
 
 let getMsgType = tag => {
-  switch tag->Js.String2.slice(~from=2, ~to_=6) {
-  | "list" => InsertConn
-  | "modC" => ModifyConn
-  | "addG" => InsertGame
-  | "modG" => ModifyGame
-  | "remG" => RemoveGame
-  | "word" => Word
+  switch tag->Js.String2.slice(~from=2, ~to_=9) {
+  | "listGms" => InsertConn
+  | "modConn" => ModifyConn
+  | "addGame" => InsertGame
+  | "mdLstGm" => ModifyListGame
+  | "mdLveGm" => ModifyLiveGame
+  | "rmvGame" => RemoveGame
   | _ => Other
   }
 }
@@ -147,35 +147,35 @@ let useWs = (token, setToken) => {
 
         switch getMsgType(data) {
         | InsertConn => {
-            let {list, connID} = parseListGames(data)
-            Js.log3("parsedlistgames", list, connID)
-            dispatch(ListGames(Js.Nullable.return(list)))
+            let {listGms, connID} = parseListGames(data)
+            Js.log3("parsedlistgames", listGms, connID)
+            dispatch(ListGames(Js.Nullable.return(listGms)))
             setConnID(._ => connID)
           }
         | ModifyConn => {
-            let {modC} = parseModConn(data)
-            Js.log2("parsedmodconn", modC)
-            setPlayerGame(._ => modC)
+            let {modConn} = parseModConn(data)
+            Js.log2("parsedmodconn", modConn)
+            setPlayerGame(._ => modConn)
           }
         | InsertGame => {
-            let {addG} = parseAddGame(data)
-            Js.log2("parsedaddgame", addG)
-            dispatch(AddGame(addG))
+            let {addGame} = parseAddGame(data)
+            Js.log2("parsedaddgame", addGame)
+            dispatch(AddGame(addGame))
           }
-        | ModifyGame => {
-            let {modG} = parseModGame(data)
-            Js.log2("parsedmodgame", modG)
-            dispatch(UpdateGame(modG))
+        | ModifyListGame => {
+            let {mdLstGm} = parseModListGame(data)
+            Js.log2("parsedmodlistgame", mdLstGm)
+            dispatch(UpdateListGame(mdLstGm))
+          }
+        | ModifyLiveGame => {
+            let {mdLveGm} = parseModLiveGame(data)
+            Js.log2("parsedmodlivegame", mdLveGm)
+            dispatch(UpdateLiveGame(mdLveGm))
           }
         | RemoveGame => {
-            let {remG} = parseRemGame(data)
-            Js.log2("parsedremgame", remG)
-            dispatch(RemoveGame(remG))
-          }
-        | Word => {
-            let {word} = parseWord(data)
-            Js.log2("parsedword", word)
-            dispatch(RemoveGame(remG))
+            let {rmvGame} = parseRmvGame(data)
+            Js.log2("parsedremgame", rmvGame)
+            dispatch(RemoveGame(rmvGame))
           }
         | Other => Js.log2("unknown json data", data)
         }

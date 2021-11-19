@@ -47,24 +47,28 @@ type connin struct {
 }
 
 type insertConnPayload struct {
-	ListGames gameOutList `json:"list"`
+	ListGames gameOutList `json:"listGms"`
 	ConnID    string      `json:"connID"`
 }
 
 type modifyConnPayload struct {
-	ModConnGm string `json:"modC"`
+	ModConnGm string `json:"modConn"`
 }
 
 type insertGamePayload struct {
-	AddGame gameout `json:"addG"`
+	AddGame gameout `json:"addGame"`
 }
 
-type modifyGamePayload struct {
-	ModGame gameout `json:"modG"`
+type modifyListGamePayload struct {
+	ModListGame gameout `json:"mdLstGm"`
+}
+
+type modifyLiveGamePayload struct {
+	ModLiveGame gameout `json:"mdLveGm"`
 }
 
 type removeGamePayload struct {
-	RemoveGame gameout `json:"remG"`
+	RemoveGame gameout `json:"rmvGame"`
 }
 
 type lessFunc func(p1, p2 *player) int

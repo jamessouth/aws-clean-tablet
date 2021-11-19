@@ -13,7 +13,7 @@ let answer_max_length = 12
 @react.component
 let make = (
   ~wsConnected,
-  ~game: Reducer.game,
+  ~game: Reducer.liveGame,
   ~leadertoken,
   ~playerColor,
   ~send,

@@ -78,7 +78,7 @@ let appState = () => {
         ),
       }
 
-    | (Some(gl), UpdateLiveGame(game)) => {
+    | (Some(_), UpdateLiveGame(game)) => {
         ...state,
         game: game,
       }
