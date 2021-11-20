@@ -25,30 +25,22 @@ import (
 
 const maxPlayersPerGame string = "8"
 
-// Key holds values to be put in db
-type Key struct {
+type key struct {
 	Pk string `dynamodbav:"pk"`
 	Sk string `dynamodbav:"sk"`
 }
 
-// Player holds values to be put in db
-type Player struct {
+type listPlayer struct {
 	Name   string `dynamodbav:"name"`
 	ConnID string `dynamodbav:"connid"`
 	Ready  bool   `dynamodbav:"ready"`
-	Color  string `dynamodbav:"color,omitempty"`
-	Score  int    `dynamodbav:"score"`
 }
 
-type game struct {
-	Pk          string            `dynamodbav:"pk"`
-	Sk          string            `dynamodbav:"sk"`
-	Starting    bool              `dynamodbav:"starting"`
-	Ready       bool              `dynamodbav:"ready"`
-	Loading     bool              `dynamodbav:"loading"`
-	Players     map[string]Player `dynamodbav:"players"`
-	Wordlist    []string          `dynamodbav:"wordList"`
-	SendToFront bool              `dynamodbav:"sendToFront"`
+type listGame struct {
+	Pk      string                `dynamodbav:"pk"` //'GAME'
+	Sk      string                `dynamodbav:"sk"` //no
+	Ready   bool                  `dynamodbav:"ready"`
+	Players map[string]listPlayer `dynamodbav:"players"`
 }
 
 type body struct {
@@ -120,7 +112,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		gameno = body.Gameno
 	}
 
-	gameItemKey, err := attributevalue.MarshalMap(Key{
+	gameItemKey, err := attributevalue.MarshalMap(key{
 		Pk: "GAME",
 		Sk: gameno,
 	})
@@ -145,15 +137,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	if body.Tipe == "join" {
 
-		player := Player{
+		player := listPlayer{
 			Name:   name,
 			ConnID: req.RequestContext.ConnectionID,
 			Ready:  false,
-			Color:  "",
-			Score:  0,
 		}
 
-		marshalledPlayersMap, err := attributevalue.Marshal(map[string]Player{
+		marshalledPlayersMap, err := attributevalue.Marshal(map[string]listPlayer{
 			id: player,
 		})
 		if err != nil {
@@ -163,11 +153,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		marshalledPlayer, err := attributevalue.Marshal(player)
 		if err != nil {
 			panic(fmt.Sprintf("failed to marshal indiv Record 22, %v", err))
-		}
-
-		marshalledWordsList, err := attributevalue.Marshal([]string{})
-		if err != nil {
-			panic(fmt.Sprintf("failed to marshal word list 777, %v", err))
 		}
 
 		updateConnInput := types.Update{
@@ -197,8 +182,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 						ExpressionAttributeNames: map[string]string{
 							"#PL": "players",
 							"#ID": id,
-							// "#ST": "starting",#ST = :f
-							// "#LO": "loading",#LO = :f
 							"#RE": "ready",
 						},
 						ExpressionAttributeValues: map[string]types.AttributeValue{
@@ -225,19 +208,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 						ConditionExpression: aws.String("attribute_not_exists(#PL)"),
 						ExpressionAttributeNames: map[string]string{
 							"#PL": "players",
-							"#ST": "starting",
-							"#LO": "loading",
 							"#RE": "ready",
-							"#WL": "wordList",
-							"#S":  "sendToFront",
 						},
 						ExpressionAttributeValues: map[string]types.AttributeValue{
 							":p": marshalledPlayersMap,
 							":f": &types.AttributeValueMemberBOOL{Value: false},
-							":t": &types.AttributeValueMemberBOOL{Value: true},
-							":w": marshalledWordsList,
 						},
-						UpdateExpression: aws.String("SET #PL = :p, #ST = :f, #LO = :f, #RE = :f, #AN = :a, #WL = :w, #S = :t"),
+						UpdateExpression: aws.String("SET #PL = :p, #RE = :f"),
 					},
 				},
 				{
@@ -300,7 +277,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 				"#PL": "players",
 				"#ID": id,
 				"#RD": "ready",
-				// "#RE": "ready",
 			},
 			ExpressionAttributeValues: map[string]types.AttributeValue{
 				":f": &types.AttributeValueMemberBOOL{Value: false},
@@ -347,7 +323,7 @@ func main() {
 }
 
 func callFunction(rv, gik map[string]types.AttributeValue, tn string, ctx context.Context, svc *dynamodb.Client) {
-	var gm game
+	var gm listGame
 	err := attributevalue.UnmarshalMap(rv, &gm)
 	if err != nil {
 		fmt.Println("unmarshal err", err)
