@@ -23,6 +23,12 @@ import (
 	"github.com/aws/smithy-go"
 )
 
+type listPlayer struct {
+	Name   string `dynamodbav:"name"`
+	ConnID string `dynamodbav:"connid"`
+	Ready  bool   `dynamodbav:"ready"`
+}
+
 type player struct {
 	Name   string `json:"name"`
 	ConnID string `json:"connid"`
@@ -428,7 +434,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				}
 
 			} else {
-				fmt.Println("remove conn ", connRecord)
+				fmt.Println("mod conn playing in a game", connRecord)
 			}
 
 		} else if recType == "GAME" {

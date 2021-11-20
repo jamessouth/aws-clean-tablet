@@ -35,15 +35,11 @@ var colors = []string{
 	"#581c87", //purple 900
 }
 
-// const maxPlayersPerGame = 8
-
-// Key holds values to be put in db
-type Key struct {
+type key struct {
 	Pk string `dynamodbav:"pk"`
 	Sk string `dynamodbav:"sk"`
 }
 
-// Player holds values to be put in db
 type player struct {
 	Name   string `dynamodbav:"name"`
 	ConnID string `dynamodbav:"connid"`
