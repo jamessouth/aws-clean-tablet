@@ -131,6 +131,18 @@ type fromDBLiveGame struct {
 	SendToFront  bool          `dynamodbav:"sendToFront"`
 }
 
+type gamein struct {
+	Pk       string `dynamodbav:"pk"`
+	Sk       string `dynamodbav:"sk"`
+	Starting bool   `dynamodbav:"starting"`
+	Ready    bool   `dynamodbav:"ready"`
+	Loading  bool   `dynamodbav:"loading"`
+
+	Players      playerMap `dynamodbav:"players"`
+	AnswersCount int       `dynamodbav:"answersCount"`
+	SendToFront  bool      `dynamodbav:"sendToFront"`
+}
+
 type insertConnPayload struct {
 	ListGames toFEListGameList `json:"listGms"`
 	ConnID    string           `json:"connID"`
@@ -412,7 +424,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 					return callErr(err)
 				}
 
-				var games gameInList
+				var games fromDBListGameList
 				err = attributevalue.UnmarshalListOfMaps(gamesResults.Items, &games)
 				if err != nil {
 					return callErr(err)
