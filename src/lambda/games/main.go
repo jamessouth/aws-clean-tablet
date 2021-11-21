@@ -23,38 +23,117 @@ import (
 	"github.com/aws/smithy-go"
 )
 
-type listPlayer struct {
-	Name   string `dynamodbav:"name"`
-	ConnID string `dynamodbav:"connid"`
-	Ready  bool   `dynamodbav:"ready"`
+type connItem struct {
+	Pk      string `dynamodbav:"pk"`      //'CONN#' + uuid
+	Sk      string `dynamodbav:"sk"`      //name
+	Game    string `dynamodbav:"game"`    //game no or blank
+	Playing bool   `dynamodbav:"playing"` //playing or not
+	GSI1PK  string `dynamodbav:"GSI1PK"`  //'CONN'
+	GSI1SK  string `dynamodbav:"GSI1SK"`  //conn id
 }
 
-type player struct {
+type connin struct {
+	GSI1SK string
+}
+
+type connsList []connin
+
+//-----------------------------------------------------------------------------
+
+type listPlayer struct {
+	Name   string `json:"name" dynamodbav:"name"`
+	ConnID string `json:"connid" dynamodbav:"connid"`
+	Ready  bool   `json:"ready" dynamodbav:"ready"`
+}
+type listPlayerMap map[string]listPlayer
+
+type fromDBListGame struct {
+	Pk      string        `dynamodbav:"pk"` //'GAME'
+	Sk      string        `dynamodbav:"sk"` //no
+	Ready   bool          `dynamodbav:"ready"`
+	Players listPlayerMap `dynamodbav:"players"`
+}
+
+type listPlayerList []listPlayer
+
+type fromDBListGameList []fromDBListGame
+
+func (gl fromDBListGameList) mapListGames() (res toFEListGameList) {
+	res = make(toFEListGameList, 0)
+
+	for _, g := range gl {
+		res = append(res, toFEListGame{
+
+			No:    g.Sk,
+			Ready: g.Ready,
+
+			Players: g.Players.getListPlayersSlice().sort(name),
+		})
+	}
+
+	return
+}
+
+type toFEListGameList []toFEListGame
+
+type toFEListGame struct {
+	No      string         `json:"no"`
+	Ready   bool           `json:"ready"`
+	Players listPlayerList `json:"players"`
+}
+
+func (pm listPlayerMap) getListPlayersSlice() (res listPlayerList) {
+	res = make(listPlayerList, 0)
+
+	for _, v := range pm {
+		res = append(res, v)
+	}
+
+	return
+}
+
+//-------------------------------------------------------------------------------
+
+type answer struct {
+	PlayerID string `json:"playerid"`
+	Answer   string `json:"answer"`
+}
+
+type livePlayer struct {
 	Name   string `json:"name"`
 	ConnID string `json:"connid"`
-	Ready  bool   `json:"ready"`
-	Color  string `json:"color,omitempty"`
+	Color  string `json:"color"`
 	Score  int    `json:"score"`
 	Answer answer `json:"answer"`
 }
 
-type gameout struct {
-	Pk       string `json:"pk,omitempty"`
-	No       string `json:"no"`
-	Ready    bool   `json:"ready"`
-	Starting bool   `json:"starting,omitempty"`
-	Loading  bool   `json:"loading,omitempty"`
+type livePlayerList []livePlayer
 
-	Players playerList `json:"players"`
+type livePlayerMap map[string]livePlayer
+
+type toFELiveGame struct {
+	No           string         `json:"no"`
+	ShowAnswers  bool           `json:"showAnswers"`
+	CurrentWord  string         `json:"currentWord"`
+	PreviousWord string         `json:"previousWord"`
+	Players      livePlayerList `json:"players"`
 }
 
-type connin struct {
-	GSI1SK string `json:"gsi1sk"`
+type fromDBLiveGame struct {
+	Pk       string `dynamodbav:"pk"`
+	Sk       string `dynamodbav:"sk"`
+	Starting bool   `dynamodbav:"starting"`
+	Ready    bool   `dynamodbav:"ready"`
+	Loading  bool   `dynamodbav:"loading"`
+
+	Players      livePlayerMap `dynamodbav:"players"`
+	AnswersCount int           `dynamodbav:"answersCount"`
+	SendToFront  bool          `dynamodbav:"sendToFront"`
 }
 
 type insertConnPayload struct {
-	ListGames gameOutList `json:"listGms"`
-	ConnID    string      `json:"connID"`
+	ListGames toFEListGameList `json:"listGms"`
+	ConnID    string           `json:"connID"`
 }
 
 type modifyConnPayload struct {
@@ -62,29 +141,29 @@ type modifyConnPayload struct {
 }
 
 type insertGamePayload struct {
-	AddGame gameout `json:"addGame"`
+	AddGame toFEListGame `json:"addGame"`
 }
 
 type modifyListGamePayload struct {
-	ModListGame gameout `json:"mdLstGm"`
+	ModListGame toFEListGame `json:"mdLstGm"`
 }
 
 type modifyLiveGamePayload struct {
-	ModLiveGame gameout `json:"mdLveGm"`
+	ModLiveGame toFELiveGame `json:"mdLveGm"`
 }
 
 type removeGamePayload struct {
-	RemoveGame gameout `json:"rmvGame"`
+	RemoveGame toFEListGame `json:"rmvGame"`
 }
 
-type lessFunc func(p1, p2 *player) int
+type lessFunc func(p1, p2 *listPlayer) int
 
 type multiSorter struct {
-	players []player
+	players listPlayerList
 	less    []lessFunc
 }
 
-func (ms *multiSorter) Sort(players []player) {
+func (ms *multiSorter) Sort(players listPlayerList) {
 	ms.players = players
 	sort.Sort(ms)
 }
@@ -116,7 +195,7 @@ func (ms *multiSorter) Less(i, j int) bool {
 	return true
 }
 
-var name = func(a, b *player) int {
+var name = func(a, b *listPlayer) int {
 	if a.Name > b.Name {
 		return -1
 	}
@@ -124,7 +203,7 @@ var name = func(a, b *player) int {
 	return 1
 }
 
-var score = func(a, b *player) int {
+var score = func(a, b *livePlayer) int {
 	if a.Score < b.Score {
 		return -1
 	}
@@ -135,44 +214,10 @@ var score = func(a, b *player) int {
 	return 0
 }
 
-func (p playerList) sort(fs ...lessFunc) playerList {
+func (p listPlayerList) sort(fs ...lessFunc) listPlayerList {
 	OrderedBy(fs...).Sort(p)
 
 	return p
-}
-
-func (pm playerMap) getPlayersSlice() (res playerList) {
-	res = make(playerList, 0)
-
-	for _, v := range pm {
-		res = append(res, v)
-	}
-
-	return
-}
-
-type gameInList []gamein
-type gameOutList []gameout
-type connsList []connin
-type playerList []player
-type playerMap map[string]player
-
-func (gl gameInList) mapGames() (res gameOutList) {
-	res = make(gameOutList, 0)
-
-	for _, g := range gl {
-		res = append(res, gameout{
-			Pk:       "",
-			No:       g.Sk,
-			Ready:    g.Ready,
-			Starting: false,
-			Loading:  false,
-
-			Players: g.Players.getPlayersSlice().sort(name),
-		})
-	}
-
-	return
 }
 
 func FromDynamoDBEventAVMap(m map[string]events.DynamoDBAttributeValue) (res map[string]types.AttributeValue, err error) {
@@ -236,32 +281,6 @@ func FromDynamoDBEventAV(av events.DynamoDBAttributeValue) (types.AttributeValue
 	default:
 		return nil, fmt.Errorf("unknown AttributeValue union member, %T", av)
 	}
-}
-
-type answer struct {
-	PlayerID string `json:"playerid"`
-	Answer   string `json:"answer"`
-}
-
-type connItem struct {
-	Pk      string `dynamodbav:"pk"`      //'CONN#' + uuid
-	Sk      string `dynamodbav:"sk"`      //name
-	Game    string `dynamodbav:"game"`    //game no or blank
-	Playing bool   `dynamodbav:"playing"` //playing or not
-	GSI1PK  string `dynamodbav:"GSI1PK"`  //'CONN'
-	GSI1SK  string `dynamodbav:"GSI1SK"`  //conn id
-}
-
-type gamein struct {
-	Pk       string `dynamodbav:"pk"`
-	Sk       string `dynamodbav:"sk"`
-	Starting bool   `dynamodbav:"starting"`
-	Ready    bool   `dynamodbav:"ready"`
-	Loading  bool   `dynamodbav:"loading"`
-
-	Players      playerMap `dynamodbav:"players"`
-	AnswersCount int       `dynamodbav:"answersCount"`
-	SendToFront  bool      `dynamodbav:"sendToFront"`
 }
 
 func getReturnValue(status int) events.APIGatewayProxyResponse {
@@ -401,7 +420,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 				// Tipe:  "listGames",
 				payload, err := json.Marshal(insertConnPayload{
-					ListGames: games.mapGames(),
+					ListGames: games.mapListGames(),
 					ConnID:    connRecord.GSI1SK,
 				})
 				if err != nil {

@@ -13,7 +13,7 @@ type livePlayer = {
   name: string,
   connid: string,
   color: string,
-  score: string,
+  score: int,
   answer: answer,
 }
 
