@@ -48,7 +48,7 @@ type listPlayer struct {
 type listPlayerMap map[string]listPlayer
 
 type fromDBListGame struct {
-	Pk      string        `dynamodbav:"pk"` //'GAME'
+	Pk      string        `dynamodbav:"pk"` //'LISTGAME'
 	Sk      string        `dynamodbav:"sk"` //no
 	Ready   bool          `dynamodbav:"ready"`
 	Players listPlayerMap `dynamodbav:"players"`
@@ -63,10 +63,8 @@ func (gl fromDBListGameList) mapListGames() (res toFEListGameList) {
 
 	for _, g := range gl {
 		res = append(res, toFEListGame{
-
-			No:    g.Sk,
-			Ready: g.Ready,
-
+			No:      g.Sk,
+			Ready:   g.Ready,
 			Players: g.Players.getListPlayersSlice().sort(name),
 		})
 	}
@@ -123,25 +121,23 @@ type fromDBLiveGame struct {
 	Pk       string `dynamodbav:"pk"`
 	Sk       string `dynamodbav:"sk"`
 	Starting bool   `dynamodbav:"starting"`
-	Ready    bool   `dynamodbav:"ready"`
-	Loading  bool   `dynamodbav:"loading"`
-
+	// Ready    bool   `dynamodbav:"ready"`
+	Loading      bool          `dynamodbav:"loading"`
 	Players      livePlayerMap `dynamodbav:"players"`
 	AnswersCount int           `dynamodbav:"answersCount"`
 	SendToFront  bool          `dynamodbav:"sendToFront"`
 }
 
-type gamein struct {
-	Pk       string `dynamodbav:"pk"`
-	Sk       string `dynamodbav:"sk"`
-	Starting bool   `dynamodbav:"starting"`
-	Ready    bool   `dynamodbav:"ready"`
-	Loading  bool   `dynamodbav:"loading"`
-
-	Players      playerMap `dynamodbav:"players"`
-	AnswersCount int       `dynamodbav:"answersCount"`
-	SendToFront  bool      `dynamodbav:"sendToFront"`
-}
+// type gamein struct {
+// 	Pk       string `dynamodbav:"pk"`
+// 	Sk       string `dynamodbav:"sk"`
+// 	Starting bool   `dynamodbav:"starting"`
+// 	Ready    bool   `dynamodbav:"ready"`
+// 	Loading  bool   `dynamodbav:"loading"`
+// 	Players      playerMap `dynamodbav:"players"`
+// 	AnswersCount int       `dynamodbav:"answersCount"`
+// 	SendToFront  bool      `dynamodbav:"sendToFront"`
+// }
 
 type insertConnPayload struct {
 	ListGames toFEListGameList `json:"listGms"`
@@ -310,6 +306,33 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 	for _, rec := range req.Records {
 		fmt.Println("reccc: ", rec)
 
+		if rec.EventName == dynamodbstreams.OperationTypeRemove {
+			oi := rec.Change.OldImage
+			fmt.Printf("%s: %+v\n", "old db oi", oi)
+
+			// item, err := FromDynamoDBEventAVMap(oi)
+			// if err != nil {
+			// 	return callErr(err)
+			// }
+
+			// var connRecord connItem
+			// err = attributevalue.UnmarshalMap(item, &connRecord)
+			// if err != nil {
+			// 	return callErr(err)
+			// }
+
+			// fmt.Printf("%s%+v\n", "connrecord ", connRecord)
+
+			// _, err = apigwsvc.DeleteConnection(ctx, &apigatewaymanagementapi.DeleteConnectionInput{
+			// 	ConnectionId: aws.String(connRecord.GSI1SK),
+			// })
+			// if err != nil {
+			// 	return callErr(err)
+			// }
+
+			return getReturnValue(http.StatusOK), nil
+		}
+
 		tableName := strings.Split(rec.EventSourceArn, "/")[1]
 		ni := rec.Change.NewImage
 		fmt.Printf("%s: %+v\n", "new db ni", ni)
@@ -354,33 +377,6 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 		apigwsvc := apigatewaymanagementapi.NewFromConfig(apigwcfg)
 
-		if rec.EventName == dynamodbstreams.OperationTypeRemove {
-			oi := rec.Change.OldImage
-			fmt.Printf("%s: %+v\n", "old db oi", oi)
-
-			// item, err := FromDynamoDBEventAVMap(oi)
-			// if err != nil {
-			// 	return callErr(err)
-			// }
-
-			// var connRecord connItem
-			// err = attributevalue.UnmarshalMap(item, &connRecord)
-			// if err != nil {
-			// 	return callErr(err)
-			// }
-
-			// fmt.Printf("%s%+v\n", "connrecord ", connRecord)
-
-			// _, err = apigwsvc.DeleteConnection(ctx, &apigatewaymanagementapi.DeleteConnectionInput{
-			// 	ConnectionId: aws.String(connRecord.GSI1SK),
-			// })
-			// if err != nil {
-			// 	return callErr(err)
-			// }
-
-			return getReturnValue(http.StatusOK), nil
-		}
-
 		ddbcfg, err := config.LoadDefaultConfig(ctx,
 			config.WithRegion(rec.AWSRegion),
 			// config.WithLogger(logger),
@@ -411,7 +407,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 					KeyConditionExpression: aws.String("pk = :gm"),
 					FilterExpression:       aws.String("#ST = :st"),
 					ExpressionAttributeValues: map[string]types.AttributeValue{
-						":gm": &types.AttributeValueMemberS{Value: "GAME"},
+						":gm": &types.AttributeValueMemberS{Value: "LISTGAME"},
 						":st": &types.AttributeValueMemberBOOL{Value: false},
 					},
 					ExpressionAttributeNames: map[string]string{
@@ -468,7 +464,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				fmt.Println("mod conn playing in a game", connRecord)
 			}
 
-		} else if recType == "GAME" {
+		} else if recType == "LISTGAME" {
 
 			var gameRecord gamein
 			err = attributevalue.UnmarshalMap(item, &gameRecord)
@@ -478,9 +474,77 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			fmt.Printf("%s%+v\n", "gammmmme ", gameRecord)
 
-			// if len(gameRecord.Answers) > 0 && len(gameRecord.Answers) < len(gameRecord.Players) {
-			// 	return getReturnValue(http.StatusOK), nil
-			// }
+			if rec.EventName == dynamodbstreams.OperationTypeInsert {
+
+				err = sendGamesToConns(ctx, ddbsvc, apigwsvc, gameRecord, tableName, "add")
+				if err != nil {
+					return callErr(err)
+				}
+
+			} else if rec.EventName == dynamodbstreams.OperationTypeModify {
+
+				if gameRecord.SendToFront {
+
+					if gameRecord.Loading {
+						gp := modifyGamePayload{
+							ModGame: gameout{
+								Pk:       "",
+								No:       gameRecord.Sk,
+								Ready:    gameRecord.Ready,
+								Starting: gameRecord.Starting,
+								Loading:  gameRecord.Loading,
+
+								Players: gameRecord.Players.getPlayersSlice().sort(score, name),
+							},
+						}
+
+						payload, err := json.Marshal(gp)
+						if err != nil {
+							return callErr(err)
+						}
+
+						for _, v := range gp.ModGame.Players {
+
+							conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.ConnID), Data: payload}
+
+							_, err = apigwsvc.PostToConnection(ctx, &conn)
+							if err != nil {
+								return callErr(err)
+							}
+
+						}
+
+					} else {
+						if gameRecord.Starting {
+
+							err = sendGamesToConns(ctx, ddbsvc, apigwsvc, gameRecord, tableName, "rem")
+							if err != nil {
+								return callErr(err)
+							}
+
+						} else {
+							err = sendGamesToConns(ctx, ddbsvc, apigwsvc, gameRecord, tableName, "mod")
+							if err != nil {
+								return callErr(err)
+							}
+
+						}
+					}
+				}
+
+			} else {
+				fmt.Println("remove game ", gameRecord)
+			}
+
+		} else if recType == "LIVEGAME" {
+
+			var gameRecord gamein
+			err = attributevalue.UnmarshalMap(item, &gameRecord)
+			if err != nil {
+				return callErr(err)
+			}
+
+			fmt.Printf("%s%+v\n", "gammmmme ", gameRecord)
 
 			if rec.EventName == dynamodbstreams.OperationTypeInsert {
 

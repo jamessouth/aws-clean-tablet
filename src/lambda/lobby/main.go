@@ -37,7 +37,7 @@ type listPlayer struct {
 }
 
 type listGame struct {
-	Pk      string                `dynamodbav:"pk"` //'GAME'
+	Pk      string                `dynamodbav:"pk"` //'LISTGAME'
 	Sk      string                `dynamodbav:"sk"` //no
 	Ready   bool                  `dynamodbav:"ready"`
 	Players map[string]listPlayer `dynamodbav:"players"`
@@ -113,7 +113,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	gameItemKey, err := attributevalue.MarshalMap(key{
-		Pk: "GAME",
+		Pk: "LISTGAME",
 		Sk: gameno,
 	})
 	if err != nil {

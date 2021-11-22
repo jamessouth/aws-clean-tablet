@@ -164,7 +164,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	gameItemKey, err := attributevalue.MarshalMap(key{
-		Pk: "GAME",
+		Pk: "LISTGAME",
 		Sk: body.Gameno,
 	})
 	if err != nil {
