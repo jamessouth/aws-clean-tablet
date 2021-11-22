@@ -22,11 +22,11 @@ import (
 
 // ConnItem holds values to be put in db
 type ConnItem struct {
-	Pk      string `dynamodbav:"pk"`      //'CONN#' + uuid
+	Pk      string `dynamodbav:"pk"`      //'CONNECT#' + uuid
 	Sk      string `dynamodbav:"sk"`      //name
 	Game    string `dynamodbav:"game"`    //game no or blank
 	Playing bool   `dynamodbav:"playing"` //playing or not
-	GSI1PK  string `dynamodbav:"GSI1PK"`  //'CONN'
+	GSI1PK  string `dynamodbav:"GSI1PK"`  //'CONNECT'
 	GSI1SK  string `dynamodbav:"GSI1SK"`  //conn id
 }
 
@@ -76,18 +76,18 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	name := auth["username"].(string)
 
 	connItem, err := attributevalue.MarshalMap(ConnItem{
-		Pk:      "CONN#" + id,
+		Pk:      "CONNECT#" + id,
 		Sk:      name,
 		Game:    "",
 		Playing: false,
-		GSI1PK:  "CONN",
+		GSI1PK:  "CONNECT",
 		GSI1SK:  req.RequestContext.ConnectionID,
 	})
 	if err != nil {
 		panic(fmt.Sprintf("failed to marshal Record, %v", err))
 	}
 
-	// connid, err := attributevalue.Marshal("CONN#" + id)
+	// connid, err := attributevalue.Marshal("CONNECT#" + id)
 	// if err != nil {
 	// 	panic(fmt.Sprintf("failed to marshal Record 10, %v", err))
 	// }

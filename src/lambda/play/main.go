@@ -164,7 +164,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	gameItemKey, err := attributevalue.MarshalMap(key{
-		Pk: "LISTGAME",
+		Pk: "LISTGME",
 		Sk: body.Gameno,
 	})
 	if err != nil {
@@ -252,7 +252,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 			Key: map[string]types.AttributeValue{
-				"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
+				"pk": &types.AttributeValueMemberS{Value: "LIVEGME"},
 				"sk": &types.AttributeValueMemberS{Value: game.Sk},
 			},
 			TableName: aws.String(tableName),

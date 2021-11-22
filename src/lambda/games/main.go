@@ -24,11 +24,11 @@ import (
 )
 
 type connItem struct {
-	Pk      string `dynamodbav:"pk"`      //'CONN#' + uuid
+	Pk      string `dynamodbav:"pk"`      //'CONNECT#' + uuid
 	Sk      string `dynamodbav:"sk"`      //name
 	Game    string `dynamodbav:"game"`    //game no or blank
 	Playing bool   `dynamodbav:"playing"` //playing or not
-	GSI1PK  string `dynamodbav:"GSI1PK"`  //'CONN'
+	GSI1PK  string `dynamodbav:"GSI1PK"`  //'CONNECT'
 	GSI1SK  string `dynamodbav:"GSI1SK"`  //conn id
 }
 
@@ -48,7 +48,7 @@ type listPlayer struct {
 type listPlayerMap map[string]listPlayer
 
 type fromDBListGame struct {
-	Pk      string        `dynamodbav:"pk"` //'LISTGAME'
+	Pk      string        `dynamodbav:"pk"` //'LISTGME'
 	Sk      string        `dynamodbav:"sk"` //no
 	Ready   bool          `dynamodbav:"ready"`
 	Players listPlayerMap `dynamodbav:"players"`
@@ -387,9 +387,9 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 		ddbsvc := dynamodb.NewFromConfig(ddbcfg)
 
-		recType := item["pk"].(*types.AttributeValueMemberS).Value[:4]
+		recType := item["pk"].(*types.AttributeValueMemberS).Value[:7]
 
-		if recType == "CONN" {
+		if recType == "CONNECT" {
 
 			var connRecord connItem
 			err = attributevalue.UnmarshalMap(item, &connRecord)
@@ -407,7 +407,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 					KeyConditionExpression: aws.String("pk = :gm"),
 					FilterExpression:       aws.String("#ST = :st"),
 					ExpressionAttributeValues: map[string]types.AttributeValue{
-						":gm": &types.AttributeValueMemberS{Value: "LISTGAME"},
+						":gm": &types.AttributeValueMemberS{Value: "LISTGME"},
 						":st": &types.AttributeValueMemberBOOL{Value: false},
 					},
 					ExpressionAttributeNames: map[string]string{
@@ -464,7 +464,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				fmt.Println("mod conn playing in a game", connRecord)
 			}
 
-		} else if recType == "LISTGAME" {
+		} else if recType == "LISTGME" {
 
 			var gameRecord gamein
 			err = attributevalue.UnmarshalMap(item, &gameRecord)
@@ -536,7 +536,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				fmt.Println("remove game ", gameRecord)
 			}
 
-		} else if recType == "LIVEGAME" {
+		} else if recType == "LIVEGME" {
 
 			var gameRecord gamein
 			err = attributevalue.UnmarshalMap(item, &gameRecord)
@@ -664,7 +664,7 @@ func getConnsInput(tn string) *dynamodb.QueryInput {
 		KeyConditionExpression: aws.String("GSI1PK = :cn"),
 		FilterExpression:       aws.String("#PL = :f"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":cn": &types.AttributeValueMemberS{Value: "CONN"},
+			":cn": &types.AttributeValueMemberS{Value: "CONNECT"},
 			":f":  &types.AttributeValueMemberBOOL{Value: false},
 		},
 		ExpressionAttributeNames: map[string]string{

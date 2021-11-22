@@ -37,7 +37,7 @@ type listPlayer struct {
 }
 
 type listGame struct {
-	Pk      string                `dynamodbav:"pk"` //'LISTGAME'
+	Pk      string                `dynamodbav:"pk"` //'LISTGME'
 	Sk      string                `dynamodbav:"sk"` //no
 	Ready   bool                  `dynamodbav:"ready"`
 	Players map[string]listPlayer `dynamodbav:"players"`
@@ -113,7 +113,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	gameItemKey, err := attributevalue.MarshalMap(key{
-		Pk: "LISTGAME",
+		Pk: "LISTGME",
 		Sk: gameno,
 	})
 	if err != nil {
@@ -157,7 +157,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		updateConnInput := types.Update{
 			Key: map[string]types.AttributeValue{
-				"pk": &types.AttributeValueMemberS{Value: "CONN#" + id},
+				"pk": &types.AttributeValueMemberS{Value: "CONNECT#" + id},
 				"sk": &types.AttributeValueMemberS{Value: name},
 			},
 			TableName:           aws.String(tableName),
@@ -228,7 +228,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 			Key: map[string]types.AttributeValue{
-				"pk": &types.AttributeValueMemberS{Value: "CONN#" + id},
+				"pk": &types.AttributeValueMemberS{Value: "CONNECT#" + id},
 				"sk": &types.AttributeValueMemberS{Value: name},
 			},
 			TableName: aws.String(tableName),
@@ -298,7 +298,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		_, err = svc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
 			Key: map[string]types.AttributeValue{
-				"pk": &types.AttributeValueMemberS{Value: "CONN#" + id},
+				"pk": &types.AttributeValueMemberS{Value: "CONNECT#" + id},
 				"sk": &types.AttributeValueMemberS{Value: name},
 			},
 			TableName: aws.String(tableName),
