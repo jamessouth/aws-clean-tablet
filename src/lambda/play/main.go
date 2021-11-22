@@ -58,6 +58,26 @@ type hiScore struct {
 	Tie   bool `json:"tie"`
 }
 
+type livePlayer struct {
+	Name   string `dynamodbav:"name"`
+	ConnID string `dynamodbav:"connid"`
+	Color  string `dynamodbav:"color"`
+	Score  int    `dynamodbav:"score"`
+	Answer answer `dynamodbav:"answer"`
+}
+
+type livePlayerMap map[string]livePlayer
+
+type liveGame struct {
+	Pk           string        `dynamodbav:"pk"`
+	Sk           string        `dynamodbav:"sk"`
+	Starting     bool          `dynamodbav:"starting"`
+	Loading      bool          `dynamodbav:"loading"`
+	Players      livePlayerMap `dynamodbav:"players"`
+	AnswersCount int           `dynamodbav:"answersCount"`
+	SendToFront  bool          `dynamodbav:"sendToFront"`
+}
+
 type game struct {
 	Pk           string            `dynamodbav:"pk"`
 	Sk           string            `dynamodbav:"sk"`
@@ -87,7 +107,7 @@ type sfnInput struct {
 	Players []sfnArrInput `json:"players"`
 }
 
-func getPlayersSlice(pm map[string]player) (res []sfnArrInput) {
+func (pm livePlayerMap) getLivePlayersSlice() (res []sfnArrInput) {
 	count := 0
 	for k, v := range pm {
 		res = append(res, sfnArrInput{
@@ -143,7 +163,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		return callErr(err)
 	}
 
-	gameItemKey, err := attributevalue.MarshalMap(Key{
+	gameItemKey, err := attributevalue.MarshalMap(key{
 		Pk: "GAME",
 		Sk: body.Gameno,
 	})
@@ -152,6 +172,21 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	if body.Tipe == "start" {
+
+		di, err := ddbsvc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
+			Key:          gameItemKey,
+			TableName:    aws.String(tableName),
+			ReturnValues: types.ReturnValueAllOld,
+		})
+		callErr(err)
+
+		var game liveGame
+		err = attributevalue.UnmarshalMap(di.Attributes, &game)
+		if err != nil {
+			return callErr(err)
+		}
+
+		fmt.Printf("%s%+v\n", "livegame ", game)
 
 		const numberOfWords int = 40
 		lambdasvc := lamb.NewFromConfig(cfg)
@@ -210,22 +245,28 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			return callErr(err)
 		}
 
-		uia, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-			Key:       gameItemKey,
+		marshalledPlayersMap, err := attributevalue.Marshal(game.Players)
+		if err != nil {
+			return callErr(err)
+		}
+
+		_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+			Key: map[string]types.AttributeValue{
+				"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
+				"sk": &types.AttributeValueMemberS{Value: game.Sk},
+			},
 			TableName: aws.String(tableName),
-			// ConditionExpression: aws.String("size (#AN) < :c"),
 			ExpressionAttributeNames: map[string]string{
-				// "#PL": "players",
-				// "#ID": id,
+				"#P": "players",
 				"#W": "wordList",
 				"#S": "sendToFront",
 			},
 			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":w": words,
 				":f": &types.AttributeValueMemberBOOL{Value: false},
+				":p": marshalledPlayersMap,
+				":w": words,
 			},
-			UpdateExpression: aws.String("SET #W = :w, #S = :f"),
-			ReturnValues:     types.ReturnValueAllNew,
+			UpdateExpression: aws.String("SET #S = :f, #P = :p, #W = :w"),
 		})
 
 		if err != nil {
@@ -233,15 +274,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			return callErr(err)
 		}
 
-		var game game
-		err = attributevalue.UnmarshalMap(uia.Attributes, &game)
-		if err != nil {
-			return callErr(err)
-		}
-
-		fmt.Printf("%s%+v\n", "gammmmme ", game)
-
-		players := getPlayersSlice(game.Players)
+		players := game.Players.getLivePlayersSlice()
 
 		sfnInput, err := json.Marshal(sfnInput{
 			Gameno:  body.Gameno,
