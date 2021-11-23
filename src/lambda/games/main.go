@@ -401,34 +401,34 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			if rec.EventName == dynamodbstreams.OperationTypeInsert {
 
-				gamesParams := dynamodb.QueryInput{
+				listGamesParams := dynamodb.QueryInput{
 					TableName:              aws.String(tableName),
 					ScanIndexForward:       aws.Bool(false),
 					KeyConditionExpression: aws.String("pk = :gm"),
-					FilterExpression:       aws.String("#ST = :st"),
+					// FilterExpression:       aws.String("#ST = :st"),
 					ExpressionAttributeValues: map[string]types.AttributeValue{
 						":gm": &types.AttributeValueMemberS{Value: "LISTGME"},
-						":st": &types.AttributeValueMemberBOOL{Value: false},
+						// ":st": &types.AttributeValueMemberBOOL{Value: false},
 					},
-					ExpressionAttributeNames: map[string]string{
-						"#ST": "starting",
-					},
+					// ExpressionAttributeNames: map[string]string{
+					// 	"#ST": "starting",
+					// },
 				}
 
-				gamesResults, err := ddbsvc.Query(ctx, &gamesParams)
+				listGamesResults, err := ddbsvc.Query(ctx, &listGamesParams)
 				if err != nil {
 					return callErr(err)
 				}
 
-				var games fromDBListGameList
-				err = attributevalue.UnmarshalListOfMaps(gamesResults.Items, &games)
+				var listGames fromDBListGameList
+				err = attributevalue.UnmarshalListOfMaps(listGamesResults.Items, &listGames)
 				if err != nil {
 					return callErr(err)
 				}
 
 				// Tipe:  "listGames",
 				payload, err := json.Marshal(insertConnPayload{
-					ListGames: games.mapListGames(),
+					ListGames: listGames.mapListGames(),
 					ConnID:    connRecord.GSI1SK,
 				})
 				if err != nil {
@@ -466,7 +466,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 		} else if recType == "LISTGME" {
 
-			var gameRecord gamein
+			var gameRecord fromDBListGame
 			err = attributevalue.UnmarshalMap(item, &gameRecord)
 			if err != nil {
 				return callErr(err)
