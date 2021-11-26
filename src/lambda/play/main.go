@@ -250,23 +250,26 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			return callErr(err)
 		}
 
-		_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-			Key: map[string]types.AttributeValue{
-				"pk": &types.AttributeValueMemberS{Value: "LIVEGME"},
-				"sk": &types.AttributeValueMemberS{Value: game.Sk},
+		_, err = ddbsvc.PutItem(ctx, &dynamodb.PutItemInput{
+			Item: map[string]types.AttributeValue{
+				"pk":          &types.AttributeValueMemberS{Value: "LIVEGME"},
+				"sk":          &types.AttributeValueMemberS{Value: game.Sk},
+				"players":     marshalledPlayersMap,
+				"wordList":    words,
+				"sendToFront": &types.AttributeValueMemberBOOL{Value: false},
 			},
 			TableName: aws.String(tableName),
-			ExpressionAttributeNames: map[string]string{
-				"#P": "players",
-				"#W": "wordList",
-				"#S": "sendToFront",
-			},
-			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":f": &types.AttributeValueMemberBOOL{Value: false},
-				":p": marshalledPlayersMap,
-				":w": words,
-			},
-			UpdateExpression: aws.String("SET #S = :f, #P = :p, #W = :w"),
+			// ExpressionAttributeNames: map[string]string{
+			// 	"#P": "players",
+			// 	"#W": "wordList",
+			// 	"#S": "sendToFront",
+			// },
+			// ExpressionAttributeValues: map[string]types.AttributeValue{
+			// 	":f": &types.AttributeValueMemberBOOL{Value: false},
+			// 	":p": marshalledPlayersMap,
+			// 	":w": words,
+			// },
+			// UpdateExpression: aws.String("SET #S = :f, #P = :p, #W = :w"),
 		})
 
 		if err != nil {
