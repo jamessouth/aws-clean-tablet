@@ -306,33 +306,6 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 	for _, rec := range req.Records {
 		fmt.Println("reccc: ", rec)
 
-		if rec.EventName == dynamodbstreams.OperationTypeRemove {
-			oi := rec.Change.OldImage
-			fmt.Printf("%s: %+v\n", "old db oi", oi)
-
-			// item, err := FromDynamoDBEventAVMap(oi)
-			// if err != nil {
-			// 	return callErr(err)
-			// }
-
-			// var connRecord connItem
-			// err = attributevalue.UnmarshalMap(item, &connRecord)
-			// if err != nil {
-			// 	return callErr(err)
-			// }
-
-			// fmt.Printf("%s%+v\n", "connrecord ", connRecord)
-
-			// _, err = apigwsvc.DeleteConnection(ctx, &apigatewaymanagementapi.DeleteConnectionInput{
-			// 	ConnectionId: aws.String(connRecord.GSI1SK),
-			// })
-			// if err != nil {
-			// 	return callErr(err)
-			// }
-
-			return getReturnValue(http.StatusOK), nil
-		}
-
 		tableName := strings.Split(rec.EventSourceArn, "/")[1]
 		ni := rec.Change.NewImage
 		fmt.Printf("%s: %+v\n", "new db ni", ni)
@@ -442,26 +415,33 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 					return callErr(err)
 				}
 
-			} else if rec.EventName == dynamodbstreams.OperationTypeModify && !connRecord.Playing {
+			} else if rec.EventName == dynamodbstreams.OperationTypeModify {
 
-				// Tipe:   "modifyConn",
-				payload, err := json.Marshal(modifyConnPayload{
-					ModConnGm: connRecord.Game,
-				})
+				if connRecord.Playing {
+					fmt.Println("mod conn playing in a game", connRecord)
 
-				if err != nil {
-					return callErr(err)
-				}
+				} else {
 
-				conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(connRecord.GSI1SK), Data: payload}
+					// Tipe:   "modifyConn",
+					payload, err := json.Marshal(modifyConnPayload{
+						ModConnGm: connRecord.Game,
+					})
 
-				_, err = apigwsvc.PostToConnection(ctx, &conn)
-				if err != nil {
-					return callErr(err)
+					if err != nil {
+						return callErr(err)
+					}
+
+					conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(connRecord.GSI1SK), Data: payload}
+
+					_, err = apigwsvc.PostToConnection(ctx, &conn)
+					if err != nil {
+						return callErr(err)
+					}
 				}
 
 			} else {
-				fmt.Println("mod conn playing in a game", connRecord)
+				oi := rec.Change.OldImage
+				fmt.Printf("%s: %+v\n", "remove conn oi", oi)
 			}
 
 		} else if recType == "LISTGME" {
@@ -472,7 +452,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				return callErr(err)
 			}
 
-			fmt.Printf("%s%+v\n", "gammmmme ", gameRecord)
+			fmt.Printf("%s%+v\n", "list gammmmme ", gameRecord)
 
 			if rec.EventName == dynamodbstreams.OperationTypeInsert {
 
@@ -483,68 +463,25 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			} else if rec.EventName == dynamodbstreams.OperationTypeModify {
 
-				if gameRecord.SendToFront {
-
-					if gameRecord.Loading {
-						gp := modifyGamePayload{
-							ModGame: gameout{
-								Pk:       "",
-								No:       gameRecord.Sk,
-								Ready:    gameRecord.Ready,
-								Starting: gameRecord.Starting,
-								Loading:  gameRecord.Loading,
-
-								Players: gameRecord.Players.getPlayersSlice().sort(score, name),
-							},
-						}
-
-						payload, err := json.Marshal(gp)
-						if err != nil {
-							return callErr(err)
-						}
-
-						for _, v := range gp.ModGame.Players {
-
-							conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.ConnID), Data: payload}
-
-							_, err = apigwsvc.PostToConnection(ctx, &conn)
-							if err != nil {
-								return callErr(err)
-							}
-
-						}
-
-					} else {
-						if gameRecord.Starting {
-
-							err = sendGamesToConns(ctx, ddbsvc, apigwsvc, gameRecord, tableName, "rem")
-							if err != nil {
-								return callErr(err)
-							}
-
-						} else {
-							err = sendGamesToConns(ctx, ddbsvc, apigwsvc, gameRecord, tableName, "mod")
-							if err != nil {
-								return callErr(err)
-							}
-
-						}
-					}
+				err = sendGamesToConns(ctx, ddbsvc, apigwsvc, gameRecord, tableName, "mod")
+				if err != nil {
+					return callErr(err)
 				}
 
 			} else {
-				fmt.Println("remove game ", gameRecord)
+				oi := rec.Change.OldImage
+				fmt.Printf("%s: %+v\n", "remove list game oi", oi)
 			}
 
 		} else if recType == "LIVEGME" {
 
-			var gameRecord gamein
+			var gameRecord fromDBLiveGame
 			err = attributevalue.UnmarshalMap(item, &gameRecord)
 			if err != nil {
 				return callErr(err)
 			}
 
-			fmt.Printf("%s%+v\n", "gammmmme ", gameRecord)
+			fmt.Printf("%s%+v\n", "live gammmmme ", gameRecord)
 
 			if rec.EventName == dynamodbstreams.OperationTypeInsert {
 
@@ -557,55 +494,39 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 				if gameRecord.SendToFront {
 
-					if gameRecord.Loading {
-						gp := modifyGamePayload{
-							ModGame: gameout{
-								Pk:       "",
-								No:       gameRecord.Sk,
-								Ready:    gameRecord.Ready,
-								Starting: gameRecord.Starting,
-								Loading:  gameRecord.Loading,
+					gp := modifyGamePayload{
+						ModGame: gameout{
+							Pk:       "",
+							No:       gameRecord.Sk,
+							Ready:    gameRecord.Ready,
+							Starting: gameRecord.Starting,
+							Loading:  gameRecord.Loading,
 
-								Players: gameRecord.Players.getPlayersSlice().sort(score, name),
-							},
-						}
+							Players: gameRecord.Players.getPlayersSlice().sort(score, name),
+						},
+					}
 
-						payload, err := json.Marshal(gp)
+					payload, err := json.Marshal(gp)
+					if err != nil {
+						return callErr(err)
+					}
+
+					for _, v := range gp.ModGame.Players {
+
+						conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.ConnID), Data: payload}
+
+						_, err = apigwsvc.PostToConnection(ctx, &conn)
 						if err != nil {
 							return callErr(err)
 						}
 
-						for _, v := range gp.ModGame.Players {
-
-							conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.ConnID), Data: payload}
-
-							_, err = apigwsvc.PostToConnection(ctx, &conn)
-							if err != nil {
-								return callErr(err)
-							}
-
-						}
-
-					} else {
-						if gameRecord.Starting {
-
-							err = sendGamesToConns(ctx, ddbsvc, apigwsvc, gameRecord, tableName, "rem")
-							if err != nil {
-								return callErr(err)
-							}
-
-						} else {
-							err = sendGamesToConns(ctx, ddbsvc, apigwsvc, gameRecord, tableName, "mod")
-							if err != nil {
-								return callErr(err)
-							}
-
-						}
 					}
+
 				}
 
 			} else {
-				fmt.Println("remove game ", gameRecord)
+				oi := rec.Change.OldImage
+				fmt.Printf("%s: %+v\n", "remove live game oi", oi)
 			}
 
 		} else {
