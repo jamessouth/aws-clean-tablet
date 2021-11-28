@@ -93,26 +93,16 @@ type sfnInput struct {
 	Players []sfnArrInput `json:"players"`
 }
 
-func (pm livePlayerMap) getLivePlayersSlice() (res []sfnArrInput) {
+func (pm livePlayerMap) assignColors() livePlayerMap {
 	count := 0
 	for k, v := range pm {
-		res = append(res, sfnArrInput{
-			Id:     k,
-			Color:  colors[count],
-			Name:   v.Name,
-			ConnID: v.ConnID,
-		})
+		v.Color = colors[count]
+		pm[k] = v
 		count++
 	}
 
-	return
+	return pm
 }
-
-// type sfev struct {
-// 	Region, Endpoint, Word, Token string
-// 	Conns                         []int
-// 	Index                         int
-// }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
@@ -231,7 +221,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			return callErr(err)
 		}
 
-		marshalledPlayersMap, err := attributevalue.Marshal(game.Players)
+		marshalledPlayersMap, err := attributevalue.Marshal(game.Players.assignColors())
 		if err != nil {
 			return callErr(err)
 		}
@@ -262,8 +252,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 			return callErr(err)
 		}
-
-		players := game.Players.getLivePlayersSlice()
 
 		sfnInput, err := json.Marshal(sfnInput{
 			Gameno:  body.Gameno,

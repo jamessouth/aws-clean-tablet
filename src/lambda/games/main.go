@@ -586,21 +586,27 @@ func main() {
 
 func getGamePayload(g fromDBListGame, opt string) (payload []byte, err error) {
 
-	pl := toFEListGame{
-		No:      g.Sk,
-		Ready:   g.Ready,
-		Players: g.Players.getListPlayersSlice().sort(nameList),
-	}
-
 	if opt == "add" {
+		pl := toFEListGame{
+			No:      g.Sk,
+			Players: g.Players.getListPlayersSlice(),
+		}
 		payload, err = json.Marshal(insertGamePayload{
 			AddGame: pl,
 		})
 	} else if opt == "mod" {
+		pl := toFEListGame{
+			No:      g.Sk,
+			Ready:   g.Ready,
+			Players: g.Players.getListPlayersSlice().sort(nameList),
+		}
 		payload, err = json.Marshal(modifyListGamePayload{
 			ModListGame: pl,
 		})
 	} else if opt == "rem" {
+		pl := toFEListGame{
+			No: g.Sk,
+		}
 		payload, err = json.Marshal(removeGamePayload{
 			RemoveGame: pl,
 		})
