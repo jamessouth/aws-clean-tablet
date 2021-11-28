@@ -71,24 +71,10 @@ type livePlayerMap map[string]livePlayer
 type liveGame struct {
 	Pk           string        `dynamodbav:"pk"`
 	Sk           string        `dynamodbav:"sk"`
-	Starting     bool          `dynamodbav:"starting"`
-	Loading      bool          `dynamodbav:"loading"`
+	CurrentWord  string        `dynamodbav:"currentWord"`
 	Players      livePlayerMap `dynamodbav:"players"`
 	AnswersCount int           `dynamodbav:"answersCount"`
 	SendToFront  bool          `dynamodbav:"sendToFront"`
-}
-
-type game struct {
-	Pk           string            `dynamodbav:"pk"`
-	Sk           string            `dynamodbav:"sk"`
-	Starting     bool              `dynamodbav:"starting"`
-	Ready        bool              `dynamodbav:"ready"`
-	Token        string            `dynamodbav:"token"`
-	Loading      bool              `dynamodbav:"loading"`
-	Players      map[string]player `dynamodbav:"players"`
-	AnswersCount int               `dynamodbav:"answersCount"`
-	Wordlist     []string          `dynamodbav:"wordList"`
-	SendToFront  bool              `dynamodbav:"sendToFront"`
 }
 
 type body struct {
@@ -339,7 +325,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			return callErr(err)
 		}
 
-		var gm game
+		var gm liveGame
 		err = attributevalue.UnmarshalMap(ui.Attributes, &gm)
 		if err != nil {
 			return callErr(err)
@@ -353,11 +339,15 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 				// ConditionExpression: aws.String("size (#AN) < :c"),
 				ExpressionAttributeNames: map[string]string{
 					"#S": "sendToFront",
+					"#P": "previousWord",
+					"#C": "currentWord",
 				},
 				ExpressionAttributeValues: map[string]types.AttributeValue{
 					":t": &types.AttributeValueMemberBOOL{Value: true},
+					":c": &types.AttributeValueMemberS{Value: gm.CurrentWord},
+					":b": &types.AttributeValueMemberS{Value: ""},
 				},
-				UpdateExpression: aws.String("SET #S = :t"),
+				UpdateExpression: aws.String("SET #S = :t, #P = :c, #C = :b"),
 				// ReturnValues:     types.ReturnValueAllNew,
 			})
 

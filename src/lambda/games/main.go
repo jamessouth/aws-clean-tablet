@@ -111,7 +111,6 @@ type livePlayerMap map[string]livePlayer
 
 type toFELiveGame struct {
 	No           string         `json:"no"`
-	ShowAnswers  bool           `json:"showAnswers"`
 	CurrentWord  string         `json:"currentWord"`
 	PreviousWord string         `json:"previousWord"`
 	Players      livePlayerList `json:"players"`
@@ -120,8 +119,8 @@ type toFELiveGame struct {
 type fromDBLiveGame struct {
 	Sk           string        `dynamodbav:"sk"`
 	Players      livePlayerMap `dynamodbav:"players"`
-	ShowAnswers  bool          `dynamodbav:"showAnswers"`
 	CurrentWord  string        `dynamodbav:"currentWord"`
+	PreviousWord string        `dynamodbav:"previousWord"`
 	AnswersCount int           `dynamodbav:"answersCount"`
 	SendToFront  bool          `dynamodbav:"sendToFront"`
 }
@@ -135,17 +134,6 @@ func (pm livePlayerMap) getLivePlayersSlice() (res livePlayerList) {
 
 	return
 }
-
-// type gamein struct {
-// 	Pk       string `dynamodbav:"pk"`
-// 	Sk       string `dynamodbav:"sk"`
-// 	Starting bool   `dynamodbav:"starting"`
-// 	Ready    bool   `dynamodbav:"ready"`
-// 	Loading  bool   `dynamodbav:"loading"`
-// 	Players      playerMap `dynamodbav:"players"`
-// 	AnswersCount int       `dynamodbav:"answersCount"`
-// 	SendToFront  bool      `dynamodbav:"sendToFront"`
-// }
 
 type insertConnPayload struct {
 	ListGames toFEListGameList `json:"listGms"`
@@ -444,9 +432,6 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 						":gm": &types.AttributeValueMemberS{Value: "LISTGME"},
 						// ":st": &types.AttributeValueMemberBOOL{Value: false},
 					},
-					// ExpressionAttributeNames: map[string]string{
-					// 	"#ST": "starting",
-					// },
 				}
 
 				listGamesResults, err := ddbsvc.Query(ctx, &listGamesParams)
@@ -557,10 +542,9 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 					gp := modifyLiveGamePayload{
 						ModLiveGame: toFELiveGame{
 							No:           gameRecord.Sk,
-							ShowAnswers:  gameRecord.ShowAnswers,
 							CurrentWord:  gameRecord.CurrentWord,
 							PreviousWord: gameRecord.PreviousWord,
-							Players:      gameRecord.Players.getLivePlayersSlice().sort(score, name),
+							Players:      gameRecord.Players.getLivePlayersSlice().sort(score, nameLive),
 						},
 					}
 
@@ -600,16 +584,12 @@ func main() {
 	lambda.Start(handler)
 }
 
-func getGamePayload(g gamein, opt string) (payload []byte, err error) {
+func getGamePayload(g fromDBListGame, opt string) (payload []byte, err error) {
 
-	pl := gameout{
-		Pk:       "",
-		No:       g.Sk,
-		Ready:    g.Ready,
-		Starting: g.Starting,
-		Loading:  g.Loading,
-
-		Players: g.Players.getPlayersSlice().sort(name),
+	pl := toFEListGame{
+		No:      g.Sk,
+		Ready:   g.Ready,
+		Players: g.Players.getListPlayersSlice().sort(nameList),
 	}
 
 	if opt == "add" {
@@ -617,8 +597,8 @@ func getGamePayload(g gamein, opt string) (payload []byte, err error) {
 			AddGame: pl,
 		})
 	} else if opt == "mod" {
-		payload, err = json.Marshal(modifyGamePayload{
-			ModGame: pl,
+		payload, err = json.Marshal(modifyListGamePayload{
+			ModListGame: pl,
 		})
 	} else if opt == "rem" {
 		payload, err = json.Marshal(removeGamePayload{
@@ -681,7 +661,7 @@ func unmarshalConns(ctx context.Context, ddbsvc *dynamodb.Client, tn string) (co
 
 }
 
-func sendGamesToConns(ctx context.Context, ddbsvc *dynamodb.Client, apigwsvc *apigatewaymanagementapi.Client, gr gamein, tn, opt string) error {
+func sendGamesToConns(ctx context.Context, ddbsvc *dynamodb.Client, apigwsvc *apigatewaymanagementapi.Client, gr fromDBListGame, tn, opt string) error {
 
 	payload, err := getGamePayload(gr, opt)
 	if err != nil {

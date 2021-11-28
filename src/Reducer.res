@@ -25,7 +25,6 @@ type listGame = {
 
 type liveGame = {
   no: string,
-  showAnswers: bool,
   currentWord: string,
   previousWord: string,
   players: array<livePlayer>,
@@ -90,7 +89,6 @@ let appState = () => {
       game: {
         no: "",
         players: [],
-        showAnswers: false,
         currentWord: "",
         previousWord: "",
       },
