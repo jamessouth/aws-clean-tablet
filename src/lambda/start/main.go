@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -17,7 +19,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	lamb "github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/sfn"
 	sfntypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
 
@@ -40,23 +41,23 @@ type key struct {
 	Sk string `dynamodbav:"sk"`
 }
 
-type player struct {
-	Name   string `dynamodbav:"name"`
-	ConnID string `dynamodbav:"connid"`
-	Ready  bool   `dynamodbav:"ready"`
-	Color  string `dynamodbav:"color,omitempty"`
-	Score  int    `dynamodbav:"score"`
-	Answer answer `dynamodbav:"answer"`
-}
+// type player struct {
+// 	Name   string `dynamodbav:"name"`
+// 	ConnID string `dynamodbav:"connid"`
+// 	Ready  bool   `dynamodbav:"ready"`
+// 	Color  string `dynamodbav:"color,omitempty"`
+// 	Score  int    `dynamodbav:"score"`
+// 	Answer answer `dynamodbav:"answer"`
+// }
 
 type answer struct {
 	PlayerID, Answer string
 }
 
-type hiScore struct {
-	Score int  `json:"score"`
-	Tie   bool `json:"tie"`
-}
+// type hiScore struct {
+// 	Score int  `json:"score"`
+// 	Tie   bool `json:"tie"`
+// }
 
 type livePlayer struct {
 	Name   string `dynamodbav:"name"`
@@ -139,8 +140,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	ddbsvc := dynamodb.NewFromConfig(cfg)
 	sfnsvc := sfn.NewFromConfig(cfg)
 
-	id := req.RequestContext.Authorizer.(map[string]interface{})["principalId"].(string)
-
 	var body body
 
 	err = json.Unmarshal([]byte(req.Body), &body)
@@ -172,58 +171,8 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	fmt.Printf("%s%+v\n", "livegame ", game)
 
 	const numberOfWords int = 40
-	lambdasvc := lamb.NewFromConfig(cfg)
 
-	wordsArg, err := json.Marshal(numberOfWords)
-	if err != nil {
-		fmt.Println("arg to words lambda marshal err", err)
-	}
-
-	lambdaInvInput := lamb.InvokeInput{
-		FunctionName: aws.String("ct-words"),
-		Payload:      wordsArg,
-	}
-
-	lambdaInv, err := lambdasvc.Invoke(ctx, &lambdaInvInput)
-	if err != nil {
-
-		var intServErr *types.InternalServerError
-		if errors.As(err, &intServErr) {
-			fmt.Printf("get item error, %v",
-				intServErr.ErrorMessage())
-		}
-
-		// To get any API error
-		var apiErr smithy.APIError
-		if errors.As(err, &apiErr) {
-			fmt.Printf("db error, Code: %v, Message: %v",
-				apiErr.ErrorCode(), apiErr.ErrorMessage())
-		}
-
-	}
-
-	lambdaReturn := *lambdaInv
-	fmt.Printf("\n%s, %+v\n", "liii", lambdaReturn)
-
-	if lambdaReturn.FunctionError != nil || lambdaReturn.StatusCode != 200 {
-		fmt.Println("inv pyld err ", *lambdaReturn.FunctionError)
-		var errPayload []string
-		err = json.Unmarshal(lambdaReturn.Payload, &errPayload)
-		if err != nil {
-			return callErr(err)
-		}
-		fmt.Println("err pyld ", errPayload)
-	}
-
-	var lambdaPayload []string
-	err = json.Unmarshal(lambdaReturn.Payload, &lambdaPayload)
-	if err != nil {
-		return callErr(err)
-	}
-
-	fmt.Println(lambdaPayload)
-
-	words, err := attributevalue.Marshal(lambdaPayload)
+	words, err := attributevalue.Marshal(shuffleList(words, numberOfWords))
 	if err != nil {
 		return callErr(err)
 	}
@@ -313,6 +262,19 @@ func callErr(err error) (events.APIGatewayProxyResponse, error) {
 		IsBase64Encoded:   false,
 	}, err
 
+}
+
+func shuffleList(words []string, length int) []string {
+	t := time.Now().UnixNano()
+	rand.Seed(t)
+
+	nl := append([]string(nil), words...)
+
+	rand.Shuffle(len(nl), func(i, j int) {
+		nl[i], nl[j] = nl[j], nl[i]
+	})
+
+	return nl[:length]
 }
 
 var words = []string{
