@@ -36,10 +36,10 @@ var colors = []string{
 	"#581c87", //purple 900
 }
 
-type key struct {
-	Pk string `dynamodbav:"pk"`
-	Sk string `dynamodbav:"sk"`
-}
+// type key struct {
+// 	Pk string `dynamodbav:"pk"`
+// 	Sk string `dynamodbav:"sk"`
+// }
 
 // type player struct {
 // 	Name   string `dynamodbav:"name"`
@@ -78,9 +78,9 @@ type liveGame struct {
 	SendToFront  bool          `dynamodbav:"sendToFront"`
 }
 
-type body struct {
-	Gameno, Tipe, Answer, PlayersCount string
-}
+// type body struct {
+// 	Gameno string
+// }
 
 type sfnArrInput struct {
 	Id   string `dynamodbav:"id"`
@@ -140,23 +140,18 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	ddbsvc := dynamodb.NewFromConfig(cfg)
 	sfnsvc := sfn.NewFromConfig(cfg)
 
-	var body body
+	var gameno string
 
-	err = json.Unmarshal([]byte(req.Body), &body)
-	if err != nil {
-		return callErr(err)
-	}
-
-	gameItemKey, err := attributevalue.MarshalMap(key{
-		Pk: "LISTGME",
-		Sk: body.Gameno,
-	})
+	err = json.Unmarshal([]byte(req.Body), &gameno)
 	if err != nil {
 		return callErr(err)
 	}
 
 	di, err := ddbsvc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
-		Key:          gameItemKey,
+		Key: map[string]types.AttributeValue{
+			"pk": &types.AttributeValueMemberS{Value: "LISTGME"},
+			"sk": &types.AttributeValueMemberS{Value: gameno},
+		},
 		TableName:    aws.String(tableName),
 		ReturnValues: types.ReturnValueAllOld,
 	})
@@ -172,7 +167,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	const numberOfWords int = 40
 
-	words, err := attributevalue.Marshal(shuffleList(words, numberOfWords))
+	marshalledWordsList, err := attributevalue.Marshal(shuffleList(words, numberOfWords))
 	if err != nil {
 		return callErr(err)
 	}
@@ -189,7 +184,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			"pk":       &types.AttributeValueMemberS{Value: "LIVEGME"},
 			"sk":       &types.AttributeValueMemberS{Value: game.Sk},
 			"players":  marshalledPlayersMap,
-			"wordList": words,
+			"wordList": marshalledWordsList,
 		},
 		TableName: aws.String(tableName),
 	})
@@ -199,7 +194,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	sfnInput, err := json.Marshal(sfnInput{
-		Gameno:  body.Gameno,
+		Gameno:  gameno,
 		Players: playersMap.mapToSlice(),
 	})
 	if err != nil {

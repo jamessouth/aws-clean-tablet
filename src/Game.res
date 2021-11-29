@@ -13,8 +13,6 @@ let make = (~game: Reducer.listGame, ~leadertoken, ~playerGame, ~send, ~class, ~
   let (disabled1, setDisabled1) = React.useState(_ => false)
   let (disabled2, setDisabled2) = React.useState(_ => false)
   let (leader, setLeader) = React.useState(_ => false)
-  //   let (prop1, setProp1) = React.useState(_ => false)
-  //   let (inThisGame, setInThisGame) = React.useState(_ => false)
 
   let onClick1 = _ => {
     let pl = {
@@ -95,9 +93,8 @@ let make = (~game: Reducer.listGame, ~leadertoken, ~playerGame, ~send, ~class, ~
         RescriptReactRouter.push(`/game/${game.no}`)
 
         let pl = {
-          action: "play",
+          action: "start",
           gameno: game.no,
-          tipe: "start",
         }
         send(. Js.Json.stringifyAny(pl))
       }
