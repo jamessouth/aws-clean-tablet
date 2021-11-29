@@ -82,15 +82,13 @@ type body struct {
 }
 
 type sfnArrInput struct {
-	Id     string `json:"id"`
-	Color  string `json:"color"`
-	Name   string `json:"name"`
-	ConnID string `json:"connid"`
+	Id   string `dynamodbav:"id"`
+	Name string `dynamodbav:"name"`
 }
 
 type sfnInput struct {
-	Gameno  string        `json:"gameno"`
-	Players []sfnArrInput `json:"players"`
+	Gameno  string        `dynamodbav:"gameno"`
+	Players []sfnArrInput `dynamodbav:"players"`
 }
 
 func (pm livePlayerMap) assignColors() livePlayerMap {
@@ -102,6 +100,17 @@ func (pm livePlayerMap) assignColors() livePlayerMap {
 	}
 
 	return pm
+}
+
+func (pm livePlayerMap) mapToSlice() (res []sfnArrInput) {
+	for k, v := range pm {
+		res = append(res, sfnArrInput{
+			Id:   k,
+			Name: v.Name,
+		})
+	}
+
+	return
 }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -221,41 +230,30 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			return callErr(err)
 		}
 
-		marshalledPlayersMap, err := attributevalue.Marshal(game.Players.assignColors())
+		playersMap := game.Players.assignColors()
+
+		marshalledPlayersMap, err := attributevalue.Marshal(playersMap)
 		if err != nil {
 			return callErr(err)
 		}
 
 		_, err = ddbsvc.PutItem(ctx, &dynamodb.PutItemInput{
 			Item: map[string]types.AttributeValue{
-				"pk":          &types.AttributeValueMemberS{Value: "LIVEGME"},
-				"sk":          &types.AttributeValueMemberS{Value: game.Sk},
-				"players":     marshalledPlayersMap,
-				"wordList":    words,
-				"sendToFront": &types.AttributeValueMemberBOOL{Value: false},
+				"pk":       &types.AttributeValueMemberS{Value: "LIVEGME"},
+				"sk":       &types.AttributeValueMemberS{Value: game.Sk},
+				"players":  marshalledPlayersMap,
+				"wordList": words,
 			},
 			TableName: aws.String(tableName),
-			// ExpressionAttributeNames: map[string]string{
-			// 	"#P": "players",
-			// 	"#W": "wordList",
-			// 	"#S": "sendToFront",
-			// },
-			// ExpressionAttributeValues: map[string]types.AttributeValue{
-			// 	":f": &types.AttributeValueMemberBOOL{Value: false},
-			// 	":p": marshalledPlayersMap,
-			// 	":w": words,
-			// },
-			// UpdateExpression: aws.String("SET #S = :f, #P = :p, #W = :w"),
 		})
 
 		if err != nil {
-
 			return callErr(err)
 		}
 
 		sfnInput, err := json.Marshal(sfnInput{
 			Gameno:  body.Gameno,
-			Players: players,
+			Players: playersMap.mapToSlice(),
 		})
 		if err != nil {
 			return callErr(err)
@@ -300,12 +298,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 				"#ID": id,
 				"#AN": "answer",
 				"#AC": "answersCount",
+				"#S":  "sendToFront",
 			},
 			ExpressionAttributeValues: map[string]types.AttributeValue{
 				":a": ans,
 				":o": &types.AttributeValueMemberN{Value: "1"},
+				":f": &types.AttributeValueMemberBOOL{Value: false},
 			},
-			UpdateExpression: aws.String("SET #PL.#ID.#AN = :a ADD #AC :o"),
+			UpdateExpression: aws.String("SET #PL.#ID.#AN = :a, #S = :f ADD #AC :o"),
 			ReturnValues:     types.ReturnValueAllNew,
 		})
 
