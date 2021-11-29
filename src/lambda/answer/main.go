@@ -17,9 +17,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	lamb "github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/sfn"
-	sfntypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
 
 	"github.com/aws/smithy-go"
 )
@@ -115,7 +113,7 @@ func (pm livePlayerMap) mapToSlice() (res []sfnArrInput) {
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
-	fmt.Println("plaaaaaaay", req.Body)
+	fmt.Println("answer", req.Body)
 
 	reg := strings.Split(req.RequestContext.DomainName, ".")[2]
 
@@ -156,130 +154,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		return callErr(err)
 	}
 
-	if body.Tipe == "start" {
-
-		di, err := ddbsvc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
-			Key:          gameItemKey,
-			TableName:    aws.String(tableName),
-			ReturnValues: types.ReturnValueAllOld,
-		})
-		callErr(err)
-
-		var game liveGame
-		err = attributevalue.UnmarshalMap(di.Attributes, &game)
-		if err != nil {
-			return callErr(err)
-		}
-
-		fmt.Printf("%s%+v\n", "livegame ", game)
-
-		const numberOfWords int = 40
-		lambdasvc := lamb.NewFromConfig(cfg)
-
-		wordsArg, err := json.Marshal(numberOfWords)
-		if err != nil {
-			fmt.Println("arg to words lambda marshal err", err)
-		}
-
-		lambdaInvInput := lamb.InvokeInput{
-			FunctionName: aws.String("ct-words"),
-			Payload:      wordsArg,
-		}
-
-		lambdaInv, err := lambdasvc.Invoke(ctx, &lambdaInvInput)
-		if err != nil {
-
-			var intServErr *types.InternalServerError
-			if errors.As(err, &intServErr) {
-				fmt.Printf("get item error, %v",
-					intServErr.ErrorMessage())
-			}
-
-			// To get any API error
-			var apiErr smithy.APIError
-			if errors.As(err, &apiErr) {
-				fmt.Printf("db error, Code: %v, Message: %v",
-					apiErr.ErrorCode(), apiErr.ErrorMessage())
-			}
-
-		}
-
-		lambdaReturn := *lambdaInv
-		fmt.Printf("\n%s, %+v\n", "liii", lambdaReturn)
-
-		if lambdaReturn.FunctionError != nil || lambdaReturn.StatusCode != 200 {
-			fmt.Println("inv pyld err ", *lambdaReturn.FunctionError)
-			var errPayload []string
-			err = json.Unmarshal(lambdaReturn.Payload, &errPayload)
-			if err != nil {
-				return callErr(err)
-			}
-			fmt.Println("err pyld ", errPayload)
-		}
-
-		var lambdaPayload []string
-		err = json.Unmarshal(lambdaReturn.Payload, &lambdaPayload)
-		if err != nil {
-			return callErr(err)
-		}
-
-		fmt.Println(lambdaPayload)
-
-		words, err := attributevalue.Marshal(lambdaPayload)
-		if err != nil {
-			return callErr(err)
-		}
-
-		playersMap := game.Players.assignColors()
-
-		marshalledPlayersMap, err := attributevalue.Marshal(playersMap)
-		if err != nil {
-			return callErr(err)
-		}
-
-		_, err = ddbsvc.PutItem(ctx, &dynamodb.PutItemInput{
-			Item: map[string]types.AttributeValue{
-				"pk":       &types.AttributeValueMemberS{Value: "LIVEGME"},
-				"sk":       &types.AttributeValueMemberS{Value: game.Sk},
-				"players":  marshalledPlayersMap,
-				"wordList": words,
-			},
-			TableName: aws.String(tableName),
-		})
-
-		if err != nil {
-			return callErr(err)
-		}
-
-		sfnInput, err := json.Marshal(sfnInput{
-			Gameno:  body.Gameno,
-			Players: playersMap.mapToSlice(),
-		})
-		if err != nil {
-			return callErr(err)
-		}
-
-		ssei := sfn.StartSyncExecutionInput{
-			StateMachineArn: aws.String(sfnarn),
-			Input:           aws.String(string(sfnInput)),
-		}
-
-		sse, err := sfnsvc.StartSyncExecution(ctx, &ssei)
-		if err != nil {
-			return callErr(err)
-		}
-
-		sseo := *sse
-		fmt.Printf("\n%s, %+v\n", "sse op", sseo)
-
-		if sseo.Status == sfntypes.SyncExecutionStatusFailed || sseo.Status == sfntypes.SyncExecutionStatusTimedOut {
-
-			err := fmt.Errorf("step function %s, execution %s, failed with status %s. error code: %s. cause: %s. ", *sseo.StateMachineArn, *sseo.ExecutionArn, sseo.Status, *sseo.Error, *sseo.Cause)
-			return callErr(err)
-
-		}
-
-	} else if body.Tipe == "answer" {
+	if body.Tipe == "answer" {
 
 		ans, err := attributevalue.Marshal(answer{
 			PlayerID: id,
