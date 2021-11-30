@@ -22,17 +22,6 @@ import (
 	"github.com/aws/smithy-go"
 )
 
-var colors = []string{
-	"#dc2626", //red 600
-	"#0c4a6e", //light blue 900
-	"#16a34a", //green 600
-	"#7c2d12", //orange 900
-	"#c026d3", //fuchsia 600
-	"#365314", //lime 900
-	"#0891b2", //cyan 600
-	"#581c87", //purple 900
-}
-
 type key struct {
 	Pk string `dynamodbav:"pk"`
 	Sk string `dynamodbav:"sk"`
@@ -76,7 +65,7 @@ type liveGame struct {
 }
 
 type body struct {
-	Gameno, Tipe, Answer, PlayersCount string
+	Gameno, Answer, PlayersCount string
 }
 
 type sfnArrInput struct {
@@ -89,16 +78,16 @@ type sfnInput struct {
 	Players []sfnArrInput `dynamodbav:"players"`
 }
 
-func (pm livePlayerMap) assignColors() livePlayerMap {
-	count := 0
-	for k, v := range pm {
-		v.Color = colors[count]
-		pm[k] = v
-		count++
-	}
+// func (pm livePlayerMap) assignColors() livePlayerMap {
+// 	count := 0
+// 	for k, v := range pm {
+// 		v.Color = colors[count]
+// 		pm[k] = v
+// 		count++
+// 	}
 
-	return pm
-}
+// 	return pm
+// }
 
 func (pm livePlayerMap) mapToSlice() (res []sfnArrInput) {
 	for k, v := range pm {
@@ -147,213 +136,190 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	gameItemKey, err := attributevalue.MarshalMap(key{
-		Pk: "LISTGME",
+		Pk: "LIVEGME",
 		Sk: body.Gameno,
 	})
 	if err != nil {
 		return callErr(err)
 	}
 
-	if body.Tipe == "answer" {
+	marshalledAnswer, err := attributevalue.Marshal(answer{
+		PlayerID: id,
+		Answer:   body.Answer,
+	})
+	if err != nil {
+		return callErr(err)
+	}
 
-		ans, err := attributevalue.Marshal(answer{
-			PlayerID: id,
-			Answer:   body.Answer,
-		})
-		if err != nil {
-			return callErr(err)
-		}
+	ui, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		Key:       gameItemKey,
+		TableName: aws.String(tableName),
+		ExpressionAttributeNames: map[string]string{
+			"#PL": "players",
+			"#ID": id,
+			"#AN": "answer",
+			"#AC": "answersCount",
+		},
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":a": marshalledAnswer,
+			":o": &types.AttributeValueMemberN{Value: "1"},
+		},
+		UpdateExpression: aws.String("SET #PL.#ID.#AN = :a ADD #AC :o"),
+		ReturnValues:     types.ReturnValueAllNew,
+	})
 
-		ui, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+	if err != nil {
+		return callErr(err)
+	}
+
+	var gm liveGame
+	err = attributevalue.UnmarshalMap(ui.Attributes, &gm)
+	if err != nil {
+		return callErr(err)
+	}
+
+	if len(gm.Players) == gm.AnswersCount {
+
+		_, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 			Key:       gameItemKey,
 			TableName: aws.String(tableName),
-			// ConditionExpression: aws.String("size (#AN) < :c"),
 			ExpressionAttributeNames: map[string]string{
-				"#PL": "players",
-				"#ID": id,
-				"#AN": "answer",
+				"#P":  "previousWord",
+				"#C":  "currentWord",
 				"#AC": "answersCount",
-				"#S":  "sendToFront",
 			},
 			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":a": ans,
-				":o": &types.AttributeValueMemberN{Value: "1"},
-				":f": &types.AttributeValueMemberBOOL{Value: false},
+				":c": &types.AttributeValueMemberS{Value: gm.CurrentWord},
+				":b": &types.AttributeValueMemberS{Value: ""},
+				":z": &types.AttributeValueMemberN{Value: "0"},
 			},
-			UpdateExpression: aws.String("SET #PL.#ID.#AN = :a, #S = :f ADD #AC :o"),
-			ReturnValues:     types.ReturnValueAllNew,
+			UpdateExpression: aws.String("SET #P = :c, #C = :b, #AC = :z"),
 		})
 
 		if err != nil {
 			return callErr(err)
 		}
 
-		var gm liveGame
-		err = attributevalue.UnmarshalMap(ui.Attributes, &gm)
+		answers := map[string][]string{}
+		// scores := map[string]int{}
+
+		for i, v := range gm.Players {
+			fmt.Printf("%s, %v, %+v", "anssss", i, v)
+			answers[v.Answer.Answer] = append(answers[v.Answer.Answer], v.Answer.PlayerID)
+			// scores[v.Answer.PlayerID] = v.Score
+		}
+
+		hiScore := hiScore{
+			Score: 0,
+			Tie:   false,
+		}
+
+		for k, v := range answers {
+
+			fmt.Printf("%s, %v, %+v", "anssssmapppp", k, v)
+
+			switch {
+			case len(k) < 2:
+				// c.updateEachScore(v, 0)
+
+			case len(v) > 2:
+				// c.updateEachScore(v, 1)
+
+				for _, id := range v {
+
+					pl := gm.Players[id]
+					score := pl.Score + 1
+
+					if score == hiScore.Score {
+						hiScore.Tie = true
+					}
+					if score > hiScore.Score {
+						hiScore.Score = score
+						hiScore.Tie = false
+					}
+
+					player := livePlayer{
+						Name:   pl.Name,
+						ConnID: pl.ConnID,
+						Color:  pl.Color,
+						Score:  score,
+						Answer: pl.Answer,
+					}
+
+					gm.Players[id] = player
+
+				}
+
+			case len(v) == 2:
+				// c.updateEachScore(v, 3)
+
+				for _, id := range v {
+
+					pl := gm.Players[id]
+					score := pl.Score + 3
+
+					if score == hiScore.Score {
+						hiScore.Tie = true
+					}
+					if score > hiScore.Score {
+						hiScore.Score = score
+						hiScore.Tie = false
+					}
+
+					player := livePlayer{
+						Name:   pl.Name,
+						ConnID: pl.ConnID,
+						Color:  pl.Color,
+						Score:  score,
+						Answer: pl.Answer,
+					}
+
+					gm.Players[id] = player
+
+				}
+
+			default:
+				// c.updateEachScore(v, 0)
+			}
+
+		}
+
+		marshalledPlayersMap, err := attributevalue.Marshal(gm.Players)
 		if err != nil {
 			return callErr(err)
 		}
 
-		if len(gm.Players) == gm.AnswersCount {
+		_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+			Key:       gameItemKey,
+			TableName: aws.String(tableName),
+			ExpressionAttributeNames: map[string]string{
+				"#PL": "players",
+			},
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":p": marshalledPlayersMap,
+			},
+			UpdateExpression: aws.String("SET #PL = :p"),
+		})
 
-			_, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-				Key:       gameItemKey,
-				TableName: aws.String(tableName),
-				// ConditionExpression: aws.String("size (#AN) < :c"),
-				ExpressionAttributeNames: map[string]string{
-					"#S": "sendToFront",
-					"#P": "previousWord",
-					"#C": "currentWord",
-				},
-				ExpressionAttributeValues: map[string]types.AttributeValue{
-					":t": &types.AttributeValueMemberBOOL{Value: true},
-					":c": &types.AttributeValueMemberS{Value: gm.CurrentWord},
-					":b": &types.AttributeValueMemberS{Value: ""},
-				},
-				UpdateExpression: aws.String("SET #S = :t, #P = :c, #C = :b"),
-				// ReturnValues:     types.ReturnValueAllNew,
-			})
-
-			if err != nil {
-				return callErr(err)
-			}
-
-			answers := map[string][]string{}
-			for i, v := range gm.Players {
-
-				fmt.Printf("%s, %v, %+v", "anssss", i, v)
-
-				answers[v.Answer.Answer] = append(answers[v.Answer.Answer], v.Answer.PlayerID)
-
-			}
-
-			for k, v := range answers {
-
-				fmt.Printf("%s, %v, %+v", "anssssmapppp", k, v)
-
-				switch {
-				case len(k) < 2:
-					// c.updateEachScore(v, 0)
-
-				case len(v) > 2:
-					// c.updateEachScore(v, 1)
-
-					for _, id := range v {
-
-						_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-							Key:       gameItemKey,
-							TableName: aws.String(tableName),
-							ExpressionAttributeNames: map[string]string{
-								"#PL": "players",
-								"#ID": id,
-								"#SC": "score",
-							},
-							ExpressionAttributeValues: map[string]types.AttributeValue{
-								":s": &types.AttributeValueMemberN{Value: "1"},
-							},
-							UpdateExpression: aws.String("ADD #PL.#ID.#SC :s"),
-						})
-
-						if err != nil {
-
-							return callErr(err)
-
-						}
-					}
-
-				case len(v) == 2:
-					// c.updateEachScore(v, 3)
-
-					for _, id := range v {
-
-						_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-							Key:       gameItemKey,
-							TableName: aws.String(tableName),
-							ExpressionAttributeNames: map[string]string{
-								"#PL": "players",
-								"#ID": id,
-								"#SC": "score",
-							},
-							ExpressionAttributeValues: map[string]types.AttributeValue{
-								":s": &types.AttributeValueMemberN{Value: "3"},
-							},
-							UpdateExpression: aws.String("ADD #PL.#ID.#SC :s"),
-						})
-
-						if err != nil {
-
-							return callErr(err)
-
-						}
-					}
-
-				default:
-					// c.updateEachScore(v, 0)
-				}
-
-			}
-
-			ui2, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-				Key:       gameItemKey,
-				TableName: aws.String(tableName),
-				// ConditionExpression: aws.String("size (#AN) < :c"),
-				ExpressionAttributeNames: map[string]string{
-					// "#PL": "players",
-					// "#ID": id,
-					"#AC": "answersCount",
-				},
-				ExpressionAttributeValues: map[string]types.AttributeValue{
-					":z": &types.AttributeValueMemberN{Value: "0"},
-					// ":c": &types.AttributeValueMemberN{Value: body.PlayersCount},
-				},
-				UpdateExpression: aws.String("SET #AC = :z"),
-				ReturnValues:     types.ReturnValueAllNew,
-			})
-
-			if err != nil {
-				return callErr(err)
-			}
-
-			var gm2 game
-			err = attributevalue.UnmarshalMap(ui2.Attributes, &gm2)
-			if err != nil {
-				return callErr(err)
-			}
-
-			hiScore := hiScore{
-				Score: 0,
-				Tie:   false,
-			}
-			// && hiScore.Score > 0
-			for _, v := range gm2.Players {
-				if v.Score == hiScore.Score {
-					hiScore.Tie = true
-				}
-				if v.Score > hiScore.Score {
-					hiScore.Score = v.Score
-					hiScore.Tie = false
-				}
-			}
-
-			taskOutput, err := json.Marshal(hiScore)
-			if err != nil {
-				return callErr(err)
-			}
-
-			stsi := sfn.SendTaskSuccessInput{
-				Output:    aws.String(string(taskOutput)),
-				TaskToken: aws.String(gm2.Token),
-			}
-
-			_, err = sfnsvc.SendTaskSuccess(ctx, &stsi)
-			if err != nil {
-				return callErr(err)
-			}
-
+		if err != nil {
+			return callErr(err)
 		}
 
-	} else {
-		fmt.Println("other play")
+		taskOutput, err := json.Marshal(hiScore)
+		if err != nil {
+			return callErr(err)
+		}
+
+		stsi := sfn.SendTaskSuccessInput{
+			Output:    aws.String(string(taskOutput)),
+			TaskToken: aws.String(gm2.Token),
+		}
+
+		_, err = sfnsvc.SendTaskSuccess(ctx, &stsi)
+		if err != nil {
+			return callErr(err)
+		}
+
 	}
 
 	return events.APIGatewayProxyResponse{

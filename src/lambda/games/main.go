@@ -539,6 +539,13 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 				if gameRecord.SendToFront {
 
+					if gameRecord.AnswersCount > 0 {
+
+					}
+					// else if gameRecord.AnswersCount == len(gameRecord.Players) {
+
+					// }
+
 					gp := modifyLiveGamePayload{
 						ModLiveGame: toFELiveGame{
 							No:           gameRecord.Sk,

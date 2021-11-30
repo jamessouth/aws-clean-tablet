@@ -31,10 +31,9 @@ let make = (
 
   let _sendAnswer = _ => {
     let pl = {
-      action: "play",
+      action: "answer",
       gameno: game.no,
       answer: inputText->Js.String2.slice(~from=0, ~to_=answer_max_length),
-      tipe: "answer",
       playersCount: j`$noplrs`,
     }
     send(. Js.Json.stringifyAny(pl))
