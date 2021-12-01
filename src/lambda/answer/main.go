@@ -197,9 +197,9 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			return callErr(err)
 		}
 
-		answers := getAnswersMap(gm.Players)
+		// answers := getAnswersMap(gm.Players)
 
-		updateScores(answers, gm)
+		updateScores(gm)
 
 		marshalledPlayersMap, err := attributevalue.Marshal(gm.Players)
 		if err != nil {
@@ -252,8 +252,8 @@ func main() {
 	lambda.Start(handler)
 }
 
-func getAnswersMap(players livePlayerMap) (res map[string][]string) {
-	for k, v := range players {
+func getAnswersMap(game liveGame) (res map[string][]string) {
+	for k, v := range game.Players {
 		fmt.Printf("%s, %v, %+v", "anssss", k, v)
 		res[v.Answer.Answer] = append(res[v.Answer.Answer], v.Answer.PlayerID)
 	}
@@ -261,7 +261,9 @@ func getAnswersMap(players livePlayerMap) (res map[string][]string) {
 	return
 }
 
-func updateScores(answers map[string][]string, game liveGame) {
+func updateScores(game liveGame) liveGame {
+	answers := getAnswersMap(game)
+
 	for k, v := range answers {
 		fmt.Printf("%s, %v, %+v", "anssssmapppp", k, v)
 
@@ -270,12 +272,12 @@ func updateScores(answers map[string][]string, game liveGame) {
 
 		case len(v) > 2: // c.updateEachScore(v, 1)
 			for _, id := range v {
-				game.Players[id] = adjScore(game.Players[id], 1, game.HiScore, game.GameTied)
+				game.Players[id], game.HiScore, game.GameTied = adjScore(game.Players[id], 1, game.HiScore, game.GameTied)
 			}
 
 		case len(v) == 2: // c.updateEachScore(v, 3)
 			for _, id := range v {
-				game.Players[id] = adjScore(game.Players[id], 3, game.HiScore, game.GameTied)
+				game.Players[id], game.HiScore, game.GameTied = adjScore(game.Players[id], 3, game.HiScore, game.GameTied)
 			}
 
 		default: // c.updateEachScore(v, 0)
@@ -283,7 +285,7 @@ func updateScores(answers map[string][]string, game liveGame) {
 	}
 }
 
-func adjScore(old livePlayer, incr int, hiScore int, tied bool) livePlayer {
+func adjScore(old livePlayer, incr, hiScore int, tied bool) (livePlayer, int, bool) {
 	score := old.Score + incr
 
 	if score == hiScore {
@@ -300,7 +302,7 @@ func adjScore(old livePlayer, incr int, hiScore int, tied bool) livePlayer {
 		Color:  old.Color,
 		Score:  score,
 		Answer: old.Answer,
-	}
+	}, hiScore, tied
 }
 
 func callErr(err error) (events.APIGatewayProxyResponse, error) {
