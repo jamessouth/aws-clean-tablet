@@ -40,11 +40,6 @@ type answer struct {
 	PlayerID, Answer string
 }
 
-type hiScore struct {
-	Score int  `json:"score"`
-	Tie   bool `json:"tie"`
-}
-
 type livePlayer struct {
 	Name   string `dynamodbav:"name"`
 	ConnID string `dynamodbav:"connid"`
@@ -62,6 +57,8 @@ type liveGame struct {
 	Players      livePlayerMap `dynamodbav:"players"`
 	AnswersCount int           `dynamodbav:"answersCount"`
 	SendToFront  bool          `dynamodbav:"sendToFront"`
+	HiScore      int           `dynamodbav:"hiScore"`
+	GameTied     bool          `dynamodbav:"gameTied"`
 }
 
 type body struct {
@@ -200,89 +197,9 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			return callErr(err)
 		}
 
-		answers := map[string][]string{}
-		// scores := map[string]int{}
+		answers := getAnswersMap(gm.Players)
 
-		for i, v := range gm.Players {
-			fmt.Printf("%s, %v, %+v", "anssss", i, v)
-			answers[v.Answer.Answer] = append(answers[v.Answer.Answer], v.Answer.PlayerID)
-			// scores[v.Answer.PlayerID] = v.Score
-		}
-
-		hiScore := hiScore{
-			Score: 0,
-			Tie:   false,
-		}
-
-		for k, v := range answers {
-
-			fmt.Printf("%s, %v, %+v", "anssssmapppp", k, v)
-
-			switch {
-			case len(k) < 2:
-				// c.updateEachScore(v, 0)
-
-			case len(v) > 2:
-				// c.updateEachScore(v, 1)
-
-				for _, id := range v {
-
-					pl := gm.Players[id]
-					score := pl.Score + 1
-
-					if score == hiScore.Score {
-						hiScore.Tie = true
-					}
-					if score > hiScore.Score {
-						hiScore.Score = score
-						hiScore.Tie = false
-					}
-
-					player := livePlayer{
-						Name:   pl.Name,
-						ConnID: pl.ConnID,
-						Color:  pl.Color,
-						Score:  score,
-						Answer: pl.Answer,
-					}
-
-					gm.Players[id] = player
-
-				}
-
-			case len(v) == 2:
-				// c.updateEachScore(v, 3)
-
-				for _, id := range v {
-
-					pl := gm.Players[id]
-					score := pl.Score + 3
-
-					if score == hiScore.Score {
-						hiScore.Tie = true
-					}
-					if score > hiScore.Score {
-						hiScore.Score = score
-						hiScore.Tie = false
-					}
-
-					player := livePlayer{
-						Name:   pl.Name,
-						ConnID: pl.ConnID,
-						Color:  pl.Color,
-						Score:  score,
-						Answer: pl.Answer,
-					}
-
-					gm.Players[id] = player
-
-				}
-
-			default:
-				// c.updateEachScore(v, 0)
-			}
-
-		}
+		updateScores(answers, gm)
 
 		marshalledPlayersMap, err := attributevalue.Marshal(gm.Players)
 		if err != nil {
@@ -333,6 +250,57 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 func main() {
 	lambda.Start(handler)
+}
+
+func getAnswersMap(players livePlayerMap) (res map[string][]string) {
+	for k, v := range players {
+		fmt.Printf("%s, %v, %+v", "anssss", k, v)
+		res[v.Answer.Answer] = append(res[v.Answer.Answer], v.Answer.PlayerID)
+	}
+
+	return
+}
+
+func updateScores(answers map[string][]string, game liveGame) {
+	for k, v := range answers {
+		fmt.Printf("%s, %v, %+v", "anssssmapppp", k, v)
+
+		switch {
+		case len(k) < 2: // c.updateEachScore(v, 0)
+
+		case len(v) > 2: // c.updateEachScore(v, 1)
+			for _, id := range v {
+				game.Players[id] = adjScore(game.Players[id], 1, game.HiScore, game.GameTied)
+			}
+
+		case len(v) == 2: // c.updateEachScore(v, 3)
+			for _, id := range v {
+				game.Players[id] = adjScore(game.Players[id], 3, game.HiScore, game.GameTied)
+			}
+
+		default: // c.updateEachScore(v, 0)
+		}
+	}
+}
+
+func adjScore(old livePlayer, incr int, hiScore int, tied bool) livePlayer {
+	score := old.Score + incr
+
+	if score == hiScore {
+		tied = true
+	}
+	if score > hiScore {
+		hiScore = score
+		tied = false
+	}
+
+	return livePlayer{
+		Name:   old.Name,
+		ConnID: old.ConnID,
+		Color:  old.Color,
+		Score:  score,
+		Answer: old.Answer,
+	}
 }
 
 func callErr(err error) (events.APIGatewayProxyResponse, error) {
