@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -18,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go-v2/service/sfn"
+	sfntypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
 
 	"github.com/aws/smithy-go"
 )
@@ -27,14 +29,14 @@ type key struct {
 	Sk string `dynamodbav:"sk"`
 }
 
-type player struct {
-	Name   string `dynamodbav:"name"`
-	ConnID string `dynamodbav:"connid"`
-	Ready  bool   `dynamodbav:"ready"`
-	Color  string `dynamodbav:"color,omitempty"`
-	Score  int    `dynamodbav:"score"`
-	Answer answer `dynamodbav:"answer"`
-}
+// type player struct {
+// 	Name   string `dynamodbav:"name"`
+// 	ConnID string `dynamodbav:"connid"`
+// 	Ready  bool   `dynamodbav:"ready"`
+// 	Color  string `dynamodbav:"color,omitempty"`
+// 	Score  int    `dynamodbav:"score"`
+// 	Answer answer `dynamodbav:"answer"`
+// }
 
 type answer struct {
 	PlayerID, Answer string
@@ -65,16 +67,6 @@ type body struct {
 	Gameno, Answer, PlayersCount string
 }
 
-type sfnArrInput struct {
-	Id   string `dynamodbav:"id"`
-	Name string `dynamodbav:"name"`
-}
-
-type sfnInput struct {
-	Gameno  string        `dynamodbav:"gameno"`
-	Players []sfnArrInput `dynamodbav:"players"`
-}
-
 // func (pm livePlayerMap) assignColors() livePlayerMap {
 // 	count := 0
 // 	for k, v := range pm {
@@ -86,16 +78,16 @@ type sfnInput struct {
 // 	return pm
 // }
 
-func (pm livePlayerMap) mapToSlice() (res []sfnArrInput) {
-	for k, v := range pm {
-		res = append(res, sfnArrInput{
-			Id:   k,
-			Name: v.Name,
-		})
-	}
+// func (pm livePlayerMap) mapToSlice() (res []sfnArrInput) {
+// 	for k, v := range pm {
+// 		res = append(res, sfnArrInput{
+// 			Id:   k,
+// 			Name: v.Name,
+// 		})
+// 	}
 
-	return
-}
+// 	return
+// }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
@@ -197,11 +189,16 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			return callErr(err)
 		}
 
-		// answers := getAnswersMap(gm.Players)
+		winner := false
+		const winThreshold int = 24
 
-		updateScores(gm)
+		updatedGame := updateScores(gm)
 
-		marshalledPlayersMap, err := attributevalue.Marshal(gm.Players)
+		if !updatedGame.GameTied && updatedGame.HiScore > winThreshold {
+			winner = true
+		}
+
+		marshalledPlayersMap, err := attributevalue.Marshal(updatedGame.Players)
 		if err != nil {
 			return callErr(err)
 		}
@@ -210,33 +207,44 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			Key:       gameItemKey,
 			TableName: aws.String(tableName),
 			ExpressionAttributeNames: map[string]string{
-				"#PL": "players",
+				"#P": "players",
+				"#H": "hiScore",
+				"#G": "gameTied",
+				"#W": "winner",
 			},
 			ExpressionAttributeValues: map[string]types.AttributeValue{
 				":p": marshalledPlayersMap,
+				":h": &types.AttributeValueMemberN{Value: strconv.Itoa(updatedGame.HiScore)},
+				":g": &types.AttributeValueMemberBOOL{Value: updatedGame.GameTied},
+				":w": &types.AttributeValueMemberBOOL{Value: winner},
 			},
-			UpdateExpression: aws.String("SET #PL = :p"),
+			UpdateExpression: aws.String("SET #P = :p, #H = :h, #G = :g, #W = :w"),
 		})
 
 		if err != nil {
 			return callErr(err)
 		}
 
-		taskOutput, err := json.Marshal(hiScore)
-		if err != nil {
-			return callErr(err)
-		}
+		if !winner {
 
-		stsi := sfn.SendTaskSuccessInput{
-			Output:    aws.String(string(taskOutput)),
-			TaskToken: aws.String(gm2.Token),
-		}
+			ssei := sfn.StartSyncExecutionInput{
+				StateMachineArn: aws.String(sfnarn),
+				Input:           aws.String(body.Gameno),
+			}
 
-		_, err = sfnsvc.SendTaskSuccess(ctx, &stsi)
-		if err != nil {
-			return callErr(err)
-		}
+			sse, err := sfnsvc.StartSyncExecution(ctx, &ssei)
+			if err != nil {
+				return callErr(err)
+			}
 
+			sseo := *sse
+			fmt.Printf("\n%s, %+v\n", "sse op", sseo)
+
+			if sseo.Status == sfntypes.SyncExecutionStatusFailed || sseo.Status == sfntypes.SyncExecutionStatusTimedOut {
+				err := fmt.Errorf("step function %s, execution %s, failed with status %s. error code: %s. cause: %s. ", *sseo.StateMachineArn, *sseo.ExecutionArn, sseo.Status, *sseo.Error, *sseo.Cause)
+				return callErr(err)
+			}
+		}
 	}
 
 	return events.APIGatewayProxyResponse{
@@ -252,13 +260,15 @@ func main() {
 	lambda.Start(handler)
 }
 
-func getAnswersMap(game liveGame) (res map[string][]string) {
+func getAnswersMap(game liveGame) map[string][]string {
+	res := make(map[string][]string)
+
 	for k, v := range game.Players {
 		fmt.Printf("%s, %v, %+v", "anssss", k, v)
 		res[v.Answer.Answer] = append(res[v.Answer.Answer], v.Answer.PlayerID)
 	}
 
-	return
+	return res
 }
 
 func updateScores(game liveGame) liveGame {
@@ -283,11 +293,11 @@ func updateScores(game liveGame) liveGame {
 		default: // c.updateEachScore(v, 0)
 		}
 	}
+
+	return game
 }
 
-func adjScore(old livePlayer, incr, hiScore int, tied bool) (livePlayer, int, bool) {
-	score := old.Score + incr
-
+func checkHiScore(score, hiScore int, tied bool) (int, bool) {
 	if score == hiScore {
 		tied = true
 	}
@@ -296,13 +306,21 @@ func adjScore(old livePlayer, incr, hiScore int, tied bool) (livePlayer, int, bo
 		tied = false
 	}
 
+	return hiScore, tied
+}
+
+func adjScore(old livePlayer, incr, hiScore int, tied bool) (livePlayer, int, bool) {
+	score := old.Score + incr
+
+	hs, t := checkHiScore(score, hiScore, tied)
+
 	return livePlayer{
 		Name:   old.Name,
 		ConnID: old.ConnID,
 		Color:  old.Color,
 		Score:  score,
 		Answer: old.Answer,
-	}, hiScore, tied
+	}, hs, t
 }
 
 func callErr(err error) (events.APIGatewayProxyResponse, error) {

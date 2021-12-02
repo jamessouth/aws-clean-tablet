@@ -215,10 +215,8 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	fmt.Printf("\n%s, %+v\n", "sse op", sseo)
 
 	if sseo.Status == sfntypes.SyncExecutionStatusFailed || sseo.Status == sfntypes.SyncExecutionStatusTimedOut {
-
 		err := fmt.Errorf("step function %s, execution %s, failed with status %s. error code: %s. cause: %s. ", *sseo.StateMachineArn, *sseo.ExecutionArn, sseo.Status, *sseo.Error, *sseo.Cause)
 		return callErr(err)
-
 	}
 
 	return events.APIGatewayProxyResponse{
