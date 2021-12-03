@@ -136,11 +136,6 @@ package main
 // 		ThreeScores: 2,
 // 		Description: "no hiscore ties",
 // 	}},
-// 	// {"XYZ", "XYZ", "single characters only are encoded without count"},
-// 	// {"AABBBCCCC", "2A3B4C", "string with no single characters"},
-// 	// {"WWWWWWWWWWWWBWWWWWWWWWWWWBBBWWWWWWWWWWWWWWWWWWWWWWWWB", "12WB12W3B24WB", "single characters mixed with repeated characters"},
-// 	// {"  hsqq qww  ", "2 hs2q q2w2 ", "multiple whitespace mixed in string"},
-// 	// {"aabbbcccc", "2a3b4c", "lowercase characters"},
 // }
 
 type chsInput struct {
@@ -288,4 +283,207 @@ var adjScoreTests = []struct {
 		HiScore: 19,
 		Tied:    true,
 	}, description: "incr by 1 to tie"},
+}
+
+var gamTests = []struct {
+	input       liveGame
+	expected    map[string][]string
+	description string
+}{
+	{input: liveGame{
+		Pk:          "",
+		Sk:          "",
+		CurrentWord: "",
+		Players: map[string]livePlayer{
+			"p1": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  11,
+				Answer: answer{
+					PlayerID: "111",
+					Answer:   "ans1",
+				},
+			},
+			"p2": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  21,
+				Answer: answer{
+					PlayerID: "222",
+					Answer:   "ans1",
+				},
+			},
+			"p3": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  8,
+				Answer: answer{
+					PlayerID: "333",
+					Answer:   "ans1",
+				},
+			},
+			"p4": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  14,
+				Answer: answer{
+					PlayerID: "444",
+					Answer:   "ans2",
+				},
+			},
+			"p5": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  18,
+				Answer: answer{
+					PlayerID: "555",
+					Answer:   "ans2",
+				},
+			},
+		},
+		AnswersCount: 0,
+		SendToFront:  false,
+		HiScore:      21,
+		GameTied:     false,
+	}, expected: map[string][]string{
+		"ans1": {"111", "222", "333"},
+		"ans2": {"444", "555"},
+	}, description: "2 answers, 5 players"},
+	{input: liveGame{
+		Pk:          "",
+		Sk:          "",
+		CurrentWord: "",
+		Players: map[string]livePlayer{
+			"p1": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  11,
+				Answer: answer{
+					PlayerID: "111",
+					Answer:   "ans1",
+				},
+			},
+			"p2": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  21,
+				Answer: answer{
+					PlayerID: "222",
+					Answer:   "ans2",
+				},
+			},
+			"p3": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  8,
+				Answer: answer{
+					PlayerID: "333",
+					Answer:   "ans3",
+				},
+			},
+			"p4": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  14,
+				Answer: answer{
+					PlayerID: "444",
+					Answer:   "ans4",
+				},
+			},
+			"p5": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  18,
+				Answer: answer{
+					PlayerID: "555",
+					Answer:   "ans5",
+				},
+			},
+		},
+		AnswersCount: 0,
+		SendToFront:  false,
+		HiScore:      21,
+		GameTied:     false,
+	}, expected: map[string][]string{
+		"ans1": {"111"},
+		"ans2": {"222"},
+		"ans3": {"333"},
+		"ans4": {"444"},
+		"ans5": {"555"},
+	}, description: "5 answers, 5 players"},
+	{input: liveGame{
+		Pk:          "",
+		Sk:          "",
+		CurrentWord: "",
+		Players: map[string]livePlayer{
+			"p1": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  11,
+				Answer: answer{
+					PlayerID: "111",
+					Answer:   "ans1",
+				},
+			},
+			"p2": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  21,
+				Answer: answer{
+					PlayerID: "222",
+					Answer:   "ans1",
+				},
+			},
+			"p3": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  8,
+				Answer: answer{
+					PlayerID: "333",
+					Answer:   "ans2",
+				},
+			},
+			"p4": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  14,
+				Answer: answer{
+					PlayerID: "444",
+					Answer:   "ans2",
+				},
+			},
+			"p5": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  18,
+				Answer: answer{
+					PlayerID: "555",
+					Answer:   "ans3",
+				},
+			},
+		},
+		AnswersCount: 0,
+		SendToFront:  false,
+		HiScore:      21,
+		GameTied:     false,
+	}, expected: map[string][]string{
+		"ans1": {"111", "222"},
+		"ans2": {"333", "444"},
+		"ans3": {"555"},
+	}, description: "3 answers, 5 players"},
 }
