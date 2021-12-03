@@ -263,8 +263,8 @@ func main() {
 func getAnswersMap(game liveGame) map[string][]string {
 	res := make(map[string][]string)
 
-	for k, v := range game.Players {
-		fmt.Printf("%s, %v, %+v", "anssss", k, v)
+	for _, v := range game.Players {
+		// fmt.Printf("%s, %v, %+v\n", "anssss", k, v)
 		res[v.Answer.Answer] = append(res[v.Answer.Answer], v.Answer.PlayerID)
 	}
 
@@ -275,7 +275,7 @@ func updateScores(game liveGame) liveGame {
 	answers := getAnswersMap(game)
 
 	for k, v := range answers {
-		fmt.Printf("%s, %v, %+v", "anssssmapppp", k, v)
+		fmt.Printf("%s, %v, %+v\n", "anssssmapppp", k, v)
 
 		switch {
 		case len(k) < 2: // c.updateEachScore(v, 0)
