@@ -149,8 +149,8 @@ type chsInput struct {
 }
 
 type chsExpected struct {
-	hiScore int
-	tied    bool
+	HiScore int
+	Tied    bool
 }
 
 var checkHiScoreTests = []struct {
@@ -164,8 +164,8 @@ var checkHiScoreTests = []struct {
 			hiScore: 20,
 			tied:    false,
 		}, expected: chsExpected{
-			hiScore: 20,
-			tied:    true,
+			HiScore: 20,
+			Tied:    true,
 		}, description: "ties with high score"},
 	{
 		input: chsInput{
@@ -173,8 +173,8 @@ var checkHiScoreTests = []struct {
 			hiScore: 21,
 			tied:    false,
 		}, expected: chsExpected{
-			hiScore: 21,
-			tied:    false,
+			HiScore: 21,
+			Tied:    false,
 		}, description: "no ties, no high score"},
 	{
 		input: chsInput{
@@ -182,16 +182,110 @@ var checkHiScoreTests = []struct {
 			hiScore: 20,
 			tied:    true,
 		}, expected: chsExpected{
-			hiScore: 21,
-			tied:    false,
+			HiScore: 21,
+			Tied:    false,
 		}, description: "break tie with high score"},
 }
 
-// // encode and then decode
-// var encodeDecodeTests = []struct {
-// 	input       string
-// 	expected    string
-// 	description string
-// }{
-// 	{"zzz ZZ  zZ", "zzz ZZ  zZ", "encode followed by decode gives original string"},
-// }
+type adjScInput struct {
+	old           livePlayer
+	incr, hiScore int
+	tied          bool
+}
+
+type adjScExpected struct {
+	Lp      livePlayer
+	HiScore int
+	Tied    bool
+}
+
+var adjScoreTests = []struct {
+	input       adjScInput
+	expected    adjScExpected
+	description string
+}{
+	{input: adjScInput{
+		old: livePlayer{
+			Name:   "",
+			ConnID: "",
+			Color:  "",
+			Score:  18,
+			Answer: answer{
+				PlayerID: "555",
+				Answer:   "ans2",
+			},
+		},
+		incr:    1,
+		hiScore: 18,
+		tied:    false,
+	}, expected: adjScExpected{
+		Lp: livePlayer{
+			Name:   "",
+			ConnID: "",
+			Color:  "",
+			Score:  19,
+			Answer: answer{
+				PlayerID: "555",
+				Answer:   "ans2",
+			},
+		},
+		HiScore: 19,
+		Tied:    false,
+	}, description: "incr by 1 incr hi"},
+	{input: adjScInput{
+		old: livePlayer{
+			Name:   "",
+			ConnID: "",
+			Color:  "",
+			Score:  18,
+			Answer: answer{
+				PlayerID: "555",
+				Answer:   "ans2",
+			},
+		},
+		incr:    3,
+		hiScore: 24,
+		tied:    true,
+	}, expected: adjScExpected{
+		Lp: livePlayer{
+			Name:   "",
+			ConnID: "",
+			Color:  "",
+			Score:  21,
+			Answer: answer{
+				PlayerID: "555",
+				Answer:   "ans2",
+			},
+		},
+		HiScore: 24,
+		Tied:    true,
+	}, description: "incr by 3 tie"},
+	{input: adjScInput{
+		old: livePlayer{
+			Name:   "",
+			ConnID: "",
+			Color:  "",
+			Score:  18,
+			Answer: answer{
+				PlayerID: "555",
+				Answer:   "ans2",
+			},
+		},
+		incr:    1,
+		hiScore: 19,
+		tied:    false,
+	}, expected: adjScExpected{
+		Lp: livePlayer{
+			Name:   "",
+			ConnID: "",
+			Color:  "",
+			Score:  19,
+			Answer: answer{
+				PlayerID: "555",
+				Answer:   "ans2",
+			},
+		},
+		HiScore: 19,
+		Tied:    true,
+	}, description: "incr by 1 to tie"},
+}
