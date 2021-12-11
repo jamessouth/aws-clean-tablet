@@ -50,7 +50,7 @@ func TestWords(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got, word, ind := loop(tc.words, tc.test)()
 			if !got {
-				t.Fatalf("the %s test failed on word: %s, line: %d", name, word, ind)
+				t.Fatalf("the %s test failed on word: %s, line: %d", name, word, ind+269)
 			}
 		})
 	}

@@ -1,142 +1,394 @@
 package main
 
-// type desc struct {
-// 	ZeroScores, OneScores, ThreeScores int
-// 	Description                        string
-// }
+type desc struct {
+	ZeroScores, OneScores, ThreeScores int
+	Description                        string
+}
 
-// var updateScoresTests = []struct {
-// 	input       liveGame
-// 	expected    liveGame
-// 	description desc
-// }{
-// 	{input: liveGame{
-// 		Pk:          "",
-// 		Sk:          "",
-// 		CurrentWord: "",
-// 		Players: map[string]livePlayer{
-// 			"p1": {
-// 				Name:   "",
-// 				ConnID: "",
-// 				Color:  "",
-// 				Score:  10,
-// 				Answer: answer{
-// 					PlayerID: "111",
-// 					Answer:   "ans1",
-// 				},
-// 			},
-// 			"p2": {
-// 				Name:   "",
-// 				ConnID: "",
-// 				Color:  "",
-// 				Score:  20,
-// 				Answer: answer{
-// 					PlayerID: "222",
-// 					Answer:   "ans1",
-// 				},
-// 			},
-// 			"p3": {
-// 				Name:   "",
-// 				ConnID: "",
-// 				Color:  "",
-// 				Score:  7,
-// 				Answer: answer{
-// 					PlayerID: "333",
-// 					Answer:   "ans1",
-// 				},
-// 			},
-// 			"p4": {
-// 				Name:   "",
-// 				ConnID: "",
-// 				Color:  "",
-// 				Score:  11,
-// 				Answer: answer{
-// 					PlayerID: "444",
-// 					Answer:   "ans2",
-// 				},
-// 			},
-// 			"p5": {
-// 				Name:   "",
-// 				ConnID: "",
-// 				Color:  "",
-// 				Score:  15,
-// 				Answer: answer{
-// 					PlayerID: "555",
-// 					Answer:   "ans2",
-// 				},
-// 			},
-// 		},
-// 		AnswersCount: 0,
-// 		SendToFront:  false,
-// 		HiScore:      20,
-// 		GameTied:     false,
-// 	}, expected: liveGame{
-// 		Pk:          "",
-// 		Sk:          "",
-// 		CurrentWord: "",
-// 		Players: map[string]livePlayer{
-// 			"p1": {
-// 				Name:   "",
-// 				ConnID: "",
-// 				Color:  "",
-// 				Score:  11,
-// 				Answer: answer{
-// 					PlayerID: "111",
-// 					Answer:   "ans1",
-// 				},
-// 			},
-// 			"p2": {
-// 				Name:   "",
-// 				ConnID: "",
-// 				Color:  "",
-// 				Score:  21,
-// 				Answer: answer{
-// 					PlayerID: "222",
-// 					Answer:   "ans1",
-// 				},
-// 			},
-// 			"p3": {
-// 				Name:   "",
-// 				ConnID: "",
-// 				Color:  "",
-// 				Score:  8,
-// 				Answer: answer{
-// 					PlayerID: "333",
-// 					Answer:   "ans1",
-// 				},
-// 			},
-// 			"p4": {
-// 				Name:   "",
-// 				ConnID: "",
-// 				Color:  "",
-// 				Score:  14,
-// 				Answer: answer{
-// 					PlayerID: "444",
-// 					Answer:   "ans2",
-// 				},
-// 			},
-// 			"p5": {
-// 				Name:   "",
-// 				ConnID: "",
-// 				Color:  "",
-// 				Score:  18,
-// 				Answer: answer{
-// 					PlayerID: "555",
-// 					Answer:   "ans2",
-// 				},
-// 			},
-// 		},
-// 		AnswersCount: 0,
-// 		SendToFront:  false,
-// 		HiScore:      21,
-// 		GameTied:     false,
-// 	}, description: desc{
-// 		ZeroScores:  0,
-// 		OneScores:   3,
-// 		ThreeScores: 2,
-// 		Description: "no hiscore ties",
-// 	}},
-// }
+var updateScoresTests = []struct {
+	input       liveGame
+	expected    liveGame
+	description desc
+}{
+	{input: liveGame{
+		Pk:          "",
+		Sk:          "",
+		CurrentWord: "",
+		Players: map[string]livePlayer{
+			"p1": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  10,
+				Answer: answer{
+					PlayerID: "p1",
+					Answer:   "ans1",
+				},
+			},
+			"p2": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  20,
+				Answer: answer{
+					PlayerID: "p2",
+					Answer:   "ans1",
+				},
+			},
+			"p3": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  7,
+				Answer: answer{
+					PlayerID: "p3",
+					Answer:   "ans1",
+				},
+			},
+			"p4": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  11,
+				Answer: answer{
+					PlayerID: "p4",
+					Answer:   "ans2",
+				},
+			},
+			"p5": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  15,
+				Answer: answer{
+					PlayerID: "p5",
+					Answer:   "ans2",
+				},
+			},
+		},
+		AnswersCount: 0,
+		SendToFront:  false,
+		HiScore:      20,
+		GameTied:     false,
+	}, expected: liveGame{
+		Pk:          "",
+		Sk:          "",
+		CurrentWord: "",
+		Players: map[string]livePlayer{
+			"p1": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  11,
+				Answer: answer{
+					PlayerID: "p1",
+					Answer:   "ans1",
+				},
+			},
+			"p2": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  21,
+				Answer: answer{
+					PlayerID: "p2",
+					Answer:   "ans1",
+				},
+			},
+			"p3": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  8,
+				Answer: answer{
+					PlayerID: "p3",
+					Answer:   "ans1",
+				},
+			},
+			"p4": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  14,
+				Answer: answer{
+					PlayerID: "p4",
+					Answer:   "ans2",
+				},
+			},
+			"p5": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  18,
+				Answer: answer{
+					PlayerID: "p5",
+					Answer:   "ans2",
+				},
+			},
+		},
+		AnswersCount: 0,
+		SendToFront:  false,
+		HiScore:      21,
+		GameTied:     false,
+	}, description: desc{
+		ZeroScores:  0,
+		OneScores:   3,
+		ThreeScores: 2,
+		Description: "no hiscore ties",
+	}},
+	{input: liveGame{
+		Pk:          "",
+		Sk:          "",
+		CurrentWord: "",
+		Players: map[string]livePlayer{
+			"p1": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  20,
+				Answer: answer{
+					PlayerID: "p1",
+					Answer:   "ans1",
+				},
+			},
+			"p2": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  20,
+				Answer: answer{
+					PlayerID: "p2",
+					Answer:   "ans1",
+				},
+			},
+			"p3": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  7,
+				Answer: answer{
+					PlayerID: "p3",
+					Answer:   "ans3",
+				},
+			},
+			"p4": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  11,
+				Answer: answer{
+					PlayerID: "p4",
+					Answer:   "ans2",
+				},
+			},
+			"p5": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  15,
+				Answer: answer{
+					PlayerID: "p5",
+					Answer:   "ans2",
+				},
+			},
+		},
+		AnswersCount: 0,
+		SendToFront:  false,
+		HiScore:      20,
+		GameTied:     false,
+	}, expected: liveGame{
+		Pk:          "",
+		Sk:          "",
+		CurrentWord: "",
+		Players: map[string]livePlayer{
+			"p1": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  23,
+				Answer: answer{
+					PlayerID: "p1",
+					Answer:   "ans1",
+				},
+			},
+			"p2": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  23,
+				Answer: answer{
+					PlayerID: "p2",
+					Answer:   "ans1",
+				},
+			},
+			"p3": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  7,
+				Answer: answer{
+					PlayerID: "p3",
+					Answer:   "ans3",
+				},
+			},
+			"p4": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  14,
+				Answer: answer{
+					PlayerID: "p4",
+					Answer:   "ans2",
+				},
+			},
+			"p5": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  18,
+				Answer: answer{
+					PlayerID: "p5",
+					Answer:   "ans2",
+				},
+			},
+		},
+		AnswersCount: 0,
+		SendToFront:  false,
+		HiScore:      23,
+		GameTied:     true,
+	}, description: desc{
+		ZeroScores:  1,
+		OneScores:   2,
+		ThreeScores: 2,
+		Description: "hiscore ties",
+	}},
+	{input: liveGame{
+		Pk:          "",
+		Sk:          "",
+		CurrentWord: "",
+		Players: map[string]livePlayer{
+			"p1": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  10,
+				Answer: answer{
+					PlayerID: "p1",
+					Answer:   "ans1",
+				},
+			},
+			"p2": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  20,
+				Answer: answer{
+					PlayerID: "p2",
+					Answer:   "ans2",
+				},
+			},
+			"p3": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  7,
+				Answer: answer{
+					PlayerID: "p3",
+					Answer:   "ans3",
+				},
+			},
+			"p4": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  11,
+				Answer: answer{
+					PlayerID: "p4",
+					Answer:   "ans4",
+				},
+			},
+			"p5": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  15,
+				Answer: answer{
+					PlayerID: "p5",
+					Answer:   "ans5",
+				},
+			},
+		},
+		AnswersCount: 0,
+		SendToFront:  false,
+		HiScore:      20,
+		GameTied:     false,
+	}, expected: liveGame{
+		Pk:          "",
+		Sk:          "",
+		CurrentWord: "",
+		Players: map[string]livePlayer{
+			"p1": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  10,
+				Answer: answer{
+					PlayerID: "p1",
+					Answer:   "ans1",
+				},
+			},
+			"p2": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  20,
+				Answer: answer{
+					PlayerID: "p2",
+					Answer:   "ans2",
+				},
+			},
+			"p3": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  7,
+				Answer: answer{
+					PlayerID: "p3",
+					Answer:   "ans3",
+				},
+			},
+			"p4": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  11,
+				Answer: answer{
+					PlayerID: "p4",
+					Answer:   "ans4",
+				},
+			},
+			"p5": {
+				Name:   "",
+				ConnID: "",
+				Color:  "",
+				Score:  15,
+				Answer: answer{
+					PlayerID: "p5",
+					Answer:   "ans5",
+				},
+			},
+		},
+		AnswersCount: 0,
+		SendToFront:  false,
+		HiScore:      20,
+		GameTied:     false,
+	}, description: desc{
+		ZeroScores:  5,
+		OneScores:   0,
+		ThreeScores: 0,
+		Description: "nobody scores",
+	}},
+}
 
 type chsInput struct {
 	score, hiScore int

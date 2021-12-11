@@ -275,18 +275,20 @@ func updateScores(game liveGame) liveGame {
 	answers := getAnswersMap(game)
 
 	for k, v := range answers {
-		fmt.Printf("%s, %v, %+v\n", "anssssmapppp", k, v)
+		// fmt.Printf("%s, %v, %+v\n", "anssssmapppp", k, v)
 
 		switch {
 		case len(k) < 2: // c.updateEachScore(v, 0)
 
 		case len(v) > 2: // c.updateEachScore(v, 1)
 			for _, id := range v {
+				// fmt.Println("1st", id)
 				game.Players[id], game.HiScore, game.GameTied = adjScore(game.Players[id], 1, game.HiScore, game.GameTied)
 			}
 
 		case len(v) == 2: // c.updateEachScore(v, 3)
 			for _, id := range v {
+				// fmt.Println("2nd", id)
 				game.Players[id], game.HiScore, game.GameTied = adjScore(game.Players[id], 3, game.HiScore, game.GameTied)
 			}
 

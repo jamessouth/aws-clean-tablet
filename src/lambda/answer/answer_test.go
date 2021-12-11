@@ -6,15 +6,16 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-// func TestUpdateScores(t *testing.T) {
-// 	for _, test := range updateScoresTests {
-// 		if act := updateScores(test.input); !cmp.Equal(act, test.expected) {
-// 			t.Errorf("FAIL - updateScores(%s: %+v\n), expected: %+v\n.",
-// 				test.description.Description, act, test.expected)
-// 		}
-// 		t.Logf("PASS updateScores - %s", test.description.Description)
-// 	}
-// }
+func TestUpdateScores(t *testing.T) {
+	// t.Skip()
+	for _, test := range updateScoresTests {
+		if act := updateScores(test.input); !cmp.Equal(act, test.expected) {
+			t.Errorf("FAIL - updateScores(%s: %+v\n), expected: %+v\n.",
+				test.description.Description, act, test.expected)
+		}
+		t.Logf("PASS updateScores - %s", test.description.Description)
+	}
+}
 
 func TestCheckHiScore(t *testing.T) {
 	t.Skip()
@@ -55,7 +56,7 @@ func TestAdjScore(t *testing.T) {
 }
 
 func TestGetAnswersMap(t *testing.T) {
-	// t.Skip()
+	t.Skip()
 	for _, test := range gamTests {
 		act := getAnswersMap(test.input)
 
