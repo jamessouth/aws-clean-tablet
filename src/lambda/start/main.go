@@ -70,12 +70,12 @@ type livePlayer struct {
 type livePlayerMap map[string]livePlayer
 
 type liveGame struct {
-	Pk           string        `dynamodbav:"pk"`
-	Sk           string        `dynamodbav:"sk"`
-	CurrentWord  string        `dynamodbav:"currentWord"`
-	Players      livePlayerMap `dynamodbav:"players"`
-	AnswersCount int           `dynamodbav:"answersCount"`
-	SendToFront  bool          `dynamodbav:"sendToFront"`
+	// Pk           string        `dynamodbav:"pk"`
+	Sk string `dynamodbav:"sk"`
+	// CurrentWord  string        `dynamodbav:"currentWord"`
+	Players livePlayerMap `dynamodbav:"players"`
+	// AnswersCount int           `dynamodbav:"answersCount"`
+	// SendToFront  bool          `dynamodbav:"sendToFront"`
 }
 
 // type body struct {

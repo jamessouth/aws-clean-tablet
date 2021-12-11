@@ -125,6 +125,15 @@ type fromDBLiveGame struct {
 	SendToFront  bool          `dynamodbav:"sendToFront"`
 }
 
+type fromDBLiveGameLite struct {
+	Sk      string        `dynamodbav:"sk"`
+	Players livePlayerMap `dynamodbav:"players"`
+	// CurrentWord  string        `dynamodbav:"currentWord"`
+	// PreviousWord string        `dynamodbav:"previousWord"`
+	// AnswersCount int           `dynamodbav:"answersCount"`
+	// SendToFront  bool          `dynamodbav:"sendToFront"`
+}
+
 func (pm livePlayerMap) getLivePlayersSlice() (res livePlayerList) {
 	res = make(livePlayerList, 0)
 
@@ -499,33 +508,54 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			}
 
 			fmt.Printf("%s%+v\n", "list gammmmme ", listGameRecord)
-
-			if rec.EventName == dynamodbstreams.OperationTypeInsert {
-
-				err = sendGamesToConns(ctx, ddbsvc, apigwsvc, listGameRecord, tableName, "add")
-				if err != nil {
-					return callErr(err)
-				}
-
-			} else if rec.EventName == dynamodbstreams.OperationTypeModify {
-
-				err = sendGamesToConns(ctx, ddbsvc, apigwsvc, listGameRecord, tableName, "mod")
-				if err != nil {
-					return callErr(err)
-				}
-
-			} else {
+			var opt string
+			switch rec.EventName {
+			case dynamodbstreams.OperationTypeInsert:
+				opt = "add"
+			case dynamodbstreams.OperationTypeModify:
+				opt = "mod"
+			default:
 				oi := rec.Change.OldImage
 				fmt.Printf("%s: %+v\n", "remove list game oi", oi)
-				err = sendGamesToConns(ctx, ddbsvc, apigwsvc, listGameRecord, tableName, "rem")
-				if err != nil {
-					return callErr(err)
-				}
+				opt = "rem"
+			}
+
+			// if rec.EventName == dynamodbstreams.OperationTypeInsert {
+
+			// 	err = sendGamesToConns(ctx, ddbsvc, apigwsvc, listGameRecord, tableName, "add")
+			// 	if err != nil {
+			// 		return callErr(err)
+			// 	}
+
+			// } else if rec.EventName == dynamodbstreams.OperationTypeModify {
+
+			// 	err = sendGamesToConns(ctx, ddbsvc, apigwsvc, listGameRecord, tableName, "mod")
+			// 	if err != nil {
+			// 		return callErr(err)
+			// 	}
+
+			// } else {
+			// 	err = sendGamesToConns(ctx, ddbsvc, apigwsvc, listGameRecord, tableName, "rem")
+			// 	if err != nil {
+			// 		return callErr(err)
+			// 	}
+			// }
+			err = sendGamesToConns(ctx, ddbsvc, apigwsvc, listGameRecord, tableName, opt)
+			if err != nil {
+				return callErr(err)
 			}
 
 		} else if recType == "LIVEGME" {
 
 			if rec.EventName == dynamodbstreams.OperationTypeInsert {
+
+				var gameRecordLite fromDBLiveGameLite
+				err = attributevalue.UnmarshalMap(item, &gameRecordLite)
+				if err != nil {
+					return callErr(err)
+				}
+
+				fmt.Printf("%s%+v\n", "live gammmmme lite ", gameRecordLite)
 
 			} else if rec.EventName == dynamodbstreams.OperationTypeModify {
 
