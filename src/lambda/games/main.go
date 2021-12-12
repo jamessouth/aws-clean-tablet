@@ -98,11 +98,12 @@ type answer struct {
 }
 
 type livePlayer struct {
-	Name   string `json:"name"`
-	ConnID string `json:"connid"`
-	Color  string `json:"color"`
-	Score  int    `json:"score"`
-	Answer answer `json:"answer"`
+	Name        string `json:"name"`
+	ConnID      string `json:"connid"`
+	Color       string `json:"color"`
+	Score       int    `json:"score"`
+	Answer      answer `json:"answer"`
+	HasAnswered bool   `json:"hasAnswered"`
 }
 
 type livePlayerList []livePlayer
@@ -114,6 +115,7 @@ type toFELiveGame struct {
 	CurrentWord  string         `json:"currentWord"`
 	PreviousWord string         `json:"previousWord"`
 	Players      livePlayerList `json:"players"`
+	AnswersCount int            `json:"answersCount"`
 }
 
 type fromDBLiveGame struct {
@@ -163,6 +165,22 @@ type modifyListGamePayload struct {
 
 type modifyLiveGamePayload struct {
 	ModLiveGame toFELiveGame `json:"mdLveGm"`
+}
+
+func (p modifyLiveGamePayload) MarshalJSON() ([]byte, error) {
+	if p.ModLiveGame.AnswersCount == len(p.ModLiveGame.Players) {
+		return []byte("null"), nil
+	}
+	if p.ModLiveGame.AnswersCount > 0 && p.ModLiveGame.AnswersCount < len(p.ModLiveGame.Players) {
+		for _, p := range p.ModLiveGame.Players {
+			if p.Answer.Answer != "" {
+				p.Answer.Answer = ""
+				p.HasAnswered = true
+			}
+		}
+	}
+
+	return json.Marshal(p)
 }
 
 type removeGamePayload struct {
@@ -520,26 +538,6 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				opt = "rem"
 			}
 
-			// if rec.EventName == dynamodbstreams.OperationTypeInsert {
-
-			// 	err = sendGamesToConns(ctx, ddbsvc, apigwsvc, listGameRecord, tableName, "add")
-			// 	if err != nil {
-			// 		return callErr(err)
-			// 	}
-
-			// } else if rec.EventName == dynamodbstreams.OperationTypeModify {
-
-			// 	err = sendGamesToConns(ctx, ddbsvc, apigwsvc, listGameRecord, tableName, "mod")
-			// 	if err != nil {
-			// 		return callErr(err)
-			// 	}
-
-			// } else {
-			// 	err = sendGamesToConns(ctx, ddbsvc, apigwsvc, listGameRecord, tableName, "rem")
-			// 	if err != nil {
-			// 		return callErr(err)
-			// 	}
-			// }
 			err = sendGamesToConns(ctx, ddbsvc, apigwsvc, listGameRecord, tableName, opt)
 			if err != nil {
 				return callErr(err)
@@ -557,6 +555,8 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 				fmt.Printf("%s%+v\n", "live gammmmme lite ", gameRecordLite)
 
+				// send to front
+
 			} else if rec.EventName == dynamodbstreams.OperationTypeModify {
 
 				var gameRecord fromDBLiveGame
@@ -569,9 +569,9 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 				if gameRecord.SendToFront {
 
-					if gameRecord.AnswersCount > 0 {
+					// if gameRecord.AnswersCount > 0 {
 
-					}
+					// }
 					// else if gameRecord.AnswersCount == len(gameRecord.Players) {
 
 					// }
@@ -582,6 +582,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 							CurrentWord:  gameRecord.CurrentWord,
 							PreviousWord: gameRecord.PreviousWord,
 							Players:      gameRecord.Players.getLivePlayersSlice().sort(score, nameLive),
+							AnswersCount: gameRecord.AnswersCount,
 						},
 					}
 
