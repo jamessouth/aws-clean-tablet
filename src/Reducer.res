@@ -15,6 +15,7 @@ type livePlayer = {
   color: string,
   score: int,
   answer: answer,
+  hasAnswered: bool,
 }
 
 type listGame = {

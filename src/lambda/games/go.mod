@@ -11,6 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi v1.4.2
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.5.2
 	github.com/aws/smithy-go v1.8.0
+	github.com/google/go-cmp v0.5.6
 )
 
 require (
