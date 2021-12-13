@@ -8,7 +8,7 @@ import (
 )
 
 func TestModifyLiveGamePayload_MarshalJSON(t *testing.T) {
-	t.Skip()
+	// t.Skip()
 	for _, ref := range modifyLiveGamePayload_MarshalJSON_Tests {
 		j, err := json.Marshal(ref.input)
 		// t.Log(string(j))

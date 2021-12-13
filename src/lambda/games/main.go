@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"sort"
 
 	"net/http"
 	"os"
@@ -65,7 +64,7 @@ func (gl fromDBListGameList) mapListGames() (res toFEListGameList) {
 		res = append(res, toFEListGame{
 			No:      g.Sk,
 			Ready:   g.Ready,
-			Players: g.Players.getListPlayersSlice().sort(nameList),
+			Players: g.Players.getListPlayersSlice().sort(namesList),
 		})
 	}
 
@@ -190,123 +189,6 @@ func (p modifyLiveGamePayload) MarshalJSON() ([]byte, error) {
 
 type removeGamePayload struct {
 	RemoveGame toFEListGame `json:"rmvGame"`
-}
-
-type lessFuncList func(p1, p2 *listPlayer) int
-
-type multiSorterList struct {
-	players listPlayerList
-	less    []lessFuncList
-}
-
-func (ms *multiSorterList) Sort(players listPlayerList) {
-	ms.players = players
-	sort.Sort(ms)
-}
-
-func OrderedByList(less ...lessFuncList) *multiSorterList {
-	return &multiSorterList{
-		less: less,
-	}
-}
-
-func (ms *multiSorterList) Len() int {
-	return len(ms.players)
-}
-
-func (ms *multiSorterList) Swap(i, j int) {
-	ms.players[i], ms.players[j] = ms.players[j], ms.players[i]
-}
-
-func (ms *multiSorterList) Less(i, j int) bool {
-	for _, k := range ms.less {
-		switch k(&ms.players[i], &ms.players[j]) {
-		case 1:
-			return true
-		case -1:
-			return false
-		}
-	}
-
-	return true
-}
-
-func (p listPlayerList) sort(fs ...lessFuncList) listPlayerList {
-	OrderedByList(fs...).Sort(p)
-
-	return p
-}
-
-var nameList = func(a, b *listPlayer) int {
-	if a.Name > b.Name {
-		return -1
-	}
-
-	return 1
-}
-
-type lessFuncLive func(p1, p2 *livePlayer) int
-
-type multiSorterLive struct {
-	players livePlayerList
-	less    []lessFuncLive
-}
-
-func (ms *multiSorterLive) Sort(players livePlayerList) {
-	ms.players = players
-	sort.Sort(ms)
-}
-
-func OrderedByLive(less ...lessFuncLive) *multiSorterLive {
-	return &multiSorterLive{
-		less: less,
-	}
-}
-
-func (ms *multiSorterLive) Len() int {
-	return len(ms.players)
-}
-
-func (ms *multiSorterLive) Swap(i, j int) {
-	ms.players[i], ms.players[j] = ms.players[j], ms.players[i]
-}
-
-func (ms *multiSorterLive) Less(i, j int) bool {
-	for _, k := range ms.less {
-		switch k(&ms.players[i], &ms.players[j]) {
-		case 1:
-			return true
-		case -1:
-			return false
-		}
-	}
-
-	return true
-}
-
-func (p livePlayerList) sort(fs ...lessFuncLive) livePlayerList {
-	OrderedByLive(fs...).Sort(p)
-
-	return p
-}
-
-var nameLive = func(a, b *livePlayer) int {
-	if a.Name > b.Name {
-		return -1
-	}
-
-	return 1
-}
-
-var score = func(a, b *livePlayer) int {
-	if a.Score < b.Score {
-		return -1
-	}
-	if a.Score > b.Score {
-		return 1
-	}
-
-	return 0
 }
 
 func FromDynamoDBEventAVMap(m map[string]events.DynamoDBAttributeValue) (res map[string]types.AttributeValue, err error) {
@@ -573,20 +455,20 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				fmt.Printf("%s%+v\n", "live gammmmme ", gameRecord)
 
 				if gameRecord.SendToFront {
+					pls := gameRecord.Players.getLivePlayersSlice()
 
-					// if gameRecord.AnswersCount > 0 {
-
-					// }
-					// else if gameRecord.AnswersCount == len(gameRecord.Players) {
-
-					// }
+					if gameRecord.AnswersCount == len(gameRecord.Players) {
+						pls = pls.sort(answers, namesLive)
+					} else {
+						pls = pls.sort(scores, namesLive)
+					}
 
 					gp := modifyLiveGamePayload{
 						ModLiveGame: toFELiveGame{
 							No:           gameRecord.Sk,
 							CurrentWord:  gameRecord.CurrentWord,
 							PreviousWord: gameRecord.PreviousWord,
-							Players:      gameRecord.Players.getLivePlayersSlice().sort(score, nameLive),
+							Players:      pls,
 							AnswersCount: gameRecord.AnswersCount,
 						},
 					}
@@ -641,7 +523,7 @@ func getGamePayload(g fromDBListGame, opt string) (payload []byte, err error) {
 		pl := toFEListGame{
 			No:      g.Sk,
 			Ready:   g.Ready,
-			Players: g.Players.getListPlayersSlice().sort(nameList),
+			Players: g.Players.getListPlayersSlice().sort(namesList),
 		}
 		payload, err = json.Marshal(modifyListGamePayload{
 			ModListGame: pl,
