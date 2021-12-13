@@ -172,15 +172,20 @@ func (p modifyLiveGamePayload) MarshalJSON() ([]byte, error) {
 		return []byte("null"), nil
 	}
 	if p.ModLiveGame.AnswersCount > 0 && p.ModLiveGame.AnswersCount < len(p.ModLiveGame.Players) {
-		for _, p := range p.ModLiveGame.Players {
-			if p.Answer.Answer != "" {
-				p.Answer.Answer = ""
-				p.HasAnswered = true
+		for i, pl := range p.ModLiveGame.Players {
+			if pl.Answer.Answer != "" {
+				pl.Answer.Answer = ""
+				pl.HasAnswered = true
+				p.ModLiveGame.Players[i] = pl
 			}
 		}
 	}
+	m, err := json.Marshal(p.ModLiveGame)
+	if err != nil {
+		return m, err
+	}
 
-	return json.Marshal(p)
+	return []byte(fmt.Sprintf("{%q:%s}", "mdLveGm", m)), nil
 }
 
 type removeGamePayload struct {
