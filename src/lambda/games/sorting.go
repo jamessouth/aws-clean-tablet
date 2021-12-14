@@ -2,130 +2,139 @@ package main
 
 import "sort"
 
-type lessFuncList func(p1, p2 *listPlayer) int
-
-type multiSorterList struct {
-	players listPlayerList
-	less    []lessFuncList
+func (players listPlayerList) sortByName() {
+	sort.Slice(players, func(i, j int) bool {
+		return players[i].Name < players[j].Name
+	})
 }
 
-func (ms *multiSorterList) Sort(players listPlayerList) {
-	ms.players = players
-	sort.Sort(ms)
+func (players livePlayerList) sortByName() {
+	sort.Slice(players, func(i, j int) bool {
+		return players[i].Name < players[j].Name
+	})
 }
 
-func OrderedByList(less ...lessFuncList) *multiSorterList {
-	return &multiSorterList{
-		less: less,
-	}
-}
+// type lessFuncList func(p1, p2 *listPlayer) int
 
-func (ms *multiSorterList) Len() int {
-	return len(ms.players)
-}
+// type multiSorterList struct {
+// 	players listPlayerList
+// 	less    []lessFuncList
+// }
 
-func (ms *multiSorterList) Swap(i, j int) {
-	ms.players[i], ms.players[j] = ms.players[j], ms.players[i]
-}
+// func (ms *multiSorterList) Sort(players listPlayerList) {
+// 	ms.players = players
+// 	sort.Sort(ms)
+// }
 
-func (ms *multiSorterList) Less(i, j int) bool {
-	for _, k := range ms.less {
-		switch k(&ms.players[i], &ms.players[j]) {
-		case 1:
-			return true
-		case -1:
-			return false
-		}
-	}
+// func OrderedByList(less ...lessFuncList) *multiSorterList {
+// 	return &multiSorterList{
+// 		less: less,
+// 	}
+// }
 
-	return true
-}
+// func (ms *multiSorterList) Len() int {
+// 	return len(ms.players)
+// }
 
-func (p listPlayerList) sort(fs ...lessFuncList) listPlayerList {
-	OrderedByList(fs...).Sort(p)
+// func (ms *multiSorterList) Swap(i, j int) {
+// 	ms.players[i], ms.players[j] = ms.players[j], ms.players[i]
+// }
 
-	return p
-}
+// func (ms *multiSorterList) Less(i, j int) bool {
+// 	for _, k := range ms.less {
+// 		switch k(&ms.players[i], &ms.players[j]) {
+// 		case 1:
+// 			return true
+// 		case -1:
+// 			return false
+// 		}
+// 	}
 
-var namesList = func(a, b *listPlayer) int {
-	if a.Name > b.Name {
-		return -1
-	}
+// 	return true
+// }
 
-	return 1
-}
+// func (p listPlayerList) sort(fs ...lessFuncList) listPlayerList {
+// 	OrderedByList(fs...).Sort(p)
 
-type lessFuncLive func(p1, p2 *livePlayer) int
+// 	return p
+// }
 
-type multiSorterLive struct {
-	players livePlayerList
-	less    []lessFuncLive
-}
+// var namesList = func(a, b *listPlayer) int {
+// 	if a.Name > b.Name {
+// 		return -1
+// 	}
 
-func (ms *multiSorterLive) Sort(players livePlayerList) {
-	ms.players = players
-	sort.Sort(ms)
-}
+// 	return 1
+// }
 
-func OrderedByLive(less ...lessFuncLive) *multiSorterLive {
-	return &multiSorterLive{
-		less: less,
-	}
-}
+// type lessFuncLive func(p1, p2 *livePlayer) int
 
-func (ms *multiSorterLive) Len() int {
-	return len(ms.players)
-}
+// type multiSorterLive struct {
+// 	players livePlayerList
+// 	less    []lessFuncLive
+// }
 
-func (ms *multiSorterLive) Swap(i, j int) {
-	ms.players[i], ms.players[j] = ms.players[j], ms.players[i]
-}
+// func (ms *multiSorterLive) Sort(players livePlayerList) {
+// 	ms.players = players
+// 	sort.Sort(ms)
+// }
 
-func (ms *multiSorterLive) Less(i, j int) bool {
-	for _, k := range ms.less {
-		switch k(&ms.players[i], &ms.players[j]) {
-		case 1:
-			return true
-		case -1:
-			return false
-		}
-	}
+// func OrderedByLive(less ...lessFuncLive) *multiSorterLive {
+// 	return &multiSorterLive{
+// 		less: less,
+// 	}
+// }
 
-	return true
-}
+// func (ms *multiSorterLive) Len() int {
+// 	return len(ms.players)
+// }
 
-func (p livePlayerList) sort(fs ...lessFuncLive) livePlayerList {
-	OrderedByLive(fs...).Sort(p)
+// func (ms *multiSorterLive) Swap(i, j int) {
+// 	ms.players[i], ms.players[j] = ms.players[j], ms.players[i]
+// }
 
-	return p
-}
+// func (ms *multiSorterLive) Less(i, j int) bool {
+// 	for _, k := range ms.less {
+// 		switch k(&ms.players[i], &ms.players[j]) {
+// 		case 1:
+// 			return true
+// 		case -1:
+// 			return false
+// 		}
+// 	}
 
-var namesLive = func(a, b *livePlayer) int {
-	if a.Name > b.Name {
-		return -1
-	}
+// 	return true
+// }
 
-	return 1
-}
+// func (p livePlayerList) sort(fs ...lessFuncLive) livePlayerList {
+// 	OrderedByLive(fs...).Sort(p)
 
-var scores = func(a, b *livePlayer) int {
-	if a.Score < b.Score {
-		return -1
-	}
-	if a.Score > b.Score {
-		return 1
-	}
+// 	return p
+// }
 
-	return 0
-}
+// var namesLive = func(a, b *livePlayer) int {
+// 	if a.Name > b.Name {
+// 		return -1
+// 	}
 
-var answers = func(a, b *livePlayer) int {
-	if a.Answer.Answer < b.Answer.Answer {
-		return -1
-	}
-	if a.Answer.Answer > b.Answer.Answer {
-		return 1
-	}
+// 	return 1
+// }
 
-	return 0
-}
+// var scores = func(a, b *livePlayer) int {
+// 	if a.Score < b.Score {
+// 		return -1
+// 	}
+// 	if a.Score > b.Score {
+// 		return 1
+// 	}
+
+// 	return 0
+// }
+
+// var answers = func(a, b *livePlayer) int {
+// 	if a.Answer.Answer > b.Answer.Answer {
+// 		return -1
+// 	}
+
+// 	return 1
+// }

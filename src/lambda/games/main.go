@@ -64,7 +64,8 @@ func (gl fromDBListGameList) mapListGames() (res toFEListGameList) {
 		res = append(res, toFEListGame{
 			No:      g.Sk,
 			Ready:   g.Ready,
-			Players: g.Players.getListPlayersSlice().sort(namesList),
+			Players: g.Players.getListPlayersSlice(),
+			// .sort(namesList),
 		})
 	}
 
@@ -458,9 +459,11 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 					pls := gameRecord.Players.getLivePlayersSlice()
 
 					if gameRecord.AnswersCount == len(gameRecord.Players) {
-						pls = pls.sort(answers, namesLive)
+						pls = pls
+						// .sort(answers, namesLive)
 					} else {
-						pls = pls.sort(scores, namesLive)
+						pls = pls
+						// .sort(scores, namesLive)
 					}
 
 					gp := modifyLiveGamePayload{
@@ -523,7 +526,8 @@ func getGamePayload(g fromDBListGame, opt string) (payload []byte, err error) {
 		pl := toFEListGame{
 			No:      g.Sk,
 			Ready:   g.Ready,
-			Players: g.Players.getListPlayersSlice().sort(namesList),
+			Players: g.Players.getListPlayersSlice(),
+			// .sort(namesList),
 		}
 		payload, err = json.Marshal(modifyListGamePayload{
 			ModListGame: pl,
