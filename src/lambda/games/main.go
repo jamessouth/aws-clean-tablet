@@ -128,15 +128,6 @@ type fromDBLiveGame struct {
 	SendToFront  bool          `dynamodbav:"sendToFront"`
 }
 
-type fromDBLiveGameLite struct {
-	Sk      string        `dynamodbav:"sk"`
-	Players livePlayerMap `dynamodbav:"players"`
-	// CurrentWord  string        `dynamodbav:"currentWord"`
-	// PreviousWord string        `dynamodbav:"previousWord"`
-	// AnswersCount int           `dynamodbav:"answersCount"`
-	// SendToFront  bool          `dynamodbav:"sendToFront"`
-}
-
 func (pm livePlayerMap) getLivePlayersSlice() (res livePlayerList) {
 	res = make(livePlayerList, 0)
 
@@ -165,7 +156,7 @@ type modifyListGamePayload struct {
 }
 
 type modifyLiveGamePayload struct {
-	ModLiveGame toFELiveGame `json:"mdLveGm"`
+	ModLiveGame toFELiveGame
 }
 
 func (p modifyLiveGamePayload) MarshalJSON() ([]byte, error) {
@@ -459,26 +450,30 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				opt = "rem"
 			}
 
-			err = sendGamesToConns(ctx, ddbsvc, apigwsvc, listGameRecord, tableName, opt)
+			payload, err := getGamePayload(listGameRecord, opt)
 			if err != nil {
 				return callErr(err)
 			}
 
-		} else if recType == "LIVEGME" {
+			conns, err := unmarshalConns(ctx, ddbsvc, tableName)
+			if err != nil {
+				return callErr(err)
+			}
 
-			if rec.EventName == dynamodbstreams.OperationTypeInsert {
+			for _, v := range conns {
 
-				var gameRecordLite fromDBLiveGameLite
-				err = attributevalue.UnmarshalMap(item, &gameRecordLite)
+				conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.GSI1SK), Data: payload}
+
+				_, err := apigwsvc.PostToConnection(ctx, &conn)
 				if err != nil {
 					return callErr(err)
 				}
 
-				fmt.Printf("%s%+v\n", "live gammmmme lite ", gameRecordLite)
+			}
 
-				// send to front
+		} else if recType == "LIVEGME" {
 
-			} else if rec.EventName == dynamodbstreams.OperationTypeModify {
+			if rec.EventName == dynamodbstreams.OperationTypeInsert || rec.EventName == dynamodbstreams.OperationTypeModify {
 
 				var gameRecord fromDBLiveGame
 				err = attributevalue.UnmarshalMap(item, &gameRecord)
@@ -626,33 +621,6 @@ func unmarshalConns(ctx context.Context, ddbsvc *dynamodb.Client, tn string) (co
 	}
 
 	return conns, nil
-
-}
-
-func sendGamesToConns(ctx context.Context, ddbsvc *dynamodb.Client, apigwsvc *apigatewaymanagementapi.Client, gr fromDBListGame, tn, opt string) error {
-
-	payload, err := getGamePayload(gr, opt)
-	if err != nil {
-		return fmt.Errorf("could not get payload: %w", err)
-	}
-
-	conns, err := unmarshalConns(ctx, ddbsvc, tn)
-	if err != nil {
-		return fmt.Errorf("could not get connections: %w", err)
-	}
-
-	for _, v := range conns {
-
-		conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.GSI1SK), Data: payload}
-
-		_, err := apigwsvc.PostToConnection(ctx, &conn)
-		if err != nil {
-			return fmt.Errorf("could not post to connection %s: %w", v.GSI1SK, err)
-		}
-
-	}
-
-	return nil
 }
 
 func callErr(err error) (events.APIGatewayProxyResponse, error) {
@@ -671,5 +639,4 @@ func callErr(err error) (events.APIGatewayProxyResponse, error) {
 	}
 
 	return getReturnValue(http.StatusBadRequest), err
-
 }
