@@ -26,20 +26,20 @@ func TestModifyLiveGamePayload_MarshalJSON(t *testing.T) {
 	}
 }
 
-func TestModifyLiveGamePayload_MarshalJSON2(t *testing.T) {
-	// t.Skip()
-	for _, ref := range modifyLiveGamePayload_MarshalJSON_Tests2 {
-		j, err := json.Marshal(ref.input)
-		// t.Log(string(j))
-		if err != nil {
-			t.Fatalf("MarshalJSON() returned %q, want nil.", err)
-		}
+// func TestModifyLiveGamePayload_MarshalJSON2(t *testing.T) {
+// 	// t.Skip()
+// 	for _, ref := range modifyLiveGamePayload_MarshalJSON_Tests2 {
+// 		j, err := json.Marshal(ref.input)
+// 		// t.Log(string(j))
+// 		if err != nil {
+// 			t.Fatalf("MarshalJSON() returned %q, want nil.", err)
+// 		}
 
-		if !cmp.Equal(j, []byte("null")) {
-			t.Fatalf("MarshalJSON() result: %v,\n  want:%v.", j, nil)
-		}
-	}
-}
+// 		if !cmp.Equal(j, []byte("null")) {
+// 			t.Fatalf("MarshalJSON() result: %v,\n  want:%v.", j, nil)
+// 		}
+// 	}
+// }
 
 // ----------------------------------------------------------------------
 func TestSortListPlayers(t *testing.T) {

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
 
 	"net/http"
 	"os"
@@ -168,10 +169,7 @@ type modifyLiveGamePayload struct {
 }
 
 func (p modifyLiveGamePayload) MarshalJSON() ([]byte, error) {
-	if p.ModLiveGame.AnswersCount == len(p.ModLiveGame.Players) {
-		return []byte("null"), nil
-	}
-	if p.ModLiveGame.AnswersCount > 0 && p.ModLiveGame.AnswersCount < len(p.ModLiveGame.Players) {
+	if p.ModLiveGame.AnswersCount > 0 {
 		for i, pl := range p.ModLiveGame.Players {
 			if pl.Answer.Answer != "" {
 				pl.Answer.Answer = ""
@@ -180,6 +178,7 @@ func (p modifyLiveGamePayload) MarshalJSON() ([]byte, error) {
 			}
 		}
 	}
+
 	m, err := json.Marshal(p.ModLiveGame)
 	if err != nil {
 		return m, err
@@ -190,6 +189,40 @@ func (p modifyLiveGamePayload) MarshalJSON() ([]byte, error) {
 
 type removeGamePayload struct {
 	RemoveGame toFEListGame `json:"rmvGame"`
+}
+
+func (players listPlayerList) sortByName() {
+	sort.Slice(players, func(i, j int) bool {
+		return players[i].Name < players[j].Name
+	})
+}
+
+func (players livePlayerList) sortByName() {
+	sort.Slice(players, func(i, j int) bool {
+		return players[i].Name < players[j].Name
+	})
+}
+
+func (players livePlayerList) sortByAnswerThenName() {
+	sort.Slice(players, func(i, j int) bool {
+		switch {
+		case players[i].Answer.Answer != players[j].Answer.Answer:
+			return players[i].Answer.Answer < players[j].Answer.Answer
+		default:
+			return players[i].Name < players[j].Name
+		}
+	})
+}
+
+func (players livePlayerList) sortByScoreThenName() {
+	sort.Slice(players, func(i, j int) bool {
+		switch {
+		case players[i].Score != players[j].Score:
+			return players[i].Score > players[j].Score
+		default:
+			return players[i].Name < players[j].Name
+		}
+	})
 }
 
 func FromDynamoDBEventAVMap(m map[string]events.DynamoDBAttributeValue) (res map[string]types.AttributeValue, err error) {
@@ -459,11 +492,11 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 					pls := gameRecord.Players.getLivePlayersSlice()
 
 					if gameRecord.AnswersCount == len(gameRecord.Players) {
-						pls = pls
-						// .sort(answers, namesLive)
+						return getReturnValue(http.StatusOK), nil
+					} else if gameRecord.AnswersCount > 0 {
+						pls.sortByScoreThenName()
 					} else {
-						pls = pls
-						// .sort(scores, namesLive)
+						pls.sortByAnswerThenName()
 					}
 
 					gp := modifyLiveGamePayload{
@@ -481,7 +514,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 						return callErr(err)
 					}
 
-					for _, v := range gp.ModLiveGame.Players {
+					for _, v := range pls {
 
 						conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.ConnID), Data: payload}
 
