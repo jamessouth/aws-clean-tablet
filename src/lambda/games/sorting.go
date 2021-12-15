@@ -14,6 +14,28 @@ func (players livePlayerList) sortByName() {
 	})
 }
 
+func (players livePlayerList) sortByAnswerThenName() {
+	sort.Slice(players, func(i, j int) bool {
+		switch {
+		case players[i].Answer.Answer != players[j].Answer.Answer:
+			return players[i].Answer.Answer < players[j].Answer.Answer
+		default:
+			return players[i].Name < players[j].Name
+		}
+	})
+}
+
+func (players livePlayerList) sortByScoreThenName() {
+	sort.Slice(players, func(i, j int) bool {
+		switch {
+		case players[i].Score != players[j].Score:
+			return players[i].Score > players[j].Score
+		default:
+			return players[i].Name < players[j].Name
+		}
+	})
+}
+
 // type lessFuncList func(p1, p2 *listPlayer) int
 
 // type multiSorterList struct {
