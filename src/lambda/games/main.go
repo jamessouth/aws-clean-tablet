@@ -62,11 +62,12 @@ func (gl fromDBListGameList) mapListGames() (res toFEListGameList) {
 	res = make(toFEListGameList, 0)
 
 	for _, g := range gl {
+		pls := g.Players.getListPlayersSlice()
+		pls.sortByName()
 		res = append(res, toFEListGame{
 			No:      g.Sk,
 			Ready:   g.Ready,
-			Players: g.Players.getListPlayersSlice(),
-			// .sort(namesList),
+			Players: pls,
 		})
 	}
 
@@ -551,11 +552,12 @@ func getGamePayload(g fromDBListGame, opt string) (payload []byte, err error) {
 			AddGame: pl,
 		})
 	} else if opt == "mod" {
+		pls := g.Players.getListPlayersSlice()
+		pls.sortByName()
 		pl := toFEListGame{
 			No:      g.Sk,
 			Ready:   g.Ready,
-			Players: g.Players.getListPlayersSlice(),
-			// .sort(namesList),
+			Players: pls,
 		}
 		payload, err = json.Marshal(modifyListGamePayload{
 			ModListGame: pl,
