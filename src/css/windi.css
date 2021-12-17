@@ -3,12 +3,7 @@
     -webkit-mask-image: url('../../assets/decaying.png');
     mask-image: url('../../assets/decaying.png');
   }
-  .rect{
-    fill: transparent;
-    stroke-width: 10;
-    stroke-dasharray: 1000;
-    stroke-dashoffset: 0;
-  }
+
 
 *{
   margin: 0;
