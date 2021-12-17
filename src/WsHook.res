@@ -31,11 +31,11 @@ type closeEventHandler = closeEvent => unit
 @send external sendString: (Js.Nullable.t<t>, string) => unit = "send"
 
 type return = {
+  playerGame: string,
   playerColor: string,
   wsConnected: bool,
   game: Reducer.liveGame,
   games: Js.Nullable.t<array<Reducer.listGame>>,
-  playerGame: string,
   currentWord: string,
   previousWord: string,
   connID: string,
@@ -45,14 +45,11 @@ type return = {
   setWs: (. Js.Nullable.t<t> => Js.Nullable.t<t>) => unit,
 }
 
-type listGamesData = {
-  listGms: array<Reducer.listGame>,
-  connID: string,
-}
+type listGamesData = {listGms: array<Reducer.listGame>, connID: string}
 @scope("JSON") @val
 external parseListGames: string => listGamesData = "parse"
 
-type modConnData = {modConn: string}
+type modConnData = {modConn: string, color: string}
 @scope("JSON") @val
 external parseModConn: string => modConnData = "parse"
 
@@ -99,13 +96,13 @@ let useWs = (token, setToken) => {
 
   let (ws, setWs) = React.Uncurried.useState(_ => Js.Nullable.null)
 
-  let (playerColor, _setPlayerColor) = React.Uncurried.useState(_ => "")
+  let (playerGame, setPlayerGame) = React.Uncurried.useState(_ => "")
+  let (playerColor, setPlayerColor) = React.Uncurried.useState(_ => "")
   let (wsConnected, setWsConnected) = React.Uncurried.useState(_ => false)
   let (wsError, setWsError) = React.Uncurried.useState(_ => "")
   let (currentWord, _setCurrentWord) = React.Uncurried.useState(_ => "")
   let (previousWord, _setPreviousWord) = React.Uncurried.useState(_ => "")
   // let (game, setGame) = React.Uncurried.useState(_ => emptyGame)
-  let (playerGame, setPlayerGame) = React.Uncurried.useState(_ => "")
   let (connID, setConnID) = React.Uncurried.useState(_ => "")
 
   let {initialState, reducer} = Reducer.appState()
@@ -153,9 +150,10 @@ let useWs = (token, setToken) => {
             setConnID(._ => connID)
           }
         | ModifyConn => {
-            let {modConn} = parseModConn(data)
+            let {modConn, color} = parseModConn(data)
             Js.log2("parsedmodconn", modConn)
             setPlayerGame(._ => modConn)
+            setPlayerColor(._ => color)
           }
         | InsertGame => {
             let {addGame} = parseAddGame(data)
@@ -214,11 +212,11 @@ let useWs = (token, setToken) => {
   let close = (. code, reason) => ws->closeCodeReason(code, reason)
 
   {
+    playerGame: playerGame,
     playerColor: playerColor,
     wsConnected: wsConnected,
     game: state.game,
     games: state.gamesList,
-    playerGame: playerGame,
     currentWord: currentWord,
     previousWord: previousWord,
     connID: connID,

@@ -12,14 +12,13 @@ let answer_max_length = 12
 let make = (
   ~wsConnected,
   ~game: Reducer.liveGame,
-  ~leadertoken,
   ~playerColor,
   ~send,
   ~wsError,
   ~currentWord,
   ~previousWord,
 ) => {
-  Js.log4("play", wsConnected, leadertoken, wsError)
+  Js.log3("play", wsConnected, wsError)
   Js.log3("play2", previousWord, game)
   let (answered, setAnswered) = React.useState(_ => false)
   let (inputText, setInputText) = React.useState(_ => "")

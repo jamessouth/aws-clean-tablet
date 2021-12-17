@@ -1,6 +1,5 @@
 
 
-//~answered, 
 @react.component
 let make = (~onAnimationEnd, ~playerColor, ~currentWord:string) => {
 
@@ -9,10 +8,7 @@ let make = (~onAnimationEnd, ~playerColor, ~currentWord:string) => {
     | false => "a word then a blank"
     }
 
-    // className={switch answered {
-    //     | true => "animate-erase"
-    //     | false => ""
-    //     }}
+
 
 
     <div className="mt-20 mb-10 mx-auto bg-smoke-100 relative w-80 h-36 flex items-center justify-center">

@@ -28,6 +28,7 @@ type connItem struct {
 	Sk      string `dynamodbav:"sk"`      //name
 	Game    string `dynamodbav:"game"`    //game no or blank
 	Playing bool   `dynamodbav:"playing"` //playing or not
+	Color   string `dynamodbav:"color"`   //player's color
 	GSI1PK  string `dynamodbav:"GSI1PK"`  //'CONNECT'
 	GSI1SK  string `dynamodbav:"GSI1SK"`  //conn id
 }
@@ -146,6 +147,7 @@ type insertConnPayload struct {
 
 type modifyConnPayload struct {
 	ModConnGm string `json:"modConn"`
+	Color     string `json:"color"`
 }
 
 type insertGamePayload struct {
@@ -403,27 +405,28 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			} else if rec.EventName == dynamodbstreams.OperationTypeModify {
 
-				if connRecord.Playing {
-					fmt.Println("mod conn playing in a game", connRecord)
+				// if connRecord.Playing {
+				// 	fmt.Println("mod conn playing in a game", connRecord)
 
-				} else {
+				// } else {
 
-					// Tipe:   "modifyConn",
-					payload, err := json.Marshal(modifyConnPayload{
-						ModConnGm: connRecord.Game,
-					})
+				// Tipe:   "modifyConn",
+				payload, err := json.Marshal(modifyConnPayload{
+					ModConnGm: connRecord.Game,
+					Color:     connRecord.Color,
+				})
 
-					if err != nil {
-						return callErr(err)
-					}
-
-					conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(connRecord.GSI1SK), Data: payload}
-
-					_, err = apigwsvc.PostToConnection(ctx, &conn)
-					if err != nil {
-						return callErr(err)
-					}
+				if err != nil {
+					return callErr(err)
 				}
+
+				conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(connRecord.GSI1SK), Data: payload}
+
+				_, err = apigwsvc.PostToConnection(ctx, &conn)
+				if err != nil {
+					return callErr(err)
+				}
+				// }
 
 			} else {
 				oi := rec.Change.OldImage

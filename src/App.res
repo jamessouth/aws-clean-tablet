@@ -43,11 +43,11 @@ let make = () => {
 }, [cognitoUser])
 
   let {
+    playerGame,
     playerColor,
     wsConnected,
     game,
     games,
-    playerGame,
     currentWord,
     previousWord,
     connID,
@@ -56,8 +56,12 @@ let make = () => {
     wsError,
     setWs
   } = WsHook.useWs(token, setToken)
-
+let onAnimationEnd = _ => {
+    // sendAnswer()
+    Js.log("onanimend")
+  }
   <>
+  <Word onAnimationEnd playerColor="#d51142" currentWord="port" />
     <SignOut cognitoUser setToken send playerGame close setCognitoUser setPlayerName setWs/>
     <h1 className="text-6xl mt-11 text-center font-arch decay-mask text-warm-gray-100">
       {"CLEAN TABLET"->React.string}
@@ -142,7 +146,7 @@ let make = () => {
         }
 
 // playerName
-      | (list{"game", _gameno}, Some(_)) => <Play wsConnected game leadertoken="nnn" playerColor send wsError currentWord previousWord/>
+      | (list{"game", _gameno}, Some(_)) => <Play wsConnected game playerColor send wsError currentWord previousWord/>
 
       | (_, _) => <div> {"other"->React.string} </div> // <PageNotFound/>
       }}
