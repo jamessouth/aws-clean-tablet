@@ -18,7 +18,7 @@ func TestUpdateScores(t *testing.T) {
 }
 
 func TestCheckHiScore(t *testing.T) {
-	t.Skip()
+	// t.Skip()
 	for _, test := range checkHiScoreTests {
 		act1, act2 := checkHiScore(test.input.score, test.input.hiScore, test.input.tied)
 
@@ -37,7 +37,7 @@ func TestCheckHiScore(t *testing.T) {
 }
 
 func TestAdjScore(t *testing.T) {
-	t.Skip()
+	// t.Skip()
 	for _, test := range adjScoreTests {
 		act1, act2, act3 := adjScore(test.input.old, test.input.incr, test.input.hiScore, test.input.tied)
 
@@ -56,7 +56,7 @@ func TestAdjScore(t *testing.T) {
 }
 
 func TestGetAnswersMap(t *testing.T) {
-	t.Skip()
+	// t.Skip()
 	for _, test := range gamTests {
 		act := getAnswersMap(test.input)
 

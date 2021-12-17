@@ -64,7 +64,7 @@ type liveGame struct {
 }
 
 type body struct {
-	Gameno, Answer, PlayersCount string
+	Gameno, Answer string
 }
 
 // func (pm livePlayerMap) assignColors() livePlayerMap {

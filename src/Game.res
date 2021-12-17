@@ -1,7 +1,12 @@
-type routePayload = {
+type lobbyPayload = {
   action: string,
   gameno: string,
   tipe: string,
+}
+
+type startPayload = {
+  action: string,
+  gameno: string,
 }
 
 let chk = Js.String2.fromCharCode(10003)

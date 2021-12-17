@@ -9,7 +9,7 @@ let make = (~cognitoUser, ~setToken, ~send, ~playerGame, ~close, ~setCognitoUser
   let onClick = e => {
     Js.log2("btn clck", e)
 
-    let pl: Game.routePayload = {
+    let pl: Game.lobbyPayload = {
       action: "lobby",
       gameno: switch Js.String2.length(playerGame) == 0 {
       | true => "dc"

@@ -2,8 +2,6 @@ type answerPayload = {
   action: string,
   gameno: string,
   answer: string,
-  tipe: string,
-  playersCount: string,
 }
 
 let circ = Js.String2.fromCharCode(9862)
@@ -27,14 +25,11 @@ let make = (
   let (inputText, setInputText) = React.useState(_ => "")
   let (gameStarted, setGameStarted) = React.useState(_ => false)
 
-  let noplrs = Js.Array2.length(game.players)
-
   let _sendAnswer = _ => {
     let pl = {
       action: "answer",
       gameno: game.no,
       answer: inputText->Js.String2.slice(~from=0, ~to_=answer_max_length),
-      playersCount: j`$noplrs`,
     }
     send(. Js.Json.stringifyAny(pl))
     (_ => true)->setAnswered
@@ -63,7 +58,7 @@ let make = (
 
   <div>
     // playerName
-    <Scoreboard players=game.players />
+    <Scoreboard players=game.players currentWord previousWord/>
     {switch gameStarted {
     | false =>
       <p className="text-yellow-200 text-2xl font-bold">

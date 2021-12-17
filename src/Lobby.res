@@ -3,7 +3,7 @@ let startBtnStyles = " mb-8 w-1/2 bg-warm-gray-100 text-gray-700 h-8 text-lg fon
 @react.component
 let make = (~wsConnected, ~playerGame, ~leadertoken, ~games, ~send, ~wsError) => {
   let onClick = _ => {
-    let pl: Game.routePayload = {
+    let pl: Game.lobbyPayload = {
       action: "lobby",
       gameno: "new",
       tipe: "join"
