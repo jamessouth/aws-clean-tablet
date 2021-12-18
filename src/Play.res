@@ -22,7 +22,6 @@ let make = (
   Js.log3("play2", previousWord, game)
   let (answered, setAnswered) = React.useState(_ => false)
   let (inputText, setInputText) = React.useState(_ => "")
-  let (gameStarted, setGameStarted) = React.useState(_ => false)
 
   let _sendAnswer = _ => {
     let pl = {
@@ -35,51 +34,38 @@ let make = (
     (_ => "")->setInputText
   }
 
-  let onAnimationEnd = _ => {
-    // sendAnswer()
-    Js.log("onanimend")
-  }
+  // let onAnimationEnd = _ => {
+  //   // sendAnswer()
+  //   Js.log("onanimend")
+  // }
 
   let onEnter = _ => {
     // sendAnswer()
     Js.log("onenter")
   }
 
-
-
-
-
   React.useEffect3(() => {
-    let me = Js.Array2.filter(game.players, p => p.color == playerColor)
     if currentWord != "" {
-
+      let me = Js.Array2.filter(game.players, p => p.color == playerColor)
+      if me.hasAnswered {
+        (_ => true)->setAnswered
+      } else {
+        (_ => false)->setAnswered
+      }
     } else {
-
-    }
-    if me.hasAnswered {
       (_ => true)->setAnswered
     }
-
     None
   }, (game.players, playerColor, currentWord))
 
-
-  React.useEffect1(() => {
-    (_ => true)->setGameStarted
-    None
-  }, [currentWord])
-
   <div>
     // playerName
-    <Scoreboard players=game.players currentWord previousWord/>
-    {switch gameStarted {
-    | false =>
-      <p className="text-yellow-200 text-2xl font-bold">
-        {"Get Ready"->React.string} <span className="animate-spin"> {circ->React.string} </span>
-      </p>
-    | true => React.null
-    }}
-    <Word onAnimationEnd playerColor currentWord answered/>
+    <Scoreboard players=game.players currentWord previousWord />
+    <p className="text-yellow-200 text-2xl font-bold">
+      {"Get Ready"->React.string} <span className="animate-spin"> {React.string(circ)} </span>
+    </p>
+    //  onAnimationEnd
+    <Word playerColor currentWord answered />
     <Form answer_max_length answered inputText onEnter setInputText />
 
     // <Prompt></Prompt>
