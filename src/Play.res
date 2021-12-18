@@ -45,10 +45,24 @@ let make = (
     Js.log("onenter")
   }
 
-  React.useEffect1(() => {
-    (_ => false)->setAnswered
+
+
+
+
+  React.useEffect3(() => {
+    let me = Js.Array2.filter(game.players, p => p.color == playerColor)
+    if currentWord != "" {
+
+    } else {
+
+    }
+    if me.hasAnswered {
+      (_ => true)->setAnswered
+    }
+
     None
-  }, [currentWord])
+  }, (game.players, playerColor, currentWord))
+
 
   React.useEffect1(() => {
     (_ => true)->setGameStarted
@@ -65,7 +79,7 @@ let make = (
       </p>
     | true => React.null
     }}
-    <Word onAnimationEnd playerColor currentWord />
+    <Word onAnimationEnd playerColor currentWord answered/>
     <Form answer_max_length answered inputText onEnter setInputText />
 
     // <Prompt></Prompt>
