@@ -9,7 +9,7 @@ let make = (~onAnimationEnd, ~playerColor, ~currentWord: string, ~answered) => {
 
   React.useEffect1(() => {
     let alph = switch answered {
-    | true => "52"
+    | true => "70"
     | false => ""
     }
     (_ => alph)->setAlpha

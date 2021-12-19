@@ -48,12 +48,16 @@ let make = (
     Js.log("onenter")
   }
 
+  // React.useEffect0(() => {
+  //   None
+  // })
+
   <div>
     // playerName
     <Scoreboard players=game.players currentWord previousWord />
-    <p className="text-yellow-200 text-2xl font-bold">
-      {"Get Ready"->React.string} <span className="animate-spin"> {React.string(circ)} </span>
-    </p>
+    // <p className="text-yellow-200 text-2xl font-bold">
+    //   {"Get Ready"->React.string} <span className="animate-spin"> {React.string(circ)} </span>
+    // </p>
     <Word onAnimationEnd playerColor currentWord answered />
     <Form answer_max_length answered inputText onEnter setInputText />
 

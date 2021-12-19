@@ -20,7 +20,7 @@ let make = (~answer_max_length, ~answered, ~inputText, ~onEnter, ~setInputText) 
 
   let onChange = evt => {
     let value = ReactEvent.Form.currentTarget(evt)["value"]
-    value->setInputText
+    setInputText(value)
   }
 
   let onClick = _ => {
@@ -30,11 +30,11 @@ let make = (~answer_max_length, ~answered, ~inputText, ~onEnter, ~setInputText) 
   React.useEffect1(() => {
     switch inputText->Js.String2.match_(%re("/[^a-z '-]+/i")) {
     | Some(arr) => {
-        setBadChar(_ => Some(arr[0]))
+        // setBadChar(_ => Some(arr[0]))
         setIsValidInput(_ => false)
       }
     | None => {
-        setBadChar(_ => None)
+        // setBadChar(_ => None)
         setIsValidInput(_ => true)
       }
     }
@@ -43,7 +43,7 @@ let make = (~answer_max_length, ~answered, ~inputText, ~onEnter, ~setInputText) 
 
   React.useEffect1(() => {
     switch (answered, inputBox.current->Js.Nullable.toOption) {
-    | (true, Some(inp)) => inp->blur
+    | (true, Some(inp)) => blur(inp)
     | (true, None) | (false, _) => ()
     }
     None
