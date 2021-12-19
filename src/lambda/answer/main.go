@@ -64,7 +64,8 @@ type liveGame struct {
 }
 
 type body struct {
-	Gameno, Answer string
+	Gameno string `json:"gameno"`
+	Answer string `json:"answer"`
 }
 
 // func (pm livePlayerMap) assignColors() livePlayerMap {

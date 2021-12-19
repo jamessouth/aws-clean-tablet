@@ -22,7 +22,7 @@ export default defineConfig({
         theme: {
           extend: {
             animation: {
-              'erase': 'erase 3s cubic-bezier(.03,.74,.03,1) forwards 1',
+              // 'erase': 'erase 3s cubic-bezier(.03,.74,.03,1) forwards 1',
               'change': 'change 35s linear forwards 1',
             },
             colors: {

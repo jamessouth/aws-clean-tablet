@@ -23,7 +23,7 @@ let make = (
   let (answered, setAnswered) = React.useState(_ => false)
   let (inputText, setInputText) = React.useState(_ => "")
 
-  let _sendAnswer = _ => {
+  let sendAnswer = _ => {
     let pl = {
       action: "answer",
       gameno: game.no,
@@ -34,29 +34,19 @@ let make = (
     (_ => "")->setInputText
   }
 
-  // let onAnimationEnd = _ => {
-  //   // sendAnswer()
-  //   Js.log("onanimend")
-  // }
-
-  let onEnter = _ => {
-    // sendAnswer()
-    Js.log("onenter")
+  let onAnimationEnd = _ => {
+    if !answered {
+      sendAnswer()
+    }
+    Js.log("onanimend")
   }
 
-  React.useEffect3(() => {
-    if currentWord != "" {
-      let me = Js.Array2.filter(game.players, p => p.color == playerColor)
-      if me.hasAnswered {
-        (_ => true)->setAnswered
-      } else {
-        (_ => false)->setAnswered
-      }
-    } else {
-      (_ => true)->setAnswered
+  let onEnter = _ => {
+    if !answered {
+      sendAnswer()
     }
-    None
-  }, (game.players, playerColor, currentWord))
+    Js.log("onenter")
+  }
 
   <div>
     // playerName
@@ -64,8 +54,7 @@ let make = (
     <p className="text-yellow-200 text-2xl font-bold">
       {"Get Ready"->React.string} <span className="animate-spin"> {React.string(circ)} </span>
     </p>
-    //  onAnimationEnd
-    <Word playerColor currentWord answered />
+    <Word onAnimationEnd playerColor currentWord answered />
     <Form answer_max_length answered inputText onEnter setInputText />
 
     // <Prompt></Prompt>

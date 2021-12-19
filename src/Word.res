@@ -1,8 +1,5 @@
-
-// ~onAnimationEnd, 
-
 @react.component
-let make = (~playerColor, ~currentWord: string, ~answered) => {
+let make = (~onAnimationEnd, ~playerColor, ~currentWord: string, ~answered) => {
   let (alpha, setAlpha) = React.useState(_ => "")
 
   let blankPos = switch currentWord->Js.String2.startsWith("_") {
