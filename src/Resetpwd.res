@@ -1,3 +1,23 @@
+
+
+
+type t
+
+type forgotPasswordCB = (. Js.Nullable.t<Js.Exn.t>, Js.Nullable.t<t>) => unit
+
+@send
+external forgotPassword: (
+  Js.Nullable.t<Signup.usr>,
+  string,
+  bool,
+  forgotPasswordCB,
+  Js.Nullable.t<Signup.clientMetadata>,
+) => unit = "forgotPassword"
+
+
+
+
+
 @react.component
 let make = () => {
 

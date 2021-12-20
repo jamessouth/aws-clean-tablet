@@ -56,30 +56,10 @@ let make = () => {
     wsError,
     setWs
   } = WsHook.useWs(token, setToken)
-let a: array<Reducer.livePlayer> = [{
-  name: "bill",
-  connid: "111",
-  color: "red",
-  score: "12",
-  answer: {playerid: "1", answer: ""},
-  hasAnswered: true,
-}, {
-  name: "carl",
-  connid: "222",
-  color: "blue",
-  score: "13",
-  answer: {playerid: "2", answer: ""},
-  hasAnswered: true,
-}, {
-  name: "wes",
-  connid: "333",
-  color: "green",
-  score: "1",
-  answer: {playerid: "3", answer: ""},
-  hasAnswered: false,
-}]
+
+
   <>
-<Scoreboard players=a currentWord="fret" previousWord="" />
+
     <SignOut cognitoUser setToken send playerGame close setCognitoUser setPlayerName setWs/>
     <h1 className="text-6xl mt-11 text-center font-arch decay-mask text-warm-gray-100">
       {"CLEAN TABLET"->React.string}
