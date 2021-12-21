@@ -22,8 +22,8 @@ external confirmPassword: (
 
 @react.component
 let make = (~cognitoUser) => {
-  Js.log2("user", cognitoUser)
   let url = RescriptReactRouter.useUrl()
+  Js.log3("user", cognitoUser, url)
 
   let (showVerifCode, setShowVerifCode) = React.useState(_ => false)
   let (verifCode, setVerifCode) = React.useState(_ => "")
@@ -67,7 +67,7 @@ let make = (~cognitoUser) => {
     }
   )
 
-  let confirmPWcb = {
+  let _confirmPWcb: Resetpwd.passwordPWCB = {
       onSuccess: str => Js.log2("pw confirmed: ", str),
       onFailure: err => {
         switch Js.Exn.message(err) {

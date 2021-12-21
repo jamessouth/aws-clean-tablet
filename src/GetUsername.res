@@ -44,6 +44,7 @@ let make = (~userpool, ~setCognitoUser) => {
   // let pwInput = React.useRef(Js.Nullable.null)
 
   let url = RescriptReactRouter.useUrl()
+  Js.log2("url", url)
 
   let (unVisited, setUnVisited) = React.useState(_ => false)
 
@@ -103,7 +104,7 @@ let make = (~userpool, ~setCognitoUser) => {
       pool: userpool
     }
     setCognitoUser(._ => Js.Nullable.return(userConstructor(userdata)))
-    RescriptReactRouter.push(`/confirm/${url.path[1]}`)
+    RescriptReactRouter.push(`/confirm?${url.search}`)
   }
 
   React.useEffect2(() => {
@@ -127,7 +128,8 @@ let make = (~userpool, ~setCognitoUser) => {
   //   None
   // }, (unErr, pwErr, username, password, email))
 
-  <main>
+  switch url.search {
+  | "code" | "pw" => <main>
     <form className="w-4/5 m-auto" onSubmit={handleSubmit}>
       <fieldset className="flex flex-col items-center justify-around h-40">
         <legend className="text-warm-gray-100 m-auto mb-6 text-3xl font-fred">
@@ -191,4 +193,8 @@ let make = (~userpool, ~setCognitoUser) => {
       </button>
     </form>
   </main>
+  | _ => <div> {"other"->React.string} </div>
+  }
+
+  
 }

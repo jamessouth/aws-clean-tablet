@@ -120,9 +120,9 @@ let make = () => {
           React.null
         }
 
-      | (list{"getusername", "code"}, None) => <GetUsername userpool setCognitoUser />
+      | (list{"getusername"}, None) => <GetUsername userpool setCognitoUser />
 
-      | (list{"getusername", "pw"}, None) => <GetUsername userpool setCognitoUser />
+      // | (list{"getusername"}, None) => <GetUsername userpool setCognitoUser />
 
       | (list{"signup"}, Some(_t)) => {
           RescriptReactRouter.replace("/lobby")

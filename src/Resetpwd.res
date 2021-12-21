@@ -35,17 +35,17 @@ let make = () => {
 
   let handleSubmit = e => {
     e->ReactEvent.Form.preventDefault
-    let forgotPWcb = {
+    let _forgotPWcb = {
       onSuccess: str => {
         Js.log2("forgot pw initiated: ", str)
       RescriptReactRouter.push("/confirm")
       
       },
       onFailure: err => {
-        switch Js.Exn.message(err) {
-        | Some(msg) => (_ => Some(msg))->setCognitoErr
-        | None => (_ => Some("unknown forgot pw error"))->setCognitoErr
-        }
+        // switch Js.Exn.message(err) {
+        // | Some(msg) => (_ => Some(msg))->setCognitoErr
+        // | None => (_ => Some("unknown forgot pw error"))->setCognitoErr
+        // }
         Js.log2("forgot pw problem: ", err)
       },
     }
