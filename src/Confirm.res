@@ -11,9 +11,20 @@ external confirmRegistration: (
   Js.Nullable.t<Signup.clientMetadata>,
 ) => unit = "confirmRegistration"
 
+@send
+external confirmPassword: (
+  Js.Nullable.t<Signup.usr>, //user object
+  string, //conf code
+  string, //new pw
+  Resetpwd.passwordPWCB, //cb obj
+  Js.Nullable.t<Signup.clientMetadata>,
+) => unit = "confirmPassword"
+
 @react.component
 let make = (~cognitoUser) => {
   Js.log2("user", cognitoUser)
+  let url = RescriptReactRouter.useUrl()
+
   let (showVerifCode, setShowVerifCode) = React.useState(_ => false)
   let (verifCode, setVerifCode) = React.useState(_ => "")
 
@@ -48,13 +59,24 @@ let make = (~cognitoUser) => {
     | Error(ex) => {
         switch Js.Exn.message(ex) {
         | Some(msg) => (_ => Some(msg))->setCognitoErr
-        | None => (_ => None)->setCognitoErr
+        | None => (_ => Some("unknown confirm rego error"))->setCognitoErr
         }
 
         Js.log2("conf rego problem", ex)
       }
     }
   )
+
+  let confirmPWcb = {
+      onSuccess: str => Js.log2("pw confirmed: ", str),
+      onFailure: err => {
+        switch Js.Exn.message(err) {
+        | Some(msg) => (_ => Some(msg))->setCognitoErr
+        | None => (_ => Some("unknown confirm pw error"))->setCognitoErr
+        }
+        Js.log2("confirm pw problem: ", err)
+      },
+    }
 
   let handleSubmit = e => {
     e->ReactEvent.Form.preventDefault

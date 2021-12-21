@@ -43,6 +43,8 @@ type signupOk = {
 let make = (~userpool, ~setCognitoUser) => {
   // let pwInput = React.useRef(Js.Nullable.null)
 
+  let url = RescriptReactRouter.useUrl()
+
   let (unVisited, setUnVisited) = React.useState(_ => false)
 
   let (unErr, setUnErr) = React.useState(_ => None)
@@ -101,7 +103,7 @@ let make = (~userpool, ~setCognitoUser) => {
       pool: userpool
     }
     setCognitoUser(._ => Js.Nullable.return(userConstructor(userdata)))
-    RescriptReactRouter.push("/confirm")
+    RescriptReactRouter.push(`/confirm/${url.path[1]}`)
   }
 
   React.useEffect2(() => {

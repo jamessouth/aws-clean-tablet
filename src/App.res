@@ -83,9 +83,14 @@ let make = () => {
             content="SIGN UP"
           />
           <Link
-            url="/getusername"
+            url="/getusername?code"
             className="w-3/5 text-center text-warm-gray-100 block font-anon text-sm mt-4 max-w-80"
             content="verification code?"
+          />
+          <Link
+            url="/getusername?pw"
+            className="w-3/5 text-center text-warm-gray-100 block font-anon text-sm mt-4 max-w-80"
+            content="forgot password?"
           />
           <Link
             url="/leaderboards"
@@ -115,7 +120,9 @@ let make = () => {
           React.null
         }
 
-      | (list{"getusername"}, None) => <GetUsername userpool setCognitoUser />
+      | (list{"getusername", "code"}, None) => <GetUsername userpool setCognitoUser />
+
+      | (list{"getusername", "pw"}, None) => <GetUsername userpool setCognitoUser />
 
       | (list{"signup"}, Some(_t)) => {
           RescriptReactRouter.replace("/lobby")
