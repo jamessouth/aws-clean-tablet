@@ -24,10 +24,12 @@ external confirmPassword: (
 let make = (~cognitoUser) => {
   let url = RescriptReactRouter.useUrl()
   Js.log3("user", cognitoUser, url)
-
+  let (password, setPassword) = React.useState(_ => "")
+  let (showPassword, setShowPassword) = React.useState(_ => false)
+  let (pwVisited, setPwVisited) = React.useState(_ => false)
+  let (pwErr, setPwErr) = React.useState(_ => None)
   let (showVerifCode, setShowVerifCode) = React.useState(_ => false)
   let (verifCode, setVerifCode) = React.useState(_ => "")
-
   let (disabled, setDisabled) = React.useState(_ => true)
 
   let (cognitoErr, setCognitoErr) = React.useState(_ => None)
@@ -36,9 +38,23 @@ let make = (~cognitoUser) => {
     (prev => !prev)->setShowVerifCode
   }
 
-  let onChange = e => {
+  let onClick2 = _e => {
+    (prev => !prev)->setShowPassword
+  }
+
+    let onBlur = (input, _e) => {
+    switch input {
+    // | "username" => (_ => true)->setUnVisited
+    | "password" => (_ => true)->setPwVisited
+    | _ => ()
+    }
+  }
+
+
+
+    let onChange = (func, e) => {
     let value = ReactEvent.Form.target(e)["value"]
-    (_ => value)->setVerifCode
+    (_ => value)->func
   }
 
   React.useEffect1(() => {
@@ -48,6 +64,95 @@ let make = (~cognitoUser) => {
     }
     None
   }, [verifCode])
+
+    let checkPwForbiddenChars = pw => {
+    let r = %re("/[-=+]/")
+
+    switch Js.String2.match_(pw, r) {
+    | Some(_) => (_ => Some("no +, -, or = ..."))->setPwErr
+    | None => (_ => None)->setPwErr
+    }
+  }
+
+    let checkPwMaxLength = pw => {
+    switch pw->Js.String2.length > 98 {
+    | true => (_ => Some("too long..."))->setPwErr
+    | false => pw->checkPwForbiddenChars
+    }
+  }
+
+    let checkNoPwWhitespace = pw => {
+    let r = %re("/\s/")
+
+    switch Js.String2.match_(pw, r) {
+    | Some(_) => (_ => Some("no whitespace..."))->setPwErr
+    | None => pw->checkPwMaxLength
+    }
+  }
+
+    let checkSymbol = pw => {
+    let r = %re("/[!-*\[-`{-~./,:;<>?@]/")
+
+    switch Js.String2.match_(pw, r) {
+    | None => (_ => Some("add symbol..."))->setPwErr
+    | Some(_) => pw->checkNoPwWhitespace
+    }
+  }
+
+    let checkNumber = pw => {
+    let r = %re("/\d/")
+
+    switch Js.String2.match_(pw, r) {
+    | None => (_ => Some("add number..."))->setPwErr
+    | Some(_) => pw->checkSymbol
+    }
+  }
+
+    let checkUpper = pw => {
+    let r = %re("/[A-Z]/")
+
+    switch Js.String2.match_(pw, r) {
+    | None => (_ => Some("add uppercase..."))->setPwErr
+    | Some(_) => pw->checkNumber
+    }
+  }
+
+    let checkLower = pw => {
+    let r = %re("/[a-z]/")
+
+    switch Js.String2.match_(pw, r) {
+    | None => (_ => Some("add lowercase..."))->setPwErr
+    | Some(_) => pw->checkUpper
+    }
+  }
+
+    let checkPwLength = pw => {
+    switch pw->Js.String2.length < 8 {
+    | true => (_ => Some("too short..."))->setPwErr
+    | false => pw->checkLower
+    }
+  }
+
+    React.useEffect2(() => {
+    switch pwVisited {
+    | true => password->checkPwLength
+    | false => (_ => None)->setPwErr
+    }
+    None
+  }, (password, pwVisited))
+
+    // React.useEffect5(() => {
+  //   switch (unErr, pwErr, username->Js.String2.length < 4, password->Js.String2.length < 8, email->Js.String2.length < 3) {
+  //   | (None, None, false, false, false) => (_ => false)->setDisabled
+  //   | (Some(_), _, _, _, _)
+  //   | (_, Some(_), _, _, _)
+  //   | (_, _, true, _, _)
+  //   | (_, _, _, true, _)
+  //   | (_, _, _, _, true) => (_ => true)->setDisabled
+  //   }
+
+  //   None
+  // }, (unErr, pwErr, username, password, email))
 
   let confirmregistrationCallback = Signup.cbToOption(res =>
     switch res {
@@ -92,7 +197,8 @@ let make = (~cognitoUser) => {
     }
   }
 
-  <main>
+  switch url.search {
+  | "code" | "pw" => <main>
     <form className="w-5/6 m-auto" onSubmit={handleSubmit}>
       <fieldset className="h-40">
         <legend className="text-warm-gray-100 m-auto mb-8 text-3xl font-fred">
@@ -111,7 +217,7 @@ let make = (~cognitoUser) => {
             minLength=6
             inputMode="numeric"
             name="verifcode"
-            onChange
+            onChange={onChange(setVerifCode)}
             // placeholder="Enter password"
             // ref={pwInput->ReactDOM.Ref.domRef}
             pattern="^\d{6}$"
@@ -134,6 +240,65 @@ let make = (~cognitoUser) => {
             }}
           </button>
         </div>
+        {switch url.search {
+        | "pw" => <div className="relative">
+          <label
+            className={switch (pwVisited, pwErr) {
+            | (true, Some(_)) => "text-2xl text-red-500 font-bold font-flow"
+            | (false, _) | (true, None) => "text-2xl text-warm-gray-100 font-flow"
+            }}
+            htmlFor="new-password">
+            {"password:"->React.string}
+          </label>
+          {switch (pwVisited, pwErr) {
+          | (true, Some(err)) =>
+            <span className="absolute right-0 text-2xl text-red-500 font-bold font-flow">
+              {err->React.string}
+            </span>
+          | (false, _) | (true, None) => React.null
+          }}
+          <input
+            autoComplete="new-password"
+            autoFocus=false
+            className={switch (pwVisited, pwErr) {
+            | (
+                true,
+                Some(_),
+              ) => "h-6 w-3/4 text-xl pl-1 text-left outline-none text-red-500 bg-transparent border-b-1 border-red-500"
+            | (false, _)
+            | (
+              true,
+              None,
+            ) => "h-6 w-3/4 text-xl pl-1 text-left outline-none text-warm-gray-100 bg-transparent border-b-1 border-warm-gray-100"
+            }}
+            // className="h-6 w-full text-xl pl-1 text-left outline-none text-warm-gray-100 bg-transparent border-b-1 border-warm-gray-100"
+            id="new-password"
+            // minLength=8
+            name="password"
+            onBlur={onBlur("password")}
+            onChange={onChange(setPassword)}
+            // placeholder="Enter password"
+            // ref={pwInput->ReactDOM.Ref.domRef}
+            required=true
+            spellCheck=false
+            type_={switch showPassword {
+            | true => "text"
+            | false => "password"
+            }}
+            value={password}
+          />
+          <button
+            type_="button"
+            className="font-arch bg-transparent text-warm-gray-100 text-2xl absolute right-0 cursor-pointer"
+            onClick=onClick2>
+            {switch showPassword {
+            | true => "hide"->React.string
+            | false => "show"->React.string
+            }}
+          </button>
+        </div>
+        | _ => React.null
+        }}
       </fieldset>
       {switch cognitoErr {
       | Some(msg) =>
@@ -150,4 +315,7 @@ let make = (~cognitoUser) => {
       </button>
     </form>
   </main>
+  | _ => <div> {"other"->React.string} </div>
+  }
+  
 }
