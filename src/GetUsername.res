@@ -131,15 +131,15 @@ let make = (~userpool, ~setCognitoUser) => {
   switch url.search {
   | "code" | "pw" => <main>
     <form className="w-4/5 m-auto" onSubmit={handleSubmit}>
-      <fieldset className="flex flex-col items-center justify-around h-40">
-        <legend className="text-warm-gray-100 m-auto mb-6 text-3xl font-fred">
-          {"Enter name"->React.string}
+      <fieldset className="flex flex-col justify-between h-52">
+        <legend className="text-warm-gray-100 m-auto mb-8 text-3xl font-fred">
+          {React.string("Enter username")}
         </legend>
         <div className="relative">
           <label
             className={switch (unVisited, unErr) {
-            | (true, Some(_)) => "text-2xl text-red-500 font-bold font-flow"
-            | (false, _) | (true, None) => "text-2xl text-warm-gray-100 font-flow"
+            | (true, Some(_)) => "block text-2xl text-red-500 font-bold font-flow"
+            | (false, _) | (true, None) => "block text-2xl text-warm-gray-100 font-flow"
             }}
             htmlFor="username">
             {"username:"->React.string}
@@ -158,12 +158,12 @@ let make = (~userpool, ~setCognitoUser) => {
             | (
                 true,
                 Some(_),
-              ) => "h-6 w-full text-xl pl-1 text-left outline-none text-red-500 bg-transparent border-b-1 border-red-500"
+              ) => "h-8 w-full text-xl outline-none text-red-500 bg-transparent border-b-1 border-red-500"
             | (false, _)
             | (
               true,
               None,
-            ) => "h-6 w-full text-xl pl-1 text-left outline-none text-warm-gray-100 bg-transparent border-b-1 border-warm-gray-100"
+            ) => "h-8 w-full text-xl outline-none text-warm-gray-100 bg-transparent border-b-1 border-warm-gray-100"
             }}
             id="username"
             minLength=4
@@ -188,7 +188,7 @@ let make = (~userpool, ~setCognitoUser) => {
       }}
       <button
         disabled
-        className="text-gray-700 mt-16 bg-warm-gray-100 block font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7">
+        className="text-gray-700 mt-10 bg-warm-gray-100 block font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7">
         {"submit"->React.string}
       </button>
     </form>

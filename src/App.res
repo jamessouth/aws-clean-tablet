@@ -84,12 +84,12 @@ let make = () => {
           />
           <Link
             url="/getusername?code"
-            className="w-3/5 text-center text-warm-gray-100 block font-anon text-sm mt-4 max-w-80"
+            className="w-3/5 text-right text-warm-gray-100 block font-anon text-sm mt-4 max-w-80"
             content="verification code?"
           />
           <Link
             url="/getusername?pw"
-            className="w-3/5 text-center text-warm-gray-100 block font-anon text-sm mt-4 max-w-80"
+            className="w-3/5 text-right text-warm-gray-100 block font-anon text-sm mt-4 max-w-80"
             content="forgot password?"
           />
           <Link
