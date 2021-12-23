@@ -39,8 +39,20 @@ type signupOk = {
   userSub: string,
 }
 
+type passwordPWCB = {
+  onFailure: Js.Exn.t => unit,
+  onSuccess: string => unit,
+}
+
+@send
+external forgotPassword: (
+  Js.Nullable.t<Signup.usr>, //user object
+  passwordPWCB, //cb obj
+  Js.Nullable.t<Signup.clientMetadata>,
+) => unit = "forgotPassword"
+
 @react.component
-let make = (~userpool, ~setCognitoUser) => {
+let make = (~userpool, ~cognitoUser, ~setCognitoUser) => {
   // let pwInput = React.useRef(Js.Nullable.null)
 
   let url = RescriptReactRouter.useUrl()
@@ -97,14 +109,41 @@ let make = (~userpool, ~setCognitoUser) => {
     setUnVisited(_ => true)
   }
 
+  let forgotPWcb = {
+    onSuccess: str => {
+      Js.log2("forgot pw initiated: ", str)
+      // RescriptReactRouter.push("/confirm")
+    },
+    onFailure: err => {
+      switch Js.Exn.message(err) {
+      | Some(msg) => (_ => Some(msg))->setCognitoErr
+      | None => (_ => Some("unknown forgot pw error"))->setCognitoErr
+      }
+      Js.log2("forgot pw problem: ", err)
+    },
+  }
+
+  React.useEffect1(() => {
+    switch Js.Nullable.toOption(cognitoUser) {
+    | None => ()
+    | Some(user) =>
+      switch url.search {
+      | "pw" => user->forgotPassword(forgotPWcb, Js.Nullable.null)
+      | _ => ()
+      }
+
+      RescriptReactRouter.push(`/confirm?${url.search}`)
+    }
+    None
+  }, [cognitoUser])
+
   let handleSubmit = e => {
     e->ReactEvent.Form.preventDefault
     let userdata: Types.userDataInput = {
-      username,
-      pool: userpool
+      username: username,
+      pool: userpool,
     }
     setCognitoUser(._ => Js.Nullable.return(userConstructor(userdata)))
-    RescriptReactRouter.push(`/confirm?${url.search}`)
   }
 
   React.useEffect2(() => {
@@ -129,72 +168,71 @@ let make = (~userpool, ~setCognitoUser) => {
   // }, (unErr, pwErr, username, password, email))
 
   switch url.search {
-  | "code" | "pw" => <main>
-    <form className="w-4/5 m-auto" onSubmit={handleSubmit}>
-      <fieldset className="flex flex-col justify-between h-52">
-        <legend className="text-warm-gray-100 m-auto mb-8 text-3xl font-fred">
-          {React.string("Enter username")}
-        </legend>
-        <div className="relative">
-          <label
-            className={switch (unVisited, unErr) {
-            | (true, Some(_)) => "block text-2xl text-red-500 font-bold font-flow"
-            | (false, _) | (true, None) => "block text-2xl text-warm-gray-100 font-flow"
+  | "code" | "pw" =>
+    <main>
+      <form className="w-4/5 m-auto" onSubmit={handleSubmit}>
+        <fieldset className="flex flex-col justify-between h-52">
+          <legend className="text-warm-gray-100 m-auto mb-8 text-3xl font-fred">
+            {React.string("Enter username")}
+          </legend>
+          <div className="relative">
+            <label
+              className={switch (unVisited, unErr) {
+              | (true, Some(_)) => "block text-2xl text-red-500 font-bold font-flow"
+              | (false, _) | (true, None) => "block text-2xl text-warm-gray-100 font-flow"
+              }}
+              htmlFor="username">
+              {"username:"->React.string}
+            </label>
+            {switch (unVisited, unErr) {
+            | (true, Some(err)) =>
+              <span className="absolute right-0 text-2xl text-red-500 font-bold font-flow">
+                {err->React.string}
+              </span>
+            | (false, _) | (true, None) => React.null
             }}
-            htmlFor="username">
-            {"username:"->React.string}
-          </label>
-          {switch (unVisited, unErr) {
-          | (true, Some(err)) =>
-            <span className="absolute right-0 text-2xl text-red-500 font-bold font-flow">
-              {err->React.string}
-            </span>
-          | (false, _) | (true, None) => React.null
-          }}
-          <input
-            autoComplete="username"
-            autoFocus=true
-            className={switch (unVisited, unErr) {
-            | (
+            <input
+              autoComplete="username"
+              autoFocus=true
+              className={switch (unVisited, unErr) {
+              | (
+                  true,
+                  Some(_),
+                ) => "h-8 w-full text-xl outline-none text-red-500 bg-transparent border-b-1 border-red-500"
+              | (false, _)
+              | (
                 true,
-                Some(_),
-              ) => "h-8 w-full text-xl outline-none text-red-500 bg-transparent border-b-1 border-red-500"
-            | (false, _)
-            | (
-              true,
-              None,
-            ) => "h-8 w-full text-xl outline-none text-warm-gray-100 bg-transparent border-b-1 border-warm-gray-100"
-            }}
-            id="username"
-            minLength=4
-            name="username"
-            onBlur
-            onChange
-            // placeholder="Enter username"
-            required=true
-            spellCheck=false
-            type_="text"
-            value={username}
-          />
-        </div>
-      </fieldset>
-      {switch cognitoErr {
-      | Some(msg) =>
-        <span
-          className="text-sm text-warm-gray-100 absolute bg-red-500 text-center w-full left-1/2 transform max-w-lg -translate-x-1/2">
-          {msg->React.string}
-        </span>
-      | None => React.null
-      }}
-      <button
-        disabled
-        className="text-gray-700 mt-10 bg-warm-gray-100 block font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7">
-        {"submit"->React.string}
-      </button>
-    </form>
-  </main>
+                None,
+              ) => "h-8 w-full text-xl outline-none text-warm-gray-100 bg-transparent border-b-1 border-warm-gray-100"
+              }}
+              id="username"
+              minLength=4
+              name="username"
+              onBlur
+              onChange
+              // placeholder="Enter username"
+              required=true
+              spellCheck=false
+              type_="text"
+              value={username}
+            />
+          </div>
+        </fieldset>
+        {switch cognitoErr {
+        | Some(msg) =>
+          <span
+            className="text-sm text-warm-gray-100 absolute bg-red-500 text-center w-full left-1/2 transform max-w-lg -translate-x-1/2">
+            {msg->React.string}
+          </span>
+        | None => React.null
+        }}
+        <button
+          disabled
+          className="text-gray-700 mt-10 bg-warm-gray-100 block font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7">
+          {"submit"->React.string}
+        </button>
+      </form>
+    </main>
   | _ => <div> {"other"->React.string} </div>
   }
-
-  
 }

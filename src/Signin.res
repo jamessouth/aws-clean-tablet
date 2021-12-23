@@ -149,11 +149,6 @@ let make = (~userpool, ~setCognitoUser, ~setToken, ~cognitoUser) => {
             }}
           </button>
         </div>
-        <Link
-          url="/resetpwd"
-          className="self-end text-sm cursor-pointer font-anon text-warm-gray-100"
-          content="forgot password?"
-        />
       </fieldset>
       <button
         disabled

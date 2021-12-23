@@ -120,7 +120,7 @@ let make = () => {
           React.null
         }
 
-      | (list{"getusername"}, None) => <GetUsername userpool setCognitoUser />
+      | (list{"getusername"}, None) => <GetUsername userpool cognitoUser setCognitoUser />
 
       // | (list{"getusername"}, None) => <GetUsername userpool setCognitoUser />
 
@@ -130,13 +130,6 @@ let make = () => {
         }
 
       | (list{"signup"}, None) => <Signup userpool setCognitoUser />
-
-      | (list{"resetpwd"}, Some(_t)) => {
-          RescriptReactRouter.replace("/lobby")
-          React.null
-        }
-
-      | (list{"resetpwd"}, None) => <Resetpwd />
 
       | (list{"lobby"}, Some(_)) => <Lobby wsConnected playerGame leadertoken=(playerName ++ connID) games send wsError/>
 

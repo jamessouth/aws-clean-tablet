@@ -16,7 +16,7 @@ external confirmPassword: (
   Js.Nullable.t<Signup.usr>, //user object
   string, //conf code
   string, //new pw
-  Resetpwd.passwordPWCB, //cb obj
+  GetUsername.passwordPWCB, //cb obj
   Js.Nullable.t<Signup.clientMetadata>,
 ) => unit = "confirmPassword"
 
@@ -155,7 +155,7 @@ let make = (~cognitoUser) => {
   let confirmregistrationCallback = Signup.cbToOption(res =>
     switch res {
     | Ok(val) => {
-        (_ => None)->setCognitoErr
+        setCognitoErr(_ => None)
         RescriptReactRouter.push("/signin")
         Js.log2("conf rego res", val)
       }
@@ -170,8 +170,12 @@ let make = (~cognitoUser) => {
     }
   )
 
-  let confirmPWcb: Resetpwd.passwordPWCB = {
-    onSuccess: str => Js.log2("pw confirmed: ", str),
+  let confirmpasswordCallback: GetUsername.passwordPWCB = {
+    onSuccess: str => {
+        setCognitoErr(_ => None)
+        RescriptReactRouter.push("/signin")
+      Js.log2("pw confirmed: ", str),
+    },
     onFailure: err => {
       switch Js.Exn.message(err) {
       | Some(msg) => (_ => Some(msg))->setCognitoErr
@@ -193,7 +197,7 @@ let make = (~cognitoUser) => {
           confirmregistrationCallback,
           Js.Nullable.null,
         )
-      | "pw" => cognitoUser->confirmPassword(verifCode, password, confirmPWcb, Js.Nullable.null)
+      | "pw" => cognitoUser->confirmPassword(verifCode, password, confirmpasswordCallback, Js.Nullable.null)
       | _ => (_ => Some("unknown method - not submitting"))->setCognitoErr
       }
 
@@ -207,11 +211,11 @@ let make = (~cognitoUser) => {
       <form className="w-4/5 m-auto" onSubmit={handleSubmit}>
         <fieldset className="flex flex-col justify-between h-52">
           <legend className="text-warm-gray-100 m-auto mb-8 text-3xl font-fred">
-          {switch url.search {
-          | "code" => React.string("Confirm code")
-          | "pw" => React.string("Change password")
-          }}
-    
+            {switch url.search {
+            | "code" => React.string("Confirm code")
+            | "pw" => React.string("Change password")
+            | _ => React.string("other")
+            }}
           </legend>
           <div className="relative">
             <label className="block text-2xl text-warm-gray-100 font-flow" htmlFor="verif-code">
