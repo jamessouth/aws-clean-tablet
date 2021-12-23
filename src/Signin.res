@@ -27,8 +27,8 @@ external authenticateUser: (Js.Nullable.t<Signup.usr>, authDetails, callback) =>
   "authenticateUser"
 
 @react.component
-let make = (~userpool, ~setCognitoUser, ~setToken, ~cognitoUser) => {
-  let (_cognitoErr, setCognitoErr) = React.useState(_ => None)
+let make = (~userpool, ~setCognitoUser, ~setToken, ~cognitoUser, ~cognitoErr, ~setCognitoErr) => {
+  
   let (showPassword, setShowPassword) = React.useState(_ => false)
   let (disabled, setDisabled) = React.useState(_ => true)
   let (username, setUsername) = React.useState(_ => "")
@@ -42,13 +42,14 @@ let make = (~userpool, ~setCognitoUser, ~setToken, ~cognitoUser) => {
     e->ReactEvent.Form.preventDefault
     let cbs = {
       onSuccess: res => {
+        setCognitoErr(_ => None)
         Js.log2("signin result:", res)
         setToken(._ => Some(res.accessToken.jwtToken))
       },
       onFailure: ex => {
         switch Js.Exn.message(ex) {
-        | Some(msg) => (_ => Some(msg))->setCognitoErr
-        | None => (_ => None)->setCognitoErr
+        | Some(msg) => setCognitoErr(_ => Some(msg))
+        | None => setCognitoErr(_ => Some("unknown signin error"))
         }
 
         Js.log2("problem", ex)

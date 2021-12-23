@@ -27,6 +27,7 @@ let make = () => {
   let (cognitoUser: Js.Nullable.t<Signup.usr>, setCognitoUser) = React.Uncurried.useState(_ =>
     Js.Nullable.null
   )
+  let (cognitoErr, setCognitoErr) = React.useState(_ => None)
 
   let (playerName, setPlayerName) = React.Uncurried.useState(_ => "")
   
@@ -106,21 +107,21 @@ let make = () => {
           React.null
         }
 
-      | (list{"signin"}, None) => <Signin userpool setCognitoUser setToken cognitoUser/>
+      | (list{"signin"}, None) => <Signin userpool setCognitoUser setToken cognitoUser cognitoErr setCognitoErr/>
 
       | (list{"confirm"}, Some(_t)) => {
           RescriptReactRouter.replace("/lobby")
           React.null
         }
 
-      | (list{"confirm"}, None) => <Confirm cognitoUser />
+      | (list{"confirm"}, None) => <Confirm cognitoUser cognitoErr setCognitoErr/>
 
       | (list{"getusername"}, Some(_t)) => {
           RescriptReactRouter.replace("/lobby")
           React.null
         }
 
-      | (list{"getusername"}, None) => <GetUsername userpool cognitoUser setCognitoUser />
+      | (list{"getusername"}, None) => <GetUsername userpool cognitoUser setCognitoUser cognitoErr setCognitoErr/>
 
       // | (list{"getusername"}, None) => <GetUsername userpool setCognitoUser />
 
@@ -129,7 +130,7 @@ let make = () => {
           React.null
         }
 
-      | (list{"signup"}, None) => <Signup userpool setCognitoUser />
+      | (list{"signup"}, None) => <Signup userpool setCognitoUser cognitoErr setCognitoErr/>
 
       | (list{"lobby"}, Some(_)) => <Lobby wsConnected playerGame leadertoken=(playerName ++ connID) games send wsError/>
 

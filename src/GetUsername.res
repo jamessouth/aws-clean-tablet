@@ -52,7 +52,7 @@ external forgotPassword: (
 ) => unit = "forgotPassword"
 
 @react.component
-let make = (~userpool, ~cognitoUser, ~setCognitoUser) => {
+let make = (~userpool, ~cognitoUser, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
   // let pwInput = React.useRef(Js.Nullable.null)
 
   let url = RescriptReactRouter.useUrl()
@@ -65,7 +65,7 @@ let make = (~userpool, ~cognitoUser, ~setCognitoUser) => {
   let (disabled, _setDisabled) = React.useState(_ => false)
   let (username, setUsername) = React.useState(_ => "")
 
-  let (cognitoErr, _setCognitoErr) = React.useState(_ => None)
+  
   // let (cognitoResult, setCognitoResult) = React.useState(_ => false)
 
   let checkUnForbiddenChars = un => {
@@ -111,24 +111,25 @@ let make = (~userpool, ~cognitoUser, ~setCognitoUser) => {
 
   let forgotPWcb = {
     onSuccess: str => {
+      setCognitoErr(_ => None)
       Js.log2("forgot pw initiated: ", str)
       // RescriptReactRouter.push("/confirm")
     },
     onFailure: err => {
       switch Js.Exn.message(err) {
-      | Some(msg) => (_ => Some(msg))->setCognitoErr
-      | None => (_ => Some("unknown forgot pw error"))->setCognitoErr
+      | Some(msg) => setCognitoErr(_ => Some(msg))
+      | None => setCognitoErr(_ => Some("unknown forgot pw error"))
       }
       Js.log2("forgot pw problem: ", err)
     },
   }
 
   React.useEffect1(() => {
-    switch Js.Nullable.toOption(cognitoUser) {
-    | None => ()
-    | Some(user) =>
+    switch Js.Nullable.isNullable(cognitoUser) {
+    | true => ()
+    | false =>
       switch url.search {
-      | "pw" => user->forgotPassword(forgotPWcb, Js.Nullable.null)
+      | "pw" => cognitoUser->forgotPassword(forgotPWcb, Js.Nullable.null)
       | _ => ()
       }
 

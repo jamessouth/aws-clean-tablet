@@ -85,7 +85,7 @@ external signUp: (
     }
 
 @react.component
-let make = (~userpool, ~setCognitoUser) => {
+let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
   // let pwInput = React.useRef(Js.Nullable.null)
 
   let (unVisited, setUnVisited) = React.useState(_ => false)
@@ -99,7 +99,7 @@ let make = (~userpool, ~setCognitoUser) => {
   let (password, setPassword) = React.useState(_ => "")
   let (email, setEmail) = React.useState(_ => "")
 
-  let (cognitoErr, setCognitoErr) = React.useState(_ => None)
+  
   // let (cognitoResult, setCognitoResult) = React.useState(_ => false)
 
 
@@ -107,7 +107,7 @@ let make = (~userpool, ~setCognitoUser) => {
   let signupCallback = cbToOption(res =>
     switch res {
     | Ok(val) => {
-        (_ => None)->setCognitoErr
+        setCognitoErr(_ => None)
         setCognitoUser(._ => Js.Nullable.return(val.user))
         RescriptReactRouter.push("/confirm")
 
@@ -117,8 +117,8 @@ let make = (~userpool, ~setCognitoUser) => {
       }
     | Error(ex) => {
         switch Js.Exn.message(ex) {
-        | Some(msg) => (_ => Some(msg))->setCognitoErr
-        | None => (_ => None)->setCognitoErr
+        | Some(msg) => setCognitoErr(_ => Some(msg))
+        | None => setCognitoErr(_ => Some("unknown signup error"))
         }
 
         Js.log2("problem", ex)

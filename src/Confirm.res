@@ -21,7 +21,7 @@ external confirmPassword: (
 ) => unit = "confirmPassword"
 
 @react.component
-let make = (~cognitoUser) => {
+let make = (~cognitoUser, ~cognitoErr, ~setCognitoErr) => {
   let url = RescriptReactRouter.useUrl()
   Js.log3("user", cognitoUser, url)
   let (password, setPassword) = React.useState(_ => "")
@@ -32,7 +32,7 @@ let make = (~cognitoUser) => {
   let (verifCode, setVerifCode) = React.useState(_ => "")
   let (disabled, setDisabled) = React.useState(_ => true)
 
-  let (cognitoErr, setCognitoErr) = React.useState(_ => None)
+  
 
   let onClick = _e => {
     (prev => !prev)->setShowVerifCode
@@ -161,8 +161,8 @@ let make = (~cognitoUser) => {
       }
     | Error(ex) => {
         switch Js.Exn.message(ex) {
-        | Some(msg) => (_ => Some(msg))->setCognitoErr
-        | None => (_ => Some("unknown confirm rego error"))->setCognitoErr
+        | Some(msg) => setCognitoErr(_ => Some(msg))
+        | None => setCognitoErr(_ => Some("unknown confirm rego error"))
         }
 
         Js.log2("conf rego problem", ex)
@@ -174,12 +174,12 @@ let make = (~cognitoUser) => {
     onSuccess: str => {
         setCognitoErr(_ => None)
         RescriptReactRouter.push("/signin")
-      Js.log2("pw confirmed: ", str),
+      Js.log2("pw confirmed: ", str)
     },
     onFailure: err => {
       switch Js.Exn.message(err) {
-      | Some(msg) => (_ => Some(msg))->setCognitoErr
-      | None => (_ => Some("unknown confirm pw error"))->setCognitoErr
+      | Some(msg) => setCognitoErr(_ => Some(msg))
+      | None => setCognitoErr(_ => Some("unknown confirm pw error"))
       }
       Js.log2("confirm pw problem: ", err)
     },
