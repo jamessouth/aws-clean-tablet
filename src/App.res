@@ -58,10 +58,12 @@ let make = () => {
     setWs
   } = WsHook.useWs(token, setToken)
 
+  let signOut = <SignOut cognitoUser setToken send playerGame close setCognitoUser setPlayerName setWs/>
+
 
   <>
 
-    <SignOut cognitoUser setToken send playerGame close setCognitoUser setPlayerName setWs/>
+    
     <h1 className="text-6xl mt-11 text-center font-arch decay-mask text-warm-gray-100">
       {"CLEAN TABLET"->React.string}
     </h1>
@@ -132,7 +134,7 @@ let make = () => {
 
       | (list{"signup"}, None) => <Signup userpool setCognitoUser cognitoErr setCognitoErr/>
 
-      | (list{"lobby"}, Some(_)) => <Lobby wsConnected playerGame leadertoken=(playerName ++ connID) games send wsError/>
+      | (list{"lobby"}, Some(_)) => <Lobby wsConnected playerGame leadertoken=(playerName ++ connID) games send wsError signOut/>
 
       | (list{"lobby"}, None) => {
           RescriptReactRouter.replace("/")

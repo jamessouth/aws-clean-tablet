@@ -151,6 +151,12 @@ let make = (~userpool, ~setCognitoUser, ~setToken, ~cognitoUser, ~cognitoErr, ~s
           </button>
         </div>
       </fieldset>
+      {
+        switch cognitoErr {
+        | Some(msg) => <span className="text-sm text-warm-gray-100 absolute bg-red-500 text-center w-full left-1/2 transform max-w-lg -translate-x-1/2">{React.string(msg)}</span>
+        | None => React.null
+        }
+      }
       <button
         disabled
         className="text-gray-700 mt-16 bg-warm-gray-100 block font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7">
