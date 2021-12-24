@@ -45,6 +45,7 @@ type return = {
   close: (. int, string) => unit,
   wsError: string,
   setWs: (. Js.Nullable.t<t> => Js.Nullable.t<t>) => unit,
+  dispatch: Reducer.action => unit,
 }
 
 type listGamesData = {listGms: array<Reducer.listGame>, connID: string}
@@ -228,5 +229,6 @@ let useWs = (token, setToken) => {
     close: close,
     wsError: wsError,
     setWs: setWs,
+    dispatch: dispatch,
   }
 }

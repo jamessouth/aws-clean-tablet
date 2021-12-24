@@ -57,10 +57,11 @@ let make = () => {
     send,
     close,
     wsError,
-    setWs
+    setWs,
+    dispatch
   } = WsHook.useWs(token, setToken)
 
-  let signOut = <SignOut cognitoUser setToken send playerGame close setCognitoUser setPlayerName setWs setPlayerGame setConnID/>
+  let signOut = <SignOut cognitoUser setToken send playerGame close setCognitoUser setPlayerName setWs setPlayerGame setConnID dispatch/>
 
 
   <>
