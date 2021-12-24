@@ -32,6 +32,7 @@ type closeEventHandler = closeEvent => unit
 
 type return = {
   playerGame: string,
+  setPlayerGame: (. string => string) => unit,
   playerColor: string,
   wsConnected: bool,
   game: Reducer.liveGame,
@@ -39,6 +40,7 @@ type return = {
   currentWord: string,
   previousWord: string,
   connID: string,
+  setConnID: (. string => string) => unit,
   send: (. option<string>) => unit,
   close: (. int, string) => unit,
   wsError: string,
@@ -213,6 +215,7 @@ let useWs = (token, setToken) => {
 
   {
     playerGame: playerGame,
+    setPlayerGame: setPlayerGame,
     playerColor: playerColor,
     wsConnected: wsConnected,
     game: state.game,
@@ -220,6 +223,7 @@ let useWs = (token, setToken) => {
     currentWord: currentWord,
     previousWord: previousWord,
     connID: connID,
+    setConnID: setConnID,
     send: send,
     close: close,
     wsError: wsError,

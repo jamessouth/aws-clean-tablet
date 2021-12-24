@@ -45,6 +45,7 @@ let make = () => {
 
   let {
     playerGame,
+    setPlayerGame,
     playerColor,
     wsConnected,
     game,
@@ -52,13 +53,14 @@ let make = () => {
     currentWord,
     previousWord,
     connID,
+    setConnID,
     send,
     close,
     wsError,
     setWs
   } = WsHook.useWs(token, setToken)
 
-  let signOut = <SignOut cognitoUser setToken send playerGame close setCognitoUser setPlayerName setWs/>
+  let signOut = <SignOut cognitoUser setToken send playerGame close setCognitoUser setPlayerName setWs setPlayerGame setConnID/>
 
 
   <>
