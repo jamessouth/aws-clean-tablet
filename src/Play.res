@@ -15,11 +15,9 @@ let make = (
   ~playerColor,
   ~send,
   ~wsError,
-  ~currentWord,
-  ~previousWord,
 ) => {
-  Js.log3("play", wsConnected, wsError)
-  Js.log3("play2", previousWord, game)
+  Js.log4("play", wsConnected, wsError, game)
+  
   let (answered, setAnswered) = React.useState(_ => false)
   let (inputText, setInputText) = React.useState(_ => "")
 
@@ -54,11 +52,11 @@ let make = (
 
   <div>
     // playerName
-    <Scoreboard players=game.players currentWord previousWord />
+    <Scoreboard players=game.players currentWord=game.currentWord previousWord=game.previousWord />
     // <p className="text-yellow-200 text-2xl font-bold">
     //   {"Get Ready"->React.string} <span className="animate-spin"> {React.string(circ)} </span>
     // </p>
-    <Word onAnimationEnd playerColor currentWord answered />
+    <Word onAnimationEnd playerColor currentWord=game.currentWord answered />
     <Form answer_max_length answered inputText onEnter setInputText />
 
     // <Prompt></Prompt>

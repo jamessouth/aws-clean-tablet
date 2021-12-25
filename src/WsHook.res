@@ -32,20 +32,20 @@ type closeEventHandler = closeEvent => unit
 
 type return = {
   playerGame: string,
-  setPlayerGame: (. string => string) => unit,
+  // setPlayerGame: (. string => string) => unit,
   playerColor: string,
   wsConnected: bool,
   game: Reducer.liveGame,
   games: Js.Nullable.t<array<Reducer.listGame>>,
-  currentWord: string,
-  previousWord: string,
+  // currentWord: string,
+  // previousWord: string,
   connID: string,
-  setConnID: (. string => string) => unit,
+  // setConnID: (. string => string) => unit,
   send: (. option<string>) => unit,
   close: (. int, string) => unit,
   wsError: string,
-  setWs: (. Js.Nullable.t<t> => Js.Nullable.t<t>) => unit,
-  dispatch: Reducer.action => unit,
+  // setWs: (. Js.Nullable.t<t> => Js.Nullable.t<t>) => unit,
+  // dispatch: Reducer.action => unit,
 }
 
 type listGamesData = {listGms: array<Reducer.listGame>, connID: string}
@@ -93,9 +93,8 @@ let getMsgType = tag => {
   }
 }
 
-let useWs = (token, setToken) => {
+let useWs = (token, setToken, cognitoUser, signOut, setCognitoUser, setPlayerName) => {
   // Js.log2("wshook ", token)
-
 
   let (ws, setWs) = React.Uncurried.useState(_ => Js.Nullable.null)
 
@@ -103,8 +102,8 @@ let useWs = (token, setToken) => {
   let (playerColor, setPlayerColor) = React.Uncurried.useState(_ => "")
   let (wsConnected, setWsConnected) = React.Uncurried.useState(_ => false)
   let (wsError, setWsError) = React.Uncurried.useState(_ => "")
-  let (currentWord, _setCurrentWord) = React.Uncurried.useState(_ => "")
-  let (previousWord, _setPreviousWord) = React.Uncurried.useState(_ => "")
+  // let (currentWord, _setCurrentWord) = React.Uncurried.useState(_ => "")
+  // let (previousWord, _setPreviousWord) = React.Uncurried.useState(_ => "")
   // let (game, setGame) = React.Uncurried.useState(_ => emptyGame)
   let (connID, setConnID) = React.Uncurried.useState(_ => "")
 
@@ -126,8 +125,6 @@ let useWs = (token, setToken) => {
 
     None
   }, [token])
-
-
 
   React.useEffect1(() => {
     switch Js.Nullable.isNullable(ws) {
@@ -189,8 +186,19 @@ let useWs = (token, setToken) => {
     }
 
     let cleanup = () => {
+      Js.log("cleanup")
       setWsConnected(._ => false)
       setWsError(._ => "")
+
+      cognitoUser->signOut(Js.Nullable.null)
+      setCognitoUser(._ => Js.Nullable.null)
+      setPlayerName(._ => "")
+
+      setPlayerGame(._ => "")
+      setConnID(._ => "")
+      setWs(._ => Js.Nullable.null)
+      dispatch((ResetPlayerState: Reducer.action))
+
       switch Js.Nullable.isNullable(ws) {
       | true => ()
       | false => ws->closeCode(1000)
@@ -216,19 +224,19 @@ let useWs = (token, setToken) => {
 
   {
     playerGame: playerGame,
-    setPlayerGame: setPlayerGame,
+    // setPlayerGame: setPlayerGame,
     playerColor: playerColor,
     wsConnected: wsConnected,
     game: state.game,
     games: state.gamesList,
-    currentWord: currentWord,
-    previousWord: previousWord,
+    // currentWord: currentWord,
+    // previousWord: previousWord,
     connID: connID,
-    setConnID: setConnID,
+    // setConnID: setConnID,
     send: send,
     close: close,
     wsError: wsError,
-    setWs: setWs,
-    dispatch: dispatch,
+    // setWs: setWs,
+    // dispatch: dispatch,
   }
 }

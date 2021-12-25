@@ -6,7 +6,7 @@ external cid: string = "VITE_CID"
 @val external localStorage: Dom.Storage2.t = "localStorage"
 external getItem: (Dom.Storage2.t, string) => option<string> = "getItem"
 
-// @module external signoutimg: string = 
+// @module external signoutimg: string =
 
 @new @module("amazon-cognito-identity-js")
 external userPoolConstructor: Types.poolDataInput => Types.poolData = "CognitoUserPool"
@@ -18,11 +18,16 @@ let pool: Types.poolDataInput = {
 }
 let userpool = userPoolConstructor(pool)
 
+type revokeTokenCallback = Js.Exn.t => unit
+
+@send
+external signOut: (Js.Nullable.t<Signup.usr>, Js.Nullable.t<revokeTokenCallback>) => unit =
+  "signOut"
+
 @react.component
 let make = () => {
   Js.log("app")
   let url = RescriptReactRouter.useUrl()
-  
 
   let (cognitoUser: Js.Nullable.t<Signup.usr>, setCognitoUser) = React.Uncurried.useState(_ =>
     Js.Nullable.null
@@ -30,43 +35,36 @@ let make = () => {
   let (cognitoErr, setCognitoErr) = React.useState(_ => None)
 
   let (playerName, setPlayerName) = React.Uncurried.useState(_ => "")
-  
-  
-  let (token, setToken) = React.Uncurried.useState(_ => None)
 
+  let (token, setToken) = React.Uncurried.useState(_ => None)
 
   React.useEffect1(() => {
     switch Js.Nullable.toOption(cognitoUser) {
     | None => setPlayerName(._ => "")
     | Some(user) => setPlayerName(._ => user.username)
     }
-  None
-}, [cognitoUser])
+    None
+  }, [cognitoUser])
 
   let {
     playerGame,
-    setPlayerGame,
+    // setPlayerGame,
     playerColor,
     wsConnected,
     game,
     games,
-    currentWord,
-    previousWord,
     connID,
-    setConnID,
+    // setConnID,
     send,
     close,
     wsError,
-    setWs,
-    dispatch
-  } = WsHook.useWs(token, setToken)
+    // setWs,
+    // dispatch
+  } = WsHook.useWs(token, setToken, cognitoUser, signOut, setCognitoUser, setPlayerName)
 
-  let signOut = <SignOut cognitoUser setToken send playerGame close setCognitoUser setPlayerName setWs setPlayerGame setConnID dispatch/>
-
+  let signOut = <SignOut send playerGame close />
 
   <>
-
-    
     <h1 className="text-6xl mt-11 text-center font-arch decay-mask text-warm-gray-100">
       {"CLEAN TABLET"->React.string}
     </h1>
@@ -112,32 +110,35 @@ let make = () => {
           React.null
         }
 
-      | (list{"signin"}, None) => <Signin userpool setCognitoUser setToken cognitoUser cognitoErr setCognitoErr/>
+      | (list{"signin"}, None) =>
+        <Signin userpool setCognitoUser setToken cognitoUser cognitoErr setCognitoErr />
 
       | (list{"confirm"}, Some(_t)) => {
           RescriptReactRouter.replace("/lobby")
           React.null
         }
 
-      | (list{"confirm"}, None) => <Confirm cognitoUser cognitoErr setCognitoErr/>
+      | (list{"confirm"}, None) => <Confirm cognitoUser cognitoErr setCognitoErr />
 
       | (list{"getusername"}, Some(_t)) => {
           RescriptReactRouter.replace("/lobby")
           React.null
         }
 
-      | (list{"getusername"}, None) => <GetUsername userpool cognitoUser setCognitoUser cognitoErr setCognitoErr/>
-
-      // | (list{"getusername"}, None) => <GetUsername userpool setCognitoUser />
+      | (list{"getusername"}, None) =>
+        <GetUsername userpool cognitoUser setCognitoUser cognitoErr setCognitoErr />
 
       | (list{"signup"}, Some(_t)) => {
           RescriptReactRouter.replace("/lobby")
           React.null
         }
 
-      | (list{"signup"}, None) => <Signup userpool setCognitoUser cognitoErr setCognitoErr/>
+      | (list{"signup"}, None) => <Signup userpool setCognitoUser cognitoErr setCognitoErr />
 
-      | (list{"lobby"}, Some(_)) => <Lobby wsConnected playerGame leadertoken=(playerName ++ connID) games send wsError signOut/>
+      | (list{"lobby"}, Some(_)) =>
+        <Lobby
+          wsConnected playerGame leadertoken={playerName ++ connID} games send wsError signOut
+        />
 
       | (list{"lobby"}, None) => {
           RescriptReactRouter.replace("/")
@@ -149,8 +150,8 @@ let make = () => {
           React.null
         }
 
-// playerName
-      | (list{"game", _gameno}, Some(_)) => <Play wsConnected game playerColor send wsError currentWord previousWord/>
+      // playerName
+      | (list{"game", _gameno}, Some(_)) => <Play wsConnected game playerColor send wsError />
 
       | (_, _) => <div> {"other"->React.string} </div> // <PageNotFound/>
       }}
