@@ -93,7 +93,13 @@ let getMsgType = tag => {
   }
 }
 
-let useWs = (token, setToken, cognitoUser, signOut, setCognitoUser, setPlayerName) => {
+type revokeTokenCallback = Js.Exn.t => unit
+
+@send
+external signOut: (Js.Nullable.t<Signup.usr>, Js.Nullable.t<revokeTokenCallback>) => unit =
+  "signOut"
+
+let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
   // Js.log2("wshook ", token)
 
   let (ws, setWs) = React.Uncurried.useState(_ => Js.Nullable.null)
@@ -182,24 +188,26 @@ let useWs = (token, setToken, cognitoUser, signOut, setCognitoUser, setPlayerNam
       ws->onClose(({code, reason, wasClean}) => {
         Js.log4("close", code, reason, wasClean)
         setToken(._ => None)
+        setWsConnected(._ => false)
+        setWsError(._ => "")
+
+        switch Js.Nullable.isNullable(cognitoUser) {
+        | true => ()
+        | false => cognitoUser->signOut(Js.Nullable.null)
+        }
+        setCognitoUser(._ => Js.Nullable.null)
+        setPlayerName(._ => "")
+
+        setPlayerGame(._ => "")
+        setConnID(._ => "")
+        setWs(._ => Js.Nullable.null)
+        dispatch((ResetPlayerState: Reducer.action))
       })
     }
 
     let cleanup = () => {
-      Js.log("cleanup")
-      setWsConnected(._ => false)
-      setWsError(._ => "")
-
-      cognitoUser->signOut(Js.Nullable.null)
-      setCognitoUser(._ => Js.Nullable.null)
-      setPlayerName(._ => "")
-
-      setPlayerGame(._ => "")
-      setConnID(._ => "")
-      setWs(._ => Js.Nullable.null)
-      dispatch((ResetPlayerState: Reducer.action))
-
       switch Js.Nullable.isNullable(ws) {
+      Js.log("cleanup")
       | true => ()
       | false => ws->closeCode(1000)
       }

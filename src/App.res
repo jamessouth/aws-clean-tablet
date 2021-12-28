@@ -18,11 +18,7 @@ let pool: Types.poolDataInput = {
 }
 let userpool = userPoolConstructor(pool)
 
-type revokeTokenCallback = Js.Exn.t => unit
 
-@send
-external signOut: (Js.Nullable.t<Signup.usr>, Js.Nullable.t<revokeTokenCallback>) => unit =
-  "signOut"
 
 @react.component
 let make = () => {
@@ -60,7 +56,7 @@ let make = () => {
     wsError,
     // setWs,
     // dispatch
-  } = WsHook.useWs(token, setToken, cognitoUser, signOut, setCognitoUser, setPlayerName)
+  } = WsHook.useWs(token, setToken, cognitoUser, setCognitoUser, setPlayerName)
 
   let signOut = <SignOut send playerGame close />
 

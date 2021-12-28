@@ -120,10 +120,10 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		// ExpressionAttributeValues: map[string]types.AttributeValue{
 		// 	":id": connid,
 		// },
-		ConditionExpression: aws.String("attribute_not_exists(pk)"),
+		// ConditionExpression: aws.String("attribute_not_exists(pk)"),
 	}
-
-	err = panicProtectedPut(ctx, svc, &connItemInput)
+	_, err = svc.PutItem(ctx, &connItemInput)
+	// err = panicProtectedPut(ctx, svc, &connItemInput)
 
 	if err != nil {
 		// fmt.Println("poi", err)
@@ -198,15 +198,15 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}, nil
 }
 
-func panicProtectedPut(ctx context.Context, svc *dynamodb.Client, pii *dynamodb.PutItemInput) error {
-	fmt.Println("panicProtectedPut called", pii)
-	defer func() {
-		recover()
-	}()
-	_, err := svc.PutItem(ctx, pii)
+// func panicProtectedPut(ctx context.Context, svc *dynamodb.Client, pii *dynamodb.PutItemInput) error {
+// 	fmt.Println("panicProtectedPut called", pii)
+// 	defer func() {
+// 		recover()
+// 	}()
+// 	_, err := svc.PutItem(ctx, pii)
 
-	return err
-}
+// 	return err
+// }
 
 func main() {
 	lambda.Start(handler)
