@@ -78,18 +78,19 @@ type liveGame struct {
 	// SendToFront  bool          `dynamodbav:"sendToFront"`
 }
 
-// type body struct {
-// 	Gameno string
-// }
+type body struct {
+	Gameno string
+}
 
 type sfnArrInput struct {
-	Id   string `dynamodbav:"id"`
-	Name string `dynamodbav:"name"`
+	Id    string `json:"id"`
+	Name  string `json:"name"`
+	Color string `json:"color"`
 }
 
 type sfnInput struct {
-	Gameno  string        `dynamodbav:"gameno"`
-	Players []sfnArrInput `dynamodbav:"players"`
+	Gameno  string        `json:"gameno"`
+	Players []sfnArrInput `json:"players"`
 }
 
 func (pm livePlayerMap) assignColors() livePlayerMap {
@@ -106,8 +107,9 @@ func (pm livePlayerMap) assignColors() livePlayerMap {
 func (pm livePlayerMap) mapToSlice() (res []sfnArrInput) {
 	for k, v := range pm {
 		res = append(res, sfnArrInput{
-			Id:   k,
-			Name: v.Name,
+			Id:    k,
+			Name:  v.Name,
+			Color: v.Color,
 		})
 	}
 
@@ -140,7 +142,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	ddbsvc := dynamodb.NewFromConfig(cfg)
 	sfnsvc := sfn.NewFromConfig(cfg)
 
-	var gameno string
+	var gameno body
 
 	err = json.Unmarshal([]byte(req.Body), &gameno)
 	if err != nil {
@@ -150,7 +152,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	di, err := ddbsvc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
 		Key: map[string]types.AttributeValue{
 			"pk": &types.AttributeValueMemberS{Value: "LISTGME"},
-			"sk": &types.AttributeValueMemberS{Value: gameno},
+			"sk": &types.AttributeValueMemberS{Value: gameno.Gameno},
 		},
 		TableName:    aws.String(tableName),
 		ReturnValues: types.ReturnValueAllOld,
@@ -198,7 +200,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	sfnInput, err := json.Marshal(sfnInput{
-		Gameno:  gameno,
+		Gameno:  gameno.Gameno,
 		Players: playersMap.mapToSlice(),
 	})
 	if err != nil {
