@@ -61,7 +61,8 @@ let make = () => {
   let signOut = <SignOut send playerGame close />
 
   <>
-    <h1 className="text-6xl mt-11 text-center font-arch decay-mask text-warm-gray-100">
+    <p className="font-flow text-warm-gray-100 text-4xl font-bold text-center">{React.string(playerName)}</p>
+    <h1 style={ReactDOM.Style.make(~backgroundColor={playerColor}, ())} className="text-6xl mt-11 text-center font-arch decay-mask text-warm-gray-100">
       {"CLEAN TABLET"->React.string}
     </h1>
     <div className="mt-10 sm:mt-20">

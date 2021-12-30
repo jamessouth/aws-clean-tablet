@@ -105,7 +105,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
   let (ws, setWs) = React.Uncurried.useState(_ => Js.Nullable.null)
 
   let (playerGame, setPlayerGame) = React.Uncurried.useState(_ => "")
-  let (playerColor, setPlayerColor) = React.Uncurried.useState(_ => "")
+  let (playerColor, setPlayerColor) = React.Uncurried.useState(_ => "transparent")
   let (wsConnected, setWsConnected) = React.Uncurried.useState(_ => false)
   let (wsError, setWsError) = React.Uncurried.useState(_ => "")
   // let (currentWord, _setCurrentWord) = React.Uncurried.useState(_ => "")
@@ -206,8 +206,8 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
     }
 
     let cleanup = () => {
-      switch Js.Nullable.isNullable(ws) {
       Js.log("cleanup")
+      switch Js.Nullable.isNullable(ws) {
       | true => ()
       | false => ws->closeCode(1000)
       }

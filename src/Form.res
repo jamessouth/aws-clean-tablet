@@ -71,7 +71,7 @@ let make = (~answer_max_length, ~answered, ~inputText, ~onEnter, ~setInputText) 
     }}
     <label htmlFor="inputbox"> {React.string("Enter your answer:")} </label>
     <input
-      className="h-7 w-3/5 text-xl pl-1 text-left bg-transparent border-none text-smoke-700"
+      className="h-7 w-3/5 text-xl pl-1 text-left bg-warm-gray-100 border-none text-smoke-700"
       id="inputbox"
       autoComplete="off"
       // autoFocus

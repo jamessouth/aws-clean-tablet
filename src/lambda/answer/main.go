@@ -228,9 +228,11 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		if !winner {
 
+			sfnInput := "{\"gameno\":\"" + body.Gameno + "\"}"
+
 			ssei := sfn.StartSyncExecutionInput{
 				StateMachineArn: aws.String(sfnarn),
-				Input:           aws.String(body.Gameno),
+				Input:           aws.String(sfnInput),
 			}
 
 			sse, err := sfnsvc.StartSyncExecution(ctx, &ssei)

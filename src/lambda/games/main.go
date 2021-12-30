@@ -220,7 +220,7 @@ func (players livePlayerList) sortByScoreThenName() {
 }
 
 func FromDynamoDBEventAVMap(m map[string]events.DynamoDBAttributeValue) (res map[string]types.AttributeValue, err error) {
-	fmt.Println("av map: ", m)
+	// fmt.Println("av map: ", m)
 	res = make(map[string]types.AttributeValue, len(m))
 
 	for k, v := range m {
@@ -234,7 +234,7 @@ func FromDynamoDBEventAVMap(m map[string]events.DynamoDBAttributeValue) (res map
 }
 
 func FromDynamoDBEventAVList(l []events.DynamoDBAttributeValue) (res []types.AttributeValue, err error) {
-	fmt.Println("av list: ", l)
+	// fmt.Println("av list: ", l)
 	res = make([]types.AttributeValue, len(l))
 
 	for i, v := range l {
@@ -248,7 +248,7 @@ func FromDynamoDBEventAVList(l []events.DynamoDBAttributeValue) (res []types.Att
 }
 
 func FromDynamoDBEventAV(av events.DynamoDBAttributeValue) (types.AttributeValue, error) {
-	fmt.Println("av type: ", av, av.DataType())
+	// fmt.Println("av type: ", av, av.DataType())
 	switch av.DataType() {
 
 	case events.DataTypeBoolean: // 1
