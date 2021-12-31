@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -189,6 +190,9 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		if err != nil {
 			return callErr(err)
 		}
+
+		const startDelay = 6
+		time.Sleep(startDelay * time.Second)
 
 		winner := false
 		const winThreshold int = 24

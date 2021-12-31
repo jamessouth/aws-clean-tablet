@@ -21,6 +21,8 @@ let make = (
   let (answered, setAnswered) = React.useState(_ => false)
   let (inputText, setInputText) = React.useState(_ => "")
 
+  let {players, currentWord, previousWord} = game
+
   let sendAnswer = _ => {
     let pl = {
       action: "answer",
@@ -52,11 +54,11 @@ let make = (
 
   <div>
     // playerName
-    <Scoreboard players=game.players currentWord=game.currentWord previousWord=game.previousWord />
+    <Scoreboard players currentWord previousWord />
     // <p className="text-yellow-200 text-2xl font-bold">
     //   {"Get Ready"->React.string} <span className="animate-spin"> {React.string(circ)} </span>
     // </p>
-    <Word onAnimationEnd playerColor currentWord=game.currentWord answered />
+    <Word onAnimationEnd playerColor currentWord answered />
     <Form answer_max_length answered inputText onEnter setInputText />
 
     // <Prompt></Prompt>

@@ -197,6 +197,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
         }
         setCognitoUser(._ => Js.Nullable.null)
         setPlayerName(._ => "")
+        setPlayerColor(._ => "transparent")
 
         setPlayerGame(._ => "")
         setConnID(._ => "")
