@@ -127,7 +127,7 @@ type fromDBLiveGame struct {
 	CurrentWord  string        `dynamodbav:"currentWord"`
 	PreviousWord string        `dynamodbav:"previousWord"`
 	AnswersCount int           `dynamodbav:"answersCount"`
-	SendToFront  bool          `dynamodbav:"sendToFront"`
+	// SendToFront  bool          `dynamodbav:"sendToFront"`
 }
 
 func (pm livePlayerMap) getLivePlayersSlice() (res livePlayerList) {
@@ -487,44 +487,44 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 				fmt.Printf("%s%+v\n", "live gammmmme ", gameRecord)
 
-				if gameRecord.SendToFront {
-					pls := gameRecord.Players.getLivePlayersSlice()
+				// if gameRecord.SendToFront {
+				pls := gameRecord.Players.getLivePlayersSlice()
 
-					if gameRecord.AnswersCount == len(gameRecord.Players) {
-						return getReturnValue(http.StatusOK), nil
-					} else if gameRecord.AnswersCount > 0 {
-						pls.sortByScoreThenName()
-					} else {
-						pls.sortByAnswerThenName()
-					}
+				if gameRecord.AnswersCount == len(gameRecord.Players) {
+					return getReturnValue(http.StatusOK), nil
+				} else if gameRecord.AnswersCount > 0 {
+					pls.sortByScoreThenName()
+				} else {
+					pls.sortByAnswerThenName()
+				}
 
-					gp := modifyLiveGamePayload{
-						ModLiveGame: toFELiveGame{
-							No:           gameRecord.Sk,
-							CurrentWord:  gameRecord.CurrentWord,
-							PreviousWord: gameRecord.PreviousWord,
-							Players:      pls,
-							AnswersCount: gameRecord.AnswersCount,
-						},
-					}
+				gp := modifyLiveGamePayload{
+					ModLiveGame: toFELiveGame{
+						No:           gameRecord.Sk,
+						CurrentWord:  gameRecord.CurrentWord,
+						PreviousWord: gameRecord.PreviousWord,
+						Players:      pls,
+						AnswersCount: gameRecord.AnswersCount,
+					},
+				}
 
-					payload, err := json.Marshal(gp)
+				payload, err := json.Marshal(gp)
+				if err != nil {
+					return callErr(err)
+				}
+
+				for _, v := range pls {
+
+					conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.ConnID), Data: payload}
+
+					_, err = apigwsvc.PostToConnection(ctx, &conn)
 					if err != nil {
 						return callErr(err)
 					}
 
-					for _, v := range pls {
-
-						conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.ConnID), Data: payload}
-
-						_, err = apigwsvc.PostToConnection(ctx, &conn)
-						if err != nil {
-							return callErr(err)
-						}
-
-					}
-
 				}
+
+				// }
 
 			} else {
 				oi := rec.Change.OldImage

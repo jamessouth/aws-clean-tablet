@@ -58,9 +58,9 @@ type liveGame struct {
 	CurrentWord  string        `dynamodbav:"currentWord"`
 	Players      livePlayerMap `dynamodbav:"players"`
 	AnswersCount int           `dynamodbav:"answersCount"`
-	SendToFront  bool          `dynamodbav:"sendToFront"`
-	HiScore      int           `dynamodbav:"hiScore"`
-	GameTied     bool          `dynamodbav:"gameTied"`
+	// SendToFront  bool          `dynamodbav:"sendToFront"`
+	HiScore  int  `dynamodbav:"hiScore"`
+	GameTied bool `dynamodbav:"gameTied"`
 }
 
 type body struct {

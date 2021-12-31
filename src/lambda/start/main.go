@@ -183,9 +183,9 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	_, err = ddbsvc.PutItem(ctx, &dynamodb.PutItemInput{
 		Item: map[string]types.AttributeValue{
-			"pk":           &types.AttributeValueMemberS{Value: "LIVEGME"},
-			"sk":           &types.AttributeValueMemberS{Value: game.Sk},
-			"sendToFront":  &types.AttributeValueMemberBOOL{Value: true},
+			"pk": &types.AttributeValueMemberS{Value: "LIVEGME"},
+			"sk": &types.AttributeValueMemberS{Value: game.Sk},
+			// "sendToFront":  &types.AttributeValueMemberBOOL{Value: true},
 			"gameTied":     &types.AttributeValueMemberBOOL{Value: true},
 			"answersCount": &types.AttributeValueMemberN{Value: "0"},
 			"hiScore":      &types.AttributeValueMemberN{Value: "0"},
