@@ -1,19 +1,10 @@
 // let dot = Js.String2.fromCharCode(8901)
 
 @react.component
-let make = (~players: array<Reducer.livePlayer>, ~currentWord, ~previousWord) => {
+let make = (~players: array<Reducer.livePlayer>, ~previousWord, ~showAnswers) => {
   Js.log2("score", players)
-  let (showAnswers, setShowAnswers) = React.useState(_ => false)
 
   let noplrs = players->Js.Array2.length
-
-  React.useEffect2(() => {
-    switch (currentWord != "", previousWord != "") {
-    | (true, false) | (false, false) | (true, true) => setShowAnswers(_ => false)
-    | (false, true) => setShowAnswers(_ => true)
-    }
-    None
-  }, (currentWord, previousWord))
 
   <div className="w-full" style={ReactDOM.Style.make(~height=j`calc(82px + (28px * $noplrs))`, ())}>
     <h2 className="text-center font-anon mb-5 text-warm-gray-100">
