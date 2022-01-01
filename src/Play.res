@@ -66,7 +66,7 @@ let make = (~wsConnected, ~game: Reducer.liveGame, ~playerColor, ~send, ~wsError
     // <p className="text-yellow-200 text-2xl font-bold">
     //   {"Get Ready"->React.string} <span className="animate-spin"> {React.string(circ)} </span>
     // </p>
-    <Word onAnimationEnd playerColor currentWord answered />
+    <Word onAnimationEnd playerColor currentWord answered showTimer={!answersPhase} />
     <Form answer_max_length answered inputText onEnter setInputText />
 
     // <Prompt></Prompt>
