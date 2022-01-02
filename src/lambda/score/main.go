@@ -5,11 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 	"os"
-	"strings"
+	"strconv"
 
-	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -89,22 +87,25 @@ type body struct {
 // 	return
 // }
 
-func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
+type sfnEvent struct {
+	Region    string   `json:"region"`
+	Endpoint  string   `json:"endpoint"`
+	Word      string   `json:"word"`
+	Gameno    string   `json:"gameno"`
+	TableName string   `json:"tableName"`
+	Conns     []string `json:"conns"`
+	Token     string   `json:"token"`
+}
 
-	fmt.Println("answer", req.Body)
+func handler(ctx context.Context, req sfnEvent) error {
 
-	reg := strings.Split(req.RequestContext.DomainName, ".")[2]
+	fmt.Printf("%s%+v\n", "score req ", req)
 
 	cfg, err := config.LoadDefaultConfig(ctx,
-		config.WithRegion(reg),
+		config.WithRegion(req.Region),
 	)
 	if err != nil {
 		return callErr(err)
-	}
-
-	tableName, ok := os.LookupEnv("tableName")
-	if !ok {
-		panic(fmt.Sprintf("%v", "can't find table name"))
 	}
 
 	sfnarn, ok := os.LookupEnv("SFNARN")
@@ -132,103 +133,43 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		return callErr(err)
 	}
 
-	marshalledAnswer, err := attributevalue.Marshal(answer{
-		PlayerID: id,
-		Answer:   body.Answer,
-	})
+	winner := false
+	const winThreshold int = 24
+
+	updatedGame := updateScores(gm)
+
+	if !updatedGame.GameTied && updatedGame.HiScore > winThreshold {
+		winner = true
+	}
+
+	marshalledPlayersMap, err := attributevalue.Marshal(updatedGame.Players)
 	if err != nil {
 		return callErr(err)
 	}
 
-	ui, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+	_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 		Key:       gameItemKey,
 		TableName: aws.String(tableName),
 		ExpressionAttributeNames: map[string]string{
-			"#PL": "players",
-			"#ID": id,
-			"#AN": "answer",
-			"#AC": "answersCount",
+			"#P": "players",
+			"#H": "hiScore",
+			"#G": "gameTied",
+			"#W": "winner",
 		},
 		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":a": marshalledAnswer,
-			":o": &types.AttributeValueMemberN{Value: "1"},
+			":p": marshalledPlayersMap,
+			":h": &types.AttributeValueMemberN{Value: strconv.Itoa(updatedGame.HiScore)},
+			":g": &types.AttributeValueMemberBOOL{Value: updatedGame.GameTied},
+			":w": &types.AttributeValueMemberBOOL{Value: winner},
 		},
-		UpdateExpression: aws.String("SET #PL.#ID.#AN = :a ADD #AC :o"),
-		ReturnValues:     types.ReturnValueAllNew,
+		UpdateExpression: aws.String("SET #P = :p, #H = :h, #G = :g, #W = :w"),
 	})
 
 	if err != nil {
 		return callErr(err)
 	}
 
-	var gm liveGame
-	err = attributevalue.UnmarshalMap(ui.Attributes, &gm)
-	if err != nil {
-		return callErr(err)
-	}
-
-	if len(gm.Players) == gm.AnswersCount {
-
-		// _, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-		// 	Key:       gameItemKey,
-		// 	TableName: aws.String(tableName),
-		// 	ExpressionAttributeNames: map[string]string{
-		// 		"#P":  "previousWord",
-		// 		"#C":  "currentWord",
-		// 		"#AC": "answersCount",
-		// 	},
-		// 	ExpressionAttributeValues: map[string]types.AttributeValue{
-		// 		":c": &types.AttributeValueMemberS{Value: gm.CurrentWord},
-		// 		":b": &types.AttributeValueMemberS{Value: ""},
-		// 		":z": &types.AttributeValueMemberN{Value: "0"},
-		// 	},
-		// 	UpdateExpression: aws.String("SET #P = :c, #C = :b, #AC = :z"),
-		// })
-
-		// if err != nil {
-		// 	return callErr(err)
-		// }
-
-		// const startDelay = 6
-		// time.Sleep(startDelay * time.Second)
-
-		// winner := false
-		// const winThreshold int = 24
-
-		// updatedGame := updateScores(gm)
-
-		// if !updatedGame.GameTied && updatedGame.HiScore > winThreshold {
-		// 	winner = true
-		// }
-
-		// marshalledPlayersMap, err := attributevalue.Marshal(updatedGame.Players)
-		// if err != nil {
-		// 	return callErr(err)
-		// }
-
-		// _, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-		// 	Key:       gameItemKey,
-		// 	TableName: aws.String(tableName),
-		// 	ExpressionAttributeNames: map[string]string{
-		// 		"#P": "players",
-		// 		"#H": "hiScore",
-		// 		"#G": "gameTied",
-		// 		"#W": "winner",
-		// 	},
-		// 	ExpressionAttributeValues: map[string]types.AttributeValue{
-		// 		":p": marshalledPlayersMap,
-		// 		":h": &types.AttributeValueMemberN{Value: strconv.Itoa(updatedGame.HiScore)},
-		// 		":g": &types.AttributeValueMemberBOOL{Value: updatedGame.GameTied},
-		// 		":w": &types.AttributeValueMemberBOOL{Value: winner},
-		// 	},
-		// 	UpdateExpression: aws.String("SET #P = :p, #H = :h, #G = :g, #W = :w"),
-		// })
-
-		// if err != nil {
-		// 	return callErr(err)
-		// }
-
-		// if !winner {
+	if !winner {
 
 		sfnInput := "{\"gameno\":\"" + body.Gameno + "\",\"currentWord\":\"" + gm.CurrentWord + "\"}"
 
@@ -249,16 +190,9 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			err := fmt.Errorf("step function %s, execution %s, failed with status %s. error code: %s. cause: %s. ", *sseo.StateMachineArn, *sseo.ExecutionArn, sseo.Status, *sseo.Error, *sseo.Cause)
 			return callErr(err)
 		}
-		// }
 	}
 
-	return events.APIGatewayProxyResponse{
-		StatusCode:        http.StatusOK,
-		Headers:           map[string]string{"Content-Type": "application/json"},
-		MultiValueHeaders: map[string][]string{},
-		Body:              "",
-		IsBase64Encoded:   false,
-	}, nil
+	return nil
 }
 
 func main() {
@@ -330,7 +264,7 @@ func adjScore(old livePlayer, incr, hiScore int, tied bool) (livePlayer, int, bo
 	}, hs, t
 }
 
-func callErr(err error) (events.APIGatewayProxyResponse, error) {
+func callErr(err error) error {
 
 	var intServErr *types.InternalServerError
 	if errors.As(err, &intServErr) {
@@ -345,12 +279,6 @@ func callErr(err error) (events.APIGatewayProxyResponse, error) {
 			apiErr.ErrorCode(), apiErr.ErrorMessage())
 	}
 
-	return events.APIGatewayProxyResponse{
-		StatusCode:        http.StatusBadRequest,
-		Headers:           map[string]string{"Content-Type": "application/json"},
-		MultiValueHeaders: map[string][]string{},
-		Body:              "",
-		IsBase64Encoded:   false,
-	}, err
+	return err
 
 }
