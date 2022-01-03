@@ -298,7 +298,14 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 		fmt.Println("reccc: ", rec)
 
 		tableName := strings.Split(rec.EventSourceArn, "/")[1]
-		ni := rec.Change.NewImage
+
+		var ni map[string]events.DynamoDBAttributeValue
+
+		if rec.EventName == dynamodbstreams.OperationTypeRemove {
+			ni = rec.Change.OldImage
+		} else {
+			ni = rec.Change.NewImage
+		}
 		fmt.Printf("%s: %+v\n", "new db ni", ni)
 
 		item, err := FromDynamoDBEventAVMap(ni)

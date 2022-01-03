@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+
 	"github.com/aws/aws-sdk-go-v2/service/sfn"
 	sfntypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
 
@@ -56,14 +56,14 @@ type liveGame struct {
 	Players      livePlayerMap `dynamodbav:"players"`
 	AnswersCount int           `dynamodbav:"answersCount"`
 	// SendToFront  bool          `dynamodbav:"sendToFront"`
-	HiScore  int  `dynamodbav:"hiScore"`
-	GameTied bool `dynamodbav:"gameTied"`
+	HiScore  string `dynamodbav:"hiScore"`
+	GameTied bool   `dynamodbav:"gameTied"`
 }
 
-type body struct {
-	Gameno string `json:"gameno"`
-	Answer string `json:"answer"`
-}
+// type body struct {
+// 	Gameno string `json:"gameno"`
+// 	Answer string `json:"answer"`
+// }
 
 // func (pm livePlayerMap) assignColors() livePlayerMap {
 // 	count := 0
@@ -90,11 +90,8 @@ type body struct {
 type sfnEvent struct {
 	Region    string   `json:"region"`
 	Endpoint  string   `json:"endpoint"`
-	Word      string   `json:"word"`
-	Gameno    string   `json:"gameno"`
 	TableName string   `json:"tableName"`
-	Conns     []string `json:"conns"`
-	Token     string   `json:"token"`
+	Game      liveGame `json:"game"`
 }
 
 func handler(ctx context.Context, req sfnEvent) error {
@@ -116,18 +113,18 @@ func handler(ctx context.Context, req sfnEvent) error {
 	ddbsvc := dynamodb.NewFromConfig(cfg)
 	sfnsvc := sfn.NewFromConfig(cfg)
 
-	id := req.RequestContext.Authorizer.(map[string]interface{})["principalId"].(string)
+	// id := req.RequestContext.Authorizer.(map[string]interface{})["principalId"].(string)
 
-	var body body
+	// var body body
 
-	err = json.Unmarshal([]byte(req.Body), &body)
-	if err != nil {
-		return callErr(err)
-	}
+	// err = json.Unmarshal([]byte(req.Body), &body)
+	// if err != nil {
+	// 	return callErr(err)
+	// }
 
 	gameItemKey, err := attributevalue.MarshalMap(key{
 		Pk: "LIVEGME",
-		Sk: body.Gameno,
+		Sk: req.Game.Sk,
 	})
 	if err != nil {
 		return callErr(err)
@@ -136,7 +133,7 @@ func handler(ctx context.Context, req sfnEvent) error {
 	winner := false
 	const winThreshold int = 24
 
-	updatedGame := updateScores(gm)
+	updatedGame := updateScores(req.Game)
 
 	if !updatedGame.GameTied && updatedGame.HiScore > winThreshold {
 		winner = true
@@ -149,7 +146,7 @@ func handler(ctx context.Context, req sfnEvent) error {
 
 	_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 		Key:       gameItemKey,
-		TableName: aws.String(tableName),
+		TableName: aws.String(req.TableName),
 		ExpressionAttributeNames: map[string]string{
 			"#P": "players",
 			"#H": "hiScore",
@@ -171,7 +168,7 @@ func handler(ctx context.Context, req sfnEvent) error {
 
 	if !winner {
 
-		sfnInput := "{\"gameno\":\"" + body.Gameno + "\",\"currentWord\":\"" + gm.CurrentWord + "\"}"
+		sfnInput := "{\"gameno\":\"" + req.Game.Sk + "\"}"
 
 		ssei := sfn.StartSyncExecutionInput{
 			StateMachineArn: aws.String(sfnarn),
