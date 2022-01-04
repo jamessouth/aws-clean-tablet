@@ -56,8 +56,8 @@ type liveGame struct {
 	Players      livePlayerMap `dynamodbav:"players"`
 	AnswersCount int           `dynamodbav:"answersCount"`
 	// SendToFront  bool          `dynamodbav:"sendToFront"`
-	HiScore  string `dynamodbav:"hiScore"`
-	GameTied bool   `dynamodbav:"gameTied"`
+	HiScore  int  `dynamodbav:"hiScore"`
+	GameTied bool `dynamodbav:"gameTied"`
 }
 
 // type body struct {
@@ -88,10 +88,10 @@ type liveGame struct {
 // }
 
 type sfnEvent struct {
-	Region    string   `json:"region"`
-	Endpoint  string   `json:"endpoint"`
-	TableName string   `json:"tableName"`
-	Game      liveGame `json:"game"`
+	Region    string `json:"region"`
+	Endpoint  string `json:"endpoint"`
+	TableName string `json:"tableName"`
+	Gameno    string `json:"gameno"`
 }
 
 func handler(ctx context.Context, req sfnEvent) error {
@@ -124,8 +124,23 @@ func handler(ctx context.Context, req sfnEvent) error {
 
 	gameItemKey, err := attributevalue.MarshalMap(key{
 		Pk: "LIVEGME",
-		Sk: req.Game.Sk,
+		Sk: req.Gameno,
 	})
+	if err != nil {
+		return callErr(err)
+	}
+
+	gm, err := ddbsvc.GetItem(ctx, &dynamodb.GetItemInput{
+		Key:       gameItemKey,
+		TableName: aws.String(req.TableName),
+	})
+
+	if err != nil {
+		return callErr(err)
+	}
+
+	var game liveGame
+	err = attributevalue.UnmarshalMap(gm.Item, &game)
 	if err != nil {
 		return callErr(err)
 	}
@@ -133,7 +148,7 @@ func handler(ctx context.Context, req sfnEvent) error {
 	winner := false
 	const winThreshold int = 24
 
-	updatedGame := updateScores(req.Game)
+	updatedGame := updateScores(game)
 
 	if !updatedGame.GameTied && updatedGame.HiScore > winThreshold {
 		winner = true
@@ -168,7 +183,7 @@ func handler(ctx context.Context, req sfnEvent) error {
 
 	if !winner {
 
-		sfnInput := "{\"gameno\":\"" + req.Game.Sk + "\"}"
+		sfnInput := "{\"gameno\":\"" + req.Gameno + "\"}"
 
 		ssei := sfn.StartSyncExecutionInput{
 			StateMachineArn: aws.String(sfnarn),
