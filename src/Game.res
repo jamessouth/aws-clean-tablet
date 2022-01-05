@@ -98,7 +98,7 @@ let make = (~game: Reducer.listGame, ~leadertoken, ~playerGame, ~send, ~class, ~
         RescriptReactRouter.push(`/game/${game.no}`)
 
         let pl = {
-          action: "start",
+          action: "prep",
           gameno: game.no,
         }
         send(. Js.Json.stringifyAny(pl))
