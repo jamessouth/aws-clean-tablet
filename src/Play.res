@@ -4,7 +4,7 @@ type answerPayload = {
   answer: string,
 }
 
-let circ = Js.String2.fromCharCode(9862)
+let circ = Js.String2.fromCharCode(8635)
 let answer_max_length = 12
 
 // ~playerName,
@@ -80,9 +80,10 @@ let make = (~wsConnected, ~game: Reducer.liveGame, ~playerColor, ~send, ~wsError
     <Scoreboard players previousWord showAnswers=answersPhase />
     {switch start {
     | true => React.null
-    | false => <p className="text-yellow-200 text-2xl font-bold text-center">
-      {"Get Ready"->React.string} <span className="animate-spin"> {React.string(circ)} </span>
-    </p>
+    | false =>
+      <span className="animate-spin text-yellow-200 text-2xl font-bold absolute left-1/2">
+        {React.string(circ)}
+      </span>
     }}
     <Word onAnimationEnd playerColor currentWord answered showTimer={start && !answersPhase} />
     <Form answer_max_length answered inputText onEnter setInputText />
