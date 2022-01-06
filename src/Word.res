@@ -7,6 +7,8 @@ let make = (~onAnimationEnd, ~playerColor, ~currentWord: string, ~answered, ~sho
   | false => "a word then a blank"
   }
 
+  let pStyle = " text-smoke-700 py-0 px-6 font-perm"
+
   React.useEffect1(() => {
     let alph = switch answered {
     | true => "70"
@@ -33,7 +35,14 @@ let make = (~onAnimationEnd, ~playerColor, ~currentWord: string, ~answered, ~sho
       </svg>
     | false => React.null
     }}
-    <p ariaLabel={blankPos} role="alert" className="text-smoke-700 text-4xl py-0 px-6 font-perm">
+    <p
+      ariaLabel={blankPos}
+      role="alert"
+      className={switch Js.String2.length(currentWord) > 12 {
+      | true => "text-3xl" ++ pStyle
+      | false => "text-4xl" ++ pStyle
+      }}
+    >
       {React.string(currentWord)}
     </p>
   </div>

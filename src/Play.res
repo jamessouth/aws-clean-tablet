@@ -16,16 +16,39 @@ let make = (~wsConnected, ~game: Reducer.liveGame, ~playerColor, ~send, ~wsError
   let (inputText, setInputText) = React.useState(_ => "")
 
   let (answersPhase, setAnswersPhase) = React.useState(_ => false)
+  let (start, setStart) = React.useState(_ => false)
 
   let {players, currentWord, previousWord} = game
 
   React.useEffect2(() => {
-    switch (currentWord != "", previousWord != "") {
-    | (_, false) | (true, true) => setAnswersPhase(_ => false)
-    | (false, true) => setAnswersPhase(_ => true)
+    Js.log("wordz")
+    switch (currentWord == "", previousWord == "") {
+    | (_, true) | (false, false) => setAnswersPhase(_ => false)
+    | (true, false) => setAnswersPhase(_ => true)
     }
     None
   }, (currentWord, previousWord))
+
+  React.useEffect1(() => {
+    Js.log("answersphase")
+    switch answersPhase {
+    | true => ()
+    | false => setAnswered(_ => false)
+    }
+    None
+  }, [answersPhase])
+
+  React.useEffect1(() => {
+    switch playerColor == "" {
+    | true => Js.Global.setTimeout(() => {
+        setStart(_ => false)
+      }, 2)->ignore
+    | false => Js.Global.setTimeout(() => {
+        setStart(_ => true)
+      }, 2000)->ignore
+    }
+    None
+  }, [playerColor])
 
   let sendAnswer = _ => {
     let pl = {
@@ -52,21 +75,16 @@ let make = (~wsConnected, ~game: Reducer.liveGame, ~playerColor, ~send, ~wsError
     Js.log("onenter")
   }
 
-  React.useEffect1(() => {
-    switch answersPhase {
-    | true => ()
-    | false => setAnswered(_ => false)
-    }
-    None
-  }, [answersPhase])
-
   <div>
     // playerName
     <Scoreboard players previousWord showAnswers=answersPhase />
-    // <p className="text-yellow-200 text-2xl font-bold">
-    //   {"Get Ready"->React.string} <span className="animate-spin"> {React.string(circ)} </span>
-    // </p>
-    <Word onAnimationEnd playerColor currentWord answered showTimer={!answersPhase} />
+    {switch start {
+    | true => React.null
+    | false => <p className="text-yellow-200 text-2xl font-bold text-center">
+      {"Get Ready"->React.string} <span className="animate-spin"> {React.string(circ)} </span>
+    </p>
+    }}
+    <Word onAnimationEnd playerColor currentWord answered showTimer={start && !answersPhase} />
     <Form answer_max_length answered inputText onEnter setInputText />
 
     // <Prompt></Prompt>
