@@ -9,16 +9,25 @@ let answer_max_length = 12
 
 // ~playerName,
 @react.component
-let make = (~wsConnected, ~game: Reducer.liveGame, ~playerColor, ~send, ~wsError) => {
+let make = (~wsConnected, ~game: Reducer.liveGame, ~playerColor, ~send, ~wsError, ~leadertoken) => {
   Js.log4("play", wsConnected, wsError, game)
 
   let (answered, setAnswered) = React.useState(_ => false)
   let (inputText, setInputText) = React.useState(_ => "")
 
   let (answersPhase, setAnswersPhase) = React.useState(_ => false)
-  let (start, setStart) = React.useState(_ => false)
+  // let (start, setStart) = React.useState(_ => false)
+  let (leader, setLeader) = React.useState(_ => false)
 
   let {players, currentWord, previousWord} = game
+
+  React.useEffect2(() => {
+    switch game.players[0].name ++ game.players[0].connid == leadertoken {
+    | true => setLeader(_ => true)
+    | false => setLeader(_ => false)
+    }
+    None
+  }, (game.players, leadertoken))
 
   React.useEffect2(() => {
     Js.log("wordz")
@@ -38,17 +47,19 @@ let make = (~wsConnected, ~game: Reducer.liveGame, ~playerColor, ~send, ~wsError
     None
   }, [answersPhase])
 
-  React.useEffect1(() => {
-    switch playerColor == "" {
-    | true => Js.Global.setTimeout(() => {
-        setStart(_ => false)
-      }, 2)->ignore
-    | false => Js.Global.setTimeout(() => {
-        setStart(_ => true)
-      }, 2000)->ignore
+  React.useEffect2(() => {
+    switch (leader, playerColor == "") {
+    | (_, true) | (false, false) => ()
+    | (true, false) => {
+        let pl: Game.startPayload = {
+          action: "start",
+          gameno: game.no,
+        }
+        send(. Js.Json.stringifyAny(pl))
+      }
     }
     None
-  }, [playerColor])
+  }, (playerColor, leader))
 
   let sendAnswer = _ => {
     let pl = {
@@ -78,15 +89,18 @@ let make = (~wsConnected, ~game: Reducer.liveGame, ~playerColor, ~send, ~wsError
   <div>
     // playerName
     <Scoreboard players previousWord showAnswers=answersPhase />
-    {switch start {
-    | true => React.null
-    | false =>
+    {switch (playerColor == "", currentWord == "") {
+    | (true, true) =>
       <span className="animate-spin text-yellow-200 text-2xl font-bold absolute left-1/2">
         {React.string(circ)}
       </span>
+    | _ => React.null
     }}
-    <Word onAnimationEnd playerColor currentWord answered showTimer={start && !answersPhase} />
-    <Form answer_max_length answered inputText onEnter setInputText />
+    <Word onAnimationEnd playerColor currentWord answered showTimer={currentWord != ""} />
+    {switch currentWord == "" {
+    | true => React.null
+    | false => <Form answer_max_length answered inputText onEnter setInputText />
+    }}
 
     // <Prompt></Prompt>
   </div>

@@ -123,7 +123,7 @@ let make = (~game: Reducer.listGame, ~leadertoken, ~playerGame, ~send, ~class, ~
         {p.name->React.string}
         {switch p.ready {
         | true =>
-          <span className="text-yellow-400 text-2xl leading-3"> {React.string(chk)} </span>
+          <span className="text-yellow-500 text-2xl leading-3"> {React.string(chk)} </span>
         | false => React.null
         }}
       </p>

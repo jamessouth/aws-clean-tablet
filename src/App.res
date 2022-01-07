@@ -148,7 +148,7 @@ let make = () => {
         }
 
       // playerName
-      | (list{"game", _gameno}, Some(_)) => <Play wsConnected game playerColor send wsError />
+      | (list{"game", _gameno}, Some(_)) => <Play wsConnected game playerColor send wsError leadertoken={playerName ++ connID}/>
 
       | (_, _) => <div> {"other"->React.string} </div> // <PageNotFound/>
       }}
