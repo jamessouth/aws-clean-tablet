@@ -122,8 +122,7 @@ let make = (~game: Reducer.listGame, ~leadertoken, ~playerGame, ~send, ~class, ~
       <p className={`text-center font-bold ${textcolor} font-anon`} key=p.connid>
         {p.name->React.string}
         {switch p.ready {
-        | true =>
-          <span className="text-yellow-500 text-2xl leading-3"> {React.string(chk)} </span>
+        | true => <span className="text-amber-300 text-2xl leading-3"> {React.string(chk)} </span>
         | false => React.null
         }}
       </p>
@@ -136,11 +135,14 @@ let make = (~game: Reducer.listGame, ~leadertoken, ~playerGame, ~send, ~class, ~
         {React.string("Starting soon...")}
       </p>
 
-    | (true, false) =>
-      <p
-        className={`absolute ${textcolor} text-3xl animate-ping font-bold left-1/2 bottom-1/4 transform -translate-x-2/4`}>
-        {count->Js.Int.toString->React.string}
-      </p>
+    | (true, false) => switch count > 0 {
+      | true =>
+        <p
+          className={`absolute ${textcolor} text-3xl animate-ping font-bold left-1/2 bottom-1/4 transform -translate-x-2/4`}>
+          {count->Js.Int.toString->React.string}
+        </p>
+      | false => React.null
+      }
 
     | (false, _) => React.null
     }}

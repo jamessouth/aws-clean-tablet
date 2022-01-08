@@ -22,8 +22,12 @@ let make = (~wsConnected, ~game: Reducer.liveGame, ~playerColor, ~send, ~wsError
   let {players, currentWord, previousWord} = game
 
   React.useEffect2(() => {
-    switch game.players[0].name ++ game.players[0].connid == leadertoken {
-    | true => setLeader(_ => true)
+    switch Js.Array2.length(game.players) > 0 {
+    | true =>
+      switch game.players[0].name ++ game.players[0].connid == leadertoken {
+      | true => setLeader(_ => true)
+      | false => setLeader(_ => false)
+      }
     | false => setLeader(_ => false)
     }
     None

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -21,9 +20,9 @@ import (
 	"github.com/aws/smithy-go"
 )
 
-type body struct {
-	Gameno string `json:"gameno"`
-}
+// type body struct {
+// 	Gameno string `json:"gameno"`
+// }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
@@ -45,23 +44,23 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	sfnsvc := sfn.NewFromConfig(cfg)
 
-	var gameno body
+	// var gameno body
 
-	err = json.Unmarshal([]byte(req.Body), &gameno)
-	if err != nil {
-		return callErr(err)
-	}
+	// err = json.Unmarshal([]byte(req.Body), &gameno)
+	// if err != nil {
+	// 	return callErr(err)
+	// }
 
-	sfnInput, err := json.Marshal(body{
-		Gameno: gameno.Gameno,
-	})
-	if err != nil {
-		return callErr(err)
-	}
+	// sfnInput, err := json.Marshal(body{
+	// 	Gameno: gameno.Gameno,
+	// })
+	// if err != nil {
+	// 	return callErr(err)
+	// }
 
 	ssei := sfn.StartSyncExecutionInput{
 		StateMachineArn: aws.String(sfnarn),
-		Input:           aws.String(string(sfnInput)),
+		Input:           aws.String(req.Body),
 	}
 
 	sse, err := sfnsvc.StartSyncExecution(ctx, &ssei)
