@@ -44,20 +44,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	sfnsvc := sfn.NewFromConfig(cfg)
 
-	// var gameno body
-
-	// err = json.Unmarshal([]byte(req.Body), &gameno)
-	// if err != nil {
-	// 	return callErr(err)
-	// }
-
-	// sfnInput, err := json.Marshal(body{
-	// 	Gameno: gameno.Gameno,
-	// })
-	// if err != nil {
-	// 	return callErr(err)
-	// }
-
 	ssei := sfn.StartSyncExecutionInput{
 		StateMachineArn: aws.String(sfnarn),
 		Input:           aws.String(req.Body),

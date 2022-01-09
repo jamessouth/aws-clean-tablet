@@ -11,9 +11,6 @@ var updateScoresTests = []struct {
 	description desc
 }{
 	{input: liveGame{
-		Pk:          "",
-		Sk:          "",
-		CurrentWord: "",
 		Players: map[string]livePlayer{
 			"p1": {
 				Name:   "",
@@ -66,14 +63,9 @@ var updateScoresTests = []struct {
 				},
 			},
 		},
-		AnswersCount: 0,
-		// SendToFront:  false,
 		HiScore:  20,
 		GameTied: false,
 	}, expected: liveGame{
-		Pk:          "",
-		Sk:          "",
-		CurrentWord: "",
 		Players: map[string]livePlayer{
 			"p1": {
 				Name:   "",
@@ -126,8 +118,6 @@ var updateScoresTests = []struct {
 				},
 			},
 		},
-		AnswersCount: 0,
-		// SendToFront:  false,
 		HiScore:  21,
 		GameTied: false,
 	}, description: desc{
@@ -137,9 +127,6 @@ var updateScoresTests = []struct {
 		Description: "no hiscore ties",
 	}},
 	{input: liveGame{
-		Pk:          "",
-		Sk:          "",
-		CurrentWord: "",
 		Players: map[string]livePlayer{
 			"p1": {
 				Name:   "",
@@ -192,14 +179,9 @@ var updateScoresTests = []struct {
 				},
 			},
 		},
-		AnswersCount: 0,
-		// SendToFront:  false,
 		HiScore:  20,
 		GameTied: false,
 	}, expected: liveGame{
-		Pk:          "",
-		Sk:          "",
-		CurrentWord: "",
 		Players: map[string]livePlayer{
 			"p1": {
 				Name:   "",
@@ -252,8 +234,6 @@ var updateScoresTests = []struct {
 				},
 			},
 		},
-		AnswersCount: 0,
-		// SendToFront:  false,
 		HiScore:  23,
 		GameTied: true,
 	}, description: desc{
@@ -263,9 +243,6 @@ var updateScoresTests = []struct {
 		Description: "hiscore ties",
 	}},
 	{input: liveGame{
-		Pk:          "",
-		Sk:          "",
-		CurrentWord: "",
 		Players: map[string]livePlayer{
 			"p1": {
 				Name:   "",
@@ -318,14 +295,9 @@ var updateScoresTests = []struct {
 				},
 			},
 		},
-		AnswersCount: 0,
-		// SendToFront:  false,
 		HiScore:  20,
 		GameTied: false,
 	}, expected: liveGame{
-		Pk:          "",
-		Sk:          "",
-		CurrentWord: "",
 		Players: map[string]livePlayer{
 			"p1": {
 				Name:   "",
@@ -378,8 +350,6 @@ var updateScoresTests = []struct {
 				},
 			},
 		},
-		AnswersCount: 0,
-		// SendToFront:  false,
 		HiScore:  20,
 		GameTied: false,
 	}, description: desc{
@@ -543,9 +513,6 @@ var gamTests = []struct {
 	description string
 }{
 	{input: liveGame{
-		Pk:          "",
-		Sk:          "",
-		CurrentWord: "",
 		Players: map[string]livePlayer{
 			"p1": {
 				Name:   "",
@@ -598,8 +565,6 @@ var gamTests = []struct {
 				},
 			},
 		},
-		AnswersCount: 0,
-		// SendToFront:  false,
 		HiScore:  21,
 		GameTied: false,
 	}, expected: map[string][]string{
@@ -607,9 +572,6 @@ var gamTests = []struct {
 		"ans2": {"444", "555"},
 	}, description: "2 answers, 5 players"},
 	{input: liveGame{
-		Pk:          "",
-		Sk:          "",
-		CurrentWord: "",
 		Players: map[string]livePlayer{
 			"p1": {
 				Name:   "",
@@ -662,8 +624,6 @@ var gamTests = []struct {
 				},
 			},
 		},
-		AnswersCount: 0,
-		// SendToFront:  false,
 		HiScore:  21,
 		GameTied: false,
 	}, expected: map[string][]string{
@@ -674,9 +634,6 @@ var gamTests = []struct {
 		"ans5": {"555"},
 	}, description: "5 answers, 5 players"},
 	{input: liveGame{
-		Pk:          "",
-		Sk:          "",
-		CurrentWord: "",
 		Players: map[string]livePlayer{
 			"p1": {
 				Name:   "",
@@ -729,8 +686,6 @@ var gamTests = []struct {
 				},
 			},
 		},
-		AnswersCount: 0,
-		// SendToFront:  false,
 		HiScore:  21,
 		GameTied: false,
 	}, expected: map[string][]string{

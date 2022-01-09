@@ -8,9 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.10.2
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.4.2
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.8.1
-	github.com/aws/aws-sdk-go-v2/service/sfn v1.8.1
 	github.com/aws/smithy-go v1.9.0
-	github.com/google/go-cmp v0.5.6
 )
 
 require (

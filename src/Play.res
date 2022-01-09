@@ -52,6 +52,20 @@ let make = (~wsConnected, ~game: Reducer.liveGame, ~playerColor, ~send, ~wsError
   }, [answersPhase])
 
   React.useEffect2(() => {
+    switch (leader, answersPhase) {
+    | (true, true) => Js.Global.setTimeout(() => {
+        let pl: Game.startPayload = {
+          action: "score",
+          game: game,
+        }
+        send(. Js.Json.stringifyAny(pl))
+      }, 8564)->ignore
+    | _ => ()
+    }
+    None
+  }, (leader, answersPhase))
+
+  React.useEffect2(() => {
     switch (leader, playerColor == "") {
     | (_, true) | (false, false) => ()
     | (true, false) => {
@@ -63,7 +77,7 @@ let make = (~wsConnected, ~game: Reducer.liveGame, ~playerColor, ~send, ~wsError
       }
     }
     None
-  }, (playerColor, leader))
+  }, (leader, playerColor))
 
   let sendAnswer = _ => {
     let pl = {

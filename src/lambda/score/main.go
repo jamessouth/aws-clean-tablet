@@ -2,11 +2,15 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -21,88 +25,47 @@ import (
 	"github.com/aws/smithy-go"
 )
 
-type key struct {
-	Pk string `dynamodbav:"pk"`
-	Sk string `dynamodbav:"sk"`
-}
-
-// type player struct {
-// 	Name   string `dynamodbav:"name"`
-// 	ConnID string `dynamodbav:"connid"`
-// 	Ready  bool   `dynamodbav:"ready"`
-// 	Color  string `dynamodbav:"color,omitempty"`
-// 	Score  int    `dynamodbav:"score"`
-// 	Answer answer `dynamodbav:"answer"`
-// }
-
 type answer struct {
 	PlayerID, Answer string
 }
 
 type livePlayer struct {
-	Name   string `dynamodbav:"name"`
-	ConnID string `dynamodbav:"connid"`
-	Color  string `dynamodbav:"color"`
-	Score  int    `dynamodbav:"score"`
-	Answer answer `dynamodbav:"answer"`
+	Name   string `json:"name"`
+	ConnID string `json:"connid"`
+	Color  string `json:"color"`
+	Score  int    `json:"score"`
+	Answer answer `json:"answer"`
 }
 
 type livePlayerMap map[string]livePlayer
 
 type liveGame struct {
-	Pk           string        `dynamodbav:"pk"`
-	Sk           string        `dynamodbav:"sk"`
-	CurrentWord  string        `dynamodbav:"currentWord"`
-	Players      livePlayerMap `dynamodbav:"players"`
-	AnswersCount int           `dynamodbav:"answersCount"`
-	// SendToFront  bool          `dynamodbav:"sendToFront"`
-	HiScore  int  `dynamodbav:"hiScore"`
-	GameTied bool `dynamodbav:"gameTied"`
+	No       string        `json:"no"`
+	Players  livePlayerMap `json:"players"`
+	HiScore  int           `json:"hiScore"`
+	GameTied bool          `json:"gameTied"`
 }
 
-// type body struct {
-// 	Gameno string `json:"gameno"`
-// 	Answer string `json:"answer"`
-// }
-
-// func (pm livePlayerMap) assignColors() livePlayerMap {
-// 	count := 0
-// 	for k, v := range pm {
-// 		v.Color = colors[count]
-// 		pm[k] = v
-// 		count++
-// 	}
-
-// 	return pm
-// }
-
-// func (pm livePlayerMap) mapToSlice() (res []sfnArrInput) {
-// 	for k, v := range pm {
-// 		res = append(res, sfnArrInput{
-// 			Id:   k,
-// 			Name: v.Name,
-// 		})
-// 	}
-
-// 	return
-// }
-
-type sfnEvent struct {
-	Region    string `json:"region"`
-	Endpoint  string `json:"endpoint"`
-	TableName string `json:"tableName"`
-	Gameno    string `json:"gameno"`
+type body struct {
+	Game liveGame `json:"game"`
 }
 
-func handler(ctx context.Context, req sfnEvent) error {
+func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
-	fmt.Printf("%s%+v\n", "score req ", req)
+	fmt.Println("score", req.Body)
+
+	reg := strings.Split(req.RequestContext.DomainName, ".")[2]
 
 	cfg, err := config.LoadDefaultConfig(ctx,
-		config.WithRegion(req.Region),
+		config.WithRegion(reg),
 	)
 	if err != nil {
 		return callErr(err)
+	}
+
+	tableName, ok := os.LookupEnv("tableName")
+	if !ok {
+		panic(fmt.Sprintf("%v", "can't find table name"))
 	}
 
 	sfnarn, ok := os.LookupEnv("SFNARN")
@@ -115,32 +78,9 @@ func handler(ctx context.Context, req sfnEvent) error {
 
 	// id := req.RequestContext.Authorizer.(map[string]interface{})["principalId"].(string)
 
-	// var body body
+	var body body
 
-	// err = json.Unmarshal([]byte(req.Body), &body)
-	// if err != nil {
-	// 	return callErr(err)
-	// }
-
-	gameItemKey, err := attributevalue.MarshalMap(key{
-		Pk: "LIVEGME",
-		Sk: req.Gameno,
-	})
-	if err != nil {
-		return callErr(err)
-	}
-
-	gm, err := ddbsvc.GetItem(ctx, &dynamodb.GetItemInput{
-		Key:       gameItemKey,
-		TableName: aws.String(req.TableName),
-	})
-
-	if err != nil {
-		return callErr(err)
-	}
-
-	var game liveGame
-	err = attributevalue.UnmarshalMap(gm.Item, &game)
+	err = json.Unmarshal([]byte(req.Body), &body)
 	if err != nil {
 		return callErr(err)
 	}
@@ -148,7 +88,7 @@ func handler(ctx context.Context, req sfnEvent) error {
 	winner := false
 	const winThreshold int = 24
 
-	updatedGame := updateScores(game)
+	updatedGame := updateScores(body.Game)
 
 	if !updatedGame.GameTied && updatedGame.HiScore > winThreshold {
 		winner = true
@@ -160,8 +100,11 @@ func handler(ctx context.Context, req sfnEvent) error {
 	}
 
 	_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-		Key:       gameItemKey,
-		TableName: aws.String(req.TableName),
+		Key: map[string]types.AttributeValue{
+			"pk": &types.AttributeValueMemberS{Value: "LIVEGME"},
+			"sk": &types.AttributeValueMemberS{Value: body.Game.No},
+		},
+		TableName: aws.String(tableName),
 		ExpressionAttributeNames: map[string]string{
 			"#P": "players",
 			"#H": "hiScore",
@@ -183,7 +126,7 @@ func handler(ctx context.Context, req sfnEvent) error {
 
 	if !winner {
 
-		sfnInput := "{\"gameno\":\"" + req.Gameno + "\"}"
+		sfnInput := "{\"gameno\":\"" + body.Game.No + "\"}"
 
 		ssei := sfn.StartSyncExecutionInput{
 			StateMachineArn: aws.String(sfnarn),
@@ -204,7 +147,13 @@ func handler(ctx context.Context, req sfnEvent) error {
 		}
 	}
 
-	return nil
+	return events.APIGatewayProxyResponse{
+		StatusCode:        http.StatusOK,
+		Headers:           map[string]string{"Content-Type": "application/json"},
+		MultiValueHeaders: map[string][]string{},
+		Body:              "",
+		IsBase64Encoded:   false,
+	}, nil
 }
 
 func main() {
@@ -276,7 +225,7 @@ func adjScore(old livePlayer, incr, hiScore int, tied bool) (livePlayer, int, bo
 	}, hs, t
 }
 
-func callErr(err error) error {
+func callErr(err error) (events.APIGatewayProxyResponse, error) {
 
 	var intServErr *types.InternalServerError
 	if errors.As(err, &intServErr) {
@@ -291,6 +240,12 @@ func callErr(err error) error {
 			apiErr.ErrorCode(), apiErr.ErrorMessage())
 	}
 
-	return err
+	return events.APIGatewayProxyResponse{
+		StatusCode:        http.StatusBadRequest,
+		Headers:           map[string]string{"Content-Type": "application/json"},
+		MultiValueHeaders: map[string][]string{},
+		Body:              "",
+		IsBase64Encoded:   false,
+	}, err
 
 }

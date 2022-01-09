@@ -29,6 +29,8 @@ type liveGame = {
   currentWord: string,
   previousWord: string,
   players: array<livePlayer>,
+  hiScore: int,
+  gameTied: bool,
 }
 
 type state = {

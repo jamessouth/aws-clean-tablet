@@ -36,28 +36,9 @@ var colors = []string{
 	"#581c87", //purple 900
 }
 
-// type key struct {
-// 	Pk string `dynamodbav:"pk"`
-// 	Sk string `dynamodbav:"sk"`
-// }
-
-// type player struct {
-// 	Name   string `dynamodbav:"name"`
-// 	ConnID string `dynamodbav:"connid"`
-// 	Ready  bool   `dynamodbav:"ready"`
-// 	Color  string `dynamodbav:"color,omitempty"`
-// 	Score  int    `dynamodbav:"score"`
-// 	Answer answer `dynamodbav:"answer"`
-// }
-
 type answer struct {
 	PlayerID, Answer string
 }
-
-// type hiScore struct {
-// 	Score int  `json:"score"`
-// 	Tie   bool `json:"tie"`
-// }
 
 type livePlayer struct {
 	Name   string `dynamodbav:"name"`
@@ -70,12 +51,8 @@ type livePlayer struct {
 type livePlayerMap map[string]livePlayer
 
 type liveGame struct {
-	// Pk           string        `dynamodbav:"pk"`
-	Sk string `dynamodbav:"sk"`
-	// CurrentWord  string        `dynamodbav:"currentWord"`
+	Sk      string        `dynamodbav:"sk"`
 	Players livePlayerMap `dynamodbav:"players"`
-	// AnswersCount int           `dynamodbav:"answersCount"`
-	// SendToFront  bool          `dynamodbav:"sendToFront"`
 }
 
 type body struct {
