@@ -4,6 +4,11 @@ type answerPayload = {
   answer: string,
 }
 
+type scorePayload = {
+  action: string,
+  game: Reducer.liveGame,
+}
+
 let circ = Js.String2.fromCharCode(8635)
 let answer_max_length = 12
 
@@ -54,7 +59,7 @@ let make = (~wsConnected, ~game: Reducer.liveGame, ~playerColor, ~send, ~wsError
   React.useEffect2(() => {
     switch (leader, answersPhase) {
     | (true, true) => Js.Global.setTimeout(() => {
-        let pl: Game.startPayload = {
+        let pl: scorePayload = {
           action: "score",
           game: game,
         }

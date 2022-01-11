@@ -60,6 +60,8 @@ let appState = () => {
       players: [],
       currentWord: "",
       previousWord: "",
+      hiScore: 0,
+      gameTied: true,
     },
   }
   let reducer = (state, action) =>
