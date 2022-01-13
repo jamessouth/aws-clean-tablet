@@ -39,15 +39,41 @@ type livePlayer struct {
 
 type livePlayerMap map[string]livePlayer
 
-type liveGame struct {
+type liveGameIn struct {
+	No       string       `json:"no"`
+	Players  []livePlayer `json:"players"`
+	HiScore  int          `json:"hiScore"`
+	GameTied bool         `json:"gameTied"`
+}
+
+type liveGameOut struct {
 	No       string        `json:"no"`
 	Players  livePlayerMap `json:"players"`
 	HiScore  int           `json:"hiScore"`
 	GameTied bool          `json:"gameTied"`
 }
 
+func slice2Map(pl []livePlayer) (res livePlayerMap) {
+	res = make(livePlayerMap)
+
+	for _, v := range pl {
+		res[v.Answer.PlayerID] = v
+	}
+
+	return
+}
+
+func getGame(g liveGameIn) liveGameOut {
+	return liveGameOut{
+		No:       g.No,
+		Players:  slice2Map(g.Players),
+		HiScore:  g.HiScore,
+		GameTied: g.GameTied,
+	}
+}
+
 type body struct {
-	Game liveGame `json:"game"`
+	Game liveGameIn `json:"game"`
 }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -76,8 +102,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	ddbsvc := dynamodb.NewFromConfig(cfg)
 	sfnsvc := sfn.NewFromConfig(cfg)
 
-	// id := req.RequestContext.Authorizer.(map[string]interface{})["principalId"].(string)
-
 	var body body
 
 	err = json.Unmarshal([]byte(req.Body), &body)
@@ -88,7 +112,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	winner := false
 	const winThreshold int = 24
 
-	updatedGame := updateScores(body.Game)
+	updatedGame := updateScores(getGame(body.Game))
 
 	if !updatedGame.GameTied && updatedGame.HiScore > winThreshold {
 		winner = true
@@ -160,22 +184,20 @@ func main() {
 	lambda.Start(handler)
 }
 
-func getAnswersMap(game liveGame) map[string][]string {
+func getAnswersMap(game liveGameOut) map[string][]string {
 	res := make(map[string][]string)
 
 	for _, v := range game.Players {
-		// fmt.Printf("%s, %v, %+v\n", "anssss", k, v)
 		res[v.Answer.Answer] = append(res[v.Answer.Answer], v.Answer.PlayerID)
 	}
 
 	return res
 }
 
-func updateScores(game liveGame) liveGame {
+func updateScores(game liveGameOut) liveGameOut {
 	answers := getAnswersMap(game)
 
 	for k, v := range answers {
-		// fmt.Printf("%s, %v, %+v\n", "anssssmapppp", k, v)
 
 		switch {
 		case len(k) < 2: // c.updateEachScore(v, 0)

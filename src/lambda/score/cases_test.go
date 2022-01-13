@@ -6,11 +6,11 @@ type desc struct {
 }
 
 var updateScoresTests = []struct {
-	input       liveGame
-	expected    liveGame
+	input       liveGameOut
+	expected    liveGameOut
 	description desc
 }{
-	{input: liveGame{
+	{input: liveGameOut{
 		Players: map[string]livePlayer{
 			"p1": {
 				Name:   "",
@@ -65,7 +65,7 @@ var updateScoresTests = []struct {
 		},
 		HiScore:  20,
 		GameTied: false,
-	}, expected: liveGame{
+	}, expected: liveGameOut{
 		Players: map[string]livePlayer{
 			"p1": {
 				Name:   "",
@@ -126,7 +126,7 @@ var updateScoresTests = []struct {
 		ThreeScores: 2,
 		Description: "no hiscore ties",
 	}},
-	{input: liveGame{
+	{input: liveGameOut{
 		Players: map[string]livePlayer{
 			"p1": {
 				Name:   "",
@@ -181,7 +181,7 @@ var updateScoresTests = []struct {
 		},
 		HiScore:  20,
 		GameTied: false,
-	}, expected: liveGame{
+	}, expected: liveGameOut{
 		Players: map[string]livePlayer{
 			"p1": {
 				Name:   "",
@@ -242,7 +242,7 @@ var updateScoresTests = []struct {
 		ThreeScores: 2,
 		Description: "hiscore ties",
 	}},
-	{input: liveGame{
+	{input: liveGameOut{
 		Players: map[string]livePlayer{
 			"p1": {
 				Name:   "",
@@ -297,7 +297,7 @@ var updateScoresTests = []struct {
 		},
 		HiScore:  20,
 		GameTied: false,
-	}, expected: liveGame{
+	}, expected: liveGameOut{
 		Players: map[string]livePlayer{
 			"p1": {
 				Name:   "",
@@ -508,11 +508,11 @@ var adjScoreTests = []struct {
 }
 
 var gamTests = []struct {
-	input       liveGame
+	input       liveGameOut
 	expected    map[string][]string
 	description string
 }{
-	{input: liveGame{
+	{input: liveGameOut{
 		Players: map[string]livePlayer{
 			"p1": {
 				Name:   "",
@@ -571,7 +571,7 @@ var gamTests = []struct {
 		"ans1": {"111", "222", "333"},
 		"ans2": {"444", "555"},
 	}, description: "2 answers, 5 players"},
-	{input: liveGame{
+	{input: liveGameOut{
 		Players: map[string]livePlayer{
 			"p1": {
 				Name:   "",
@@ -633,7 +633,7 @@ var gamTests = []struct {
 		"ans4": {"444"},
 		"ans5": {"555"},
 	}, description: "5 answers, 5 players"},
-	{input: liveGame{
+	{input: liveGameOut{
 		Players: map[string]livePlayer{
 			"p1": {
 				Name:   "",
