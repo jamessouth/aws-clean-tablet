@@ -14,8 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
-	"github.com/aws/aws-sdk-go-v2/service/sfn"
-	sfntypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
@@ -48,9 +46,8 @@ type liveGame struct {
 	CurrentWord  string        `dynamodbav:"currentWord"`
 	Players      livePlayerMap `dynamodbav:"players"`
 	AnswersCount int           `dynamodbav:"answersCount"`
-	// SendToFront  bool          `dynamodbav:"sendToFront"`
-	HiScore  int  `dynamodbav:"hiScore"`
-	GameTied bool `dynamodbav:"gameTied"`
+	HiScore      int           `dynamodbav:"hiScore"`
+	GameTied     bool          `dynamodbav:"gameTied"`
 }
 
 type body struct {
@@ -76,13 +73,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		panic(fmt.Sprintf("%v", "can't find table name"))
 	}
 
-	sfnarn, ok := os.LookupEnv("SFNARN")
-	if !ok {
-		panic(fmt.Sprintf("%v", "can't find sfn arn"))
-	}
-
 	ddbsvc := dynamodb.NewFromConfig(cfg)
-	sfnsvc := sfn.NewFromConfig(cfg)
 
 	id := req.RequestContext.Authorizer.(map[string]interface{})["principalId"].(string)
 
@@ -113,16 +104,16 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		Key:       gameItemKey,
 		TableName: aws.String(tableName),
 		ExpressionAttributeNames: map[string]string{
-			"#PL": "players",
-			"#ID": id,
-			"#AN": "answer",
-			"#AC": "answersCount",
+			"#P": "players",
+			"#I": id,
+			"#A": "answer",
+			"#C": "answersCount",
 		},
 		ExpressionAttributeValues: map[string]types.AttributeValue{
 			":a": marshalledAnswer,
 			":o": &types.AttributeValueMemberN{Value: "1"},
 		},
-		UpdateExpression: aws.String("SET #PL.#ID.#AN = :a ADD #AC :o"),
+		UpdateExpression: aws.String("SET #P.#I.#A = :a ADD #C :o"),
 		ReturnValues:     types.ReturnValueAllNew,
 	})
 
@@ -138,45 +129,25 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	if len(gm.Players) == gm.AnswersCount {
 
-		sfnInput := "{\"gameno\":\"" + body.Gameno + "\",\"currentWord\":\"" + gm.CurrentWord + "\"}"
+		_, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+			Key:       gameItemKey,
+			TableName: aws.String(tableName),
+			ExpressionAttributeNames: map[string]string{
+				"#P": "previousWord",
+				"#C": "currentWord",
+				"#A": "answersCount",
+			},
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":c": &types.AttributeValueMemberS{Value: gm.CurrentWord},
+				":b": &types.AttributeValueMemberS{Value: ""},
+				":z": &types.AttributeValueMemberN{Value: "0"},
+			},
+			UpdateExpression: aws.String("SET #P = :c, #C = :b, #A = :z"),
+		})
 
-		ssei := sfn.StartSyncExecutionInput{
-			StateMachineArn: aws.String(sfnarn),
-			Input:           aws.String(sfnInput),
-		}
-
-		sse, err := sfnsvc.StartSyncExecution(ctx, &ssei)
 		if err != nil {
 			return callErr(err)
 		}
-
-		sseo := *sse
-		fmt.Printf("\n%s, %+v\n", "sse op", sseo)
-
-		if sseo.Status == sfntypes.SyncExecutionStatusFailed || sseo.Status == sfntypes.SyncExecutionStatusTimedOut {
-			err := fmt.Errorf("step function %s, execution %s, failed with status %s. error code: %s. cause: %s. ", *sseo.StateMachineArn, *sseo.ExecutionArn, sseo.Status, *sseo.Error, *sseo.Cause)
-			return callErr(err)
-		}
-
-		// _, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-		// 	Key:       gameItemKey,
-		// 	TableName: aws.String(tableName),
-		// 	ExpressionAttributeNames: map[string]string{
-		// 		"#P":  "previousWord",
-		// 		"#C":  "currentWord",
-		// 		"#AC": "answersCount",
-		// 	},
-		// 	ExpressionAttributeValues: map[string]types.AttributeValue{
-		// 		":c": &types.AttributeValueMemberS{Value: gm.CurrentWord},
-		// 		":b": &types.AttributeValueMemberS{Value: ""},
-		// 		":z": &types.AttributeValueMemberN{Value: "0"},
-		// 	},
-		// 	UpdateExpression: aws.String("SET #P = :c, #C = :b, #AC = :z"),
-		// })
-
-		// if err != nil {
-		// 	return callErr(err)
-		// }
 
 	}
 

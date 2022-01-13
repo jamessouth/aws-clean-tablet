@@ -163,6 +163,10 @@ type modifyLiveGamePayload struct {
 }
 
 func (p modifyLiveGamePayload) MarshalJSON() ([]byte, error) {
+	if p.ModLiveGame.AnswersCount == len(p.ModLiveGame.Players) {
+		return []byte(`null`), nil
+	}
+
 	if p.ModLiveGame.AnswersCount > 0 {
 		for i, pl := range p.ModLiveGame.Players {
 			if pl.Answer.Answer != "" {
@@ -294,8 +298,9 @@ func getReturnValue(status int) events.APIGatewayProxyResponse {
 
 func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayProxyResponse, error) {
 	// fmt.Println("reqqqq", req)
-	for _, rec := range req.Records {
-		fmt.Println("reccc: ", rec)
+	for i, rec := range req.Records {
+		// fmt.Println("rekkkk", req.Records, len(req.Records))
+		fmt.Println("reccc: ", i, rec, len(req.Records))
 
 		tableName := strings.Split(rec.EventSourceArn, "/")[1]
 
@@ -497,9 +502,11 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				// if gameRecord.SendToFront {
 				pls := gameRecord.Players.getLivePlayersSlice()
 
-				if gameRecord.AnswersCount == len(gameRecord.Players) {
-					return getReturnValue(http.StatusOK), nil
-				} else if gameRecord.AnswersCount > 0 {
+				// if gameRecord.AnswersCount == len(gameRecord.Players) {
+				// 	return getReturnValue(http.StatusOK), nil
+				// } else
+
+				if gameRecord.AnswersCount > 0 {
 					pls.sortByScoreThenName()
 				} else {
 					pls.sortByAnswerThenName()
