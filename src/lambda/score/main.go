@@ -26,7 +26,8 @@ import (
 )
 
 type answer struct {
-	PlayerID, Answer string
+	PlayerID string `json,dynamodbav:"playerid"`
+	Answer   string `json,dynamodbav:"answer"`
 }
 
 type livePlayer struct {
@@ -111,8 +112,11 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	winner := false
 	const winThreshold int = 24
-
-	updatedGame := updateScores(getGame(body.Game))
+	fmt.Println("AAA", body.Game)
+	xxx := getGame(body.Game)
+	fmt.Println("BBB", xxx)
+	updatedGame := updateScores(xxx)
+	fmt.Println("CCC", updatedGame)
 
 	if !updatedGame.GameTied && updatedGame.HiScore > winThreshold {
 		winner = true
@@ -226,6 +230,7 @@ func checkHiScore(score, hiScore int, tied bool) (int, bool) {
 		tied = true
 	}
 	if score > hiScore {
+		fmt.Println("hiscore", score, hiScore, tied)
 		hiScore = score
 		tied = false
 	}

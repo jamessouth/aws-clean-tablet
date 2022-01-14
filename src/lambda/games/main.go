@@ -96,8 +96,8 @@ func (pm listPlayerMap) getListPlayersSlice() (res listPlayerList) {
 //-------------------------------------------------------------------------------
 
 type answer struct {
-	PlayerID string `json:"playerid"`
-	Answer   string `json:"answer"`
+	PlayerID string `json,dynamodbav:"playerid"`
+	Answer   string `json,dynamodbav:"answer"`
 }
 
 type livePlayer struct {

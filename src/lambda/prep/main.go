@@ -37,7 +37,8 @@ var colors = []string{
 }
 
 type answer struct {
-	PlayerID, Answer string
+	PlayerID string `json,dynamodbav:"playerid"`
+	Answer   string `json,dynamodbav:"answer"`
 }
 
 type livePlayer struct {
