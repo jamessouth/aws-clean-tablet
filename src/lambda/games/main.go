@@ -111,34 +111,33 @@ type livePlayer struct {
 
 type livePlayerList []livePlayer
 
-type livePlayerMap map[string]livePlayer
+// type livePlayerMap map[string]livePlayer
 
-type toFELiveGame struct {
-	No           string         `json:"no"`
-	CurrentWord  string         `json:"currentWord"`
-	PreviousWord string         `json:"previousWord"`
-	Players      livePlayerList `json:"players"`
-	AnswersCount int            `json:"answersCount"`
+// type toFELiveGame struct {
+// 	No           string         `json:"no"`
+// 	Players      livePlayerList `json:"players"`
+// 	CurrentWord  string         `json:"currentWord"`
+// 	PreviousWord string         `json:"previousWord"`
+// 	AnswersCount int            `json:"answersCount"`
+// }
+
+type liveGame struct {
+	Sk           string         `json,dynamodbav:"sk"`
+	Players      livePlayerList `json,dynamodbav:"players"`
+	CurrentWord  string         `json,dynamodbav:"currentWord"`
+	PreviousWord string         `json,dynamodbav:"previousWord"`
+	AnswersCount int            `json,dynamodbav:"answersCount"`
 }
 
-type fromDBLiveGame struct {
-	Sk           string        `dynamodbav:"sk"`
-	Players      livePlayerMap `dynamodbav:"players"`
-	CurrentWord  string        `dynamodbav:"currentWord"`
-	PreviousWord string        `dynamodbav:"previousWord"`
-	AnswersCount int           `dynamodbav:"answersCount"`
-	// SendToFront  bool          `dynamodbav:"sendToFront"`
-}
+// func (pm livePlayerMap) getLivePlayersSlice() (res livePlayerList) {
+// 	res = make(livePlayerList, 0)
 
-func (pm livePlayerMap) getLivePlayersSlice() (res livePlayerList) {
-	res = make(livePlayerList, 0)
+// 	for _, v := range pm {
+// 		res = append(res, v)
+// 	}
 
-	for _, v := range pm {
-		res = append(res, v)
-	}
-
-	return
-}
+// 	return
+// }
 
 type insertConnPayload struct {
 	ListGames toFEListGameList `json:"listGms"`
@@ -159,7 +158,7 @@ type modifyListGamePayload struct {
 }
 
 type modifyLiveGamePayload struct {
-	ModLiveGame toFELiveGame
+	ModLiveGame liveGame
 }
 
 func (p modifyLiveGamePayload) MarshalJSON() ([]byte, error) {
@@ -491,7 +490,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			if rec.EventName == dynamodbstreams.OperationTypeInsert || rec.EventName == dynamodbstreams.OperationTypeModify {
 
-				var gameRecord fromDBLiveGame
+				var gameRecord liveGame
 				err = attributevalue.UnmarshalMap(item, &gameRecord)
 				if err != nil {
 					return callErr(err)
@@ -500,7 +499,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				fmt.Printf("%s%+v\n", "live gammmmme ", gameRecord)
 
 				// if gameRecord.SendToFront {
-				pls := gameRecord.Players.getLivePlayersSlice()
+				pls := gameRecord.Players
 
 				// if gameRecord.AnswersCount == len(gameRecord.Players) {
 				// 	return getReturnValue(http.StatusOK), nil
@@ -513,8 +512,8 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				}
 
 				gp := modifyLiveGamePayload{
-					ModLiveGame: toFELiveGame{
-						No:           gameRecord.Sk,
+					ModLiveGame: liveGame{
+						Sk:           gameRecord.Sk,
 						CurrentWord:  gameRecord.CurrentWord,
 						PreviousWord: gameRecord.PreviousWord,
 						Players:      pls,

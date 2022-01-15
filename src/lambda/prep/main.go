@@ -42,57 +42,68 @@ type answer struct {
 }
 
 type livePlayer struct {
-	Name   string `dynamodbav:"name"`
-	ConnID string `dynamodbav:"connid"`
-	Color  string `dynamodbav:"color"`
-	Score  int    `dynamodbav:"score"`
-	Answer answer `dynamodbav:"answer"`
+	PlayerID string `json,dynamodbav:"playerid"`
+	Name     string `json,dynamodbav:"name"`
+	ConnID   string `json,dynamodbav:"connid"`
+	Color    string `json,dynamodbav:"color"`
+	Score    int    `json,dynamodbav:"score"`
+	Answer   answer `json,dynamodbav:"answer"`
 }
 
-type livePlayerMap map[string]livePlayer
-
-type liveGame struct {
-	Sk      string        `dynamodbav:"sk"`
-	Players livePlayerMap `dynamodbav:"players"`
+type listPlayerMap map[string]struct {
+	name, connID string
 }
+
+// type liveGame struct {
+// 	Sk      string        `dynamodbav:"sk"`
+// 	Players livePlayerMap `dynamodbav:"players"`
+// }
 
 type body struct {
 	Gameno string
 }
 
-type sfnArrInput struct {
-	Id    string `json:"id"`
-	Name  string `json:"name"`
-	Color string `json:"color"`
+// type sfnArrInput struct {
+// 	Id    string `json:"id"`
+// 	Name  string `json:"name"`
+// 	Color string `json:"color"`
+// }
+
+// type sfnInput struct {
+// 	Gameno  string        `json:"gameno"`
+// 	Players []sfnArrInput `json:"players"`
+// }
+
+func shuffleList(list []string, length int) []string {
+	t := time.Now().UnixNano()
+	rand.Seed(t)
+
+	rand.Shuffle(len(list), func(i, j int) {
+		list[i], list[j] = list[j], list[i]
+	})
+
+	return list[:length]
 }
 
-type sfnInput struct {
-	Gameno  string        `json:"gameno"`
-	Players []sfnArrInput `json:"players"`
-}
-
-func (pm livePlayerMap) assignColors() livePlayerMap {
+func (pm listPlayerMap) getSliceAndAssignColors() (res []livePlayer) {
 	count := 0
+	clrs := shuffleList(colors, len(colors))
 	for k, v := range pm {
-		v.Color = colors[count]
-		pm[k] = v
-		count++
-	}
-
-	return pm
-}
-
-func (pm livePlayerMap) mapToSlice() (res []sfnArrInput) {
-	for k, v := range pm {
-		res = append(res, sfnArrInput{
-			Id:    k,
-			Name:  v.Name,
-			Color: v.Color,
+		res = append(res, livePlayer{
+			PlayerID: k,
+			Name:     v.name,
+			ConnID:   v.connID,
+			Color:    clrs[count],
+			Score:    0,
+			Answer:   answer{},
 		})
+		count++
 	}
 
 	return
 }
+
+const numberOfWords int = 40
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
@@ -137,7 +148,10 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	})
 	callErr(err)
 
-	var game liveGame
+	var game struct {
+		sk      string
+		players listPlayerMap
+	}
 	err = attributevalue.UnmarshalMap(di.Attributes, &game)
 	if err != nil {
 		return callErr(err)
@@ -145,16 +159,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	fmt.Printf("%s%+v\n", "livegame ", game)
 
-	const numberOfWords int = 40
-
 	marshalledWordsList, err := attributevalue.Marshal(shuffleList(words, numberOfWords))
 	if err != nil {
 		return callErr(err)
 	}
 
-	playersMap := game.Players.assignColors()
+	playersList := game.players.getSliceAndAssignColors()
 
-	marshalledPlayersMap, err := attributevalue.Marshal(playersMap)
+	marshalledPlayersList, err := attributevalue.Marshal(playersList)
 	if err != nil {
 		return callErr(err)
 	}
@@ -162,11 +174,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	_, err = ddbsvc.PutItem(ctx, &dynamodb.PutItemInput{
 		Item: map[string]types.AttributeValue{
 			"pk":           &types.AttributeValueMemberS{Value: "LIVEGME"},
-			"sk":           &types.AttributeValueMemberS{Value: game.Sk},
+			"sk":           &types.AttributeValueMemberS{Value: game.sk},
 			"gameTied":     &types.AttributeValueMemberBOOL{Value: true},
 			"answersCount": &types.AttributeValueMemberN{Value: "0"},
 			"hiScore":      &types.AttributeValueMemberN{Value: "0"},
-			"players":      marshalledPlayersMap,
+			"currentWord":  &types.AttributeValueMemberS{Value: ""},
+			"previousWord": &types.AttributeValueMemberS{Value: ""},
+			"players":      marshalledPlayersList,
 			"wordList":     marshalledWordsList,
 		},
 		TableName: aws.String(tableName),
@@ -176,9 +190,12 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		return callErr(err)
 	}
 
-	sfnInput, err := json.Marshal(sfnInput{
+	sfnInput, err := json.Marshal(struct {
+		Gameno  string       `json:"gameno"`
+		Players []livePlayer `json:"players"`
+	}{
 		Gameno:  gameno.Gameno,
-		Players: playersMap.mapToSlice(),
+		Players: playersList,
 	})
 	if err != nil {
 		return callErr(err)
@@ -238,19 +255,6 @@ func callErr(err error) (events.APIGatewayProxyResponse, error) {
 		IsBase64Encoded:   false,
 	}, err
 
-}
-
-func shuffleList(words []string, length int) []string {
-	t := time.Now().UnixNano()
-	rand.Seed(t)
-
-	nl := append([]string(nil), words...)
-
-	rand.Shuffle(len(nl), func(i, j int) {
-		nl[i], nl[j] = nl[j], nl[i]
-	})
-
-	return nl[:length]
 }
 
 var words = []string{
