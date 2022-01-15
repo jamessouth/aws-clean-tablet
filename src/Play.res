@@ -76,7 +76,7 @@ let make = (~wsConnected, ~game: Reducer.liveGame, ~playerColor, ~send, ~wsError
     | (true, false) => {
         let pl: Game.startPayload = {
           action: "start",
-          gameno: game.no,
+          gameno: game.sk,
         }
         send(. Js.Json.stringifyAny(pl))
       }
@@ -87,7 +87,7 @@ let make = (~wsConnected, ~game: Reducer.liveGame, ~playerColor, ~send, ~wsError
   let sendAnswer = _ => {
     let pl = {
       action: "answer",
-      gameno: game.no,
+      gameno: game.sk,
       answer: inputText->Js.String2.slice(~from=0, ~to_=answer_max_length),
     }
     send(. Js.Json.stringifyAny(pl))

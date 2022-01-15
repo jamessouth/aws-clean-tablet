@@ -25,7 +25,7 @@ type listGame = {
 }
 
 type liveGame = {
-  no: string,
+  sk: string,//game no
   currentWord: string,
   previousWord: string,
   players: array<livePlayer>,
@@ -56,7 +56,7 @@ let appState = () => {
   let init = {
     gamesList: Js.Nullable.null,
     game: {
-      no: "",
+      sk: "",
       players: [],
       currentWord: "",
       previousWord: "",

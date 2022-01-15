@@ -161,6 +161,7 @@ type modifyLiveGamePayload struct {
 	ModLiveGame liveGame
 }
 
+// https://go.dev/play/p/CvniMWPoLKG
 func (p modifyLiveGamePayload) MarshalJSON() ([]byte, error) {
 	if p.ModLiveGame.AnswersCount == len(p.ModLiveGame.Players) {
 		return []byte(`null`), nil
