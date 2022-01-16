@@ -95,17 +95,17 @@ func (pm listPlayerMap) getListPlayersSlice() (res listPlayerList) {
 
 //-------------------------------------------------------------------------------
 
-type answer struct {
-	PlayerID string `json,dynamodbav:"playerid"`
-	Answer   string `json,dynamodbav:"answer"`
-}
+// type answer struct {
+// 	PlayerID string `json,dynamodbav:"playerid"`
+// 	Answer   string `json,dynamodbav:"answer"`
+// }
 
 type livePlayer struct {
 	Name        string `json:"name"`
 	ConnID      string `json:"connid"`
 	Color       string `json:"color"`
 	Score       int    `json:"score"`
-	Answer      answer `json:"answer"`
+	Answer      string `json:"answer"`
 	HasAnswered bool   `json:"hasAnswered"`
 }
 
@@ -169,8 +169,8 @@ func (p modifyLiveGamePayload) MarshalJSON() ([]byte, error) {
 
 	if p.ModLiveGame.AnswersCount > 0 {
 		for i, pl := range p.ModLiveGame.Players {
-			if pl.Answer.Answer != "" {
-				pl.Answer.Answer = ""
+			if pl.Answer != "" {
+				pl.Answer = ""
 				pl.HasAnswered = true
 				p.ModLiveGame.Players[i] = pl
 			}
@@ -204,8 +204,8 @@ func (players livePlayerList) sortByName() {
 func (players livePlayerList) sortByAnswerThenName() {
 	sort.Slice(players, func(i, j int) bool {
 		switch {
-		case players[i].Answer.Answer != players[j].Answer.Answer:
-			return players[i].Answer.Answer < players[j].Answer.Answer
+		case players[i].Answer != players[j].Answer:
+			return players[i].Answer < players[j].Answer
 		default:
 			return players[i].Name < players[j].Name
 		}

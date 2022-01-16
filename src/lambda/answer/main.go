@@ -26,29 +26,28 @@ type key struct {
 	Sk string `dynamodbav:"sk"`
 }
 
-type answer struct {
-	PlayerID string `json,dynamodbav:"playerid"`
-	Answer   string `json,dynamodbav:"answer"`
-}
+// type answer struct {
+// 	PlayerID string `json,dynamodbav:"playerid"`
+// 	Answer   string `json,dynamodbav:"answer"`
+// }
 
 type livePlayer struct {
 	Name   string `dynamodbav:"name"`
 	ConnID string `dynamodbav:"connid"`
 	Color  string `dynamodbav:"color"`
 	Score  int    `dynamodbav:"score"`
-	Answer answer `dynamodbav:"answer"`
+	Answer string `dynamodbav:"answer"`
 }
 
-type livePlayerMap map[string]livePlayer
+type livePlayerList []livePlayer
 
 type liveGame struct {
-	Pk           string        `dynamodbav:"pk"`
-	Sk           string        `dynamodbav:"sk"`
-	CurrentWord  string        `dynamodbav:"currentWord"`
-	Players      livePlayerMap `dynamodbav:"players"`
-	AnswersCount int           `dynamodbav:"answersCount"`
-	HiScore      int           `dynamodbav:"hiScore"`
-	GameTied     bool          `dynamodbav:"gameTied"`
+	Sk           string         `dynamodbav:"sk"`
+	Players      livePlayerList `dynamodbav:"players"`
+	CurrentWord  string         `dynamodbav:"currentWord"`
+	AnswersCount int            `dynamodbav:"answersCount"`
+	HiScore      int            `dynamodbav:"hiScore"`
+	GameTied     bool           `dynamodbav:"gameTied"`
 }
 
 type body struct {
@@ -93,13 +92,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		return callErr(err)
 	}
 
-	marshalledAnswer, err := attributevalue.Marshal(answer{
-		PlayerID: id,
-		Answer:   body.Answer,
-	})
-	if err != nil {
-		return callErr(err)
-	}
+	// marshalledAnswer, err := attributevalue.Marshal(answer{
+	// 	PlayerID: id,
+	// 	Answer:   body.Answer,
+	// })
+	// if err != nil {
+	// 	return callErr(err)
+	// }
 
 	ui, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 		Key:       gameItemKey,

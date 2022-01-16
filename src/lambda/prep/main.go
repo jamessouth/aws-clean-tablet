@@ -36,18 +36,13 @@ var colors = []string{
 	"#581c87", //purple 900
 }
 
-type answer struct {
-	PlayerID string `json,dynamodbav:"playerid"`
-	Answer   string `json,dynamodbav:"answer"`
-}
-
 type livePlayer struct {
 	PlayerID string `json,dynamodbav:"playerid"`
 	Name     string `json,dynamodbav:"name"`
 	ConnID   string `json,dynamodbav:"connid"`
 	Color    string `json,dynamodbav:"color"`
 	Score    int    `json,dynamodbav:"score"`
-	Answer   answer `json,dynamodbav:"answer"`
+	Answer   string `json,dynamodbav:"answer"`
 }
 
 type listPlayerMap map[string]struct {
@@ -95,7 +90,7 @@ func (pm listPlayerMap) getSliceAndAssignColors() (res []livePlayer) {
 			ConnID:   v.connID,
 			Color:    clrs[count],
 			Score:    0,
-			Answer:   answer{},
+			Answer:   "",
 		})
 		count++
 	}
