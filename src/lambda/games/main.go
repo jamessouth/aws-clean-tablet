@@ -105,6 +105,7 @@ type livePlayer struct {
 	ConnID      string `json:"connid"`
 	Color       string `json:"color"`
 	Score       int    `json:"score"`
+	Index       int    `json:"index"`
 	Answer      string `json:"answer"`
 	HasAnswered bool   `json:"hasAnswered"`
 }
@@ -195,11 +196,11 @@ func (players listPlayerList) sortByName() {
 	})
 }
 
-func (players livePlayerList) sortByName() {
-	sort.Slice(players, func(i, j int) bool {
-		return players[i].Name < players[j].Name
-	})
-}
+// func (players livePlayerList) sortByName() {
+// 	sort.Slice(players, func(i, j int) bool {
+// 		return players[i].Name < players[j].Name
+// 	})
+// }
 
 func (players livePlayerList) sortByAnswerThenName() {
 	sort.Slice(players, func(i, j int) bool {
@@ -221,6 +222,13 @@ func (players livePlayerList) sortByScoreThenName() {
 			return players[i].Name < players[j].Name
 		}
 	})
+}
+
+func (players livePlayerList) addIndex() {
+	for i, p := range players {
+		p.Index = i
+		players[i] = p
+	}
 }
 
 func FromDynamoDBEventAVMap(m map[string]events.DynamoDBAttributeValue) (res map[string]types.AttributeValue, err error) {
@@ -502,6 +510,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				// if gameRecord.SendToFront {
 				pls := gameRecord.Players
 
+				pls.addIndex()
 				// if gameRecord.AnswersCount == len(gameRecord.Players) {
 				// 	return getReturnValue(http.StatusOK), nil
 				// } else

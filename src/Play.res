@@ -2,6 +2,7 @@ type answerPayload = {
   action: string,
   gameno: string,
   answer: string,
+  index: int,
 }
 
 type scorePayload = {
@@ -85,10 +86,15 @@ let make = (~wsConnected, ~game: Reducer.liveGame, ~playerColor, ~send, ~wsError
   }, (leader, playerColor))
 
   let sendAnswer = _ => {
+      let index = switch game.players->Js.Array2.find(p => p.color == playerColor) {
+      | Some(v) => v.index,
+      | None => -1
+      } 
     let pl = {
       action: "answer",
       gameno: game.sk,
       answer: inputText->Js.String2.slice(~from=0, ~to_=answer_max_length),
+      index: index,
     }
     send(. Js.Json.stringifyAny(pl))
     setAnswered(_ => true)

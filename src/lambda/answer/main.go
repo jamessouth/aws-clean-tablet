@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -53,6 +54,7 @@ type liveGame struct {
 type body struct {
 	Gameno string `json:"gameno"`
 	Answer string `json:"answer"`
+	Index  int    `json:"index"`
 }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -75,7 +77,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	ddbsvc := dynamodb.NewFromConfig(cfg)
 
-	id := req.RequestContext.Authorizer.(map[string]interface{})["principalId"].(string)
+	// id := req.RequestContext.Authorizer.(map[string]interface{})["principalId"].(string)
 
 	var body body
 
@@ -105,15 +107,17 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		TableName: aws.String(tableName),
 		ExpressionAttributeNames: map[string]string{
 			"#P": "players",
-			"#I": id,
+			// "#I": id,
 			"#A": "answer",
 			"#C": "answersCount",
+			"#H": "hasAnswered",
 		},
 		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":a": marshalledAnswer,
+			":a": &types.AttributeValueMemberS{Value: body.Answer},
 			":o": &types.AttributeValueMemberN{Value: "1"},
+			":t": &types.AttributeValueMemberBOOL{Value: true},
 		},
-		UpdateExpression: aws.String("SET #P.#I.#A = :a ADD #C :o"),
+		UpdateExpression: aws.String("SET #P[" + strconv.Itoa(body.Index) + "].#A = :a, #P[" + strconv.Itoa(body.Index) + "].#H = :t ADD #C :o"),
 		ReturnValues:     types.ReturnValueAllNew,
 	})
 

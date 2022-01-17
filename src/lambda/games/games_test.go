@@ -53,17 +53,6 @@ func TestSortListPlayers(t *testing.T) {
 	}
 }
 
-func TestSortLivePlayers(t *testing.T) {
-	// t.Skip()
-	for _, ref := range sortLivePlayers {
-		ref.input.sortByName()
-
-		if !cmp.Equal(ref.input, ref.expected) {
-			t.Fatalf("SortLivePlayers: %s result: %v,\n  want:%v.", ref.description, ref.input, ref.expected)
-		}
-	}
-}
-
 func TestSortByAnswerThenName(t *testing.T) {
 	// t.Skip()
 	for _, ref := range sortByAnswerThenName {
