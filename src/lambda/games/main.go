@@ -170,9 +170,8 @@ func (p modifyLiveGamePayload) MarshalJSON() ([]byte, error) {
 
 	if p.ModLiveGame.AnswersCount > 0 {
 		for i, pl := range p.ModLiveGame.Players {
-			if pl.Answer != "" {
+			if pl.HasAnswered {
 				pl.Answer = ""
-				pl.HasAnswered = true
 				p.ModLiveGame.Players[i] = pl
 			}
 		}
