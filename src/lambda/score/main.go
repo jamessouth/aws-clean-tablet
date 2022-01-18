@@ -19,63 +19,37 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 
-	"github.com/aws/aws-sdk-go-v2/service/sfn"
-	sfntypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
-
 	"github.com/aws/smithy-go"
 )
 
-type answer struct {
-	PlayerID string `json,dynamodbav:"playerid"`
-	Answer   string `json,dynamodbav:"answer"`
-}
+// type answer struct {
+// 	PlayerID string `json,dynamodbav:"playerid"`
+// 	Answer   string `json,dynamodbav:"answer"`
+// }
 
 type livePlayer struct {
-	Name   string `json:"name"`
-	ConnID string `json:"connid"`
-	Color  string `json:"color"`
-	Score  int    `json:"score"`
-	Answer answer `json:"answer"`
+	PlayerID string `json:"playerid"`
+	Name     string `json:"name"`
+	ConnID   string `json:"connid"`
+	Color    string `json:"color"`
+	Score    int    `json:"score"`
+	Answer   string `json:"answer"`
 }
 
-type livePlayerMap map[string]livePlayer
+type livePlayerList []livePlayer
 
-type liveGameIn struct {
-	No       string       `json:"no"`
-	Players  []livePlayer `json:"players"`
-	HiScore  int          `json:"hiScore"`
-	GameTied bool         `json:"gameTied"`
-}
-
-type liveGameOut struct {
-	No       string        `json:"no"`
-	Players  livePlayerMap `json:"players"`
-	HiScore  int           `json:"hiScore"`
-	GameTied bool          `json:"gameTied"`
-}
-
-func slice2Map(pl []livePlayer) (res livePlayerMap) {
-	res = make(livePlayerMap)
-
-	for _, v := range pl {
-		res[v.Answer.PlayerID] = v
-	}
-
-	return
-}
-
-func getGame(g liveGameIn) liveGameOut {
-	return liveGameOut{
-		No:       g.No,
-		Players:  slice2Map(g.Players),
-		HiScore:  g.HiScore,
-		GameTied: g.GameTied,
-	}
+type liveGame struct {
+	Sk       string         `json:"sk"`
+	Players  livePlayerList `json:"players"`
+	HiScore  int            `json:"hiScore"`
+	GameTied bool           `json:"gameTied"`
 }
 
 type body struct {
-	Game liveGameIn `json:"game"`
+	Game liveGame `json:"game"`
 }
+
+const winThreshold int = 24
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
@@ -95,13 +69,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		panic(fmt.Sprintf("%v", "can't find table name"))
 	}
 
-	sfnarn, ok := os.LookupEnv("SFNARN")
-	if !ok {
-		panic(fmt.Sprintf("%v", "can't find sfn arn"))
-	}
+	// sfnarn, ok := os.LookupEnv("SFNARN")
+	// if !ok {
+	// 	panic(fmt.Sprintf("%v", "can't find sfn arn"))
+	// }
 
 	ddbsvc := dynamodb.NewFromConfig(cfg)
-	sfnsvc := sfn.NewFromConfig(cfg)
+	// sfnsvc := sfn.NewFromConfig(cfg)
 
 	var body body
 
@@ -111,18 +85,16 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	winner := false
-	const winThreshold int = 24
-	fmt.Println("AAA", body.Game)
-	xxx := getGame(body.Game)
-	fmt.Println("BBB", xxx)
-	updatedGame := updateScores(xxx)
-	fmt.Println("CCC", updatedGame)
 
-	if !updatedGame.GameTied && updatedGame.HiScore > winThreshold {
+	updatedPayersList := updateScores(body.Game.Players)
+
+	hiScore, gameTied := checkHiScore(updatedPayersList, body.Game.HiScore, body.Game.GameTied)
+
+	if !gameTied && hiScore > winThreshold {
 		winner = true
 	}
 
-	marshalledPlayersMap, err := attributevalue.Marshal(updatedGame.Players)
+	marshalledPlayersMap, err := attributevalue.Marshal(updatedPayersList)
 	if err != nil {
 		return callErr(err)
 	}
@@ -130,7 +102,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 		Key: map[string]types.AttributeValue{
 			"pk": &types.AttributeValueMemberS{Value: "LIVEGME"},
-			"sk": &types.AttributeValueMemberS{Value: body.Game.No},
+			"sk": &types.AttributeValueMemberS{Value: body.Game.Sk},
 		},
 		TableName: aws.String(tableName),
 		ExpressionAttributeNames: map[string]string{
@@ -152,28 +124,28 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		return callErr(err)
 	}
 
-	if !winner {
+	// if !winner {
 
-		sfnInput := "{\"gameno\":\"" + body.Game.No + "\"}"
+	// 	sfnInput := "{\"gameno\":\"" + body.Game.No + "\"}"
 
-		ssei := sfn.StartSyncExecutionInput{
-			StateMachineArn: aws.String(sfnarn),
-			Input:           aws.String(sfnInput),
-		}
+	// 	ssei := sfn.StartSyncExecutionInput{
+	// 		StateMachineArn: aws.String(sfnarn),
+	// 		Input:           aws.String(sfnInput),
+	// 	}
 
-		sse, err := sfnsvc.StartSyncExecution(ctx, &ssei)
-		if err != nil {
-			return callErr(err)
-		}
+	// 	sse, err := sfnsvc.StartSyncExecution(ctx, &ssei)
+	// 	if err != nil {
+	// 		return callErr(err)
+	// 	}
 
-		sseo := *sse
-		fmt.Printf("\n%s, %+v\n", "sse op", sseo)
+	// 	sseo := *sse
+	// 	fmt.Printf("\n%s, %+v\n", "sse op", sseo)
 
-		if sseo.Status == sfntypes.SyncExecutionStatusFailed || sseo.Status == sfntypes.SyncExecutionStatusTimedOut {
-			err := fmt.Errorf("step function %s, execution %s, failed with status %s. error code: %s. cause: %s. ", *sseo.StateMachineArn, *sseo.ExecutionArn, sseo.Status, *sseo.Error, *sseo.Cause)
-			return callErr(err)
-		}
-	}
+	// 	if sseo.Status == sfntypes.SyncExecutionStatusFailed || sseo.Status == sfntypes.SyncExecutionStatusTimedOut {
+	// 		err := fmt.Errorf("step function %s, execution %s, failed with status %s. error code: %s. cause: %s. ", *sseo.StateMachineArn, *sseo.ExecutionArn, sseo.Status, *sseo.Error, *sseo.Cause)
+	// 		return callErr(err)
+	// 	}
+	// }
 
 	return events.APIGatewayProxyResponse{
 		StatusCode:        http.StatusOK,
@@ -188,68 +160,89 @@ func main() {
 	lambda.Start(handler)
 }
 
-func getAnswersMap(game liveGameOut) map[string][]string {
-	res := make(map[string][]string)
+func getAnswersMap(players livePlayerList) (res map[string][]string) {
+	res = make(map[string][]string)
 
-	for _, v := range game.Players {
-		res[v.Answer.Answer] = append(res[v.Answer.Answer], v.Answer.PlayerID)
+	for _, v := range players {
+		res[v.Answer] = append(res[v.Answer], v.PlayerID)
 	}
 
-	return res
+	return
 }
 
-func updateScores(game liveGameOut) liveGameOut {
-	answers := getAnswersMap(game)
+func getScoresMap(answers map[string][]string) (res map[string]int) {
+	res = make(map[string]int)
 
 	for k, v := range answers {
-
 		switch {
-		case len(k) < 2: // c.updateEachScore(v, 0)
-
-		case len(v) > 2: // c.updateEachScore(v, 1)
+		case len(k) < 2:
 			for _, id := range v {
-				// fmt.Println("1st", id)
-				game.Players[id], game.HiScore, game.GameTied = adjScore(game.Players[id], 1, game.HiScore, game.GameTied)
+				res[id] = 0
 			}
 
-		case len(v) == 2: // c.updateEachScore(v, 3)
+		case len(v) > 2:
 			for _, id := range v {
-				// fmt.Println("2nd", id)
-				game.Players[id], game.HiScore, game.GameTied = adjScore(game.Players[id], 3, game.HiScore, game.GameTied)
+				res[id] = 1
+
 			}
 
-		default: // c.updateEachScore(v, 0)
+		case len(v) == 2:
+			for _, id := range v {
+				res[id] = 3
+			}
+
+		default:
+			for _, id := range v {
+				res[id] = 0
+			}
 		}
 	}
 
-	return game
+	return
 }
 
-func checkHiScore(score, hiScore int, tied bool) (int, bool) {
-	if score == hiScore {
-		tied = true
-	}
-	if score > hiScore {
-		fmt.Println("hiscore", score, hiScore, tied)
-		hiScore = score
-		tied = false
+func updateScores(players livePlayerList) (res livePlayerList) {
+	answers := getAnswersMap(players)
+	scores := getScoresMap(answers)
+
+	for _, p := range players {
+		res = append(res, p.adjScore(scores[p.PlayerID]))
 	}
 
-	return hiScore, tied
+	return
 }
 
-func adjScore(old livePlayer, incr, hiScore int, tied bool) (livePlayer, int, bool) {
-	score := old.Score + incr
+func checkHiScore(players livePlayerList, hiScore int, tied bool) (hi int, tie bool) {
+	for _, p := range players {
+		if p.Score == hiScore {
+			tie = true
+		}
+		if p.Score > hiScore {
+			// fmt.Println("hiscore", p.Score, hiScore, tied)
+			hi = p.Score
+			tie = false
+		}
+	}
 
-	hs, t := checkHiScore(score, hiScore, tied)
+	return
+}
+
+// , hiScore int, tied bool    , int, bool
+func (old livePlayer) adjScore(incr int) livePlayer {
+	// score := old.Score + incr
+
+	// hs, t := checkHiScore(score, hiScore, tied)
 
 	return livePlayer{
-		Name:   old.Name,
-		ConnID: old.ConnID,
-		Color:  old.Color,
-		Score:  score,
-		Answer: old.Answer,
-	}, hs, t
+		PlayerID: old.PlayerID,
+		Name:     old.Name,
+		ConnID:   old.ConnID,
+		Color:    old.Color,
+		Score:    old.Score + incr,
+		Answer:   "",
+	}
+
+	// , hs, t
 }
 
 func callErr(err error) (events.APIGatewayProxyResponse, error) {

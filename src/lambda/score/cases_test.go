@@ -6,116 +6,96 @@ type desc struct {
 }
 
 var updateScoresTests = []struct {
-	input       liveGameOut
-	expected    liveGameOut
+	input       liveGame
+	expected    liveGame
 	description desc
 }{
-	{input: liveGameOut{
-		Players: map[string]livePlayer{
-			"p1": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  10,
-				Answer: answer{
-					PlayerID: "p1",
-					Answer:   "ans1",
-				},
+	{input: liveGame{
+		Players: livePlayerList{
+			{
+				PlayerID: "p1",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    10,
+				Answer:   "ans1",
 			},
-			"p2": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  20,
-				Answer: answer{
-					PlayerID: "p2",
-					Answer:   "ans1",
-				},
+			{
+				PlayerID: "p2",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    20,
+				Answer:   "ans1",
 			},
-			"p3": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  7,
-				Answer: answer{
-					PlayerID: "p3",
-					Answer:   "ans1",
-				},
+			{
+				PlayerID: "p3",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    7,
+				Answer:   "ans1",
 			},
-			"p4": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  11,
-				Answer: answer{
-					PlayerID: "p4",
-					Answer:   "ans2",
-				},
+			{
+				PlayerID: "p4",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    11,
+				Answer:   "ans2",
 			},
-			"p5": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  15,
-				Answer: answer{
-					PlayerID: "p5",
-					Answer:   "ans2",
-				},
+			{
+				PlayerID: "p5",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    15,
+				Answer:   "ans2",
 			},
 		},
 		HiScore:  20,
 		GameTied: false,
-	}, expected: liveGameOut{
-		Players: map[string]livePlayer{
-			"p1": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  11,
-				Answer: answer{
-					PlayerID: "p1",
-					Answer:   "ans1",
-				},
+	}, expected: liveGame{
+		Players: livePlayerList{
+			{
+				PlayerID: "p1",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    11,
+				Answer:   "ans1",
 			},
-			"p2": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  21,
-				Answer: answer{
-					PlayerID: "p2",
-					Answer:   "ans1",
-				},
+			{
+				PlayerID: "p2",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    21,
+				Answer:   "ans1",
 			},
-			"p3": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  8,
-				Answer: answer{
-					PlayerID: "p3",
-					Answer:   "ans1",
-				},
+			{
+				PlayerID: "p3",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    8,
+				Answer:   "ans1",
 			},
-			"p4": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  14,
-				Answer: answer{
-					PlayerID: "p4",
-					Answer:   "ans2",
-				},
+			{
+				PlayerID: "p4",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    14,
+				Answer:   "ans2",
 			},
-			"p5": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  18,
-				Answer: answer{
-					PlayerID: "p5",
-					Answer:   "ans2",
-				},
+			{
+				PlayerID: "p5",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    18,
+				Answer:   "ans2",
 			},
 		},
 		HiScore:  21,
@@ -126,112 +106,92 @@ var updateScoresTests = []struct {
 		ThreeScores: 2,
 		Description: "no hiscore ties",
 	}},
-	{input: liveGameOut{
-		Players: map[string]livePlayer{
-			"p1": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  20,
-				Answer: answer{
-					PlayerID: "p1",
-					Answer:   "ans1",
-				},
+	{input: liveGame{
+		Players: livePlayerList{
+			{
+				PlayerID: "p1",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    20,
+				Answer:   "ans1",
 			},
-			"p2": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  20,
-				Answer: answer{
-					PlayerID: "p2",
-					Answer:   "ans1",
-				},
+			{
+				PlayerID: "p2",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    20,
+				Answer:   "ans1",
 			},
-			"p3": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  7,
-				Answer: answer{
-					PlayerID: "p3",
-					Answer:   "ans3",
-				},
+			{
+				PlayerID: "p3",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    7,
+				Answer:   "ans3",
 			},
-			"p4": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  11,
-				Answer: answer{
-					PlayerID: "p4",
-					Answer:   "ans2",
-				},
+			{
+				PlayerID: "p4",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    11,
+				Answer:   "ans2",
 			},
-			"p5": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  15,
-				Answer: answer{
-					PlayerID: "p5",
-					Answer:   "ans2",
-				},
+			{
+				PlayerID: "p5",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    15,
+				Answer:   "ans2",
 			},
 		},
 		HiScore:  20,
 		GameTied: false,
-	}, expected: liveGameOut{
-		Players: map[string]livePlayer{
-			"p1": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  23,
-				Answer: answer{
-					PlayerID: "p1",
-					Answer:   "ans1",
-				},
+	}, expected: liveGame{
+		Players: livePlayerList{
+			{
+				PlayerID: "p1",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    23,
+				Answer:   "ans1",
 			},
-			"p2": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  23,
-				Answer: answer{
-					PlayerID: "p2",
-					Answer:   "ans1",
-				},
+			{
+				PlayerID: "p2",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    23,
+				Answer:   "ans1",
 			},
-			"p3": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  7,
-				Answer: answer{
-					PlayerID: "p3",
-					Answer:   "ans3",
-				},
+			{
+				PlayerID: "p3",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    7,
+				Answer:   "ans3",
 			},
-			"p4": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  14,
-				Answer: answer{
-					PlayerID: "p4",
-					Answer:   "ans2",
-				},
+			{
+				PlayerID: "p4",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    14,
+				Answer:   "ans2",
 			},
-			"p5": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  18,
-				Answer: answer{
-					PlayerID: "p5",
-					Answer:   "ans2",
-				},
+			{
+				PlayerID: "p5",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    18,
+				Answer:   "ans2",
 			},
 		},
 		HiScore:  23,
@@ -242,112 +202,92 @@ var updateScoresTests = []struct {
 		ThreeScores: 2,
 		Description: "hiscore ties",
 	}},
-	{input: liveGameOut{
-		Players: map[string]livePlayer{
-			"p1": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  10,
-				Answer: answer{
-					PlayerID: "p1",
-					Answer:   "ans1",
-				},
+	{input: liveGame{
+		Players: livePlayerList{
+			{
+				PlayerID: "p1",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    10,
+				Answer:   "ans1",
 			},
-			"p2": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  20,
-				Answer: answer{
-					PlayerID: "p2",
-					Answer:   "ans2",
-				},
+			{
+				PlayerID: "p2",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    20,
+				Answer:   "ans2",
 			},
-			"p3": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  7,
-				Answer: answer{
-					PlayerID: "p3",
-					Answer:   "ans3",
-				},
+			{
+				PlayerID: "p3",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    7,
+				Answer:   "ans3",
 			},
-			"p4": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  11,
-				Answer: answer{
-					PlayerID: "p4",
-					Answer:   "ans4",
-				},
+			{
+				PlayerID: "p4",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    11,
+				Answer:   "ans4",
 			},
-			"p5": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  15,
-				Answer: answer{
-					PlayerID: "p5",
-					Answer:   "ans5",
-				},
+			{
+				PlayerID: "p5",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    15,
+				Answer:   "ans5",
 			},
 		},
 		HiScore:  20,
 		GameTied: false,
-	}, expected: liveGameOut{
-		Players: map[string]livePlayer{
-			"p1": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  10,
-				Answer: answer{
-					PlayerID: "p1",
-					Answer:   "ans1",
-				},
+	}, expected: liveGame{
+		Players: livePlayerList{
+			{
+				PlayerID: "p1",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    10,
+				Answer:   "ans1",
 			},
-			"p2": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  20,
-				Answer: answer{
-					PlayerID: "p2",
-					Answer:   "ans2",
-				},
+			{
+				PlayerID: "p2",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    20,
+				Answer:   "ans2",
 			},
-			"p3": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  7,
-				Answer: answer{
-					PlayerID: "p3",
-					Answer:   "ans3",
-				},
+			{
+				PlayerID: "p3",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    7,
+				Answer:   "ans3",
 			},
-			"p4": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  11,
-				Answer: answer{
-					PlayerID: "p4",
-					Answer:   "ans4",
-				},
+			{
+				PlayerID: "p4",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    11,
+				Answer:   "ans4",
 			},
-			"p5": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  15,
-				Answer: answer{
-					PlayerID: "p5",
-					Answer:   "ans5",
-				},
+			{
+				PlayerID: "p5",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    15,
+				Answer:   "ans5",
 			},
 		},
 		HiScore:  20,
@@ -427,10 +367,7 @@ var adjScoreTests = []struct {
 			ConnID: "",
 			Color:  "",
 			Score:  18,
-			Answer: answer{
-				PlayerID: "555",
-				Answer:   "ans2",
-			},
+			Answer: "ans2",
 		},
 		incr:    1,
 		hiScore: 18,
@@ -441,10 +378,7 @@ var adjScoreTests = []struct {
 			ConnID: "",
 			Color:  "",
 			Score:  19,
-			Answer: answer{
-				PlayerID: "555",
-				Answer:   "ans2",
-			},
+			Answer: "ans2",
 		},
 		HiScore: 19,
 		Tied:    false,
@@ -455,10 +389,7 @@ var adjScoreTests = []struct {
 			ConnID: "",
 			Color:  "",
 			Score:  18,
-			Answer: answer{
-				PlayerID: "555",
-				Answer:   "ans2",
-			},
+			Answer: "ans2",
 		},
 		incr:    3,
 		hiScore: 24,
@@ -469,10 +400,7 @@ var adjScoreTests = []struct {
 			ConnID: "",
 			Color:  "",
 			Score:  21,
-			Answer: answer{
-				PlayerID: "555",
-				Answer:   "ans2",
-			},
+			Answer: "ans2",
 		},
 		HiScore: 24,
 		Tied:    true,
@@ -483,10 +411,7 @@ var adjScoreTests = []struct {
 			ConnID: "",
 			Color:  "",
 			Score:  18,
-			Answer: answer{
-				PlayerID: "555",
-				Answer:   "ans2",
-			},
+			Answer: "ans2",
 		},
 		incr:    1,
 		hiScore: 19,
@@ -497,10 +422,7 @@ var adjScoreTests = []struct {
 			ConnID: "",
 			Color:  "",
 			Score:  19,
-			Answer: answer{
-				PlayerID: "555",
-				Answer:   "ans2",
-			},
+			Answer: "ans2",
 		},
 		HiScore: 19,
 		Tied:    true,
@@ -508,61 +430,51 @@ var adjScoreTests = []struct {
 }
 
 var gamTests = []struct {
-	input       liveGameOut
+	input       liveGame
 	expected    map[string][]string
 	description string
 }{
-	{input: liveGameOut{
-		Players: map[string]livePlayer{
-			"p1": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  11,
-				Answer: answer{
-					PlayerID: "111",
-					Answer:   "ans1",
-				},
+	{input: liveGame{
+		Players: livePlayerList{
+			{
+				PlayerID: "p1",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    11,
+				Answer:   "ans1",
 			},
-			"p2": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  21,
-				Answer: answer{
-					PlayerID: "222",
-					Answer:   "ans1",
-				},
+			{
+				PlayerID: "p2",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    21,
+				Answer:   "ans1",
 			},
-			"p3": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  8,
-				Answer: answer{
-					PlayerID: "333",
-					Answer:   "ans1",
-				},
+			{
+				PlayerID: "p3",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    8,
+				Answer:   "ans1",
 			},
-			"p4": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  14,
-				Answer: answer{
-					PlayerID: "444",
-					Answer:   "ans2",
-				},
+			{
+				PlayerID: "p4",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    14,
+				Answer:   "ans2",
 			},
-			"p5": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  18,
-				Answer: answer{
-					PlayerID: "555",
-					Answer:   "ans2",
-				},
+			{
+				PlayerID: "p5",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    18,
+				Answer:   "ans2",
 			},
 		},
 		HiScore:  21,
@@ -571,57 +483,47 @@ var gamTests = []struct {
 		"ans1": {"111", "222", "333"},
 		"ans2": {"444", "555"},
 	}, description: "2 answers, 5 players"},
-	{input: liveGameOut{
-		Players: map[string]livePlayer{
-			"p1": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  11,
-				Answer: answer{
-					PlayerID: "111",
-					Answer:   "ans1",
-				},
+	{input: liveGame{
+		Players: livePlayerList{
+			{
+				PlayerID: "p1",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    11,
+				Answer:   "ans1",
 			},
-			"p2": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  21,
-				Answer: answer{
-					PlayerID: "222",
-					Answer:   "ans2",
-				},
+			{
+				PlayerID: "p2",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    21,
+				Answer:   "ans2",
 			},
-			"p3": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  8,
-				Answer: answer{
-					PlayerID: "333",
-					Answer:   "ans3",
-				},
+			{
+				PlayerID: "p3",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    8,
+				Answer:   "ans3",
 			},
-			"p4": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  14,
-				Answer: answer{
-					PlayerID: "444",
-					Answer:   "ans4",
-				},
+			{
+				PlayerID: "p4",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    14,
+				Answer:   "ans4",
 			},
-			"p5": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  18,
-				Answer: answer{
-					PlayerID: "555",
-					Answer:   "ans5",
-				},
+			{
+				PlayerID: "p5",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    18,
+				Answer:   "ans5",
 			},
 		},
 		HiScore:  21,
@@ -633,57 +535,47 @@ var gamTests = []struct {
 		"ans4": {"444"},
 		"ans5": {"555"},
 	}, description: "5 answers, 5 players"},
-	{input: liveGameOut{
-		Players: map[string]livePlayer{
-			"p1": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  11,
-				Answer: answer{
-					PlayerID: "111",
-					Answer:   "ans1",
-				},
+	{input: liveGame{
+		Players: livePlayerList{
+			{
+				PlayerID: "p1",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    11,
+				Answer:   "ans1",
 			},
-			"p2": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  21,
-				Answer: answer{
-					PlayerID: "222",
-					Answer:   "ans1",
-				},
+			{
+				PlayerID: "p2",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    21,
+				Answer:   "ans1",
 			},
-			"p3": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  8,
-				Answer: answer{
-					PlayerID: "333",
-					Answer:   "ans2",
-				},
+			{
+				PlayerID: "p3",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    8,
+				Answer:   "ans2",
 			},
-			"p4": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  14,
-				Answer: answer{
-					PlayerID: "444",
-					Answer:   "ans2",
-				},
+			{
+				PlayerID: "p4",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    14,
+				Answer:   "ans2",
 			},
-			"p5": {
-				Name:   "",
-				ConnID: "",
-				Color:  "",
-				Score:  18,
-				Answer: answer{
-					PlayerID: "555",
-					Answer:   "ans3",
-				},
+			{
+				PlayerID: "p5",
+				Name:     "",
+				ConnID:   "",
+				Color:    "",
+				Score:    18,
+				Answer:   "ans3",
 			},
 		},
 		HiScore:  21,
