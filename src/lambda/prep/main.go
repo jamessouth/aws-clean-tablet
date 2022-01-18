@@ -49,25 +49,9 @@ type listPlayerMap map[string]struct {
 	name, connID string
 }
 
-// type liveGame struct {
-// 	Sk      string        `dynamodbav:"sk"`
-// 	Players livePlayerMap `dynamodbav:"players"`
-// }
-
 type body struct {
 	Gameno string
 }
-
-// type sfnArrInput struct {
-// 	Id    string `json:"id"`
-// 	Name  string `json:"name"`
-// 	Color string `json:"color"`
-// }
-
-// type sfnInput struct {
-// 	Gameno  string        `json:"gameno"`
-// 	Players []sfnArrInput `json:"players"`
-// }
 
 func shuffleList(list []string, length int) []string {
 	t := time.Now().UnixNano()
@@ -170,9 +154,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		Item: map[string]types.AttributeValue{
 			"pk":           &types.AttributeValueMemberS{Value: "LIVEGME"},
 			"sk":           &types.AttributeValueMemberS{Value: game.sk},
-			"gameTied":     &types.AttributeValueMemberBOOL{Value: true},
 			"answersCount": &types.AttributeValueMemberN{Value: "0"},
-			"hiScore":      &types.AttributeValueMemberN{Value: "0"},
 			"currentWord":  &types.AttributeValueMemberS{Value: ""},
 			"previousWord": &types.AttributeValueMemberS{Value: ""},
 			"players":      marshalledPlayersList,

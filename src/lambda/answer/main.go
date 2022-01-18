@@ -27,11 +27,6 @@ type key struct {
 	Sk string `dynamodbav:"sk"`
 }
 
-// type answer struct {
-// 	PlayerID string `json,dynamodbav:"playerid"`
-// 	Answer   string `json,dynamodbav:"answer"`
-// }
-
 type livePlayer struct {
 	Name        string `dynamodbav:"name"`
 	ConnID      string `dynamodbav:"connid"`
@@ -44,12 +39,9 @@ type livePlayer struct {
 type livePlayerList []livePlayer
 
 type liveGame struct {
-	// Sk           string         `dynamodbav:"sk"`
 	Players      livePlayerList `dynamodbav:"players"`
 	CurrentWord  string         `dynamodbav:"currentWord"`
 	AnswersCount int            `dynamodbav:"answersCount"`
-	// HiScore      int            `dynamodbav:"hiScore"`
-	// GameTied     bool           `dynamodbav:"gameTied"`
 }
 
 type body struct {
@@ -87,8 +79,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	ddbsvc := dynamodb.NewFromConfig(cfg)
 
-	// id := req.RequestContext.Authorizer.(map[string]interface{})["principalId"].(string)
-
 	var body body
 
 	err = json.Unmarshal([]byte(req.Body), &body)
@@ -104,14 +94,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		return callErr(err)
 	}
 
-	// marshalledAnswer, err := attributevalue.Marshal(answer{
-	// 	PlayerID: id,
-	// 	Answer:   body.Answer,
-	// })
-	// if err != nil {
-	// 	return callErr(err)
-	// }
-
 	index := strconv.Itoa(body.Index)
 
 	ui, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
@@ -119,7 +101,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		TableName: aws.String(tableName),
 		ExpressionAttributeNames: map[string]string{
 			"#P": "players",
-			// "#I": id,
 			"#A": "answer",
 			"#C": "answersCount",
 			"#H": "hasAnswered",

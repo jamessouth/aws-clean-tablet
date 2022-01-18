@@ -95,11 +95,6 @@ func (pm listPlayerMap) getListPlayersSlice() (res listPlayerList) {
 
 //-------------------------------------------------------------------------------
 
-// type answer struct {
-// 	PlayerID string `json,dynamodbav:"playerid"`
-// 	Answer   string `json,dynamodbav:"answer"`
-// }
-
 type livePlayer struct {
 	Name        string `json:"name"`
 	ConnID      string `json:"connid"`
@@ -112,16 +107,6 @@ type livePlayer struct {
 
 type livePlayerList []livePlayer
 
-// type livePlayerMap map[string]livePlayer
-
-// type toFELiveGame struct {
-// 	No           string         `json:"no"`
-// 	Players      livePlayerList `json:"players"`
-// 	CurrentWord  string         `json:"currentWord"`
-// 	PreviousWord string         `json:"previousWord"`
-// 	AnswersCount int            `json:"answersCount"`
-// }
-
 type liveGame struct {
 	Sk           string         `json,dynamodbav:"sk"`
 	Players      livePlayerList `json,dynamodbav:"players"`
@@ -130,16 +115,6 @@ type liveGame struct {
 	AnswersCount int            `json,dynamodbav:"answersCount"`
 	ShowAnswers  bool           `json,dynamodbav:"showAnswers"`
 }
-
-// func (pm livePlayerMap) getLivePlayersSlice() (res livePlayerList) {
-// 	res = make(livePlayerList, 0)
-
-// 	for _, v := range pm {
-// 		res = append(res, v)
-// 	}
-
-// 	return
-// }
 
 type insertConnPayload struct {
 	ListGames toFEListGameList `json:"listGms"`
@@ -195,12 +170,6 @@ func (players listPlayerList) sortByName() {
 		return players[i].Name < players[j].Name
 	})
 }
-
-// func (players livePlayerList) sortByName() {
-// 	sort.Slice(players, func(i, j int) bool {
-// 		return players[i].Name < players[j].Name
-// 	})
-// }
 
 func (players livePlayerList) sortByAnswerThenName() {
 	sort.Slice(players, func(i, j int) bool {

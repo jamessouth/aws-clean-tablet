@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -22,11 +21,6 @@ import (
 	"github.com/aws/smithy-go"
 )
 
-// type answer struct {
-// 	PlayerID string `json,dynamodbav:"playerid"`
-// 	Answer   string `json,dynamodbav:"answer"`
-// }
-
 type livePlayer struct {
 	PlayerID string `json:"playerid"`
 	Name     string `json:"name"`
@@ -39,14 +33,20 @@ type livePlayer struct {
 type livePlayerList []livePlayer
 
 type liveGame struct {
-	Sk       string         `json:"sk"`
-	Players  livePlayerList `json:"players"`
-	HiScore  int            `json:"hiScore"`
-	GameTied bool           `json:"gameTied"`
+	Sk      string         `json:"sk"`
+	Players livePlayerList `json:"players"`
 }
 
 type body struct {
 	Game liveGame `json:"game"`
+}
+
+type master struct {
+	Players livePlayerList
+	Answers map[string][]string
+	Scores  map[string]int
+	Hi      int
+	Tied    bool
 }
 
 const winThreshold int = 24
@@ -86,15 +86,21 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	winner := false
 
-	updatedPlayersList := body.Game.Players.updateScores()
+	scoreData := master{
+		Players: body.Game.Players,
+		Answers: map[string][]string{},
+		Scores:  map[string]int{},
+		Hi:      0,
+		Tied:    false,
+	}
 
-	hiScore, gameTied := updatedPlayersList.checkHiScore()
+	updatedScoreData := scoreData.getAnswersMap().getScoresMap().updateScores().checkHiScore()
 
-	if !gameTied && hiScore > winThreshold {
+	if !updatedScoreData.Tied && updatedScoreData.Hi > winThreshold {
 		winner = true
 	}
 
-	marshalledPlayersMap, err := attributevalue.Marshal(updatedPlayersList)
+	marshalledPlayersMap, err := attributevalue.Marshal(updatedScoreData.Players)
 	if err != nil {
 		return callErr(err)
 	}
@@ -107,17 +113,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		TableName: aws.String(tableName),
 		ExpressionAttributeNames: map[string]string{
 			"#P": "players",
-			"#H": "hiScore",
-			"#G": "gameTied",
 			"#W": "winner",
 		},
 		ExpressionAttributeValues: map[string]types.AttributeValue{
 			":p": marshalledPlayersMap,
-			":h": &types.AttributeValueMemberN{Value: strconv.Itoa(hiScore)},
-			":g": &types.AttributeValueMemberBOOL{Value: gameTied},
 			":w": &types.AttributeValueMemberBOOL{Value: winner},
 		},
-		UpdateExpression: aws.String("SET #P = :p, #H = :h, #G = :g, #W = :w"),
+		UpdateExpression: aws.String("SET #P = :p, #W = :w"),
 	})
 
 	if err != nil {
@@ -160,87 +162,67 @@ func main() {
 	lambda.Start(handler)
 }
 
-func (players livePlayerList) getAnswersMap() (res map[string][]string) {
-	res = make(map[string][]string)
+func (data master) getAnswersMap() master {
 
-	for _, v := range players {
-		res[v.Answer] = append(res[v.Answer], v.PlayerID)
+	for _, v := range data.Players {
+		data.Answers[v.Answer] = append(data.Answers[v.Answer], v.PlayerID)
 	}
 
-	return
+	return data
 }
 
-func getScoresMap(answers map[string][]string) (res map[string]int) {
-	res = make(map[string]int)
+func (data master) getScoresMap() master {
 
-	for k, v := range answers {
+	for k, v := range data.Answers {
 		switch {
 		case len(k) < 2:
 			for _, id := range v {
-				res[id] = 0
+				data.Scores[id] = 0
 			}
 
 		case len(v) > 2:
 			for _, id := range v {
-				res[id] = 1
+				data.Scores[id] = 1
 
 			}
 
 		case len(v) == 2:
 			for _, id := range v {
-				res[id] = 3
+				data.Scores[id] = 3
 			}
 
 		default:
 			for _, id := range v {
-				res[id] = 0
+				data.Scores[id] = 0
 			}
 		}
 	}
 
-	return
+	return data
 }
 
-func (players livePlayerList) updateScores() (res livePlayerList) {
-	answers := players.getAnswersMap()
-	scores := getScoresMap(answers)
+func (data master) updateScores() master {
 
-	for _, p := range players {
-		res = append(res, p.adjScoreAndClearAnswer(scores[p.PlayerID]))
+	for i, p := range data.Players {
+		p.Score = p.Score + data.Scores[p.PlayerID]
+		p.Answer = ""
+		data.Players[i] = p
 	}
 
-	return
+	return data
 }
 
-func (players livePlayerList) checkHiScore() (hi int, tie bool) {
-	for _, p := range players {
-		if p.Score == hi {
-			tie = true
+func (data master) checkHiScore() master {
+	for _, p := range data.Players {
+		if p.Score == data.Hi {
+			data.Tied = true
 		}
-		if p.Score > hi {
-			hi = p.Score
+		if p.Score > data.Hi {
+			data.Hi = p.Score
 		}
 	}
 
-	return
-}
-
-// , hiScore int, tied bool    , int, bool
-func (old livePlayer) adjScoreAndClearAnswer(incr int) livePlayer {
-	// score := old.Score + incr
-
-	// hs, t := checkHiScore(score, hiScore, tied)
-
-	return livePlayer{
-		PlayerID: old.PlayerID,
-		Name:     old.Name,
-		ConnID:   old.ConnID,
-		Color:    old.Color,
-		Score:    old.Score + incr,
-		Answer:   "",
-	}
-
-	// , hs, t
+	return data
 }
 
 func callErr(err error) (events.APIGatewayProxyResponse, error) {
