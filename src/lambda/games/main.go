@@ -128,6 +128,7 @@ type liveGame struct {
 	CurrentWord  string         `json,dynamodbav:"currentWord"`
 	PreviousWord string         `json,dynamodbav:"previousWord"`
 	AnswersCount int            `json,dynamodbav:"answersCount"`
+	ShowAnswers  bool           `json,dynamodbav:"showAnswers"`
 }
 
 // func (pm livePlayerMap) getLivePlayersSlice() (res livePlayerList) {

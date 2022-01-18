@@ -32,6 +32,7 @@ type liveGame = {
   players: array<livePlayer>,
   hiScore: int,
   gameTied: bool,
+  showAnswers: bool,
 }
 
 type state = {
@@ -63,6 +64,7 @@ let appState = () => {
       previousWord: "",
       hiScore: 0,
       gameTied: true,
+      showAnswers: false,
     },
   }
   let reducer = (state, action) =>

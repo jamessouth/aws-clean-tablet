@@ -1,7 +1,9 @@
 @send external blur: Dom.element => unit = "blur"
 
+let sectionClass = "relative flex flex-col justify-between items-center h-40 text-xl mb-12 "
+
 @react.component
-let make = (~answer_max_length, ~answered, ~inputText, ~onEnter, ~setInputText) => {
+let make = (~answer_max_length, ~answered, ~inputText, ~onEnter, ~setInputText, ~currentWord) => {
   let inputBox = React.useRef(Js.Nullable.null)
   let input_min_length = 2
 
@@ -58,7 +60,11 @@ let make = (~answer_max_length, ~answered, ~inputText, ~onEnter, ~setInputText) 
     None
   }, (inputText, answer_max_length, answered, isValidInput))
 
-  <section className="relative flex flex-col justify-between items-center h-40 text-xl mb-12">
+  <section
+    className={switch currentWord == "" {
+    | true => sectionClass ++ "invisible"
+    | false => sectionClass
+    }}>
     {switch isValidInput {
     | true => React.null
     | false =>

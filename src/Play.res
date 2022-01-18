@@ -20,45 +20,24 @@ let make = (~wsConnected, ~game: Reducer.liveGame, ~playerColor, ~send, ~wsError
 
   let (answered, setAnswered) = React.useState(_ => false)
   let (inputText, setInputText) = React.useState(_ => "")
-
-  let (answersPhase, setAnswersPhase) = React.useState(_ => false)
-  // let (start, setStart) = React.useState(_ => false)
   let (leader, setLeader) = React.useState(_ => false)
 
-  let {players, currentWord, previousWord} = game
+  let {players, currentWord, previousWord, showAnswers, sk} = game
 
   React.useEffect2(() => {
-    switch Js.Array2.length(game.players) > 0 {
+    switch Js.Array2.length(players) > 0 {
     | true =>
-      switch game.players[0].name ++ game.players[0].connid == leadertoken {
+      switch players[0].name ++ players[0].connid == leadertoken {
       | true => setLeader(_ => true)
       | false => setLeader(_ => false)
       }
     | false => setLeader(_ => false)
     }
     None
-  }, (game.players, leadertoken))
+  }, (players, leadertoken))
 
   React.useEffect2(() => {
-    Js.log("wordz")
-    switch (currentWord == "", previousWord == "") {
-    | (_, true) | (false, false) => setAnswersPhase(_ => false)
-    | (true, false) => setAnswersPhase(_ => true)
-    }
-    None
-  }, (currentWord, previousWord))
-
-  React.useEffect1(() => {
-    Js.log("answersphase")
-    switch answersPhase {
-    | true => ()
-    | false => setAnswered(_ => false)
-    }
-    None
-  }, [answersPhase])
-
-  React.useEffect2(() => {
-    switch (leader, answersPhase) {
+    switch (leader, showAnswers) {
     | (true, true) => Js.Global.setTimeout(() => {
         let pl: scorePayload = {
           action: "score",
@@ -66,10 +45,11 @@ let make = (~wsConnected, ~game: Reducer.liveGame, ~playerColor, ~send, ~wsError
         }
         send(. Js.Json.stringifyAny(pl))
       }, 8564)->ignore
-    | _ => ()
+    | (_, false) => setAnswered(_ => false)
+    | (false, true) => ()
     }
     None
-  }, (leader, answersPhase))
+  }, (leader, showAnswers))
 
   React.useEffect2(() => {
     switch (leader, playerColor == "") {
@@ -77,7 +57,7 @@ let make = (~wsConnected, ~game: Reducer.liveGame, ~playerColor, ~send, ~wsError
     | (true, false) => {
         let pl: Game.startPayload = {
           action: "start",
-          gameno: game.sk,
+          gameno: sk,
         }
         send(. Js.Json.stringifyAny(pl))
       }
@@ -86,13 +66,13 @@ let make = (~wsConnected, ~game: Reducer.liveGame, ~playerColor, ~send, ~wsError
   }, (leader, playerColor))
 
   let sendAnswer = _ => {
-      let index = switch game.players->Js.Array2.find(p => p.color == playerColor) {
-      | Some(v) => v.index,
-      | None => -1
-      } 
+    let index = switch players->Js.Array2.find(p => p.color == playerColor) {
+    | Some(v) => v.index
+    | None => -1
+    }
     let pl = {
       action: "answer",
-      gameno: game.sk,
+      gameno: sk,
       answer: inputText->Js.String2.slice(~from=0, ~to_=answer_max_length),
       index: index,
     }
@@ -117,7 +97,7 @@ let make = (~wsConnected, ~game: Reducer.liveGame, ~playerColor, ~send, ~wsError
 
   <div>
     // playerName
-    <Scoreboard players previousWord showAnswers=answersPhase />
+    <Scoreboard players previousWord showAnswers />
     {switch (playerColor == "", currentWord == "") {
     | (true, true) =>
       <span className="animate-spin text-yellow-200 text-2xl font-bold absolute left-1/2">
@@ -126,10 +106,7 @@ let make = (~wsConnected, ~game: Reducer.liveGame, ~playerColor, ~send, ~wsError
     | _ => React.null
     }}
     <Word onAnimationEnd playerColor currentWord answered showTimer={currentWord != ""} />
-    {switch currentWord == "" {
-    | true => React.null
-    | false => <Form answer_max_length answered inputText onEnter setInputText />
-    }}
+    <Form answer_max_length answered inputText onEnter setInputText currentWord />
 
     // <Prompt></Prompt>
   </div>
