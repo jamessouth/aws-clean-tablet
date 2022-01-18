@@ -86,15 +86,15 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	winner := false
 
-	updatedPayersList := updateScores(body.Game.Players)
+	updatedPlayersList := body.Game.Players.updateScores()
 
-	hiScore, gameTied := checkHiScore(updatedPayersList, body.Game.HiScore, body.Game.GameTied)
+	hiScore, gameTied := updatedPlayersList.checkHiScore()
 
 	if !gameTied && hiScore > winThreshold {
 		winner = true
 	}
 
-	marshalledPlayersMap, err := attributevalue.Marshal(updatedPayersList)
+	marshalledPlayersMap, err := attributevalue.Marshal(updatedPlayersList)
 	if err != nil {
 		return callErr(err)
 	}
@@ -113,8 +113,8 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		},
 		ExpressionAttributeValues: map[string]types.AttributeValue{
 			":p": marshalledPlayersMap,
-			":h": &types.AttributeValueMemberN{Value: strconv.Itoa(updatedGame.HiScore)},
-			":g": &types.AttributeValueMemberBOOL{Value: updatedGame.GameTied},
+			":h": &types.AttributeValueMemberN{Value: strconv.Itoa(hiScore)},
+			":g": &types.AttributeValueMemberBOOL{Value: gameTied},
 			":w": &types.AttributeValueMemberBOOL{Value: winner},
 		},
 		UpdateExpression: aws.String("SET #P = :p, #H = :h, #G = :g, #W = :w"),
@@ -160,7 +160,7 @@ func main() {
 	lambda.Start(handler)
 }
 
-func getAnswersMap(players livePlayerList) (res map[string][]string) {
+func (players livePlayerList) getAnswersMap() (res map[string][]string) {
 	res = make(map[string][]string)
 
 	for _, v := range players {
@@ -201,26 +201,24 @@ func getScoresMap(answers map[string][]string) (res map[string]int) {
 	return
 }
 
-func updateScores(players livePlayerList) (res livePlayerList) {
-	answers := getAnswersMap(players)
+func (players livePlayerList) updateScores() (res livePlayerList) {
+	answers := players.getAnswersMap()
 	scores := getScoresMap(answers)
 
 	for _, p := range players {
-		res = append(res, p.adjScore(scores[p.PlayerID]))
+		res = append(res, p.adjScoreAndClearAnswer(scores[p.PlayerID]))
 	}
 
 	return
 }
 
-func checkHiScore(players livePlayerList, hiScore int, tied bool) (hi int, tie bool) {
+func (players livePlayerList) checkHiScore() (hi int, tie bool) {
 	for _, p := range players {
-		if p.Score == hiScore {
+		if p.Score == hi {
 			tie = true
 		}
-		if p.Score > hiScore {
-			// fmt.Println("hiscore", p.Score, hiScore, tied)
+		if p.Score > hi {
 			hi = p.Score
-			tie = false
 		}
 	}
 
@@ -228,7 +226,7 @@ func checkHiScore(players livePlayerList, hiScore int, tied bool) (hi int, tie b
 }
 
 // , hiScore int, tied bool    , int, bool
-func (old livePlayer) adjScore(incr int) livePlayer {
+func (old livePlayer) adjScoreAndClearAnswer(incr int) livePlayer {
 	// score := old.Score + incr
 
 	// hs, t := checkHiScore(score, hiScore, tied)
