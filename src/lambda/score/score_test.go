@@ -9,50 +9,39 @@ import (
 func TestGetAnswersMap(t *testing.T) {
 	// t.Skip()
 	for _, test := range bunchOfTests {
-		act := test.input.getAnswersMap()
-
-		if !cmp.Equal(act, test.expected) {
-			t.Errorf("FAIL - getAnswersMap %s act: %+v\n; expected: %+v\n",
-				test.description, act, test.expected)
+		if act := test.input.getAnswersMap(); !cmp.Equal(act.Answers, test.expected.Answers) {
+			t.Errorf("FAIL - getAnswersMap - %s\n act: %+v\n exp: %+v\n",
+				test.description.Description, act.Answers, test.expected.Answers)
 		}
-		t.Logf("PASS getAnswersMap - %s", test.description)
 	}
 }
 
 func TestGetScoresMap(t *testing.T) {
 	// t.Skip()
 	for _, test := range bunchOfTests {
-		if act := test.input.getScoresMap(); !cmp.Equal(act, test.expected) {
-			t.Errorf("FAIL - getScoresMap(%s: %+v\n), expected: %+v\n.",
-				test.description.Description, act, test.expected)
+		if act := test.input.getAnswersMap().getScoresMap(); !cmp.Equal(act.Scores, test.expected.Scores) {
+			t.Errorf("FAIL - getScoresMap - %s\n act: %+v\n exp: %+v\n",
+				test.description.Description, act.Scores, test.expected.Scores)
 		}
-		t.Logf("PASS getScoresMap - %s", test.description.Description)
 	}
 }
 
 func TestUpdateScoresAndClearAnswers(t *testing.T) {
 	// t.Skip()
 	for _, test := range bunchOfTests {
-		act := test.input.updateScoresAndClearAnswers()
-
-		if !cmp.Equal(act, test.expected) {
-			t.Errorf("FAIL - updateScoresAndClearAnswers %s act: %+v\n; expected: %+v\n",
-				test.description, act, test.expected)
+		if act := test.input.getAnswersMap().getScoresMap().updateScoresAndClearAnswers(); !cmp.Equal(act.Players, test.expected.Players) {
+			t.Errorf("FAIL - updateScoresAndClearAnswers - %s\n act: %+v\n exp: %+v\n",
+				test.description.Description, act.Players, test.expected.Players)
 		}
-
-		t.Logf("PASS updateScoresAndClearAnswers - %s", test.description)
 	}
 }
 
 func TestGetHiScoreAndTie(t *testing.T) {
 	// t.Skip()
 	for _, test := range bunchOfTests {
-		act := test.input.getHiScoreAndTie()
-
-		if !cmp.Equal(act, test.expected) {
-			t.Errorf("FAIL - getHiScoreAndTie %s act: %+v\n; expected: %+v\n",
-				test.description, act, test.expected)
+		if act := test.input.getAnswersMap().getScoresMap().updateScoresAndClearAnswers().getHiScoreAndTie(); !cmp.Equal(act, test.expected) {
+			t.Errorf("FAIL - getHiScoreAndTie - %s\n act: %+v\n exp: %+v\n",
+				test.description.Description, act, test.expected)
 		}
-		t.Logf("PASS getHiScoreAndTie - %s", test.description)
 	}
 }
