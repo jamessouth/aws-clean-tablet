@@ -41,15 +41,21 @@ type body struct {
 	Game liveGame `json:"game"`
 }
 
-type master struct {
-	Players livePlayerList
-	Answers map[string][]string
-	Scores  map[string]int
-	Hi      int
-	Tied    bool
+type game struct {
+	Players  livePlayerList `dynamodbav:"players"`
+	Answers  map[string][]string
+	Scores   map[string]int
+	HiScore  int
+	GameTied bool
 }
 
-const winThreshold int = 24
+const (
+	zeroPoints int = iota
+	onePoint
+	twoPoints
+	threePoints
+	winThreshold int = 24
+)
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
@@ -86,17 +92,17 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	winner := false
 
-	scoreData := master{
-		Players: body.Game.Players,
-		Answers: map[string][]string{},
-		Scores:  map[string]int{},
-		Hi:      0,
-		Tied:    false,
+	scoreData := game{
+		Players:  body.Game.Players,
+		Answers:  map[string][]string{},
+		Scores:   map[string]int{},
+		HiScore:  zeroPoints,
+		GameTied: false,
 	}
 
-	updatedScoreData := scoreData.getAnswersMap().getScoresMap().updateScores().checkHiScore()
+	updatedScoreData := scoreData.getAnswersMap().getScoresMap().updateScoresAndClearAnswers().getHiScoreAndTie()
 
-	if !updatedScoreData.Tied && updatedScoreData.Hi > winThreshold {
+	if !updatedScoreData.GameTied && updatedScoreData.HiScore > winThreshold {
 		winner = true
 	}
 
@@ -162,8 +168,7 @@ func main() {
 	lambda.Start(handler)
 }
 
-func (data master) getAnswersMap() master {
-
+func (data game) getAnswersMap() game {
 	for _, v := range data.Players {
 		data.Answers[v.Answer] = append(data.Answers[v.Answer], v.PlayerID)
 	}
@@ -171,29 +176,24 @@ func (data master) getAnswersMap() master {
 	return data
 }
 
-func (data master) getScoresMap() master {
-
+func (data game) getScoresMap() game {
 	for k, v := range data.Answers {
 		switch {
 		case len(k) < 2:
 			for _, id := range v {
-				data.Scores[id] = 0
+				data.Scores[id] = zeroPoints
 			}
-
 		case len(v) > 2:
 			for _, id := range v {
-				data.Scores[id] = 1
-
+				data.Scores[id] = onePoint
 			}
-
 		case len(v) == 2:
 			for _, id := range v {
-				data.Scores[id] = 3
+				data.Scores[id] = threePoints
 			}
-
 		default:
 			for _, id := range v {
-				data.Scores[id] = 0
+				data.Scores[id] = zeroPoints
 			}
 		}
 	}
@@ -201,10 +201,9 @@ func (data master) getScoresMap() master {
 	return data
 }
 
-func (data master) updateScores() master {
-
+func (data game) updateScoresAndClearAnswers() game {
 	for i, p := range data.Players {
-		p.Score = p.Score + data.Scores[p.PlayerID]
+		p.Score += data.Scores[p.PlayerID]
 		p.Answer = ""
 		data.Players[i] = p
 	}
@@ -212,13 +211,13 @@ func (data master) updateScores() master {
 	return data
 }
 
-func (data master) checkHiScore() master {
+func (data game) getHiScoreAndTie() game {
 	for _, p := range data.Players {
-		if p.Score == data.Hi {
-			data.Tied = true
+		if p.Score == data.HiScore {
+			data.GameTied = true
 		}
-		if p.Score > data.Hi {
-			data.Hi = p.Score
+		if p.Score > data.HiScore {
+			data.HiScore = p.Score
 		}
 	}
 
