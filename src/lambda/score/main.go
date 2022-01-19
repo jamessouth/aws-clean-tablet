@@ -75,13 +75,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		panic(fmt.Sprintf("%v", "can't find table name"))
 	}
 
-	// sfnarn, ok := os.LookupEnv("SFNARN")
-	// if !ok {
-	// 	panic(fmt.Sprintf("%v", "can't find sfn arn"))
-	// }
-
 	ddbsvc := dynamodb.NewFromConfig(cfg)
-	// sfnsvc := sfn.NewFromConfig(cfg)
 
 	var body body
 
@@ -131,29 +125,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	if err != nil {
 		return callErr(err)
 	}
-
-	// if !winner {
-
-	// 	sfnInput := "{\"gameno\":\"" + body.Game.No + "\"}"
-
-	// 	ssei := sfn.StartSyncExecutionInput{
-	// 		StateMachineArn: aws.String(sfnarn),
-	// 		Input:           aws.String(sfnInput),
-	// 	}
-
-	// 	sse, err := sfnsvc.StartSyncExecution(ctx, &ssei)
-	// 	if err != nil {
-	// 		return callErr(err)
-	// 	}
-
-	// 	sseo := *sse
-	// 	fmt.Printf("\n%s, %+v\n", "sse op", sseo)
-
-	// 	if sseo.Status == sfntypes.SyncExecutionStatusFailed || sseo.Status == sfntypes.SyncExecutionStatusTimedOut {
-	// 		err := fmt.Errorf("step function %s, execution %s, failed with status %s. error code: %s. cause: %s. ", *sseo.StateMachineArn, *sseo.ExecutionArn, sseo.Status, *sseo.Error, *sseo.Cause)
-	// 		return callErr(err)
-	// 	}
-	// }
 
 	return events.APIGatewayProxyResponse{
 		StatusCode:        http.StatusOK,
@@ -218,6 +189,7 @@ func (data game) getHiScoreAndTie() game {
 		}
 		if p.Score > data.HiScore {
 			data.HiScore = p.Score
+			data.GameTied = false
 		}
 	}
 

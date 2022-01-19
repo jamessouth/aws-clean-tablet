@@ -19,7 +19,7 @@ func TestGetAnswersMap(t *testing.T) {
 func TestGetScoresMap(t *testing.T) {
 	// t.Skip()
 	for _, test := range bunchOfTests {
-		if act := test.input.getAnswersMap().getScoresMap(); !cmp.Equal(act.Scores, test.expected.Scores) {
+		if act := test.input.getScoresMap(); !cmp.Equal(act.Scores, test.expected.Scores) {
 			t.Errorf("FAIL - getScoresMap - %s\n act: %+v\n exp: %+v\n",
 				test.description.Description, act.Scores, test.expected.Scores)
 		}
@@ -29,7 +29,7 @@ func TestGetScoresMap(t *testing.T) {
 func TestUpdateScoresAndClearAnswers(t *testing.T) {
 	// t.Skip()
 	for _, test := range bunchOfTests {
-		if act := test.input.getAnswersMap().getScoresMap().updateScoresAndClearAnswers(); !cmp.Equal(act.Players, test.expected.Players) {
+		if act := test.input.updateScoresAndClearAnswers(); !cmp.Equal(act.Players, test.expected.Players) {
 			t.Errorf("FAIL - updateScoresAndClearAnswers - %s\n act: %+v\n exp: %+v\n",
 				test.description.Description, act.Players, test.expected.Players)
 		}
@@ -39,7 +39,7 @@ func TestUpdateScoresAndClearAnswers(t *testing.T) {
 func TestGetHiScoreAndTie(t *testing.T) {
 	// t.Skip()
 	for _, test := range bunchOfTests {
-		if act := test.input.getAnswersMap().getScoresMap().updateScoresAndClearAnswers().getHiScoreAndTie(); !cmp.Equal(act, test.expected) {
+		if act := test.input.getHiScoreAndTie(); !cmp.Equal(act, test.expected) {
 			t.Errorf("FAIL - getHiScoreAndTie - %s\n act: %+v\n exp: %+v\n",
 				test.description.Description, act, test.expected)
 		}
