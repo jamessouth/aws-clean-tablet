@@ -193,11 +193,13 @@ func (players livePlayerList) sortByScoreThenName() {
 	})
 }
 
-func (players livePlayerList) addIndex() {
+func (players livePlayerList) addIndex() livePlayerList {
 	for i, p := range players {
 		p.Index = i
 		players[i] = p
 	}
+
+	return players
 }
 
 func FromDynamoDBEventAVMap(m map[string]events.DynamoDBAttributeValue) (res map[string]types.AttributeValue, err error) {
@@ -477,26 +479,32 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				fmt.Printf("%s%+v\n", "live gammmmme ", gameRecord)
 
 				// if gameRecord.SendToFront {
-				pls := gameRecord.Players
+				pls := gameRecord.Players.addIndex()
 
-				pls.addIndex()
 				// if gameRecord.AnswersCount == len(gameRecord.Players) {
 				// 	return getReturnValue(http.StatusOK), nil
 				// } else
 
-				if gameRecord.AnswersCount > 0 {
-					pls.sortByScoreThenName()
-				} else {
+				// if gameRecord.AnswersCount > 0 {
+				// 	pls.sortByScoreThenName()
+				// } else {
+				// 	pls.sortByAnswerThenName()
+				// }
+
+				if gameRecord.ShowAnswers {
 					pls.sortByAnswerThenName()
+				} else {
+					pls.sortByScoreThenName()
 				}
 
 				gp := modifyLiveGamePayload{
 					ModLiveGame: liveGame{
 						Sk:           gameRecord.Sk,
+						Players:      pls,
 						CurrentWord:  gameRecord.CurrentWord,
 						PreviousWord: gameRecord.PreviousWord,
-						Players:      pls,
 						AnswersCount: gameRecord.AnswersCount,
+						ShowAnswers:  gameRecord.ShowAnswers,
 					},
 				}
 

@@ -51,6 +51,20 @@ let make = (~wsConnected, ~game: Reducer.liveGame, ~playerColor, ~send, ~wsError
     None
   }, (leader, showAnswers))
 
+  React.useEffect1(() => {
+  switch showAnswers {
+  | true => ()
+  | false => Js.Global.setTimeout(() => {
+        let pl: Game.startPayload = {
+          action: "start",
+          gameno: sk,
+        }
+        send(. Js.Json.stringifyAny(pl))
+      }, 2564)->ignore
+  }
+  None
+}, [showAnswers])
+
   React.useEffect2(() => {
     switch (leader, playerColor == "") {
     | (_, true) | (false, false) => ()

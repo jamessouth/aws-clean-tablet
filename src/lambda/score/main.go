@@ -114,12 +114,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		ExpressionAttributeNames: map[string]string{
 			"#P": "players",
 			"#W": "winner",
+			"#S": "showAnswers",
 		},
 		ExpressionAttributeValues: map[string]types.AttributeValue{
 			":p": marshalledPlayersMap,
 			":w": &types.AttributeValueMemberBOOL{Value: winner},
+			":f": &types.AttributeValueMemberBOOL{Value: false},
 		},
-		UpdateExpression: aws.String("SET #P = :p, #W = :w"),
+		UpdateExpression: aws.String("SET #P = :p, #W = :w, #S = :f"),
 	})
 
 	if err != nil {

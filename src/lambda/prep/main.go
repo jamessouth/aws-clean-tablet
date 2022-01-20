@@ -168,10 +168,10 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	sfnInput, err := json.Marshal(struct {
-		Gameno  string       `json:"gameno"`
+		// Gameno  string       `json:"gameno"`
 		Players []livePlayer `json:"players"`
 	}{
-		Gameno:  gameno.Gameno,
+		// Gameno:  gameno.Gameno,
 		Players: playersList,
 	})
 	if err != nil {
