@@ -108,12 +108,12 @@ type livePlayer struct {
 type livePlayerList []livePlayer
 
 type liveGame struct {
-	Sk           string         `json,dynamodbav:"sk"`
-	Players      livePlayerList `json,dynamodbav:"players"`
-	CurrentWord  string         `json,dynamodbav:"currentWord"`
-	PreviousWord string         `json,dynamodbav:"previousWord"`
-	AnswersCount int            `json,dynamodbav:"answersCount"`
-	ShowAnswers  bool           `json,dynamodbav:"showAnswers"`
+	Sk           string         `dynamodbav:"sk"`
+	Players      livePlayerList `dynamodbav:"players"`
+	CurrentWord  string         `dynamodbav:"currentWord"`
+	PreviousWord string         `dynamodbav:"previousWord"`
+	AnswersCount int            `dynamodbav:"answersCount"`
+	ShowAnswers  bool           `dynamodbav:"showAnswers"`
 }
 
 type insertConnPayload struct {

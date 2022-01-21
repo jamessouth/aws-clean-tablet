@@ -37,20 +37,17 @@ var colors = []string{
 }
 
 type livePlayer struct {
-	PlayerID string `json,dynamodbav:"playerid"`
-	Name     string `json,dynamodbav:"name"`
-	ConnID   string `json,dynamodbav:"connid"`
-	Color    string `json,dynamodbav:"color"`
-	Score    int    `json,dynamodbav:"score"`
-	Answer   string `json,dynamodbav:"answer"`
+	PlayerID string `json:"playerid"`
+	Name     string `json:"name"`
+	ConnID   string `json:"connid"`
+	Color    string `json:"color"`
+	Score    int    `json:"score"`
+	Answer   string `json:"answer"`
 }
 
 type listPlayerMap map[string]struct {
-	name, connID string
-}
-
-type body struct {
-	Gameno string
+	Name   string
+	ConnID string
 }
 
 func shuffleList(list []string, length int) []string {
@@ -70,8 +67,8 @@ func (pm listPlayerMap) getSliceAndAssignColors() (res []livePlayer) {
 	for k, v := range pm {
 		res = append(res, livePlayer{
 			PlayerID: k,
-			Name:     v.name,
-			ConnID:   v.connID,
+			Name:     v.Name,
+			ConnID:   v.ConnID,
 			Color:    clrs[count],
 			Score:    0,
 			Answer:   "",
@@ -113,7 +110,9 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	ddbsvc := dynamodb.NewFromConfig(cfg)
 	sfnsvc := sfn.NewFromConfig(cfg)
 
-	var gameno body
+	var gameno struct {
+		Gameno string
+	}
 
 	err = json.Unmarshal([]byte(req.Body), &gameno)
 	if err != nil {
@@ -131,8 +130,8 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	callErr(err)
 
 	var game struct {
-		sk      string
-		players listPlayerMap
+		Sk      string
+		Players listPlayerMap
 	}
 	err = attributevalue.UnmarshalMap(di.Attributes, &game)
 	if err != nil {
@@ -141,14 +140,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	fmt.Printf("%s%+v\n", "livegame ", game)
 
-	numberOfWords := slope*len(game.players) + intercept
+	numberOfWords := slope*len(game.Players) + intercept
 
 	marshalledWordsList, err := attributevalue.Marshal(shuffleList(words, numberOfWords))
 	if err != nil {
 		return callErr(err)
 	}
 
-	playersList := game.players.getSliceAndAssignColors()
+	playersList := game.Players.getSliceAndAssignColors()
 
 	marshalledPlayersList, err := attributevalue.Marshal(playersList)
 	if err != nil {
@@ -158,7 +157,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	_, err = ddbsvc.PutItem(ctx, &dynamodb.PutItemInput{
 		Item: map[string]types.AttributeValue{
 			"pk":           &types.AttributeValueMemberS{Value: "LIVEGME"},
-			"sk":           &types.AttributeValueMemberS{Value: game.sk},
+			"sk":           &types.AttributeValueMemberS{Value: game.Sk},
 			"answersCount": &types.AttributeValueMemberN{Value: "0"},
 			"currentWord":  &types.AttributeValueMemberS{Value: ""},
 			"previousWord": &types.AttributeValueMemberS{Value: ""},
