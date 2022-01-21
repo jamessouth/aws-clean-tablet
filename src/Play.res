@@ -37,35 +37,6 @@ let make = (~wsConnected, ~game: Reducer.liveGame, ~playerColor, ~send, ~wsError
   }, (players, leadertoken))
 
   React.useEffect2(() => {
-    switch (leader, showAnswers) {
-    | (true, true) => Js.Global.setTimeout(() => {
-        let pl: scorePayload = {
-          action: "score",
-          game: game,
-        }
-        send(. Js.Json.stringifyAny(pl))
-      }, 8564)->ignore
-    | (_, false) => setAnswered(_ => false)
-    | (false, true) => ()
-    }
-    None
-  }, (leader, showAnswers))
-
-  React.useEffect1(() => {
-  switch showAnswers {
-  | true => ()
-  | false => Js.Global.setTimeout(() => {
-        let pl: Game.startPayload = {
-          action: "start",
-          gameno: sk,
-        }
-        send(. Js.Json.stringifyAny(pl))
-      }, 2564)->ignore
-  }
-  None
-}, [showAnswers])
-
-  React.useEffect2(() => {
     switch (leader, playerColor == "") {
     | (_, true) | (false, false) => ()
     | (true, false) => {
@@ -78,6 +49,39 @@ let make = (~wsConnected, ~game: Reducer.liveGame, ~playerColor, ~send, ~wsError
     }
     None
   }, (leader, playerColor))
+
+  let hasRendered = React.useRef(false)
+
+  React.useEffect2(() => {
+    switch (leader, showAnswers) {
+    | (true, true) => Js.Global.setTimeout(() => {
+        let pl: scorePayload = {
+          action: "score",
+          game: game,
+        }
+        send(. Js.Json.stringifyAny(pl))
+      }, 8564)->ignore
+
+    | (true, false) => {
+        setAnswered(_ => false)
+        switch hasRendered.current {
+        | true => Js.Global.setTimeout(() => {
+            let pl: Game.startPayload = {
+              action: "start",
+              gameno: sk,
+            }
+            send(. Js.Json.stringifyAny(pl))
+          }, 2564)->ignore
+
+        | false => hasRendered.current = true
+        }
+      }
+
+    | (false, false) => setAnswered(_ => false)
+    | (false, true) => ()
+    }
+    None
+  }, (leader, showAnswers))
 
   let sendAnswer = _ => {
     let index = switch players->Js.Array2.find(p => p.color == playerColor) {

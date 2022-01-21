@@ -478,18 +478,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 				fmt.Printf("%s%+v\n", "live gammmmme ", gameRecord)
 
-				// if gameRecord.SendToFront {
 				pls := gameRecord.Players.addIndex()
-
-				// if gameRecord.AnswersCount == len(gameRecord.Players) {
-				// 	return getReturnValue(http.StatusOK), nil
-				// } else
-
-				// if gameRecord.AnswersCount > 0 {
-				// 	pls.sortByScoreThenName()
-				// } else {
-				// 	pls.sortByAnswerThenName()
-				// }
 
 				if gameRecord.ShowAnswers {
 					pls.sortByAnswerThenName()
@@ -523,8 +512,6 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 					}
 
 				}
-
-				// }
 
 			} else {
 				oi := rec.Change.OldImage

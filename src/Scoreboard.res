@@ -29,7 +29,7 @@ let make = (~players: array<Reducer.livePlayer>, ~previousWord, ~showAnswers) =>
             {React.string(p.name)}
           </p>
           {switch showAnswers {
-          | true => <p> {React.string(p.answer.answer)} </p>
+          | true => <p> {React.string(p.answer)} </p>
           | false => <p> {React.string(p.score)} </p>
           }}
         </li>

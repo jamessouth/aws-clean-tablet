@@ -82,7 +82,10 @@ func (pm listPlayerMap) getSliceAndAssignColors() (res []livePlayer) {
 	return
 }
 
-const numberOfWords int = 40
+const (
+	slope     int = -3
+	intercept int = 52
+)
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
@@ -138,6 +141,8 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	fmt.Printf("%s%+v\n", "livegame ", game)
 
+	numberOfWords := slope*len(game.players) + intercept
+
 	marshalledWordsList, err := attributevalue.Marshal(shuffleList(words, numberOfWords))
 	if err != nil {
 		return callErr(err)
@@ -168,10 +173,8 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	sfnInput, err := json.Marshal(struct {
-		// Gameno  string       `json:"gameno"`
 		Players []livePlayer `json:"players"`
 	}{
-		// Gameno:  gameno.Gameno,
 		Players: playersList,
 	})
 	if err != nil {

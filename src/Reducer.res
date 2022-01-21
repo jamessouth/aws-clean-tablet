@@ -1,8 +1,3 @@
-type answer = {
-  playerid: string,
-  answer: string,
-}
-
 type listPlayer = {
   name: string,
   connid: string,
@@ -14,7 +9,7 @@ type livePlayer = {
   connid: string,
   color: string,
   score: string,
-  answer: answer,
+  answer: string,
   hasAnswered: bool,
   index: int,
 }
