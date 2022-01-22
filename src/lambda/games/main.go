@@ -108,12 +108,12 @@ type livePlayer struct {
 type livePlayerList []livePlayer
 
 type liveGame struct {
-	Sk           string         `dynamodbav:"sk"`
-	Players      livePlayerList `dynamodbav:"players"`
-	CurrentWord  string         `dynamodbav:"currentWord"`
-	PreviousWord string         `dynamodbav:"previousWord"`
-	AnswersCount int            `dynamodbav:"answersCount"`
-	ShowAnswers  bool           `dynamodbav:"showAnswers"`
+	Sk           string         `json:"sk"`
+	Players      livePlayerList `json:"players"`
+	CurrentWord  string         `json:"currentWord"`
+	PreviousWord string         `json:"previousWord"`
+	AnswersCount int            `json:"answersCount"`
+	ShowAnswers  bool           `json:"showAnswers"`
 }
 
 type insertConnPayload struct {
@@ -470,7 +470,14 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			if rec.EventName == dynamodbstreams.OperationTypeInsert || rec.EventName == dynamodbstreams.OperationTypeModify {
 
-				var gameRecord liveGame
+				var gameRecord struct {
+					Sk           string
+					Players      livePlayerList
+					CurrentWord  string
+					PreviousWord string
+					AnswersCount int
+					ShowAnswers  bool
+				}
 				err = attributevalue.UnmarshalMap(item, &gameRecord)
 				if err != nil {
 					return callErr(err)

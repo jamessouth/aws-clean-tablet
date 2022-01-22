@@ -1,17 +1,12 @@
 package main
 
-type desc struct {
-	ZeroScores, OneScores, ThreeScores int
-	Description                        string
-}
-
 var bunchOfTests = []struct {
 	input       game
 	expected    game
-	description desc
+	description string
 }{
 	{input: game{
-		Players: livePlayerList{
+		Players: []livePlayer{
 			{
 				PlayerID: "p1",
 				Name:     "",
@@ -53,12 +48,11 @@ var bunchOfTests = []struct {
 				Answer:   "ans2",
 			},
 		},
-		Answers:  map[string][]string{},
-		Scores:   map[string]int{},
-		HiScore:  0,
-		GameTied: false,
+		Answers: map[string][]string{},
+		Scores:  map[string]int{},
+		Winner:  false,
 	}, expected: game{
-		Players: livePlayerList{
+		Players: []livePlayer{
 			{
 				PlayerID: "p1",
 				Name:     "",
@@ -111,22 +105,17 @@ var bunchOfTests = []struct {
 			"p4": 3,
 			"p5": 3,
 		},
-		HiScore:  21,
-		GameTied: false,
-	}, description: desc{
-		ZeroScores:  0,
-		OneScores:   3,
-		ThreeScores: 2,
-		Description: "no ties",
-	}},
+		Winner: false,
+	}, description: "0:0, 1:3, 3:2, no winner",
+	},
 	{input: game{
-		Players: livePlayerList{
+		Players: []livePlayer{
 			{
 				PlayerID: "p1",
 				Name:     "",
 				ConnID:   "",
 				Color:    "",
-				Score:    20,
+				Score:    23,
 				Answer:   "ans1",
 			},
 			{
@@ -134,7 +123,7 @@ var bunchOfTests = []struct {
 				Name:     "",
 				ConnID:   "",
 				Color:    "",
-				Score:    20,
+				Score:    23,
 				Answer:   "ans1",
 			},
 			{
@@ -162,18 +151,17 @@ var bunchOfTests = []struct {
 				Answer:   "ans2",
 			},
 		},
-		Answers:  map[string][]string{},
-		Scores:   map[string]int{},
-		HiScore:  0,
-		GameTied: false,
+		Answers: map[string][]string{},
+		Scores:  map[string]int{},
+		Winner:  false,
 	}, expected: game{
-		Players: livePlayerList{
+		Players: []livePlayer{
 			{
 				PlayerID: "p1",
 				Name:     "",
 				ConnID:   "",
 				Color:    "",
-				Score:    23,
+				Score:    26,
 				Answer:   "",
 			},
 			{
@@ -181,7 +169,7 @@ var bunchOfTests = []struct {
 				Name:     "",
 				ConnID:   "",
 				Color:    "",
-				Score:    23,
+				Score:    26,
 				Answer:   "",
 			},
 			{
@@ -221,16 +209,10 @@ var bunchOfTests = []struct {
 			"p4": 3,
 			"p5": 3,
 		},
-		HiScore:  23,
-		GameTied: true,
-	}, description: desc{
-		ZeroScores:  1,
-		OneScores:   0,
-		ThreeScores: 4,
-		Description: "hiscore ties",
-	}},
+		Winner: false,
+	}, description: "0:1, 1:0, 3:4, no winner - tied"},
 	{input: game{
-		Players: livePlayerList{
+		Players: []livePlayer{
 			{
 				PlayerID: "p1",
 				Name:     "",
@@ -272,12 +254,11 @@ var bunchOfTests = []struct {
 				Answer:   "ans5",
 			},
 		},
-		Answers:  map[string][]string{},
-		Scores:   map[string]int{},
-		HiScore:  0,
-		GameTied: false,
+		Answers: map[string][]string{},
+		Scores:  map[string]int{},
+		Winner:  false,
 	}, expected: game{
-		Players: livePlayerList{
+		Players: []livePlayer{
 			{
 				PlayerID: "p1",
 				Name:     "",
@@ -333,16 +314,11 @@ var bunchOfTests = []struct {
 			"p4": 0,
 			"p5": 0,
 		},
-		HiScore:  20,
-		GameTied: false,
-	}, description: desc{
-		ZeroScores:  5,
-		OneScores:   0,
-		ThreeScores: 0,
-		Description: "nobody scores",
-	}},
+		Winner: false,
+	}, description: "0:5, 1:0, 3:0, nobody scores, no winner",
+	},
 	{input: game{
-		Players: livePlayerList{
+		Players: []livePlayer{
 			{
 				PlayerID: "p1",
 				Name:     "",
@@ -356,7 +332,7 @@ var bunchOfTests = []struct {
 				Name:     "",
 				ConnID:   "",
 				Color:    "",
-				Score:    20,
+				Score:    24,
 				Answer:   "ans1",
 			},
 			{
@@ -384,12 +360,11 @@ var bunchOfTests = []struct {
 				Answer:   "ans1",
 			},
 		},
-		Answers:  map[string][]string{},
-		Scores:   map[string]int{},
-		HiScore:  0,
-		GameTied: false,
+		Answers: map[string][]string{},
+		Scores:  map[string]int{},
+		Winner:  false,
 	}, expected: game{
-		Players: livePlayerList{
+		Players: []livePlayer{
 			{
 				PlayerID: "p1",
 				Name:     "",
@@ -403,7 +378,7 @@ var bunchOfTests = []struct {
 				Name:     "",
 				ConnID:   "",
 				Color:    "",
-				Score:    21,
+				Score:    25,
 				Answer:   "",
 			},
 			{
@@ -441,22 +416,17 @@ var bunchOfTests = []struct {
 			"p4": 1,
 			"p5": 1,
 		},
-		HiScore:  21,
-		GameTied: false,
-	}, description: desc{
-		ZeroScores:  0,
-		OneScores:   5,
-		ThreeScores: 0,
-		Description: "everybody scores 1",
-	}},
+		Winner: true,
+	}, description: "0:0, 1:5, 3:0, everybody scores 1, winner",
+	},
 	{input: game{
-		Players: livePlayerList{
+		Players: []livePlayer{
 			{
 				PlayerID: "p1",
 				Name:     "",
 				ConnID:   "",
 				Color:    "",
-				Score:    14,
+				Score:    24,
 				Answer:   "ans1",
 			},
 			{
@@ -464,7 +434,7 @@ var bunchOfTests = []struct {
 				Name:     "",
 				ConnID:   "",
 				Color:    "",
-				Score:    14,
+				Score:    7,
 				Answer:   "ans1",
 			},
 			{
@@ -492,18 +462,17 @@ var bunchOfTests = []struct {
 				Answer:   "ans5",
 			},
 		},
-		Answers:  map[string][]string{},
-		Scores:   map[string]int{},
-		HiScore:  0,
-		GameTied: false,
+		Answers: map[string][]string{},
+		Scores:  map[string]int{},
+		Winner:  false,
 	}, expected: game{
-		Players: livePlayerList{
+		Players: []livePlayer{
 			{
 				PlayerID: "p1",
 				Name:     "",
 				ConnID:   "",
 				Color:    "",
-				Score:    17,
+				Score:    27,
 				Answer:   "",
 			},
 			{
@@ -511,7 +480,7 @@ var bunchOfTests = []struct {
 				Name:     "",
 				ConnID:   "",
 				Color:    "",
-				Score:    17,
+				Score:    10,
 				Answer:   "",
 			},
 			{
@@ -550,12 +519,7 @@ var bunchOfTests = []struct {
 			"p4": 1,
 			"p5": 1,
 		},
-		HiScore:  18,
-		GameTied: false,
-	}, description: desc{
-		ZeroScores:  0,
-		OneScores:   3,
-		ThreeScores: 2,
-		Description: "hiscore and tie check",
-	}},
+		Winner: true,
+	}, description: "0:0, 1:3, 3:2, winner",
+	},
 }

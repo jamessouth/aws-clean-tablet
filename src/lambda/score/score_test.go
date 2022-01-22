@@ -11,7 +11,7 @@ func TestGetAnswersMap(t *testing.T) {
 	for _, test := range bunchOfTests {
 		if act := test.input.getAnswersMap(); !cmp.Equal(act.Answers, test.expected.Answers) {
 			t.Errorf("FAIL - getAnswersMap - %s\n act: %+v\n exp: %+v\n",
-				test.description.Description, act.Answers, test.expected.Answers)
+				test.description, act.Answers, test.expected.Answers)
 		}
 	}
 }
@@ -21,7 +21,7 @@ func TestGetScoresMap(t *testing.T) {
 	for _, test := range bunchOfTests {
 		if act := test.input.getScoresMap(); !cmp.Equal(act.Scores, test.expected.Scores) {
 			t.Errorf("FAIL - getScoresMap - %s\n act: %+v\n exp: %+v\n",
-				test.description.Description, act.Scores, test.expected.Scores)
+				test.description, act.Scores, test.expected.Scores)
 		}
 	}
 }
@@ -31,17 +31,17 @@ func TestUpdateScoresAndClearAnswers(t *testing.T) {
 	for _, test := range bunchOfTests {
 		if act := test.input.updateScoresAndClearAnswers(); !cmp.Equal(act.Players, test.expected.Players) {
 			t.Errorf("FAIL - updateScoresAndClearAnswers - %s\n act: %+v\n exp: %+v\n",
-				test.description.Description, act.Players, test.expected.Players)
+				test.description, act.Players, test.expected.Players)
 		}
 	}
 }
 
-func TestGetHiScoreAndTie(t *testing.T) {
+func TestGetWinner(t *testing.T) {
 	// t.Skip()
 	for _, test := range bunchOfTests {
-		if act := test.input.getHiScoreAndTie(); !cmp.Equal(act, test.expected) {
-			t.Errorf("FAIL - getHiScoreAndTie - %s\n act: %+v\n exp: %+v\n",
-				test.description.Description, act, test.expected)
+		if act := test.input.getWinner(); !cmp.Equal(act, test.expected) {
+			t.Errorf("FAIL - getWinner - %s\n act: %+v\n exp: %+v\n",
+				test.description, act, test.expected)
 		}
 	}
 }

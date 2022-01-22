@@ -30,23 +30,16 @@ type livePlayer struct {
 	Answer   string `json:"answer"`
 }
 
-type livePlayerList []livePlayer
-
 type liveGame struct {
-	Sk      string         `json:"sk"`
-	Players livePlayerList `json:"players"`
-}
-
-type body struct {
-	Game liveGame `json:"game"`
+	Sk      string       `json:"sk"`
+	Players []livePlayer `json:"players"`
 }
 
 type game struct {
-	Players  livePlayerList `dynamodbav:"players"`
-	Answers  map[string][]string
-	Scores   map[string]int
-	HiScore  int
-	GameTied bool
+	Players []livePlayer `dynamodbav:"players"`
+	Answers map[string][]string
+	Scores  map[string]int
+	Winner  bool
 }
 
 const (
@@ -77,28 +70,21 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	ddbsvc := dynamodb.NewFromConfig(cfg)
 
-	var body body
+	var body struct {
+		Game liveGame
+	}
 
 	err = json.Unmarshal([]byte(req.Body), &body)
 	if err != nil {
 		return callErr(err)
 	}
 
-	winner := false
-
-	scoreData := game{
-		Players:  body.Game.Players,
-		Answers:  map[string][]string{},
-		Scores:   map[string]int{},
-		HiScore:  zeroPoints,
-		GameTied: false,
-	}
-
-	updatedScoreData := scoreData.getAnswersMap().getScoresMap().updateScoresAndClearAnswers().getHiScoreAndTie()
-
-	if !updatedScoreData.GameTied && updatedScoreData.HiScore > winThreshold {
-		winner = true
-	}
+	updatedScoreData := game{
+		Players: body.Game.Players,
+		Answers: map[string][]string{},
+		Scores:  map[string]int{},
+		Winner:  false,
+	}.getAnswersMap().getScoresMap().updateScoresAndClearAnswers().getWinner()
 
 	marshalledPlayersMap, err := attributevalue.Marshal(updatedScoreData.Players)
 	if err != nil {
@@ -118,7 +104,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		},
 		ExpressionAttributeValues: map[string]types.AttributeValue{
 			":p": marshalledPlayersMap,
-			":w": &types.AttributeValueMemberBOOL{Value: winner},
+			":w": &types.AttributeValueMemberBOOL{Value: updatedScoreData.Winner},
 			":f": &types.AttributeValueMemberBOOL{Value: false},
 		},
 		UpdateExpression: aws.String("SET #P = :p, #W = :w, #S = :f"),
@@ -184,15 +170,22 @@ func (data game) updateScoresAndClearAnswers() game {
 	return data
 }
 
-func (data game) getHiScoreAndTie() game {
+func (data game) getWinner() game {
+	hiScore := zeroPoints
+	gameTied := false
+
 	for _, p := range data.Players {
-		if p.Score == data.HiScore {
-			data.GameTied = true
+		if p.Score == hiScore {
+			gameTied = true
 		}
-		if p.Score > data.HiScore {
-			data.HiScore = p.Score
-			data.GameTied = false
+		if p.Score > hiScore {
+			hiScore = p.Score
+			gameTied = false
 		}
+	}
+
+	if !gameTied && hiScore > winThreshold {
+		data.Winner = true
 	}
 
 	return data
