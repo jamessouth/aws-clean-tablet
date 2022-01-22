@@ -30,11 +30,6 @@ type livePlayer struct {
 	Answer   string `json:"answer"`
 }
 
-type liveGame struct {
-	Sk      string       `json:"sk"`
-	Players []livePlayer `json:"players"`
-}
-
 type game struct {
 	Players []livePlayer `dynamodbav:"players"`
 	Answers map[string][]string
@@ -71,7 +66,10 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	ddbsvc := dynamodb.NewFromConfig(cfg)
 
 	var body struct {
-		Game liveGame
+		Game struct {
+			Sk      string
+			Players []livePlayer
+		}
 	}
 
 	err = json.Unmarshal([]byte(req.Body), &body)

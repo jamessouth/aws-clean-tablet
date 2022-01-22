@@ -22,11 +22,6 @@ import (
 	"github.com/aws/smithy-go"
 )
 
-type key struct {
-	Pk string `dynamodbav:"pk"`
-	Sk string `dynamodbav:"sk"`
-}
-
 type livePlayer struct {
 	Name        string `dynamodbav:"name"`
 	ConnID      string `dynamodbav:"connid"`
@@ -36,21 +31,7 @@ type livePlayer struct {
 	HasAnswered bool   `dynamodbav:"hasAnswered"`
 }
 
-type livePlayerList []livePlayer
-
-type liveGame struct {
-	Players      livePlayerList `dynamodbav:"players"`
-	CurrentWord  string         `dynamodbav:"currentWord"`
-	AnswersCount int            `dynamodbav:"answersCount"`
-}
-
-type body struct {
-	Gameno string `json:"gameno"`
-	Answer string `json:"answer"`
-	Index  int    `json:"index"`
-}
-
-func (pl livePlayerList) clearHasAnswered() livePlayerList {
+func clearHasAnswered(pl []livePlayer) []livePlayer {
 	for i, p := range pl {
 		p.HasAnswered = false
 		pl[i] = p
@@ -79,14 +60,20 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	ddbsvc := dynamodb.NewFromConfig(cfg)
 
-	var body body
+	var body struct {
+		Gameno, Answer string
+		Index          int
+	}
 
 	err = json.Unmarshal([]byte(req.Body), &body)
 	if err != nil {
 		return callErr(err)
 	}
 
-	gameItemKey, err := attributevalue.MarshalMap(key{
+	gameItemKey, err := attributevalue.MarshalMap(struct {
+		Pk string `dynamodbav:"pk"`
+		Sk string `dynamodbav:"sk"`
+	}{
 		Pk: "LIVEGME",
 		Sk: body.Gameno,
 	})
@@ -118,7 +105,11 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		return callErr(err)
 	}
 
-	var gm liveGame
+	var gm struct {
+		Players      []livePlayer
+		CurrentWord  string
+		AnswersCount int
+	}
 	err = attributevalue.UnmarshalMap(ui.Attributes, &gm)
 	if err != nil {
 		return callErr(err)
@@ -126,9 +117,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	if len(gm.Players) == gm.AnswersCount {
 
-		playersList := gm.Players.clearHasAnswered()
-
-		marshalledPlayersList, err := attributevalue.Marshal(playersList)
+		marshalledPlayersList, err := attributevalue.Marshal(clearHasAnswered(gm.Players))
 		if err != nil {
 			return callErr(err)
 		}

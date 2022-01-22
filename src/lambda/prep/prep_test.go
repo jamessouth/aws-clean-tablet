@@ -11,7 +11,7 @@ var (
 )
 
 func TestWords(t *testing.T) {
-	loop := func(w []string, t string) func() (bool, string, int) {
+	loop := func(w stringSlice, t string) func() (bool, string, int) {
 		if t == "word" {
 			return func() (bool, string, int) {
 				for i, j := range w {
@@ -39,7 +39,7 @@ func TestWords(t *testing.T) {
 	}
 
 	tests := map[string]struct {
-		words []string
+		words stringSlice
 		test  string
 	}{
 		"each word has: 4 _, 1 space, 2-9 lower-case letters, OR 2-9 lower-case letters, 1 space, 4 _": {words: words, test: "word"},
@@ -50,7 +50,7 @@ func TestWords(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got, word, ind := loop(tc.words, tc.test)()
 			if !got {
-				t.Fatalf("the %s test failed on word: %s, line: %d", name, word, ind+269)
+				t.Fatalf("the %s test failed on word: %s, line: %d", name, word, ind+236)
 			}
 		})
 	}

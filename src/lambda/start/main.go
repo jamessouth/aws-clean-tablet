@@ -20,10 +20,6 @@ import (
 	"github.com/aws/smithy-go"
 )
 
-// type body struct {
-// 	Gameno string `json:"gameno"`
-// }
-
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
 	fmt.Println("start", req.Body)

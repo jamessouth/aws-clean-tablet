@@ -39,9 +39,9 @@ func TestUpdateScoresAndClearAnswers(t *testing.T) {
 func TestGetWinner(t *testing.T) {
 	// t.Skip()
 	for _, test := range bunchOfTests {
-		if act := test.input.getWinner(); !cmp.Equal(act, test.expected) {
-			t.Errorf("FAIL - getWinner - %s\n act: %+v\n exp: %+v\n",
-				test.description, act, test.expected)
+		if act := test.input.getWinner(); act.Winner != test.expected.Winner {
+			t.Errorf("FAIL - getWinner - %s\n act: %t\n exp: %t\n",
+				test.description, act.Winner, test.expected.Winner)
 		}
 	}
 }

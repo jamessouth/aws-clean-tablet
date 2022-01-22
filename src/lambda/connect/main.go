@@ -60,7 +60,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	// .WithEndpoint("http://192.168.4.27:8000")
 
-	svc := dynamodb.NewFromConfig(cfg)
 	// svc2 := sfn.NewFromConfig(cfg)
 
 	// svc.Handlers.Send.PushFront(func(r *request.Request) {
@@ -71,10 +70,11 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	// auth["principalId"].(string)
 	// auth["username"].(string)
 
-	auth := req.RequestContext.Authorizer.(map[string]interface{})
-
-	id := auth["principalId"].(string)
-	name := auth["username"].(string)
+	var (
+		svc      = dynamodb.NewFromConfig(cfg)
+		auth     = req.RequestContext.Authorizer.(map[string]interface{})
+		id, name = auth["principalId"].(string), auth["username"].(string)
+	)
 
 	connItem, err := attributevalue.MarshalMap(ConnItem{
 		Pk:      "CONNECT#" + id,

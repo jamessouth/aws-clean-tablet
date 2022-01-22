@@ -23,33 +23,25 @@ import (
 
 // export CGO_ENABLED=0 | go build -o main main.go | zip main.zip main | aws lambda update-function-code --function-name ct-lobby --zip-file fileb://main.zip
 
-const maxPlayersPerGame string = "8"
-
-type key struct {
-	Pk string `dynamodbav:"pk"`
-	Sk string `dynamodbav:"sk"`
-}
-
 type listPlayer struct {
 	Name   string `dynamodbav:"name"`
 	ConnID string `dynamodbav:"connid"`
 	Ready  bool   `dynamodbav:"ready"`
 }
 
-type listGame struct {
-	Pk      string                `dynamodbav:"pk"` //'LISTGME'
-	Sk      string                `dynamodbav:"sk"` //no
-	Ready   bool                  `dynamodbav:"ready"`
-	Players map[string]listPlayer `dynamodbav:"players"`
+func getReturnValue(status int) events.APIGatewayProxyResponse {
+	return events.APIGatewayProxyResponse{
+		StatusCode:        status,
+		Headers:           map[string]string{"Content-Type": "application/json"},
+		MultiValueHeaders: map[string][]string{},
+		Body:              "",
+		IsBase64Encoded:   false,
+	}
 }
 
-type body struct {
-	Action, Gameno, Tipe string
-}
+const maxPlayersPerGame string = "8"
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
-
-	// fmt.Println("lobbbbbby", req.Body)
 
 	reg := strings.Split(req.RequestContext.DomainName, ".")[2]
 
@@ -65,54 +57,40 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		panic(fmt.Sprintf("%v", "can't find table name"))
 	}
 
-	// .WithEndpoint("http://192.168.4.27:8000")
-
-	svc := dynamodb.NewFromConfig(cfg)
-	// svc2 := lamb.NewFromConfig(cfg)
-
-	auth := req.RequestContext.Authorizer.(map[string]interface{})
-
-	id := auth["principalId"].(string)
-	name := auth["username"].(string)
-
-	var body body
-	var gameno string
+	var (
+		svc      = dynamodb.NewFromConfig(cfg)
+		auth     = req.RequestContext.Authorizer.(map[string]interface{})
+		id, name = auth["principalId"].(string), auth["username"].(string)
+		body     struct {
+			Action, Gameno, Tipe string
+		}
+		gameno    string
+		exAttrNms = map[string]string{
+			"#P": "players",
+			"#I": id,
+			"#R": "ready",
+		}
+	)
 
 	err = json.Unmarshal([]byte(req.Body), &body)
 	if err != nil {
 		fmt.Println("unmarshal err")
 	}
 
-	// var gameItemKey map[string]types.AttributeValue
-
-	if body.Gameno == "new" {
-		gameno = fmt.Sprintf("%d", time.Now().UnixNano())
-	} else if body.Gameno == "dc" {
-		gameno = body.Gameno
-	} else if _, err = strconv.ParseInt(body.Gameno, 10, 64); err != nil {
-		fmt.Println("ParseInt error: ", err)
-
-		return events.APIGatewayProxyResponse{
-			StatusCode:        http.StatusBadRequest,
-			Headers:           map[string]string{"Content-Type": "application/json"},
-			MultiValueHeaders: map[string][]string{},
-			Body:              "",
-			IsBase64Encoded:   false,
-		}, err
+	if _, err = strconv.ParseInt(body.Gameno, 10, 64); err != nil {
+		return getReturnValue(http.StatusBadRequest), err
 	} else if len(body.Gameno) != 19 {
-		err = errors.New("invalid game number")
-		return events.APIGatewayProxyResponse{
-			StatusCode:        http.StatusBadRequest,
-			Headers:           map[string]string{"Content-Type": "application/json"},
-			MultiValueHeaders: map[string][]string{},
-			Body:              "",
-			IsBase64Encoded:   false,
-		}, err
+		return getReturnValue(http.StatusBadRequest), errors.New("invalid game number")
+	} else if body.Gameno == "new" {
+		gameno = fmt.Sprintf("%d", time.Now().UnixNano())
 	} else {
 		gameno = body.Gameno
 	}
 
-	gameItemKey, err := attributevalue.MarshalMap(key{
+	gameItemKey, err := attributevalue.MarshalMap(struct {
+		Pk string `dynamodbav:"pk"`
+		Sk string `dynamodbav:"sk"`
+	}{
 		Pk: "LISTGME",
 		Sk: gameno,
 	})
@@ -121,17 +99,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	removePlayerInput := dynamodb.UpdateItemInput{
-		Key:       gameItemKey,
-		TableName: aws.String(tableName),
-		ExpressionAttributeNames: map[string]string{
-			"#PL": "players",
-			"#ID": id,
-			"#RE": "ready",
-		},
+		Key:                      gameItemKey,
+		TableName:                aws.String(tableName),
+		ExpressionAttributeNames: exAttrNms,
 		ExpressionAttributeValues: map[string]types.AttributeValue{
 			":f": &types.AttributeValueMemberBOOL{Value: false},
 		},
-		UpdateExpression: aws.String("REMOVE #PL.#ID SET #RE = :f"),
+		UpdateExpression: aws.String("REMOVE #P.#I SET #R = :f"),
 		ReturnValues:     types.ReturnValueAllNew,
 	}
 
@@ -161,35 +135,31 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 				"sk": &types.AttributeValueMemberS{Value: name},
 			},
 			TableName:           aws.String(tableName),
-			ConditionExpression: aws.String("size (#IG) = :z"),
+			ConditionExpression: aws.String("size (#G) = :z"),
 			ExpressionAttributeNames: map[string]string{
-				"#IG": "game",
+				"#G": "game",
 			},
 			ExpressionAttributeValues: map[string]types.AttributeValue{
 				":g": &types.AttributeValueMemberS{Value: gameno},
 				":z": &types.AttributeValueMemberN{Value: "0"},
 			},
-			UpdateExpression: aws.String("SET #IG = :g"),
+			UpdateExpression: aws.String("SET #G = :g"),
 		}
 
 		_, err = svc.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{
 			TransactItems: []types.TransactWriteItem{
 				{
 					Update: &types.Update{
-						Key:                 gameItemKey,
-						TableName:           aws.String(tableName),
-						ConditionExpression: aws.String("attribute_exists(#PL) AND size (#PL) < :m"),
-						ExpressionAttributeNames: map[string]string{
-							"#PL": "players",
-							"#ID": id,
-							"#RE": "ready",
-						},
+						Key:                      gameItemKey,
+						TableName:                aws.String(tableName),
+						ConditionExpression:      aws.String("attribute_exists(#P) AND size (#P) < :m"),
+						ExpressionAttributeNames: exAttrNms,
 						ExpressionAttributeValues: map[string]types.AttributeValue{
 							":f": &types.AttributeValueMemberBOOL{Value: false},
 							":m": &types.AttributeValueMemberN{Value: maxPlayersPerGame},
 							":p": marshalledPlayer,
 						},
-						UpdateExpression: aws.String("SET #PL.#ID = :p, #RE = :f"),
+						UpdateExpression: aws.String("SET #P.#I = :p, #R = :f"),
 					},
 				},
 				{
@@ -205,16 +175,16 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 					Update: &types.Update{
 						Key:                 gameItemKey,
 						TableName:           aws.String(tableName),
-						ConditionExpression: aws.String("attribute_not_exists(#PL)"),
+						ConditionExpression: aws.String("attribute_not_exists(#P)"),
 						ExpressionAttributeNames: map[string]string{
-							"#PL": "players",
-							"#RE": "ready",
+							"#P": "players",
+							"#R": "ready",
 						},
 						ExpressionAttributeValues: map[string]types.AttributeValue{
 							":p": marshalledPlayersMap,
 							":f": &types.AttributeValueMemberBOOL{Value: false},
 						},
-						UpdateExpression: aws.String("SET #PL = :p, #RE = :f"),
+						UpdateExpression: aws.String("SET #P = :p, #R = :f"),
 					},
 				},
 				{
@@ -233,12 +203,12 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			},
 			TableName: aws.String(tableName),
 			ExpressionAttributeNames: map[string]string{
-				"#IG": "game",
+				"#G": "game",
 			},
 			ExpressionAttributeValues: map[string]types.AttributeValue{
 				":g": &types.AttributeValueMemberS{Value: ""},
 			},
-			UpdateExpression: aws.String("SET #IG = :g"),
+			UpdateExpression: aws.String("SET #G = :g"),
 		})
 		callErr(err)
 
@@ -250,17 +220,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	} else if body.Tipe == "ready" {
 
 		ui2, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-			Key:       gameItemKey,
-			TableName: aws.String(tableName),
-			ExpressionAttributeNames: map[string]string{
-				"#PL": "players",
-				"#ID": id,
-				"#RD": "ready",
-			},
+			Key:                      gameItemKey,
+			TableName:                aws.String(tableName),
+			ExpressionAttributeNames: exAttrNms,
 			ExpressionAttributeValues: map[string]types.AttributeValue{
 				":t": &types.AttributeValueMemberBOOL{Value: true},
 			},
-			UpdateExpression: aws.String("SET #PL.#ID.#RD = :t"),
+			UpdateExpression: aws.String("SET #P.#I.#R = :t"),
 			ReturnValues:     types.ReturnValueAllNew,
 		})
 
@@ -271,17 +237,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	} else if body.Tipe == "unready" {
 
 		_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-			Key:       gameItemKey,
-			TableName: aws.String(tableName),
-			ExpressionAttributeNames: map[string]string{
-				"#PL": "players",
-				"#ID": id,
-				"#RD": "ready",
-			},
+			Key:                      gameItemKey,
+			TableName:                aws.String(tableName),
+			ExpressionAttributeNames: exAttrNms,
 			ExpressionAttributeValues: map[string]types.AttributeValue{
 				":f": &types.AttributeValueMemberBOOL{Value: false},
 			},
-			UpdateExpression: aws.String("SET #PL.#ID.#RD = :f, #RD = :f"),
+			UpdateExpression: aws.String("SET #P.#I.#R = :f, #R = :f"),
 		})
 		callErr(err)
 
@@ -309,13 +271,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		fmt.Println("other lobby")
 	}
 
-	return events.APIGatewayProxyResponse{
-		StatusCode:        http.StatusOK,
-		Headers:           map[string]string{"Content-Type": "application/json"},
-		MultiValueHeaders: map[string][]string{},
-		Body:              "",
-		IsBase64Encoded:   false,
-	}, nil
+	return getReturnValue(http.StatusOK), nil
 }
 
 func main() {
@@ -323,7 +279,11 @@ func main() {
 }
 
 func callFunction(rv, gik map[string]types.AttributeValue, tn string, ctx context.Context, svc *dynamodb.Client) {
-	var gm listGame
+	var gm struct {
+		Pk, Sk  string
+		Ready   bool
+		Players map[string]listPlayer
+	}
 	err := attributevalue.UnmarshalMap(rv, &gm)
 	if err != nil {
 		fmt.Println("unmarshal err", err)
@@ -334,10 +294,7 @@ func callFunction(rv, gik map[string]types.AttributeValue, tn string, ctx contex
 	}
 
 	readyCount := 0
-	for k, v := range gm.Players {
-
-		fmt.Printf("%s, %v, %+v", "uicf", k, v)
-
+	for _, v := range gm.Players {
 		if v.Ready {
 			readyCount++
 			if readyCount == len(gm.Players) {
@@ -346,12 +303,12 @@ func callFunction(rv, gik map[string]types.AttributeValue, tn string, ctx contex
 					Key:       gik,
 					TableName: aws.String(tn),
 					ExpressionAttributeNames: map[string]string{
-						"#RE": "ready",
+						"#R": "ready",
 					},
 					ExpressionAttributeValues: map[string]types.AttributeValue{
 						":t": &types.AttributeValueMemberBOOL{Value: true},
 					},
-					UpdateExpression: aws.String("SET #RE = :t"),
+					UpdateExpression: aws.String("SET #R = :t"),
 				})
 				callErr(err)
 			}

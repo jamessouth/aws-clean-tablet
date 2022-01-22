@@ -25,17 +25,6 @@ import (
 	"github.com/aws/smithy-go"
 )
 
-var colors = []string{
-	"#dc2626", //red 600
-	"#0c4a6e", //light blue 900
-	"#16a34a", //green 600
-	"#7c2d12", //orange 900
-	"#c026d3", //fuchsia 600
-	"#365314", //lime 900
-	"#0891b2", //cyan 600
-	"#581c87", //purple 900
-}
-
 type livePlayer struct {
 	PlayerID string `json:"playerid"`
 	Name     string `json:"name"`
@@ -45,12 +34,9 @@ type livePlayer struct {
 	Answer   string `json:"answer"`
 }
 
-type listPlayerMap map[string]struct {
-	Name   string
-	ConnID string
-}
+type stringSlice []string
 
-func shuffleList(list []string, length int) []string {
+func (list stringSlice) shuffleList(length int) stringSlice {
 	t := time.Now().UnixNano()
 	rand.Seed(t)
 
@@ -61,9 +47,10 @@ func shuffleList(list []string, length int) []string {
 	return list[:length]
 }
 
-func (pm listPlayerMap) getSliceAndAssignColors() (res []livePlayer) {
+func getSliceAndAssignColors(pm map[string]struct{ Name, ConnID string }) (res []livePlayer) {
 	count := 0
-	clrs := shuffleList(colors, len(colors))
+	clrs := colors.shuffleList(len(colors))
+
 	for k, v := range pm {
 		res = append(res, livePlayer{
 			PlayerID: k,
@@ -107,12 +94,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		panic(fmt.Sprintf("%v", "can't find sfn arn"))
 	}
 
-	ddbsvc := dynamodb.NewFromConfig(cfg)
-	sfnsvc := sfn.NewFromConfig(cfg)
-
-	var gameno struct {
-		Gameno string
-	}
+	var (
+		ddbsvc = dynamodb.NewFromConfig(cfg)
+		sfnsvc = sfn.NewFromConfig(cfg)
+		gameno struct {
+			Gameno string
+		}
+	)
 
 	err = json.Unmarshal([]byte(req.Body), &gameno)
 	if err != nil {
@@ -131,7 +119,9 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	var game struct {
 		Sk      string
-		Players listPlayerMap
+		Players map[string]struct {
+			Name, ConnID string
+		}
 	}
 	err = attributevalue.UnmarshalMap(di.Attributes, &game)
 	if err != nil {
@@ -142,12 +132,12 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	numberOfWords := slope*len(game.Players) + intercept
 
-	marshalledWordsList, err := attributevalue.Marshal(shuffleList(words, numberOfWords))
+	marshalledWordsList, err := attributevalue.Marshal(words.shuffleList(numberOfWords))
 	if err != nil {
 		return callErr(err)
 	}
 
-	playersList := game.Players.getSliceAndAssignColors()
+	playersList := getSliceAndAssignColors(game.Players)
 
 	marshalledPlayersList, err := attributevalue.Marshal(playersList)
 	if err != nil {
@@ -236,7 +226,18 @@ func callErr(err error) (events.APIGatewayProxyResponse, error) {
 
 }
 
-var words = []string{
+var colors = stringSlice{
+	"#dc2626", //red 600
+	"#0c4a6e", //light blue 900
+	"#16a34a", //green 600
+	"#7c2d12", //orange 900
+	"#c026d3", //fuchsia 600
+	"#365314", //lime 900
+	"#0891b2", //cyan 600
+	"#581c87", //purple 900
+}
+
+var words = stringSlice{
 	"half ____",
 	"____ child",
 	"middle ____",
