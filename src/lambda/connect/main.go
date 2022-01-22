@@ -12,32 +12,10 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/smithy-go"
 )
-
-// $env:GOOS = "linux" / $env:CGO_ENABLED = "0" / $env:GOARCH = "amd64" / go build -o main main.go | build-lambda-zip.exe -o main.zip main / sam local invoke ConnectFunction -e ./event.json
-
-// ConnItem holds values to be put in db
-type ConnItem struct {
-	Pk      string `dynamodbav:"pk"`      //'CONNECT#' + uuid
-	Sk      string `dynamodbav:"sk"`      //name
-	Game    string `dynamodbav:"game"`    //game no or blank
-	Playing bool   `dynamodbav:"playing"` //playing or not
-	Color   string `dynamodbav:"color"`   //player's color
-	GSI1PK  string `dynamodbav:"GSI1PK"`  //'CONNECT'
-	GSI1SK  string `dynamodbav:"GSI1SK"`  //conn id
-}
-
-// StatItem holds values to be put in db
-// type StatItem struct {
-// 	Pk     string `dynamodbav:"pk"`     //'STAT' + uuid
-// 	Sk     string `dynamodbav:"sk"`     //name
-// 	GSI1PK string `dynamodbav:"GSI1PK"` //'STAT'
-// 	GSI1SK string `dynamodbav:"GSI1SK"` //wins
-// }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
@@ -47,147 +25,36 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		config.WithRegion(reg),
 	)
 	if err != nil {
-		fmt.Println("cfg err")
+		return callErr(err)
 	}
-	// logger := aws.NewDefaultLogger()
 
-	// sess.Handlers.Send.PushFront(func(r *request.Request) {
-	// 	logger.Log(fmt.Sprintf("Request: %s /%v, Payload: %s",
-	// 		r.ClientInfo.ServiceName, r.Operation, r.Params))
-	// })
-
-	// .WithLogLevel(aws.LogDebugWithHTTPBody)
-
-	// .WithEndpoint("http://192.168.4.27:8000")
-
-	// svc2 := sfn.NewFromConfig(cfg)
-
-	// svc.Handlers.Send.PushFront(func(r *request.Request) {
-	// 	r.HTTPRequest.Header.Set("CustomHeader", fmt.Sprintf("%d", 10))
-	// })
-	// auth := req.RequestContext.Authorizer.(map[string]interface{})
-
-	// auth["principalId"].(string)
-	// auth["username"].(string)
+	tableName, ok := os.LookupEnv("tableName")
+	if !ok {
+		panic("cant find table name")
+	}
 
 	var (
-		svc      = dynamodb.NewFromConfig(cfg)
+		ddbsvc   = dynamodb.NewFromConfig(cfg)
 		auth     = req.RequestContext.Authorizer.(map[string]interface{})
 		id, name = auth["principalId"].(string), auth["username"].(string)
 	)
 
-	connItem, err := attributevalue.MarshalMap(ConnItem{
-		Pk:      "CONNECT#" + id,
-		Sk:      name,
-		Game:    "",
-		Playing: false,
-		Color:   "",
-		GSI1PK:  "CONNECT",
-		GSI1SK:  req.RequestContext.ConnectionID,
-	})
-	if err != nil {
-		panic(fmt.Sprintf("failed to marshal Record, %v", err))
-	}
-
-	// connid, err := attributevalue.Marshal("CONNECT#" + id)
-	// if err != nil {
-	// 	panic(fmt.Sprintf("failed to marshal Record 10, %v", err))
-	// }
-
-	// statid, err := attributevalue.Marshal("STAT#" + id)
-	// if err != nil {
-	// 	panic(fmt.Sprintf("failed to marshal Record 11, %v", err))
-	// }
-
-	// statItem, err := attributevalue.MarshalMap(StatItem{
-	// 	Pk:     "STAT#" + id,
-	// 	Sk:     name,
-	// 	GSI1PK: "STAT",
-	// 	GSI1SK: "0",
-	// })
-	// if err != nil {
-	// 	panic(fmt.Sprintf("failed to marshal Record 2, %v", err))
-	// }
-
-	tableName, ok := os.LookupEnv("tableName")
-	if !ok {
-		panic(fmt.Sprintf("%v", "cant find table name"))
-	}
-
-	connItemInput := dynamodb.PutItemInput{
+	_, err = ddbsvc.PutItem(ctx, &dynamodb.PutItemInput{
+		Item: map[string]types.AttributeValue{
+			"pk":      &types.AttributeValueMemberS{Value: "CONNECT#" + id},
+			"sk":      &types.AttributeValueMemberS{Value: name},
+			"game":    &types.AttributeValueMemberS{Value: ""},
+			"playing": &types.AttributeValueMemberBOOL{Value: false},
+			"color":   &types.AttributeValueMemberS{Value: ""},
+			"GSI1PK":  &types.AttributeValueMemberS{Value: "CONNECT"},
+			"GSI1SK":  &types.AttributeValueMemberS{Value: req.RequestContext.ConnectionID},
+		},
 		TableName: aws.String(tableName),
-		Item:      connItem,
-		// ExpressionAttributeValues: map[string]types.AttributeValue{
-		// 	":id": connid,
-		// },
-		// ConditionExpression: aws.String("attribute_not_exists(pk)"),
-	}
-	_, err = svc.PutItem(ctx, &connItemInput)
-	// err = panicProtectedPut(ctx, svc, &connItemInput)
+	})
 
 	if err != nil {
-		// fmt.Println("poi", err)
-		var condCheckErr *types.ConditionalCheckFailedException
-		if errors.As(err, &condCheckErr) {
-			fmt.Printf("connection already exists, not putting, %v\n", condCheckErr.ErrorMessage())
-
-		} else {
-
-			// To get any API error
-			var apiErr smithy.APIError
-			if errors.As(err, &apiErr) {
-				fmt.Printf("db error 1, Code: %v, Message: %v",
-					apiErr.ErrorCode(), apiErr.ErrorMessage())
-			}
-
-		}
-		return events.APIGatewayProxyResponse{
-			StatusCode:        http.StatusBadRequest,
-			Headers:           map[string]string{"Content-Type": "application/json"},
-			MultiValueHeaders: map[string][]string{},
-			Body:              "baddd",
-			IsBase64Encoded:   false,
-		}, err
-
+		return callErr(err)
 	}
-	// statItemInput := dynamodb.PutItemInput{
-	// 	TableName: aws.String(tableName),
-	// 	Item:      statItem,
-	// 	// ExpressionAttributeNames: map[string]string,
-	// 	// ExpressionAttributeValues: map[string]types.AttributeValue{
-	// 	// 	":id": statid,
-	// 	// },
-	// 	ConditionExpression: aws.String("attribute_not_exists(pk)"),
-	// }
-
-	// err = panicProtectedPut(ctx, svc, &statItemInput)
-
-	// if err != nil {
-	// 	// fmt.Println("poi", err)
-	// 	var condCheckErr *types.ConditionalCheckFailedException
-	// 	if errors.As(err, &condCheckErr) {
-	// 		fmt.Printf("stat already exists, not putting, %v\n", condCheckErr.ErrorMessage())
-
-	// 	} else {
-
-	// 		// To get any API error
-	// 		var apiErr smithy.APIError
-	// 		if errors.As(err, &apiErr) {
-	// 			fmt.Printf("db error 2, Code: %v, Message: %v",
-	// 				apiErr.ErrorCode(), apiErr.ErrorMessage())
-	// 		}
-
-	// 		return events.APIGatewayProxyResponse{
-	// 			StatusCode:        http.StatusOK,
-	// 			Headers:           map[string]string{"Content-Type": "application/json"},
-	// 			MultiValueHeaders: map[string][]string{},
-	// 			Body:              "",
-	// 			IsBase64Encoded:   false,
-	// 		}, err
-
-	// 	}
-
-	// }
 
 	return events.APIGatewayProxyResponse{
 		StatusCode:        http.StatusOK,
@@ -198,16 +65,29 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}, nil
 }
 
-// func panicProtectedPut(ctx context.Context, svc *dynamodb.Client, pii *dynamodb.PutItemInput) error {
-// 	fmt.Println("panicProtectedPut called", pii)
-// 	defer func() {
-// 		recover()
-// 	}()
-// 	_, err := svc.PutItem(ctx, pii)
-
-// 	return err
-// }
-
 func main() {
 	lambda.Start(handler)
+}
+
+func callErr(err error) (events.APIGatewayProxyResponse, error) {
+	var intServErr *types.InternalServerError
+	if errors.As(err, &intServErr) {
+		fmt.Printf("get item error, %v",
+			intServErr.ErrorMessage())
+	}
+
+	// To get any API error
+	var apiErr smithy.APIError
+	if errors.As(err, &apiErr) {
+		fmt.Printf("db error, Code: %v, Message: %v",
+			apiErr.ErrorCode(), apiErr.ErrorMessage())
+	}
+
+	return events.APIGatewayProxyResponse{
+		StatusCode:        http.StatusBadRequest,
+		Headers:           map[string]string{"Content-Type": "application/json"},
+		MultiValueHeaders: map[string][]string{},
+		Body:              "",
+		IsBase64Encoded:   false,
+	}, err
 }
