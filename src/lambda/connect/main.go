@@ -28,15 +28,11 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		return callErr(err)
 	}
 
-	tableName, ok := os.LookupEnv("tableName")
-	if !ok {
-		panic("cant find table name")
-	}
-
 	var (
-		ddbsvc   = dynamodb.NewFromConfig(cfg)
-		auth     = req.RequestContext.Authorizer.(map[string]interface{})
-		id, name = auth["principalId"].(string), auth["username"].(string)
+		tableName = os.Getenv("tableName")
+		ddbsvc    = dynamodb.NewFromConfig(cfg)
+		auth      = req.RequestContext.Authorizer.(map[string]interface{})
+		id, name  = auth["principalId"].(string), auth["username"].(string)
 	)
 
 	_, err = ddbsvc.PutItem(ctx, &dynamodb.PutItemInput{

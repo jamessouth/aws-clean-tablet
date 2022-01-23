@@ -33,17 +33,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		return callErr(err)
 	}
 
-	sfnarn, ok := os.LookupEnv("SFNARN")
-	if !ok {
-		panic(fmt.Sprintf("%v", "can't find sfn arn"))
-	}
-
-	sfnsvc := sfn.NewFromConfig(cfg)
-
-	ssei := sfn.StartSyncExecutionInput{
-		StateMachineArn: aws.String(sfnarn),
-		Input:           aws.String(req.Body),
-	}
+	var (
+		sfnarn = os.Getenv("SFNARN")
+		sfnsvc = sfn.NewFromConfig(cfg)
+		ssei   = sfn.StartSyncExecutionInput{
+			StateMachineArn: aws.String(sfnarn),
+			Input:           aws.String(req.Body),
+		}
+	)
 
 	sse, err := sfnsvc.StartSyncExecution(ctx, &ssei)
 	if err != nil {

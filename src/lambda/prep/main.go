@@ -84,20 +84,12 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		return callErr(err)
 	}
 
-	tableName, ok := os.LookupEnv("tableName")
-	if !ok {
-		panic(fmt.Sprintf("%v", "can't find table name"))
-	}
-
-	sfnarn, ok := os.LookupEnv("SFNARN")
-	if !ok {
-		panic(fmt.Sprintf("%v", "can't find sfn arn"))
-	}
-
 	var (
-		ddbsvc = dynamodb.NewFromConfig(cfg)
-		sfnsvc = sfn.NewFromConfig(cfg)
-		gameno struct {
+		tableName = os.Getenv("tableName")
+		sfnarn    = os.Getenv("SFNARN")
+		ddbsvc    = dynamodb.NewFromConfig(cfg)
+		sfnsvc    = sfn.NewFromConfig(cfg)
+		gameno    struct {
 			Gameno string
 		}
 	)

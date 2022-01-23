@@ -58,19 +58,16 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		return callErr(err)
 	}
 
-	tableName, ok := os.LookupEnv("tableName")
-	if !ok {
-		panic(fmt.Sprintf("%v", "can't find table name"))
-	}
-
-	ddbsvc := dynamodb.NewFromConfig(cfg)
-
-	var body struct {
-		Game struct {
-			Sk      string
-			Players []livePlayer
+	var (
+		tableName = os.Getenv("tableName")
+		ddbsvc    = dynamodb.NewFromConfig(cfg)
+		body      struct {
+			Game struct {
+				Sk      string
+				Players []livePlayer
+			}
 		}
-	}
+	)
 
 	err = json.Unmarshal([]byte(req.Body), &body)
 	if err != nil {

@@ -52,16 +52,12 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		fmt.Println("cfg err")
 	}
 
-	tableName, ok := os.LookupEnv("tableName")
-	if !ok {
-		panic(fmt.Sprintf("%v", "can't find table name"))
-	}
-
 	var (
-		svc      = dynamodb.NewFromConfig(cfg)
-		auth     = req.RequestContext.Authorizer.(map[string]interface{})
-		id, name = auth["principalId"].(string), auth["username"].(string)
-		body     struct {
+		tableName = os.Getenv("tableName")
+		svc       = dynamodb.NewFromConfig(cfg)
+		auth      = req.RequestContext.Authorizer.(map[string]interface{})
+		id, name  = auth["principalId"].(string), auth["username"].(string)
+		body      struct {
 			Action, Gameno, Tipe string
 		}
 		gameno    string
