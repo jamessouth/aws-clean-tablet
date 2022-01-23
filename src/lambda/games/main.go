@@ -112,6 +112,20 @@ type modifyLiveGamePayload struct {
 	ModLiveGame liveGame
 }
 
+type hhh struct {
+	Game toFEListGame
+	Tag  string
+}
+
+func (p hhh) MarshalJSON() ([]byte, error) {
+	m, err := json.Marshal(p.Game)
+	if err != nil {
+		return m, err
+	}
+
+	return []byte(fmt.Sprintf("{%q:%s}", p.Tag, m)), nil
+}
+
 // https://go.dev/play/p/CvniMWPoLKG
 func (p modifyLiveGamePayload) MarshalJSON() ([]byte, error) {
 	if p.ModLiveGame.AnswersCount == len(p.ModLiveGame.Players) {
@@ -401,39 +415,31 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			fmt.Printf("%s%+v\n", "list gammmmme ", listGameRecord)
 
-			var payload []byte
-
-			pl := toFEListGame{
-				No:      listGameRecord.Sk,
-				Ready:   listGameRecord.Ready,
-				Players: listGameRecord.Players.getListPlayersSlice().sortByName(),
+			gp := hhh{
+				Game: toFEListGame{
+					No: listGameRecord.Sk,
+				},
+				Tag: "",
 			}
 
 			switch rec.EventName {
 			case dynamodbstreams.OperationTypeInsert:
+				gp.Game.Players = listGameRecord.Players.getListPlayersSlice()
+				gp.Tag = `json:"addGame"`
 
-				payload, err = json.Marshal(struct {
-					AddGame toFEListGame `json:"addGame"`
-				}{
-					AddGame: pl,
-				})
 			case dynamodbstreams.OperationTypeModify:
 
-				payload, err = json.Marshal(struct {
-					ModListGame toFEListGame `json:"mdLstGm"`
-				}{
-					ModListGame: pl,
-				})
+				gp.Game.Players = listGameRecord.Players.getListPlayersSlice().sortByName()
+				gp.Game.Ready = listGameRecord.Ready
+				gp.Tag = `json:"mdLstGm"`
+
 			default:
 				fmt.Printf("%s: %+v\n", "remove list game oi", rec.Change.OldImage)
+				gp.Tag = `json:"rmvGame"`
 
-				payload, err = json.Marshal(struct {
-					RemoveGame toFEListGame `json:"rmvGame"`
-				}{
-					RemoveGame: pl,
-				})
 			}
 
+			payload, err := json.Marshal(gp)
 			if err != nil {
 				return callErr(err)
 			}
