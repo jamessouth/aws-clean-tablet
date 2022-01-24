@@ -23,61 +23,31 @@ import (
 	"github.com/aws/smithy-go"
 )
 
-//-----------------------------------------------------------------------------
-
 type listPlayer struct {
 	Name   string `json:"name" dynamodbav:"name"`
 	ConnID string `json:"connid" dynamodbav:"connid"`
 	Ready  bool   `json:"ready" dynamodbav:"ready"`
 }
-type listPlayerMap map[string]listPlayer
 
-type fromDBListGame struct {
-	Pk      string        `dynamodbav:"pk"` //'LISTGME'
-	Sk      string        `dynamodbav:"sk"` //no
-	Ready   bool          `dynamodbav:"ready"`
-	Players listPlayerMap `dynamodbav:"players"`
+type frontListGame struct {
+	No      string       `json:"no"`
+	Ready   bool         `json:"ready"`
+	Players []listPlayer `json:"players"`
 }
 
-type listPlayerList []listPlayer
-
-func mapListGames(gl []fromDBListGame) (res toFEListGameList) {
-	res = make(toFEListGameList, 0)
-
-	for _, g := range gl {
-		pls := g.Players.getListPlayersSlice()
-		pls.sortByName()
-		res = append(res, toFEListGame{
-			No:      g.Sk,
-			Ready:   g.Ready,
-			Players: pls,
-		})
-	}
-
-	return
+type listGamePayload struct {
+	Game frontListGame
+	Tag  string
 }
 
-type toFEListGameList []toFEListGame
-
-type toFEListGame struct {
-	No      string         `json:"no"`
-	Ready   bool           `json:"ready"`
-	Players listPlayerList `json:"players"`
+type backListGame struct {
+	Pk      string                `dynamodbav:"pk"` //'LISTGME'
+	Sk      string                `dynamodbav:"sk"` //no
+	Ready   bool                  `dynamodbav:"ready"`
+	Players map[string]listPlayer `dynamodbav:"players"`
 }
 
-func (pm listPlayerMap) getListPlayersSlice() (res listPlayerList) {
-	res = make(listPlayerList, 0)
-
-	for _, v := range pm {
-		res = append(res, v)
-	}
-
-	return
-}
-
-//-------------------------------------------------------------------------------
-
-type livePlayer struct {
+type livePlayerList []struct {
 	Name        string `json:"name"`
 	ConnID      string `json:"connid"`
 	Color       string `json:"color"`
@@ -86,8 +56,6 @@ type livePlayer struct {
 	Answer      string `json:"answer"`
 	HasAnswered bool   `json:"hasAnswered"`
 }
-
-type livePlayerList []livePlayer
 
 type liveGame struct {
 	Sk           string         `json:"sk"`
@@ -98,26 +66,33 @@ type liveGame struct {
 	ShowAnswers  bool           `json:"showAnswers"`
 }
 
-type insertConnPayload struct {
-	ListGames toFEListGameList `json:"listGms"`
-	ConnID    string           `json:"connID"`
-}
-
-type modifyConnPayload struct {
-	ModConnGm string `json:"modConn"`
-	Color     string `json:"color"`
-}
-
 type modifyLiveGamePayload struct {
 	ModLiveGame liveGame
 }
 
-type hhh struct {
-	Game toFEListGame
-	Tag  string
+func getListPlayersSlice(pm map[string]listPlayer) (res []listPlayer) {
+	for _, v := range pm {
+		res = append(res, v)
+	}
+
+	return
 }
 
-func (p hhh) MarshalJSON() ([]byte, error) {
+func getFrontListGames(gl []backListGame) (res []frontListGame) {
+	for _, g := range gl {
+		pls := sortByName(getListPlayersSlice(g.Players))
+		res = append(res, frontListGame{
+			No:      g.Sk,
+			Ready:   g.Ready,
+			Players: pls,
+		})
+	}
+
+	return
+}
+
+// https://go.dev/play/p/P_Z4JabiTvH
+func (p listGamePayload) MarshalJSON() ([]byte, error) {
 	m, err := json.Marshal(p.Game)
 	if err != nil {
 		return m, err
@@ -149,7 +124,7 @@ func (p modifyLiveGamePayload) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf("{%q:%s}", "mdLveGm", m)), nil
 }
 
-func (players listPlayerList) sortByName() listPlayerList {
+func sortByName(players []listPlayer) []listPlayer {
 	sort.Slice(players, func(i, j int) bool {
 		return players[i].Name < players[j].Name
 	})
@@ -283,11 +258,11 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			return callErr(err)
 		}
 
-		apiid := os.Getenv("CT_APIID")
-
-		stage := os.Getenv("CT_STAGE")
-
-		endpoint := "https://" + apiid + ".execute-api." + rec.AWSRegion + ".amazonaws.com/" + stage
+		var (
+			apiid    = os.Getenv("CT_APIID")
+			stage    = os.Getenv("CT_STAGE")
+			endpoint = "https://" + apiid + ".execute-api." + rec.AWSRegion + ".amazonaws.com/" + stage
+		)
 
 		customResolver := aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
 			if service == apigatewaymanagementapi.ServiceID && region == rec.AWSRegion {
@@ -311,8 +286,6 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			return callErr(err)
 		}
 
-		apigwsvc := apigatewaymanagementapi.NewFromConfig(apigwcfg)
-
 		ddbcfg, err := config.LoadDefaultConfig(ctx,
 			config.WithRegion(rec.AWSRegion),
 			// config.WithLogger(logger),
@@ -321,9 +294,11 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			return callErr(err)
 		}
 
-		ddbsvc := dynamodb.NewFromConfig(ddbcfg)
-
-		recType := item["pk"].(*types.AttributeValueMemberS).Value[:7]
+		var (
+			apigwsvc = apigatewaymanagementapi.NewFromConfig(apigwcfg)
+			ddbsvc   = dynamodb.NewFromConfig(ddbcfg)
+			recType  = item["pk"].(*types.AttributeValueMemberS).Value[:7]
+		)
 
 		if recType == "CONNECT" {
 
@@ -343,59 +318,48 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			fmt.Printf("%s%+v\n", "connrecord ", connRecord)
 
+			var payload []byte
+
 			if rec.EventName == dynamodbstreams.OperationTypeInsert {
 
-				listGamesParams := dynamodb.QueryInput{
+				listGamesResults, err := ddbsvc.Query(ctx, &dynamodb.QueryInput{
 					TableName:              aws.String(tableName),
 					ScanIndexForward:       aws.Bool(false),
-					KeyConditionExpression: aws.String("pk = :gm"),
-					// FilterExpression:       aws.String("#ST = :st"),
+					KeyConditionExpression: aws.String("pk = :g"),
 					ExpressionAttributeValues: map[string]types.AttributeValue{
-						":gm": &types.AttributeValueMemberS{Value: "LISTGME"},
-						// ":st": &types.AttributeValueMemberBOOL{Value: false},
+						":g": &types.AttributeValueMemberS{Value: "LISTGME"},
 					},
-				}
-
-				listGamesResults, err := ddbsvc.Query(ctx, &listGamesParams)
+				})
 				if err != nil {
 					return callErr(err)
 				}
 
-				var listGames []fromDBListGame
+				var listGames []backListGame
 				err = attributevalue.UnmarshalListOfMaps(listGamesResults.Items, &listGames)
 				if err != nil {
 					return callErr(err)
 				}
 
-				payload, err := json.Marshal(insertConnPayload{
-					ListGames: mapListGames(listGames),
+				payload, err = json.Marshal(struct {
+					ListGames []frontListGame `json:"listGms"`
+					ConnID    string          `json:"connID"`
+				}{
+					ListGames: getFrontListGames(listGames),
 					ConnID:    connRecord.GSI1SK,
 				})
 				if err != nil {
 					return callErr(err)
 				}
 
-				conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(connRecord.GSI1SK), Data: payload}
-
-				_, err = apigwsvc.PostToConnection(ctx, &conn)
-				if err != nil {
-					return callErr(err)
-				}
-
 			} else if rec.EventName == dynamodbstreams.OperationTypeModify {
 
-				payload, err := json.Marshal(modifyConnPayload{
+				payload, err = json.Marshal(struct {
+					ModConnGm string `json:"modConn"`
+					Color     string `json:"color"`
+				}{
 					ModConnGm: connRecord.Game,
 					Color:     connRecord.Color,
 				})
-
-				if err != nil {
-					return callErr(err)
-				}
-
-				conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(connRecord.GSI1SK), Data: payload}
-
-				_, err = apigwsvc.PostToConnection(ctx, &conn)
 				if err != nil {
 					return callErr(err)
 				}
@@ -403,11 +367,19 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			} else {
 				oi := rec.Change.OldImage
 				fmt.Printf("%s: %+v\n", "remove conn oi", oi)
+				continue
+			}
+
+			conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(connRecord.GSI1SK), Data: payload}
+
+			_, err = apigwsvc.PostToConnection(ctx, &conn)
+			if err != nil {
+				return callErr(err)
 			}
 
 		} else if recType == "LISTGME" {
 
-			var listGameRecord fromDBListGame
+			var listGameRecord backListGame
 			err = attributevalue.UnmarshalMap(item, &listGameRecord)
 			if err != nil {
 				return callErr(err)
@@ -415,28 +387,23 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			fmt.Printf("%s%+v\n", "list gammmmme ", listGameRecord)
 
-			gp := hhh{
-				Game: toFEListGame{
-					No: listGameRecord.Sk,
+			gp := listGamePayload{
+				Game: frontListGame{
+					No:      listGameRecord.Sk,
+					Players: sortByName(getListPlayersSlice(listGameRecord.Players)),
 				},
-				Tag: "",
+				Tag: "mdLstGm",
 			}
 
 			switch rec.EventName {
 			case dynamodbstreams.OperationTypeInsert:
-				gp.Game.Players = listGameRecord.Players.getListPlayersSlice()
-				gp.Tag = `json:"addGame"`
-
+				gp.Tag = "addGame"
 			case dynamodbstreams.OperationTypeModify:
-
-				gp.Game.Players = listGameRecord.Players.getListPlayersSlice().sortByName()
 				gp.Game.Ready = listGameRecord.Ready
-				gp.Tag = `json:"mdLstGm"`
-
 			default:
 				fmt.Printf("%s: %+v\n", "remove list game oi", rec.Change.OldImage)
-				gp.Tag = `json:"rmvGame"`
-
+				gp.Game.Players = nil
+				gp.Tag = "rmvGame"
 			}
 
 			payload, err := json.Marshal(gp)
@@ -447,14 +414,14 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			connResults, err := ddbsvc.Query(ctx, &dynamodb.QueryInput{
 				TableName:              aws.String(tableName),
 				IndexName:              aws.String("GSI1"),
-				KeyConditionExpression: aws.String("GSI1PK = :cn"),
-				FilterExpression:       aws.String("#PL = :f"),
+				KeyConditionExpression: aws.String("GSI1PK = :c"),
+				FilterExpression:       aws.String("#P = :f"),
 				ExpressionAttributeValues: map[string]types.AttributeValue{
-					":cn": &types.AttributeValueMemberS{Value: "CONNECT"},
-					":f":  &types.AttributeValueMemberBOOL{Value: false},
+					":c": &types.AttributeValueMemberS{Value: "CONNECT"},
+					":f": &types.AttributeValueMemberBOOL{Value: false},
 				},
 				ExpressionAttributeNames: map[string]string{
-					"#PL": "playing",
+					"#P": "playing",
 				},
 			})
 			if err != nil {

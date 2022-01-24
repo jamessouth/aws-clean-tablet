@@ -45,7 +45,7 @@ func TestModifyLiveGamePayload_MarshalJSON2(t *testing.T) {
 func TestSortListPlayers(t *testing.T) {
 	// t.Skip()
 	for _, ref := range sortListPlayers {
-		ref.input.sortByName()
+		ref.input = sortByName(ref.input)
 
 		if !cmp.Equal(ref.input, ref.expected) {
 			t.Fatalf("SortListPlayers: %s result: %v,\n  want:%v.", ref.description, ref.input, ref.expected)
@@ -71,6 +71,20 @@ func TestSortByScoreThenName(t *testing.T) {
 
 		if !cmp.Equal(ref.input, ref.expected) {
 			t.Fatalf("SortByScoreThenName: %s result: %v,\n  want:%v.", ref.description, ref.input, ref.expected)
+		}
+	}
+}
+
+func TestListGamePayload_MarshalJSON(t *testing.T) {
+	// t.Skip()
+	for _, ref := range listGamePayload_MarshalJSON_Tests {
+		j, err := json.Marshal(ref.input)
+		// t.Log(string(j))
+		if err != nil {
+			t.Fatalf("MarshalJSON() returned %q, want nil.", err)
+		}
+		if !cmp.Equal(j, ref.expected) {
+			t.Fatalf("MarshalJSON(): %s result: %v,\n  want:%v.", ref.description, j, ref.expected)
 		}
 	}
 }
