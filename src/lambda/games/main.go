@@ -71,6 +71,8 @@ type modifyLiveGamePayload struct {
 }
 
 func getListPlayersSlice(pm map[string]listPlayer) (res []listPlayer) {
+	res = []listPlayer{}
+
 	for _, v := range pm {
 		res = append(res, v)
 	}
@@ -79,6 +81,8 @@ func getListPlayersSlice(pm map[string]listPlayer) (res []listPlayer) {
 }
 
 func getFrontListGames(gl []backListGame) (res []frontListGame) {
+	res = []frontListGame{}
+
 	for _, g := range gl {
 		pls := sortByName(getListPlayersSlice(g.Players))
 		res = append(res, frontListGame{

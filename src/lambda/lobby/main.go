@@ -73,12 +73,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		fmt.Println("unmarshal err")
 	}
 
-	if _, err = strconv.ParseInt(body.Gameno, 10, 64); err != nil {
+	if body.Gameno == "new" {
+		gameno = fmt.Sprintf("%d", time.Now().UnixNano())
+	} else if body.Gameno == "dc" {
+		gameno = body.Gameno
+	} else if _, err = strconv.ParseInt(body.Gameno, 10, 64); err != nil {
 		return getReturnValue(http.StatusBadRequest), err
 	} else if len(body.Gameno) != 19 {
 		return getReturnValue(http.StatusBadRequest), errors.New("invalid game number")
-	} else if body.Gameno == "new" {
-		gameno = fmt.Sprintf("%d", time.Now().UnixNano())
 	} else {
 		gameno = body.Gameno
 	}
