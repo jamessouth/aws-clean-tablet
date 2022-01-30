@@ -110,24 +110,38 @@ let make = (~game: Reducer.listGame, ~leadertoken, ~playerGame, ~send, ~class, ~
     None
   }, (count, game.no, playerGame, leader))
 
-  <li className={`mb-8 mx-auto grid grid-cols-2 grid-rows-gamebox relative pb-8 ${class}`}>
-    <p className={`text-center font-bold ${textcolor} font-anon text-sm col-span-2`}>
-      {game.no->React.string}
+  <li className={`mb-8 mx-auto grid grid-cols-2 grid-rows-gamebox relative text-xl pb-8 ${class}`}>
+    <p className="absolute font-bold text-warm-gray-100 font-anon text-xs left-1/2 transform -translate-x-2/4 -top-3.5">
+      {React.string(game.no)}
     </p>
-    <p className={`text-center font-bold ${textcolor} font-anon text-sm col-span-2`}>
-      {"players"->React.string}
-    </p>
+    <p className="col-span-2"></p>
+
     {game.players
     ->Js.Array2.map(p => {
       <p className={`text-center font-bold ${textcolor} font-anon`} key=p.connid>
-        {p.name->React.string}
-        {switch p.ready {
-        | true => <span className="text-amber-300 text-2xl leading-3"> {React.string(chk)} </span>
-        | false => React.null
-        }}
+        {React.string(p.name)}
       </p>
     })
     ->React.array}
+<p className={`text-center font-bold ${textcolor} font-anon`} key="2">
+        {React.string("z1")}
+      </p><p className={`text-center font-bold ${textcolor} font-anon`} key="23">
+        {React.string("z11")}
+      </p><p className={`text-center font-bold ${textcolor} font-anon`} key="24">
+        {React.string("z111")}
+      </p><p className={`text-center font-bold ${textcolor} font-anon`} key="25">
+        {React.string("z1111")}
+      </p><p className={`text-center font-bold ${textcolor} font-anon`} key="26">
+        {React.string("z11111")}
+      </p><p className={`text-center font-bold ${textcolor} font-anon`} key="27">
+        {React.string("z111111")}
+      </p><p className={`text-center font-bold ${textcolor} font-anon`} key="28">
+        {React.string("z1111111")}
+      </p>
+
+
+
+
     {switch (game.ready, playerGame !== game.no) {
     | (true, true) =>
       <p

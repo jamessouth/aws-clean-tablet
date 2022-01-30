@@ -1,4 +1,4 @@
-let startBtnStyles = " mb-8 w-1/2 bg-warm-gray-100 text-gray-700 h-8 text-lg font-anon cursor-pointer"
+let startBtnStyles = " mb-14 w-1/2 bg-warm-gray-100 text-gray-700 h-8 text-lg font-anon cursor-pointer"
 
 @react.component
 let make = (~wsConnected, ~playerGame, ~leadertoken, ~games, ~send, ~wsError, ~signOut) => {
@@ -25,7 +25,7 @@ let make = (~wsConnected, ~playerGame, ~leadertoken, ~games, ~send, ~wsError, ~s
           {"loading games..."->React.string}
         </p>
       | (true, Some(gs)) =>
-        <div className="flex flex-col mt-8 items-center">
+        <div className="flex flex-col mt-14 items-center">
           <button
             className={switch playerGame === "" {
             | true => `visible${startBtnStyles}`
