@@ -110,7 +110,7 @@ let make = (~game: Reducer.listGame, ~leadertoken, ~playerGame, ~send, ~class) =
     None
   }, (count, game.no, playerGame, leader))
 
-  <li className={`mb-16 grid grid-cols-2 grid-rows-gamebox relative text-xl bg-bottom bg-no-repeat text-center font-bold text-dark-800 font-anon pb-8 ${class} lg:(max-w-sm w-full mx-4)`}>
+  <li className={`<md:mb-16 grid grid-cols-2 grid-rows-6 relative text-xl bg-bottom bg-no-repeat text-center font-bold text-dark-800 font-anon pb-8 ${class} lg:(max-w-lg w-full)`}>
     <p className="absolute text-warm-gray-100 text-xs left-1/2 transform -translate-x-2/4 -top-3.5">
       {React.string(game.no)}
     </p>
