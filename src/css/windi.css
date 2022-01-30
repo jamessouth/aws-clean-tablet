@@ -29,37 +29,25 @@
 
 .game0{
   background-image: url('../../assets/soria512x200.png');
-  background-repeat: no-repeat;
-  background-position: center bottom;
 }
 .game1{
   background-image: url('../../assets/huldra512x200.png');
-  background-repeat: no-repeat;
-  background-position: center bottom;
 }
 .game2{
   background-image: url('../../assets/svaelg512x200.png');
-  background-repeat: no-repeat;
-  background-position: center bottom;
 }
 .game3{
   background-image: url('../../assets/corn512x200.png');
-  background-repeat: no-repeat;
-  background-position: center bottom;
 }
 .game4{
   background-image: url('../../assets/dammen512x200.png');
-  background-repeat: no-repeat;
-  background-position: center bottom;
 }
 .game5{
   background-image: url('../../assets/fossen512x200.png');
-  background-repeat: no-repeat;
-  background-position: center bottom;
 }
 
 body{
-  background: url('../../assets/mob.jpg') no-repeat top/cover;
+  background-image: url('../../assets/mob.jpg');
 }
 /* button{
   font-size: 1.375rem;
@@ -117,7 +105,7 @@ footer a:hover{
 @media screen and (min-width: 768px){
   body{
     /* background-image: paint(bod); */
-    background: url('../../assets/tab.jpg') no-repeat top/cover;
+    background: url('../../assets/tab.jpg');
   }
   .h1{
     font-size: 3.5rem;
@@ -125,6 +113,6 @@ footer a:hover{
 }
 @media screen and (min-width: 1440px){
   body{
-    background: url('../../assets/big.jpg') no-repeat top/cover;
+    background: url('../../assets/big.jpg');
   }
 }

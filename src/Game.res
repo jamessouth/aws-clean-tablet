@@ -12,7 +12,7 @@ type startPayload = {
 let chk = Js.String2.fromCharCode(10003)
 
 @react.component
-let make = (~game: Reducer.listGame, ~leadertoken, ~playerGame, ~send, ~class, ~textcolor) => {
+let make = (~game: Reducer.listGame, ~leadertoken, ~playerGame, ~send, ~class) => {
   let (ready, setReady) = React.Uncurried.useState(_ => true)
   let (count, setCount) = React.useState(_ => 5)
   let (disabled1, setDisabled1) = React.useState(_ => false)
@@ -110,32 +110,32 @@ let make = (~game: Reducer.listGame, ~leadertoken, ~playerGame, ~send, ~class, ~
     None
   }, (count, game.no, playerGame, leader))
 
-  <li className={`mb-8 mx-auto grid grid-cols-2 grid-rows-gamebox relative text-xl pb-8 ${class}`}>
-    <p className="absolute font-bold text-warm-gray-100 font-anon text-xs left-1/2 transform -translate-x-2/4 -top-3.5">
+  <li className={`mb-16 grid grid-cols-2 grid-rows-gamebox relative text-xl bg-bottom bg-no-repeat text-center font-bold text-dark-800 font-anon pb-8 ${class} lg:(max-w-sm w-full mx-4)`}>
+    <p className="absolute text-warm-gray-100 text-xs left-1/2 transform -translate-x-2/4 -top-3.5">
       {React.string(game.no)}
     </p>
     <p className="col-span-2"></p>
 
     {game.players
     ->Js.Array2.map(p => {
-      <p className={`text-center font-bold ${textcolor} font-anon`} key=p.connid>
+      <p key=p.connid>
         {React.string(p.name)}
       </p>
     })
     ->React.array}
-<p className={`text-center font-bold ${textcolor} font-anon`} key="2">
+<p key="2">
         {React.string("z1")}
-      </p><p className={`text-center font-bold ${textcolor} font-anon`} key="23">
+      </p><p key="23">
         {React.string("z11")}
-      </p><p className={`text-center font-bold ${textcolor} font-anon`} key="24">
+      </p><p key="24">
         {React.string("z111")}
-      </p><p className={`text-center font-bold ${textcolor} font-anon`} key="25">
+      </p><p key="25">
         {React.string("z1111")}
-      </p><p className={`text-center font-bold ${textcolor} font-anon`} key="26">
+      </p><p key="26">
         {React.string("z11111")}
-      </p><p className={`text-center font-bold ${textcolor} font-anon`} key="27">
+      </p><p key="27">
         {React.string("z111111")}
-      </p><p className={`text-center font-bold ${textcolor} font-anon`} key="28">
+      </p><p key="28">
         {React.string("z1111111")}
       </p>
 
@@ -145,14 +145,14 @@ let make = (~game: Reducer.listGame, ~leadertoken, ~playerGame, ~send, ~class, ~
     {switch (game.ready, playerGame !== game.no) {
     | (true, true) =>
       <p
-        className={`absolute ${textcolor} text-3xl animate-pulse font-bold left-1/2 bottom-1/4 transform -translate-x-2/4`}>
+        className={"absolute text-3xl animate-pulse font-bold left-1/2 bottom-1/4 transform -translate-x-2/4"}>
         {React.string("Starting soon...")}
       </p>
 
     | (true, false) => switch count > 0 {
       | true =>
         <p
-          className={`absolute ${textcolor} text-3xl animate-ping font-bold left-1/2 bottom-1/4 transform -translate-x-2/4`}>
+          className={"absolute text-3xl animate-ping font-bold left-1/2 bottom-1/4 transform -translate-x-2/4"}>
           {count->Js.Int.toString->React.string}
         </p>
       | false => React.null
