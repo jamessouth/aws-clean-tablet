@@ -12,7 +12,7 @@ type startPayload = {
 let chk = Js.String2.fromCharCode(10003)
 
 @react.component
-let make = (~game: Reducer.listGame, ~leadertoken, ~playerGame, ~send, ~class) => {
+let make = (~game: Reducer.listGame, ~leadertoken, ~playerGame, ~send, ~class, ~readyColor) => {
   let (ready, setReady) = React.Uncurried.useState(_ => true)
   let (count, setCount) = React.useState(_ => 5)
   let (disabled1, setDisabled1) = React.useState(_ => false)
@@ -118,7 +118,10 @@ let make = (~game: Reducer.listGame, ~leadertoken, ~playerGame, ~send, ~class) =
 
     {game.players
     ->Js.Array2.map(p => {
-      <p key=p.connid>
+      <p className={switch p.ready {
+        | true => `underline decoration-[${readyColor}] decoration-4`
+        | false => ""
+        }} key=p.connid>
         {React.string(p.name)}
       </p>
     })
