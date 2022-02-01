@@ -96,7 +96,7 @@ let make = (~userpool, ~setCognitoUser, ~setToken, ~cognitoUser, ~cognitoErr, ~s
 
   <main>
     <form className="w-4/5 m-auto" onSubmit>
-      <fieldset className="flex flex-col items-center justify-around h-80">
+      <fieldset className="flex flex-col items-center justify-around h-72">
         <legend className="text-warm-gray-100 m-auto mb-6 text-3xl font-fred">
           {"Sign in"->React.string}
         </legend>
@@ -119,7 +119,7 @@ let make = (~userpool, ~setCognitoUser, ~setToken, ~cognitoUser, ~cognitoErr, ~s
             value={username}
           />
         </div>
-        <div>
+        <div className="relative">
           <label className="text-2xl text-warm-gray-100 font-flow" htmlFor="password">
             {"password:"->React.string}
           </label>
@@ -142,11 +142,11 @@ let make = (~userpool, ~setCognitoUser, ~setToken, ~cognitoUser, ~cognitoErr, ~s
           />
           <button
             type_="button"
-            className="font-arch bg-transparent text-warm-gray-100 text-2xl absolute right-0 cursor-pointer"
+            className="font-arch bg-transparent text-warm-gray-100 text-2xl absolute right-0 top-0 cursor-pointer"
             onClick>
             {switch showPassword {
-            | true => "hide"->React.string
-            | false => "show"->React.string
+            | true => React.string("hide")
+            | false => React.string("show")
             }}
           </button>
         </div>
@@ -159,8 +159,8 @@ let make = (~userpool, ~setCognitoUser, ~setToken, ~cognitoUser, ~cognitoErr, ~s
       }
       <button
         disabled
-        className="text-gray-700 mt-16 bg-warm-gray-100 block font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7">
-        {"submit"->React.string}
+        className="text-gray-700 mt-14 bg-warm-gray-100 block font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7">
+        {React.string("submit")}
       </button>
     </form>
   </main>

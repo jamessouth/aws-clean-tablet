@@ -185,13 +185,16 @@ let make = (~userpool, ~cognitoUser, ~setCognitoUser, ~cognitoErr, ~setCognitoEr
               htmlFor="username">
               {"username:"->React.string}
             </label>
+       
+
             {switch (unVisited, unErr) {
-            | (true, Some(err)) =>
-              <span className="absolute right-0 text-2xl text-red-500 font-bold font-flow">
-                {err->React.string}
-              </span>
-            | (false, _) | (true, None) => React.null
-            }}
+          | (true, Some(err)) =>
+            <span
+              className="absolute right-0 text-lg text-warm-gray-100 bg-red-500 font-anon font-flow h-30 w-2/3 z-10">
+              {err->React.string}
+            </span>
+          | (false, _) | (true, None) => React.null
+          }}
             <input
               autoComplete="username"
               autoFocus=true

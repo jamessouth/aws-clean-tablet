@@ -61,7 +61,7 @@ let make = () => {
   let signOut = <SignOut send playerGame close />
 
   <>
-    <p className="font-flow text-warm-gray-100 text-4xl font-bold text-center">{React.string(playerName)}</p>
+    <p className="font-flow text-warm-gray-100 text-4xl h-10 font-bold text-center">{React.string(playerName)}</p>
     <h1 style={ReactDOM.Style.make(~backgroundColor={playerColor}, ())} className="text-6xl mt-11 text-center font-arch decay-mask text-warm-gray-100">
       {"CLEAN TABLET"->React.string}
     </h1>
@@ -95,7 +95,7 @@ let make = () => {
           />
           <Link
             url="/leaderboards"
-            className="w-3/5 border border-warm-gray-100 text-center text-warm-gray-100 block font-anon text-xl mt-40 max-w-80"
+            className="w-3/5 border border-warm-gray-100 text-center text-warm-gray-100 block font-anon text-xl mt-30 max-w-80"
             content="Leaderboards"
           />
         </div>

@@ -1,13 +1,8 @@
-
-
 @send external focus: Dom.element => unit = "focus"
 
-
 @new @module("amazon-cognito-identity-js")
-external userAttributeConstructor: Types.attributeDataInput => Types.attributeData = "CognitoUserAttribute"
-
-
-
+external userAttributeConstructor: Types.attributeDataInput => Types.attributeData =
+  "CognitoUserAttribute"
 
 type clientMetadata = {key: string}
 // type cdd = {
@@ -29,36 +24,32 @@ type clientMetadata = {key: string}
 //     userPoolId: string
 // }
 
-
-
-type accessToken = {
-  jwtToken: string
-}
+type accessToken = {jwtToken: string}
 
 type userSession = {
-    // @as("IdToken") idToken: idToken,
-    // @as("RefreshToken") refreshToken: string,
-    accessToken
-    // @as("ClockDrift") clockDrift: int
+  // @as("IdToken") idToken: idToken,
+  // @as("RefreshToken") refreshToken: string,
+  accessToken: accessToken,
+  // @as("ClockDrift") clockDrift: int
 }
 
 type usr = {
-    // @as("Session") session: Js.Nullable.t<userSession>,
-    // authenticationFlowType: string,
-    // client: clnt,
-    // keyPrefix: string,
-    // pool: pl,
-    // signInUserSession: Js.Nullable.t<string>,
-    // storage: {"length": float},
-    // userDataKey: string,
-    username: string
+  // @as("Session") session: Js.Nullable.t<userSession>,
+  // authenticationFlowType: string,
+  // client: clnt,
+  // keyPrefix: string,
+  // pool: pl,
+  // signInUserSession: Js.Nullable.t<string>,
+  // storage: {"length": float},
+  // userDataKey: string,
+  username: string,
 }
 
 type signupOk = {
-    // codeDeliveryDetails: cdd,
-    user: usr,
-    // userConfirmed: bool,
-    // userSub: string
+  // codeDeliveryDetails: cdd,
+  user: usr,
+  // userConfirmed: bool,
+  // userSub: string
 }
 // type signupResult = result<signupOk, Js.Exn.t>
 
@@ -75,14 +66,12 @@ external signUp: (
   Js.Nullable.t<clientMetadata>,
 ) => unit = "signUp"
 
-
-
-  let cbToOption = (f, . err, res) =>
-    switch (Js.Nullable.toOption(err), Js.Nullable.toOption(res)) {
-    | (Some(err), _) => f(Error(err))
-    | (_, Some(res)) => f(Ok(res))
-    | _ => invalid_arg("invalid argument for cbToOption")
-    }
+let cbToOption = (f, . err, res) =>
+  switch (Js.Nullable.toOption(err), Js.Nullable.toOption(res)) {
+  | (Some(err), _) => f(Error(err))
+  | (_, Some(res)) => f(Ok(res))
+  | _ => invalid_arg("invalid argument for cbToOption")
+  }
 
 @react.component
 let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
@@ -99,10 +88,7 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
   let (password, setPassword) = React.useState(_ => "")
   let (email, setEmail) = React.useState(_ => "")
 
-  
   // let (cognitoResult, setCognitoResult) = React.useState(_ => false)
-
-
 
   let signupCallback = cbToOption(res =>
     switch res {
@@ -111,9 +97,7 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
         setCognitoUser(._ => Js.Nullable.return(val.user))
         RescriptReactRouter.push("/confirm")
 
-
         Js.log2("res", val.user.username)
-        // ()
       }
     | Error(ex) => {
         switch Js.Exn.message(ex) {
@@ -122,7 +106,6 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
         }
 
         Js.log2("problem", ex)
-        // ()
       }
     }
   )
@@ -292,7 +275,7 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
 
   <main>
     <form className="w-4/5 m-auto" onSubmit={handleSubmit}>
-      <fieldset className="flex flex-col items-center justify-around h-80">
+      <fieldset className="flex flex-col items-center justify-around h-72">
         <legend className="text-warm-gray-100 m-auto mb-6 text-3xl font-fred">
           {"Sign up"->React.string}
         </legend>
@@ -307,7 +290,8 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
           </label>
           {switch (unVisited, unErr) {
           | (true, Some(err)) =>
-            <span className="absolute right-0 text-2xl text-red-500 font-bold font-flow">
+            <span
+              className="absolute right-0 text-lg text-warm-gray-100 bg-red-500 font-anon font-flow h-30 w-2/3 z-10">
               {err->React.string}
             </span>
           | (false, _) | (true, None) => React.null
@@ -315,17 +299,7 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
           <input
             autoComplete="username"
             autoFocus=true
-            className={switch (unVisited, unErr) {
-            | (
-                true,
-                Some(_),
-              ) => "h-6 w-full text-xl pl-1 text-left outline-none text-red-500 bg-transparent border-b-1 border-red-500"
-            | (false, _)
-            | (
-              true,
-              None,
-            ) => "h-6 w-full text-xl pl-1 text-left outline-none text-warm-gray-100 bg-transparent border-b-1 border-warm-gray-100"
-            }}
+            className="h-6 w-full text-xl pl-1 text-left outline-none text-warm-gray-100 bg-transparent border-b-1 border-warm-gray-100"
             id="username"
             minLength=4
             name="username"
@@ -349,7 +323,8 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
           </label>
           {switch (pwVisited, pwErr) {
           | (true, Some(err)) =>
-            <span className="absolute right-0 text-2xl text-red-500 font-bold font-flow">
+            <span
+              className="absolute right-0 text-lg text-warm-gray-100 bg-red-500 font-anon font-flow h-30 w-2/3 z-10">
               {err->React.string}
             </span>
           | (false, _) | (true, None) => React.null
@@ -357,18 +332,7 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
           <input
             autoComplete="new-password"
             autoFocus=false
-            className={switch (pwVisited, pwErr) {
-            | (
-                true,
-                Some(_),
-              ) => "h-6 w-3/4 text-xl pl-1 text-left outline-none text-red-500 bg-transparent border-b-1 border-red-500"
-            | (false, _)
-            | (
-              true,
-              None,
-            ) => "h-6 w-3/4 text-xl pl-1 text-left outline-none text-warm-gray-100 bg-transparent border-b-1 border-warm-gray-100"
-            }}
-            // className="h-6 w-full text-xl pl-1 text-left outline-none text-warm-gray-100 bg-transparent border-b-1 border-warm-gray-100"
+            className="h-6 w-full text-xl pl-1 text-left outline-none text-warm-gray-100 bg-transparent border-b-1 border-warm-gray-100"
             id="new-password"
             // minLength=8
             name="password"
@@ -386,7 +350,7 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
           />
           <button
             type_="button"
-            className="font-arch bg-transparent text-warm-gray-100 text-2xl absolute right-0 cursor-pointer"
+            className="font-arch bg-transparent text-warm-gray-100 text-2xl absolute right-0 top-0 cursor-pointer"
             onClick>
             {switch showPassword {
             | true => "hide"->React.string
@@ -414,16 +378,18 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
           />
         </div>
       </fieldset>
-      {
-        switch cognitoErr {
-        | Some(msg) => <span className="text-sm text-warm-gray-100 absolute bg-red-500 text-center w-full left-1/2 transform max-w-lg -translate-x-1/2">{React.string(msg)}</span>
-        | None => React.null
-        }
-      }
+      {switch cognitoErr {
+      | Some(msg) =>
+        <span
+          className="text-sm text-warm-gray-100 absolute bg-red-500 text-center w-full left-1/2 transform max-w-lg -translate-x-1/2">
+          {React.string(msg)}
+        </span>
+      | None => React.null
+      }}
       <button
         disabled
-        className="text-gray-700 mt-16 bg-warm-gray-100 block font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7">
-        {"create"->React.string}
+        className="text-gray-700 mt-14 bg-warm-gray-100 block font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7">
+        {React.string("create")}
       </button>
     </form>
   </main>
