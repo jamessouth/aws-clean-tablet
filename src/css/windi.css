@@ -28,22 +28,22 @@
 
 
 .game0{
-  background-image: url('../../assets/soria512x200.png');
+  background-image: url('../../assets/soria.png');
 }
 .game1{
-  background-image: url('../../assets/huldra512x200.png');
+  background-image: url('../../assets/huldra.png');
 }
 .game2{
-  background-image: url('../../assets/svaelg512x200.png');
+  background-image: url('../../assets/svaelg.png');
 }
 .game3{
-  background-image: url('../../assets/corn512x200.png');
+  background-image: url('../../assets/corn.png');
 }
 .game4{
-  background-image: url('../../assets/dammen512x200.png');
+  background-image: url('../../assets/dammen.png');
 }
 .game5{
-  background-image: url('../../assets/fossen512x200.png');
+  background-image: url('../../assets/fossen.png');
 }
 
 body{

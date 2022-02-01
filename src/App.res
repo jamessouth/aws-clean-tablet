@@ -65,7 +65,7 @@ let make = () => {
     <h1 style={ReactDOM.Style.make(~backgroundColor={playerColor}, ())} className="text-6xl mt-11 text-center font-arch decay-mask text-warm-gray-100">
       {"CLEAN TABLET"->React.string}
     </h1>
-    <div className="mt-10 sm:mt-20">
+    <div className="mt-10">
       {switch (url.path, token) {
       | (list{}, Some(_t)) => {
           RescriptReactRouter.replace("/lobby")
