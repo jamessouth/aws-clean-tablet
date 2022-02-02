@@ -77,7 +77,7 @@ let cbToOption = (f, . err, res) =>
 let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
   let (unVisited, setUnVisited) = React.useState(_ => false)
   let (unErr, setUnErr) = React.useState(_ => None)
-  let (disabled, setDisabled) = React.useState(_ => false)
+  let (disabled, setDisabled) = React.useState(_ => true)
   let (username, setUsername) = React.useState(_ => "")
 
   let (pwVisited, setPwVisited) = React.useState(_ => false)
@@ -109,11 +109,6 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
     }
   )
 
-  let onChange = (func, e) => {
-    let value = ReactEvent.Form.target(e)["value"]
-    (_ => value)->func
-  }
-
   let handleSubmit = e => {
     e->ReactEvent.Form.preventDefault
     let emailData: Types.attributeDataInput = {
@@ -137,42 +132,20 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
         <legend className="text-warm-gray-100 m-auto mb-6 text-3xl font-fred">
           {React.string("Sign up")}
         </legend>
-
-
-
         {switch (unVisited, unErr, pwVisited, pwErr) {
         | (true, Some(err), _, _) | (_, _, true, Some(err)) =>
           <span
             className="absolute right-0 top-0 text-sm text-warm-gray-100 bg-red-600 font-anon w-3/4 leading-4 p-1">
             {React.string(err)}
           </span>
-        | (false, _, false, _) | (true, None, true, None) | (true, None, false, _)|(false, _, true, None) => React.null
+        | (false, _, false, _)
+        | (true, None, true, None)
+        | (true, None, false, _)
+        | (false, _, true, None) => React.null
         }}
-
-
-
-
         <Username unVisited setUnVisited unErr setUnErr setDisabled username setUsername />
         <Password pwVisited setPwVisited pwErr setPwErr setDisabled password setPassword />
-        <div className="w-full">
-          <label className="text-2xl text-warm-gray-100 font-flow" htmlFor="email">
-            {"email:"->React.string}
-          </label>
-          <input
-            autoComplete="email"
-            autoFocus=false
-            className="h-6 w-full text-base pl-1 text-left font-anon outline-none text-warm-gray-100 bg-transparent border-b-1 border-warm-gray-100"
-            id="email"
-            // minLength=4
-            name="email"
-            onChange={onChange(setEmail)}
-            // placeholder="Enter username"
-            required=true
-            spellCheck=false
-            type_="email"
-            value={email}
-          />
-        </div>
+        <Email email setEmail />
       </fieldset>
       {switch cognitoErr {
       | Some(msg) =>
