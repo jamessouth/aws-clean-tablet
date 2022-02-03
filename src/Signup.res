@@ -75,14 +75,10 @@ let cbToOption = (f, . err, res) =>
 
 @react.component
 let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
-  let (unVisited, setUnVisited) = React.useState(_ => false)
-  let (unErr, setUnErr) = React.useState(_ => None)
-  let (disabled, setDisabled) = React.useState(_ => true)
+  // let (unVisited, setUnVisited) = React.useState(_ => false)
+
+  let (validationError, setValidationError) = React.useState(_ => None)
   let (username, setUsername) = React.useState(_ => "")
-
-  let (pwVisited, setPwVisited) = React.useState(_ => false)
-
-  let (pwErr, setPwErr) = React.useState(_ => None)
 
   let (password, setPassword) = React.useState(_ => "")
   let (email, setEmail) = React.useState(_ => "")
@@ -109,42 +105,46 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
     }
   )
 
-  let handleSubmit = e => {
-    e->ReactEvent.Form.preventDefault
-    let emailData: Types.attributeDataInput = {
-      name: "email",
-      value: email,
+  let usernameError = UsernameValidation.useUsernameValidation(username)
+  let passwordError = PasswordValidation.usePasswordValidation(password)
+
+  let onClick = _ => {
+    switch (usernameError, passwordError) {
+    | (None, None) => {
+        let emailData: Types.attributeDataInput = {
+          name: "email",
+          value: email,
+        }
+        let emailAttr = userAttributeConstructor(emailData)
+        userpool->signUp(
+          username,
+          password,
+          Js.Nullable.return([emailAttr]),
+          Js.Nullable.null,
+          signupCallback,
+          Js.Nullable.null,
+        )
+      }
+    | (Some(err), _) | (_, Some(err)) => setValidationError(_ => Some(err))
     }
-    let emailAttr = userAttributeConstructor(emailData)
-    userpool->signUp(
-      username,
-      password,
-      Js.Nullable.return([emailAttr]),
-      Js.Nullable.null,
-      signupCallback,
-      Js.Nullable.null,
-    )
   }
 
   <main>
-    <form className="w-4/5 m-auto relative" onSubmit={handleSubmit}>
+    <form className="w-4/5 m-auto relative">
       <fieldset className="flex flex-col items-center justify-around h-72">
         <legend className="text-warm-gray-100 m-auto mb-6 text-3xl font-fred">
           {React.string("Sign up")}
         </legend>
-        {switch (unVisited, unErr, pwVisited, pwErr) {
-        | (true, Some(err), _, _) | (_, _, true, Some(err)) =>
+        {switch validationError {
+        | Some(err) =>
           <span
             className="absolute right-0 top-0 text-sm text-warm-gray-100 bg-red-600 font-anon w-3/4 leading-4 p-1">
             {React.string(err)}
           </span>
-        | (false, _, false, _)
-        | (true, None, true, None)
-        | (true, None, false, _)
-        | (false, _, true, None) => React.null
+        | None => React.null
         }}
-        <Username unVisited setUnVisited unErr setUnErr setDisabled username setUsername />
-        <Password pwVisited setPwVisited pwErr setPwErr setDisabled password setPassword />
+        <Username username setUsername />
+        <Password password setPassword />
         <Email email setEmail />
       </fieldset>
       {switch cognitoErr {
@@ -156,8 +156,9 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
       | None => React.null
       }}
       <button
-        disabled
-        className="text-gray-700 mt-14 bg-warm-gray-100 block font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7">
+        type_="button"
+        className="text-gray-700 mt-14 bg-warm-gray-100 block font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7"
+        onClick>
         {React.string("create")}
       </button>
     </form>

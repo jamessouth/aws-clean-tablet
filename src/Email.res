@@ -13,12 +13,12 @@ let make = (~email, ~setEmail) => {
       autoFocus=false
       className="h-6 w-full text-base font-anon text-warm-gray-100 bg-transparent border-b-1 border-warm-gray-100"
       id="email"
-      maxLength=50
-      minLength=7
+    //   maxLength=50
+    //   minLength=7
       name="email"
       onChange
       // placeholder="Enter username"
-      required=true
+    //   required=true
       spellCheck=false
       type_="email"
       value={email}
