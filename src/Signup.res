@@ -75,7 +75,12 @@ let cbToOption = (f, . err, res) =>
 
 @react.component
 let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
-  // let (unVisited, setUnVisited) = React.useState(_ => false)
+  
+  let (usernameError, setUsernameError) = React.useState(_ => None)
+  let (passwordError, setPasswordError) = React.useState(_ => None)
+  let (emailError, setEmailError) = React.useState(_ => None)
+
+
 
   let (validationError, setValidationError) = React.useState(_ => None)
   let (username, setUsername) = React.useState(_ => "")
@@ -107,9 +112,9 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
 
   let hasClicked = React.useRef(false)
 
-  let usernameError = UsernameValidation.useUsernameValidation(username)
-  let passwordError = PasswordValidation.usePasswordValidation(password)
-  let emailError = EmailValidation.useEmailValidation(email)
+  
+  
+  
 
   React.useEffect3(() => {
     switch hasClicked.current {
@@ -162,9 +167,9 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
           </span>
         | (None, None) => React.null
         }}
-        <Username username setUsername />
-        <Password password setPassword />
-        <Email email setEmail />
+        <Username username setUsername setUsernameError/>
+        <Password password setPassword setPasswordError/>
+        <Email email setEmail setEmailError/>
       </fieldset>
       <button
         type_="button"

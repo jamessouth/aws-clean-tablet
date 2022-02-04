@@ -1,7 +1,11 @@
 let reqs = " 3-10 characters; letters, numbers, and underscores only."
 
 @react.component
-let make = (~email, ~setEmail) => {
+let make = (~email, ~setEmail, ~setEmailError) => {
+
+
+  EmailValidation.useEmailValidation(email, setEmailError)
+
   let onChange = e => setEmail(_ => ReactEvent.Form.target(e)["value"])
 
   <div className="w-full">

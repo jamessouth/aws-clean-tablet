@@ -1,6 +1,8 @@
 @react.component
-let make = (~password, ~setPassword) => {
+let make = (~password, ~setPassword, ~setPasswordError) => {
   let (showPassword, setShowPassword) = React.useState(_ => false)
+
+  PasswordValidation.usePasswordValidation(password, setPasswordError)
 
   let onClick = _ => {
     setShowPassword(prev => !prev)
