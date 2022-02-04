@@ -107,10 +107,12 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
 
   let usernameError = UsernameValidation.useUsernameValidation(username)
   let passwordError = PasswordValidation.usePasswordValidation(password)
+  let emailError = EmailValidation.useEmailValidation(email)
 
   let onClick = _ => {
-    switch (usernameError, passwordError) {
-    | (None, None) => {
+    switch (usernameError, passwordError, emailError) {
+    | (None, None, None) => {
+        setValidationError(_ => None)
         let emailData: Types.attributeDataInput = {
           name: "email",
           value: email,
@@ -125,7 +127,8 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
           Js.Nullable.null,
         )
       }
-    | (Some(err), _) | (_, Some(err)) => setValidationError(_ => Some(err))
+    | (Some(err), _, _) | (_, Some(err), _) | (_, _, Some(err)) =>
+      setValidationError(_ => Some(err))
     }
   }
 
@@ -135,26 +138,18 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
         <legend className="text-warm-gray-100 m-auto mb-6 text-3xl font-fred">
           {React.string("Sign up")}
         </legend>
-        {switch validationError {
-        | Some(err) =>
+        {switch (validationError, cognitoErr) {
+        | (Some(err), _) | (_, Some(err)) =>
           <span
             className="absolute right-0 top-0 text-sm text-warm-gray-100 bg-red-600 font-anon w-3/4 leading-4 p-1">
             {React.string(err)}
           </span>
-        | None => React.null
+        | (None, None) => React.null
         }}
         <Username username setUsername />
         <Password password setPassword />
         <Email email setEmail />
       </fieldset>
-      {switch cognitoErr {
-      | Some(msg) =>
-        <span
-          className="text-sm text-warm-gray-100 absolute bg-red-500 text-center w-full left-1/2 transform max-w-lg -translate-x-1/2">
-          {React.string(msg)}
-        </span>
-      | None => React.null
-      }}
       <button
         type_="button"
         className="text-gray-700 mt-14 bg-warm-gray-100 block font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7"
