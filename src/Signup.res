@@ -105,11 +105,27 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
     }
   )
 
+  let hasClicked = React.useRef(false)
+
   let usernameError = UsernameValidation.useUsernameValidation(username)
   let passwordError = PasswordValidation.usePasswordValidation(password)
   let emailError = EmailValidation.useEmailValidation(email)
 
+  React.useEffect3(() => {
+    switch hasClicked.current {
+    | false => ()
+    | true =>
+      switch (usernameError, passwordError, emailError) {
+      | (None, None, None) => setValidationError(_ => None)
+      | (Some(err), _, _) | (_, Some(err), _) | (_, _, Some(err)) =>
+        setValidationError(_ => Some(err))
+      }
+    }
+    None
+  }, (usernameError, passwordError, emailError))
+
   let onClick = _ => {
+    hasClicked.current = true
     switch (usernameError, passwordError, emailError) {
     | (None, None, None) => {
         setValidationError(_ => None)
