@@ -81,6 +81,7 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
   let (emailError, setEmailError) = React.useState(_ => None)
 
 
+  let (clicked, setClicked) = React.useState(_ => false)
 
   let (validationError, setValidationError) = React.useState(_ => None)
   let (username, setUsername) = React.useState(_ => "")
@@ -110,30 +111,23 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
     }
   )
 
-  let hasClicked = React.useRef(false)
 
-  
-  
-  
 
   React.useEffect3(() => {
-    switch hasClicked.current {
-    | false => ()
-    | true =>
       switch (usernameError, passwordError, emailError) {
       | (None, None, None) => setValidationError(_ => None)
       | (Some(err), _, _) | (_, Some(err), _) | (_, _, Some(err)) =>
         setValidationError(_ => Some(err))
       }
-    }
     None
   }, (usernameError, passwordError, emailError))
 
   let onClick = _ => {
-    hasClicked.current = true
-    switch (usernameError, passwordError, emailError) {
-    | (None, None, None) => {
-        setValidationError(_ => None)
+   
+    setClicked(_ => true)
+    switch validationError {
+    | None => {
+       
         let emailData: Types.attributeDataInput = {
           name: "email",
           value: email,
@@ -148,8 +142,7 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
           Js.Nullable.null,
         )
       }
-    | (Some(err), _, _) | (_, Some(err), _) | (_, _, Some(err)) =>
-      setValidationError(_ => Some(err))
+    | Some(_) => ()
     }
   }
 
@@ -159,14 +152,27 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
         <legend className="text-warm-gray-100 m-auto mb-6 text-3xl font-fred">
           {React.string("Sign up")}
         </legend>
-        {switch (validationError, cognitoErr) {
+
+        {
+          switch clicked {
+          | false => React.null
+          | true => switch (validationError, cognitoErr) {
         | (Some(err), _) | (_, Some(err)) =>
           <span
             className="absolute right-0 top-0 text-sm text-warm-gray-100 bg-red-600 font-anon w-3/4 leading-4 p-1">
             {React.string(err)}
           </span>
         | (None, None) => React.null
-        }}
+        }
+          }
+        }
+
+        
+
+
+
+
+
         <Username username setUsername setUsernameError/>
         <Password password setPassword setPasswordError/>
         <Email email setEmail setEmailError/>
