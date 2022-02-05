@@ -1,7 +1,9 @@
 @react.component
-let make = (~username, ~setUsername, ~setUsernameError) => {
+let make = (~username, ~setUsername, ~setUsernameError, ~funcList) => {
 
-  UsernameValidation.useUsernameValidation(username, setUsernameError)
+
+
+  Validator.useValidator(username, setUsernameError, funcList, "Username: ")
 
 
   let onChange = e => setUsername(_ => ReactEvent.Form.target(e)["value"])

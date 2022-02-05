@@ -1,10 +1,12 @@
 
 
 @react.component
-let make = (~email, ~setEmail, ~setEmailError) => {
+let make = (~email, ~setEmail, ~setEmailError, ~funcList) => {
 
 
-  EmailValidation.useEmailValidation(email, setEmailError)
+
+
+  Validator.useValidator(email, setEmailError, funcList, "Email: ")
 
   let onChange = e => setEmail(_ => ReactEvent.Form.target(e)["value"])
 

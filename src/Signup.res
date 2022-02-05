@@ -147,6 +147,112 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
     }
   }
 
+  let lenFuncStamp = (min, max) => {
+  s =>
+      switch Js.String2.length(s) < min || Js.String2.length(s) > max {
+      | false => ""
+      | true => j`$min-$max characters; `
+      }
+  }
+
+    let usernameFuncList = list{
+      lenFuncStamp(3, 10),
+    // s =>
+    //   switch Js.String2.length(s) < 3 || Js.String2.length(s) > 10 {
+    //   | false => ""
+    //   | true => "3-10 characters; "
+    //   },
+    s =>
+      switch Js.String2.match_(s, %re("/\W/")) {
+      | None => ""
+      | Some(_) => "letters, numbers, and underscores only; no whitespace."
+      },
+  }
+
+
+  let passwordFuncList = list{
+    s =>
+      switch Js.String2.length(s) < 8 || Js.String2.length(s) > 98 {
+      | false => ""
+      | true => "8-98 characters; "
+      },
+    s =>
+      switch Js.String2.match_(s, %re("/[!-/:-@\[-`{-~]/")) {
+      | None => "at least 1 symbol; "
+      | Some(_) => ""
+      },
+    s =>
+      switch Js.String2.match_(s, %re("/\d/")) {
+      | None => "at least 1 number; "
+      | Some(_) => ""
+      },
+    s =>
+      switch Js.String2.match_(s, %re("/[A-Z]/")) {
+      | None => "at least 1 uppercase letter; "
+      | Some(_) => ""
+      },
+    s =>
+      switch Js.String2.match_(s, %re("/[a-z]/")) {
+      | None => "at least 1 lowercase letter; "
+      | Some(_) => ""
+      },
+    s =>
+      switch Js.String2.match_(s, %re("/\s/")) {
+      | None => ""
+      | Some(_) => "no whitespace."
+      },
+  }
+
+  let farr = [
+        s =>
+      switch Js.String2.length(s) < 8 || Js.String2.length(s) > 98 {
+      | false => ""
+      | true => "8-98 characters; "
+      },
+    s =>
+      switch Js.String2.match_(s, %re("/[!-/:-@\[-`{-~]/")) {
+      | None => "at least 1 symbol; "
+      | Some(_) => ""
+      },
+    s =>
+      switch Js.String2.match_(s, %re("/\d/")) {
+      | None => "at least 1 number; "
+      | Some(_) => ""
+      },
+    s =>
+      switch Js.String2.match_(s, %re("/[A-Z]/")) {
+      | None => "at least 1 uppercase letter; "
+      | Some(_) => ""
+      },
+    s =>
+      switch Js.String2.match_(s, %re("/[a-z]/")) {
+      | None => "at least 1 lowercase letter; "
+      | Some(_) => ""
+      },
+    s =>
+      switch Js.String2.match_(s, %re("/\s/")) {
+      | None => ""
+      | Some(_) => "no whitespace."
+      },
+  ]
+
+Js.log(Js.Array2.length(farr))
+
+    let emailFuncList = list{
+    s =>
+      switch Js.String2.length(s) < 5 {
+      | false => ""
+      | true => "at least 5 characters; "
+      },
+    s =>
+      switch Js.String2.match_(s, %re(
+      "/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/"
+    )) {
+      | None => "enter a valid email address."
+      | Some(_) => ""
+      },
+  }
+
   <main>
     <form className="w-4/5 m-auto relative">
       <fieldset className="flex flex-col items-center justify-around h-72">
@@ -169,9 +275,9 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
         }
 
 
-        <Username username setUsername setUsernameError/>
-        <Password password setPassword setPasswordError/>
-        <Email email setEmail setEmailError/>
+        <Username username setUsername setUsernameError funcList=usernameFuncList/>
+        <Password password setPassword setPasswordError funcList=passwordFuncList/>
+        <Email email setEmail setEmailError funcList=emailFuncList/>
       </fieldset>
       <button
         type_="button"
