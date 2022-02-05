@@ -16,16 +16,10 @@ let make = (~password, ~setPassword, ~setPasswordError) => {
     </label>
     <input
       autoComplete="new-password"
-      autoFocus=false
       className="h-6 w-full text-xl font-anon text-warm-gray-100 bg-transparent border-b-1 border-warm-gray-100"
       id="new-password"
-      // maxLength=98
-      // minLength=8
       name="password"
       onChange
-      // placeholder="Enter password"
-      // ref={pwInput->ReactDOM.Ref.domRef}
-      // required=true
       spellCheck=false
       type_={switch showPassword {
       | true => "text"

@@ -1,40 +1,30 @@
-let reqs = " 3-10 characters; letters, numbers, and underscores only."
-
 let useUsernameValidation = (username, setUsernameError) => {
-  
+  let rec validate = (funcs, str, acc) =>
+    switch funcs {
+    | list{} => acc
+    | list{h, ...t} => validate(t, str, acc ++ h(str))
+    }
 
-  let checkUnForbiddenChars = un => {
-    let r = %re("/\W/")
-    switch Js.String2.match_(un, r) {
-    | Some(_) => setUsernameError(_ => Some("Alphanumeric characters only." ++ reqs))
-    | None => setUsernameError(_ => None)
-    }
-  }
-  let checkUnMaxLength = un => {
-    switch un->Js.String2.length > 10 {
-    | true => setUsernameError(_ => Some("Username is too long." ++ reqs))
-    | false => checkUnForbiddenChars(un)
-    }
-  }
-  let checkNoUnWhitespace = un => {
-    let r = %re("/\s/")
-    switch Js.String2.match_(un, r) {
-    | Some(_) => setUsernameError(_ => Some("No whitespace allowed." ++ reqs))
-    | None => checkUnMaxLength(un)
-    }
-  }
-
-  let checkUnLength = un => {
-    switch un->Js.String2.length < 3 {
-    | true => setUsernameError(_ => Some("Username is too short." ++ reqs))
-    | false => checkNoUnWhitespace(un)
-    }
+  let myList = list{
+    s =>
+      switch Js.String2.length(s) < 3 || Js.String2.length(s) > 10 {
+      | false => ""
+      | true => "3-10 characters; "
+      },
+    s =>
+      switch Js.String2.match_(s, %re("/\W/")) {
+      | None => ""
+      | Some(_) => "letters, numbers, and underscores only; no whitespace."
+      },
   }
 
   React.useEffect1(() => {
-    checkUnLength(username)
+    let error = validate(myList, username, "")
+    let final = switch error == "" {
+    | true => None
+    | false => Some("Username: " ++ error)
+    }
+    setUsernameError(_ => final)
     None
   }, [username])
-
-  
 }

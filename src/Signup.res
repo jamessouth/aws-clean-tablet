@@ -89,7 +89,8 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
   let (password, setPassword) = React.useState(_ => "")
   let (email, setEmail) = React.useState(_ => "")
 
-  // let (cognitoResult, setCognitoResult) = React.useState(_ => false)
+ 
+ 
 
   let signupCallback = cbToOption(res =>
     switch res {
@@ -166,11 +167,6 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
         }
           }
         }
-
-        
-
-
-
 
 
         <Username username setUsername setUsernameError/>

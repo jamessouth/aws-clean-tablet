@@ -1,4 +1,4 @@
-let reqs = " 3-10 characters; letters, numbers, and underscores only."
+
 
 @react.component
 let make = (~email, ~setEmail, ~setEmailError) => {
@@ -14,15 +14,10 @@ let make = (~email, ~setEmail, ~setEmailError) => {
     </label>
     <input
       autoComplete="email"
-      autoFocus=false
-      className="h-6 w-full text-base font-anon text-warm-gray-100 bg-transparent border-b-1 border-warm-gray-100"
+      className="h-6 w-full text-xl font-anon text-warm-gray-100 bg-transparent border-b-1 border-warm-gray-100"
       id="email"
-    //   maxLength=50
-    //   minLength=7
       name="email"
       onChange
-      // placeholder="Enter username"
-    //   required=true
       spellCheck=false
       type_="email"
       value={email}
