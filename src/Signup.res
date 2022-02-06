@@ -75,11 +75,9 @@ let cbToOption = (f, . err, res) =>
 
 @react.component
 let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
-  
   let (usernameError, setUsernameError) = React.useState(_ => None)
   let (passwordError, setPasswordError) = React.useState(_ => None)
   let (emailError, setEmailError) = React.useState(_ => None)
-
 
   let (clicked, setClicked) = React.useState(_ => false)
 
@@ -88,9 +86,6 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
 
   let (password, setPassword) = React.useState(_ => "")
   let (email, setEmail) = React.useState(_ => "")
-
- 
- 
 
   let signupCallback = cbToOption(res =>
     switch res {
@@ -112,23 +107,19 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
     }
   )
 
-
-
   React.useEffect3(() => {
-      switch (usernameError, passwordError, emailError) {
-      | (None, None, None) => setValidationError(_ => None)
-      | (Some(err), _, _) | (_, Some(err), _) | (_, _, Some(err)) =>
-        setValidationError(_ => Some(err))
-      }
+    switch (usernameError, passwordError, emailError) {
+    | (None, None, None) => setValidationError(_ => None)
+    | (Some(err), _, _) | (_, Some(err), _) | (_, _, Some(err)) =>
+      setValidationError(_ => Some(err))
+    }
     None
   }, (usernameError, passwordError, emailError))
 
   let onClick = _ => {
-   
     setClicked(_ => true)
     switch validationError {
     | None => {
-       
         let emailData: Types.attributeDataInput = {
           name: "email",
           value: email,
@@ -147,79 +138,53 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
     }
   }
 
-  let lenFuncStamp = (min, max) => {
-  s =>
-      switch Js.String2.length(s) < min || Js.String2.length(s) > max {
-      | false => ""
-      | true => j`$min-$max characters; `
-      }
-  }
+  let checkLength = (min, max, str) =>
+    switch Js.String2.length(str) < min || Js.String2.length(str) > max {
+    | false => ""
+    | true => j`$min-$max characters; `
+    }
 
-    let usernameFuncList = [
-      lenFuncStamp(3, 10),
-    // s =>
-    //   switch Js.String2.length(s) < 3 || Js.String2.length(s) > 10 {
-    //   | false => ""
-    //   | true => "3-10 characters; "
-    //   },
-    s =>
-      switch Js.String2.match_(s, %re("/\W/")) {
-      | None => ""
-      | Some(_) => "letters, numbers, and underscores only; no whitespace or symbols."
-      },
-    ]
+  let checkInclusion = (re, msg, str) =>
+    switch Js.String2.match_(str, re) {
+    | None => msg
+    | Some(_) => ""
+    }
+  let checkExclusion = (re, msg, str) =>
+    switch Js.String2.match_(str, re) {
+    | None => ""
+    | Some(_) => msg
+    }
 
-  let passwordFuncList = [
-    lenFuncStamp(8, 98),
-    // s =>
-    //   switch Js.String2.length(s) < 8 || Js.String2.length(s) > 98 {
-    //   | false => ""
-    //   | true => "8-98 characters; "
-    //   },
+  let usernameFuncList = [
+    s => checkLength(3, 10, s),
     s =>
-      switch Js.String2.match_(s, %re("/[!-/:-@\[-`{-~]/")) {
-      | None => "at least 1 symbol; "
-      | Some(_) => ""
-      },
-    s =>
-      switch Js.String2.match_(s, %re("/\d/")) {
-      | None => "at least 1 number; "
-      | Some(_) => ""
-      },
-    s =>
-      switch Js.String2.match_(s, %re("/[A-Z]/")) {
-      | None => "at least 1 uppercase letter; "
-      | Some(_) => ""
-      },
-    s =>
-      switch Js.String2.match_(s, %re("/[a-z]/")) {
-      | None => "at least 1 lowercase letter; "
-      | Some(_) => ""
-      },
-    s =>
-      switch Js.String2.match_(s, %re("/\s/")) {
-      | None => ""
-      | Some(_) => "no whitespace."
-      },
+      checkExclusion(
+        %re("/\W/"),
+        "letters, numbers, and underscores only; no whitespace or symbols.",
+        s,
+      ),
   ]
 
+  let passwordFuncList = [
+    s => checkLength(8, 98, s),
+    s => checkInclusion(%re("/[!-/:-@\[-`{-~]/"), "at least 1 symbol; ", s),
+    s => checkInclusion(%re("/\d/"), "at least 1 number; ", s),
+    s => checkInclusion(%re("/[A-Z]/"), "at least 1 uppercase letter; ", s),
+    s => checkInclusion(%re("/[a-z]/"), "at least 1 lowercase letter; ", s),
+    s => checkExclusion(%re("/\s/"), "no whitespace.", s),
+  ]
 
-
-    let emailFuncList = [
-      lenFuncStamp(5, 99),
-    // s =>
-    //   switch Js.String2.length(s) < 5 {
-    //   | false => ""
-    //   | true => "at least 5 characters; "
-    //   },
+  let emailFuncList = [
+    s => checkLength(5, 99, s),
     s =>
-      switch Js.String2.match_(s, %re(
-      "/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/"
-    )) {
-      | None => "enter a valid email address."
-      | Some(_) => ""
-      },
-    ]
+      checkInclusion(
+        %re(
+          "/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/"
+        ),
+        "enter a valid email address.",
+        s,
+      ),
+  ]
 
   <main>
     <form className="w-4/5 m-auto relative">
@@ -227,29 +192,33 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
         <legend className="text-warm-gray-100 m-auto mb-6 text-3xl font-fred">
           {React.string("Sign up")}
         </legend>
-
-        {
-          switch clicked {
-          | false => React.null
-          | true => switch (validationError, cognitoErr) {
-        | (Some(err), _) | (_, Some(err)) =>
-          <span
-            className="absolute right-0 top-0 text-sm text-warm-gray-100 bg-red-600 font-anon w-3/4 leading-4 p-1">
-            {React.string(err)}
-          </span>
-        | (None, None) => React.null
-        }
+        {switch clicked {
+        | false => React.null
+        | true =>
+          switch (validationError, cognitoErr) {
+          | (Some(err), _) | (_, Some(err)) =>
+            <span
+              className="absolute right-0 top-0 text-sm text-warm-gray-100 bg-red-600 font-anon w-3/4 leading-4 p-1">
+              {React.string(err)}
+            </span>
+          | (None, None) => React.null
           }
-        }
-
-        <Input value=username setFunc=setUsername setErrorFunc=setUsernameError funcList=usernameFuncList propName="username"/>
-
-        <Password password setPassword setPasswordError funcList=passwordFuncList/>
-
-        <Input value=email setFunc=setEmail setErrorFunc=setEmailError funcList=emailFuncList propName="email"/>
-
-        
-
+        }}
+        <Input
+          value=username
+          setFunc=setUsername
+          setErrorFunc=setUsernameError
+          funcList=usernameFuncList
+          propName="username"
+        />
+        <Password password setPassword setPasswordError funcList=passwordFuncList />
+        <Input
+          value=email
+          setFunc=setEmail
+          setErrorFunc=setEmailError
+          funcList=emailFuncList
+          propName="email"
+        />
       </fieldset>
       <button
         type_="button"
