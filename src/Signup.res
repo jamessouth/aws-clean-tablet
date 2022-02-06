@@ -87,6 +87,10 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
   let (password, setPassword) = React.useState(_ => "")
   let (email, setEmail) = React.useState(_ => "")
 
+
+let (showPassword, setShowPassword) = React.useState(_ => false)
+
+
   let signupCallback = cbToOption(res =>
     switch res {
     | Ok(val) => {
@@ -211,7 +215,24 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
           funcList=usernameFuncList
           propName="username"
         />
-        <Password password setPassword setPasswordError funcList=passwordFuncList />
+
+        <Input
+          value=password
+          setFunc=setPassword
+          setErrorFunc=setPasswordError
+          funcList=passwordFuncList
+          propName="password"
+          autoComplete="new-password"
+          toggleProp=showPassword
+          toggleSetFunc=setShowPassword
+        />
+
+
+        
+
+
+
+
         <Input
           value=email
           setFunc=setEmail
