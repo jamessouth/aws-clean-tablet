@@ -1,5 +1,5 @@
 @react.component
-let make = (~value, ~setFunc, ~setErrorFunc, ~funcList, ~propName, ~autoComplete=propName, ~toggleProp=false, ~toggleSetFunc) => {
+let make = (~value, ~setFunc, ~setErrorFunc, ~funcList, ~propName, ~autoComplete=propName, ~toggleProp=false, ~toggleButton=React.null) => {
 
   Validator.useValidator(value, setErrorFunc, funcList, propName ++ ": ")
 
@@ -22,9 +22,6 @@ let make = (~value, ~setFunc, ~setErrorFunc, ~funcList, ~propName, ~autoComplete
       }}
       value
     />
-    {switch propName == "password" {
-    | true => <Toggle toggleProp toggleSetFunc/>
-    | false => React.null
-    }}
+    {toggleButton}
   </div>
 }

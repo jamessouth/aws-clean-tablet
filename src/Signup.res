@@ -87,9 +87,7 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
   let (password, setPassword) = React.useState(_ => "")
   let (email, setEmail) = React.useState(_ => "")
 
-
-let (showPassword, setShowPassword) = React.useState(_ => false)
-
+  let (showPassword, setShowPassword) = React.useState(_ => false)
 
   let signupCallback = cbToOption(res =>
     switch res {
@@ -159,7 +157,7 @@ let (showPassword, setShowPassword) = React.useState(_ => false)
     | Some(_) => msg
     }
 
-  let usernameFuncList = [
+  let usernameFuncList = React.useMemo0(_ => [
     s => checkLength(3, 10, s),
     s =>
       checkExclusion(
@@ -167,18 +165,18 @@ let (showPassword, setShowPassword) = React.useState(_ => false)
         "letters, numbers, and underscores only; no whitespace or symbols.",
         s,
       ),
-  ]
+  ])
 
-  let passwordFuncList = [
+  let passwordFuncList = React.useMemo0(_ => [
     s => checkLength(8, 98, s),
     s => checkInclusion(%re("/[!-/:-@\[-`{-~]/"), "at least 1 symbol; ", s),
     s => checkInclusion(%re("/\d/"), "at least 1 number; ", s),
     s => checkInclusion(%re("/[A-Z]/"), "at least 1 uppercase letter; ", s),
     s => checkInclusion(%re("/[a-z]/"), "at least 1 lowercase letter; ", s),
     s => checkExclusion(%re("/\s/"), "no whitespace.", s),
-  ]
+  ])
 
-  let emailFuncList = [
+  let emailFuncList = React.useMemo0(_ => [
     s => checkLength(5, 99, s),
     s =>
       checkInclusion(
@@ -188,7 +186,9 @@ let (showPassword, setShowPassword) = React.useState(_ => false)
         "enter a valid email address.",
         s,
       ),
-  ]
+  ])
+
+  let toggleButton = React.useMemo1(_ => <Toggle toggleProp=showPassword toggleSetFunc=setShowPassword />, [showPassword])
 
   <main>
     <form className="w-4/5 m-auto relative">
@@ -215,7 +215,6 @@ let (showPassword, setShowPassword) = React.useState(_ => false)
           funcList=usernameFuncList
           propName="username"
         />
-
         <Input
           value=password
           setFunc=setPassword
@@ -224,15 +223,8 @@ let (showPassword, setShowPassword) = React.useState(_ => false)
           propName="password"
           autoComplete="new-password"
           toggleProp=showPassword
-          toggleSetFunc=setShowPassword
+          toggleButton
         />
-
-
-        
-
-
-
-
         <Input
           value=email
           setFunc=setEmail
