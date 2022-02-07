@@ -24,7 +24,15 @@ let make = (
     None
   }, [validationError])
 
-  Validator.useValidator(value, setErrorFunc, funcList, propName ++ ": ")
+  React.useEffect1(() => {
+    let error = funcList->Js.Array2.reduce((acc, f) => acc ++ f(value), "")
+    let final = switch error == "" {
+    | true => None
+    | false => Some(propName ++ ": " ++ error)
+    }
+    setErrorFunc(_ => final)
+    None
+  }, [value])
 
   let onChange = e => setFunc(_ => ReactEvent.Form.target(e)["value"])
 
