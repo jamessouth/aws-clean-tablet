@@ -20,6 +20,59 @@ let userpool = userPoolConstructor(pool)
 
 
 
+
+
+
+
+    let checkLength = (min, max, str) =>
+    switch Js.String2.length(str) < min || Js.String2.length(str) > max {
+    | false => ""
+    | true => j`$min-$max characters; `
+    }
+  let checkInclusion = (re, msg, str) =>
+    switch Js.String2.match_(str, re) {
+    | None => msg
+    | Some(_) => ""
+    }
+  let checkExclusion = (re, msg, str) =>
+    switch Js.String2.match_(str, re) {
+    | None => ""
+    | Some(_) => msg
+    }
+
+
+  let usernameFuncList = [
+    s => checkLength(3, 10, s),
+    s =>
+      checkExclusion(
+        %re("/\W/"),
+        "letters, numbers, and underscores only; no whitespace or symbols.",
+        s,
+      ),
+  ]
+
+  let passwordFuncList = [
+    s => checkLength(8, 98, s),
+    s => checkInclusion(%re("/[!-/:-@\[-`{-~]/"), "at least 1 symbol; ", s),
+    s => checkInclusion(%re("/\d/"), "at least 1 number; ", s),
+    s => checkInclusion(%re("/[A-Z]/"), "at least 1 uppercase letter; ", s),
+    s => checkInclusion(%re("/[a-z]/"), "at least 1 lowercase letter; ", s),
+    s => checkExclusion(%re("/\s/"), "no whitespace.", s),
+  ]
+
+  let emailFuncList = [
+    s => checkLength(5, 99, s),
+    s =>
+      checkInclusion(
+        %re(
+          "/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/"
+        ),
+        "enter a valid email address.",
+        s,
+      ),
+  ]
+
+
 @react.component
 let make = () => {
   Js.log("app")
@@ -130,7 +183,7 @@ let make = () => {
           React.null
         }
 
-      | (list{"signup"}, None) => <Signup userpool setCognitoUser cognitoErr setCognitoErr />
+      | (list{"signup"}, None) => <Signup userpool setCognitoUser cognitoErr setCognitoErr usernameFuncList passwordFuncList emailFuncList/>
 
       | (list{"lobby"}, Some(_)) =>
         <Lobby

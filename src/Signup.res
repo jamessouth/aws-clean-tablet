@@ -74,20 +74,44 @@ let cbToOption = (f, . err, res) =>
   }
 
 @react.component
-let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
-  let (usernameError, setUsernameError) = React.useState(_ => None)
-  let (passwordError, setPasswordError) = React.useState(_ => None)
-  let (emailError, setEmailError) = React.useState(_ => None)
-
-  let (clicked, setClicked) = React.useState(_ => false)
-
-  let (validationError, setValidationError) = React.useState(_ => None)
+let make = (
+  ~userpool,
+  ~setCognitoUser,
+  ~cognitoErr,
+  ~setCognitoErr,
+  ~usernameFuncList,
+  ~passwordFuncList,
+  ~emailFuncList,
+) => {
   let (username, setUsername) = React.useState(_ => "")
-
   let (password, setPassword) = React.useState(_ => "")
   let (email, setEmail) = React.useState(_ => "")
 
+  let (usernameError, setUsernameError) = React.useState(_ => Some("username: 3-10 characters; "))
+  let (passwordError, setPasswordError) = React.useState(_ => Some(
+    "password: 8-98 characters; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; ",
+  ))
+  let (emailError, setEmailError) = React.useState(_ => Some(
+    "email: 5-99 characters; enter a valid email address.",
+  ))
+
+  let (validationError, setValidationError) = React.useState(_ => Some(""))
+
+  let (clicked, setClicked) = React.useState(_ => false)
   let (showPassword, setShowPassword) = React.useState(_ => false)
+
+  React.useEffect4(() => {
+    switch clicked {
+    | false => ()
+    | true =>
+      switch (usernameError, passwordError, emailError) {
+      | (None, None, None) => setValidationError(_ => None)
+      | (Some(err), _, _) | (_, Some(err), _) | (_, _, Some(err)) =>
+        setValidationError(_ => Some(err))
+      }
+    }
+    None
+  }, (usernameError, passwordError, emailError, clicked))
 
   let signupCallback = cbToOption(res =>
     switch res {
@@ -108,15 +132,6 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
       }
     }
   )
-
-  React.useEffect3(() => {
-    switch (usernameError, passwordError, emailError) {
-    | (None, None, None) => setValidationError(_ => None)
-    | (Some(err), _, _) | (_, Some(err), _) | (_, _, Some(err)) =>
-      setValidationError(_ => Some(err))
-    }
-    None
-  }, (usernameError, passwordError, emailError))
 
   let onClick = _ => {
     setClicked(_ => true)
@@ -140,55 +155,10 @@ let make = (~userpool, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
     }
   }
 
-  let checkLength = (min, max, str) =>
-    switch Js.String2.length(str) < min || Js.String2.length(str) > max {
-    | false => ""
-    | true => j`$min-$max characters; `
-    }
-
-  let checkInclusion = (re, msg, str) =>
-    switch Js.String2.match_(str, re) {
-    | None => msg
-    | Some(_) => ""
-    }
-  let checkExclusion = (re, msg, str) =>
-    switch Js.String2.match_(str, re) {
-    | None => ""
-    | Some(_) => msg
-    }
-
-  let usernameFuncList = React.useMemo0(_ => [
-    s => checkLength(3, 10, s),
-    s =>
-      checkExclusion(
-        %re("/\W/"),
-        "letters, numbers, and underscores only; no whitespace or symbols.",
-        s,
-      ),
-  ])
-
-  let passwordFuncList = React.useMemo0(_ => [
-    s => checkLength(8, 98, s),
-    s => checkInclusion(%re("/[!-/:-@\[-`{-~]/"), "at least 1 symbol; ", s),
-    s => checkInclusion(%re("/\d/"), "at least 1 number; ", s),
-    s => checkInclusion(%re("/[A-Z]/"), "at least 1 uppercase letter; ", s),
-    s => checkInclusion(%re("/[a-z]/"), "at least 1 lowercase letter; ", s),
-    s => checkExclusion(%re("/\s/"), "no whitespace.", s),
-  ])
-
-  let emailFuncList = React.useMemo0(_ => [
-    s => checkLength(5, 99, s),
-    s =>
-      checkInclusion(
-        %re(
-          "/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/"
-        ),
-        "enter a valid email address.",
-        s,
-      ),
-  ])
-
-  let toggleButton = React.useMemo1(_ => <Toggle toggleProp=showPassword toggleSetFunc=setShowPassword />, [showPassword])
+  let toggleButton = React.useMemo1(
+    _ => <Toggle toggleProp=showPassword toggleSetFunc=setShowPassword />,
+    [showPassword],
+  )
 
   <main>
     <form className="w-4/5 m-auto relative">
