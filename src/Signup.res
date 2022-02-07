@@ -77,8 +77,8 @@ let cbToOption = (f, . err, res) =>
 let make = (
   ~userpool,
   ~setCognitoUser,
-  ~cognitoErr,
-  ~setCognitoErr,
+  ~cognitoError,
+  ~setCognitoError,
   ~usernameFuncList,
   ~passwordFuncList,
   ~emailFuncList,
@@ -97,11 +97,11 @@ let make = (
 
   let (validationError, setValidationError) = React.useState(_ => Some(""))
 
-  let (clicked, setClicked) = React.useState(_ => false)
+  let (submitClicked, setSubmitClicked) = React.useState(_ => false)
   let (showPassword, setShowPassword) = React.useState(_ => false)
 
   React.useEffect4(() => {
-    switch clicked {
+    switch submitClicked {
     | false => ()
     | true =>
       switch (usernameError, passwordError, emailError) {
@@ -111,12 +111,12 @@ let make = (
       }
     }
     None
-  }, (usernameError, passwordError, emailError, clicked))
+  }, (usernameError, passwordError, emailError, submitClicked))
 
   let signupCallback = cbToOption(res =>
     switch res {
     | Ok(val) => {
-        setCognitoErr(_ => None)
+        setCognitoError(_ => None)
         setCognitoUser(._ => Js.Nullable.return(val.user))
         RescriptReactRouter.push("/confirm")
 
@@ -124,8 +124,8 @@ let make = (
       }
     | Error(ex) => {
         switch Js.Exn.message(ex) {
-        | Some(msg) => setCognitoErr(_ => Some(msg))
-        | None => setCognitoErr(_ => Some("unknown signup error"))
+        | Some(msg) => setCognitoError(_ => Some(msg))
+        | None => setCognitoError(_ => Some("unknown signup error"))
         }
 
         Js.log2("problem", ex)
@@ -134,7 +134,7 @@ let make = (
   )
 
   let onClick = _ => {
-    setClicked(_ => true)
+    setSubmitClicked(_ => true)
     switch validationError {
     | None => {
         let emailData: Types.attributeDataInput = {
@@ -166,17 +166,9 @@ let make = (
         <legend className="text-warm-gray-100 m-auto mb-6 text-3xl font-fred">
           {React.string("Sign up")}
         </legend>
-        {switch clicked {
+        {switch submitClicked {
         | false => React.null
-        | true =>
-          switch (validationError, cognitoErr) {
-          | (Some(err), _) | (_, Some(err)) =>
-            <span
-              className="absolute right-0 top-0 text-sm text-warm-gray-100 bg-red-600 font-anon w-3/4 leading-4 p-1">
-              {React.string(err)}
-            </span>
-          | (None, None) => React.null
-          }
+        | true => <Error validationError cognitoError/>
         }}
         <Input
           value=username
@@ -184,6 +176,7 @@ let make = (
           setErrorFunc=setUsernameError
           funcList=usernameFuncList
           propName="username"
+          validationError
         />
         <Input
           value=password
@@ -194,6 +187,7 @@ let make = (
           autoComplete="new-password"
           toggleProp=showPassword
           toggleButton
+          validationError
         />
         <Input
           value=email
@@ -201,6 +195,7 @@ let make = (
           setErrorFunc=setEmailError
           funcList=emailFuncList
           propName="email"
+          validationError
         />
       </fieldset>
       <button

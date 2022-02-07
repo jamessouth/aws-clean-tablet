@@ -52,7 +52,7 @@ external forgotPassword: (
 ) => unit = "forgotPassword"
 
 @react.component
-let make = (~userpool, ~cognitoUser, ~setCognitoUser, ~cognitoErr, ~setCognitoErr) => {
+let make = (~userpool, ~cognitoUser, ~setCognitoUser, ~cognitoError, ~setCognitoError) => {
   // let pwInput = React.useRef(Js.Nullable.null)
 
   let url = RescriptReactRouter.useUrl()
@@ -111,14 +111,14 @@ let make = (~userpool, ~cognitoUser, ~setCognitoUser, ~cognitoErr, ~setCognitoEr
 
   let forgotPWcb = {
     onSuccess: str => {
-      setCognitoErr(_ => None)
+      setCognitoError(_ => None)
       Js.log2("forgot pw initiated: ", str)
       // RescriptReactRouter.push("/confirm")
     },
     onFailure: err => {
       switch Js.Exn.message(err) {
-      | Some(msg) => setCognitoErr(_ => Some(msg))
-      | None => setCognitoErr(_ => Some("unknown forgot pw error"))
+      | Some(msg) => setCognitoError(_ => Some(msg))
+      | None => setCognitoError(_ => Some("unknown forgot pw error"))
       }
       Js.log2("forgot pw problem: ", err)
     },
@@ -222,7 +222,7 @@ let make = (~userpool, ~cognitoUser, ~setCognitoUser, ~cognitoErr, ~setCognitoEr
             />
           </div>
         </fieldset>
-        {switch cognitoErr {
+        {switch cognitoError {
         | Some(msg) =>
           <span
             className="text-sm text-warm-gray-100 absolute bg-red-500 text-center w-full left-1/2 transform max-w-lg -translate-x-1/2">

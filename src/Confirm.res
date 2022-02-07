@@ -21,7 +21,7 @@ external confirmPassword: (
 ) => unit = "confirmPassword"
 
 @react.component
-let make = (~cognitoUser, ~cognitoErr, ~setCognitoErr) => {
+let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
   let url = RescriptReactRouter.useUrl()
   Js.log3("user", cognitoUser, url)
   let (password, setPassword) = React.useState(_ => "")
@@ -155,14 +155,14 @@ let make = (~cognitoUser, ~cognitoErr, ~setCognitoErr) => {
   let confirmregistrationCallback = Signup.cbToOption(res =>
     switch res {
     | Ok(val) => {
-        setCognitoErr(_ => None)
+        setCognitoError(_ => None)
         RescriptReactRouter.push("/signin")
         Js.log2("conf rego res", val)
       }
     | Error(ex) => {
         switch Js.Exn.message(ex) {
-        | Some(msg) => setCognitoErr(_ => Some(msg))
-        | None => setCognitoErr(_ => Some("unknown confirm rego error"))
+        | Some(msg) => setCognitoError(_ => Some(msg))
+        | None => setCognitoError(_ => Some("unknown confirm rego error"))
         }
 
         Js.log2("conf rego problem", ex)
@@ -172,14 +172,14 @@ let make = (~cognitoUser, ~cognitoErr, ~setCognitoErr) => {
 
   let confirmpasswordCallback: GetUsername.passwordPWCB = {
     onSuccess: str => {
-        setCognitoErr(_ => None)
+        setCognitoError(_ => None)
         RescriptReactRouter.push("/signin")
       Js.log2("pw confirmed: ", str)
     },
     onFailure: err => {
       switch Js.Exn.message(err) {
-      | Some(msg) => setCognitoErr(_ => Some(msg))
-      | None => setCognitoErr(_ => Some("unknown confirm pw error"))
+      | Some(msg) => setCognitoError(_ => Some(msg))
+      | None => setCognitoError(_ => Some("unknown confirm pw error"))
       }
       Js.log2("confirm pw problem: ", err)
     },
@@ -198,10 +198,10 @@ let make = (~cognitoUser, ~cognitoErr, ~setCognitoErr) => {
           Js.Nullable.null,
         )
       | "pw" => cognitoUser->confirmPassword(verifCode, password, confirmpasswordCallback, Js.Nullable.null)
-      | _ => (_ => Some("unknown method - not submitting"))->setCognitoErr
+      | _ => (_ => Some("unknown method - not submitting"))->setCognitoError
       }
 
-    | true => (_ => Some("null user - not submitting"))->setCognitoErr
+    | true => (_ => Some("null user - not submitting"))->setCognitoError
     }
   }
 
@@ -314,7 +314,7 @@ let make = (~cognitoUser, ~cognitoErr, ~setCognitoErr) => {
           | _ => React.null
           }}
         </fieldset>
-        {switch cognitoErr {
+        {switch cognitoError {
         | Some(msg) =>
           <span
             className="text-sm text-warm-gray-100 absolute bg-red-500 text-center w-full left-1/2 transform max-w-lg -translate-x-1/2">
