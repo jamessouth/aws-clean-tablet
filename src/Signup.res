@@ -113,6 +113,11 @@ let make = (
     None
   }, (usernameError, passwordError, emailError, submitClicked))
 
+  let toggleButton = React.useMemo1(
+    _ => <Toggle toggleProp=showPassword toggleSetFunc=setShowPassword />,
+    [showPassword],
+  )
+
   let signupCallback = cbToOption(res =>
     switch res {
     | Ok(val) => {
@@ -155,11 +160,6 @@ let make = (
     }
   }
 
-  let toggleButton = React.useMemo1(
-    _ => <Toggle toggleProp=showPassword toggleSetFunc=setShowPassword />,
-    [showPassword],
-  )
-
   <main>
     <form className="w-4/5 m-auto relative">
       <fieldset className="flex flex-col items-center justify-around h-72">
@@ -168,7 +168,7 @@ let make = (
         </legend>
         {switch submitClicked {
         | false => React.null
-        | true => <Error validationError cognitoError/>
+        | true => <Error validationError cognitoError />
         }}
         <Input
           value=username
