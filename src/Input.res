@@ -1,5 +1,6 @@
 @react.component
 let make = (
+  ~submitClicked,
   ~value,
   ~setFunc,
   ~setErrorFunc,
@@ -12,17 +13,21 @@ let make = (
 ) => {
   let (class, setClass) = React.useState(_ => "warm-gray-100")
 
-  React.useEffect1(() => {
-    switch validationError {
-    | None => setClass(_ => "warm-gray-100")
-    | Some(err) =>
-      switch Js.String2.startsWith(err, propName) {
-      | false => setClass(_ => "warm-gray-100")
-      | true => setClass(_ => "red-500")
+  React.useEffect2(() => {
+    switch submitClicked {
+    | false => ()
+    | true =>
+      switch validationError {
+      | None => setClass(_ => "warm-gray-100")
+      | Some(err) =>
+        switch Js.String2.startsWith(err, propName) {
+        | false => setClass(_ => "warm-gray-100")
+        | true => setClass(_ => "red-500")
+        }
       }
     }
     None
-  }, [validationError])
+  }, (validationError, submitClicked))
 
   React.useEffect1(() => {
     let error = funcList->Js.Array2.reduce((acc, f) => acc ++ f(value), "")

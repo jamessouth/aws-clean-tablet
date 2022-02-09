@@ -95,23 +95,21 @@ let make = (
     "email: 5-99 characters; enter a valid email address.",
   ))
 
-  let (validationError, setValidationError) = React.useState(_ => Some(""))
+  let (validationError, setValidationError) = React.useState(_ => Some(
+    "username: 3-10 characters; ",
+  ))
 
   let (submitClicked, setSubmitClicked) = React.useState(_ => false)
   let (showPassword, setShowPassword) = React.useState(_ => false)
 
-  React.useEffect4(() => {
-    switch submitClicked {
-    | false => ()
-    | true =>
-      switch (usernameError, passwordError, emailError) {
-      | (None, None, None) => setValidationError(_ => None)
-      | (Some(err), _, _) | (_, Some(err), _) | (_, _, Some(err)) =>
-        setValidationError(_ => Some(err))
-      }
+  React.useEffect3(() => {
+    switch (usernameError, passwordError, emailError) {
+    | (None, None, None) => setValidationError(_ => None)
+    | (Some(err), _, _) | (_, Some(err), _) | (_, _, Some(err)) =>
+      setValidationError(_ => Some(err))
     }
     None
-  }, (usernameError, passwordError, emailError, submitClicked))
+  }, (usernameError, passwordError, emailError))
 
   let toggleButton = React.useMemo1(
     _ => <Toggle toggleProp=showPassword toggleSetFunc=setShowPassword />,
@@ -123,7 +121,7 @@ let make = (
     | Ok(val) => {
         setCognitoError(_ => None)
         setCognitoUser(._ => Js.Nullable.return(val.user))
-        RescriptReactRouter.push("/confirm")
+        RescriptReactRouter.push("/confirm?code")
 
         Js.log2("res", val.user.username)
       }
@@ -171,6 +169,7 @@ let make = (
         | true => <Error validationError cognitoError />
         }}
         <Input
+          submitClicked
           value=username
           setFunc=setUsername
           setErrorFunc=setUsernameError
@@ -179,6 +178,7 @@ let make = (
           validationError
         />
         <Input
+          submitClicked
           value=password
           setFunc=setPassword
           setErrorFunc=setPasswordError
@@ -190,6 +190,7 @@ let make = (
           validationError
         />
         <Input
+          submitClicked
           value=email
           setFunc=setEmail
           setErrorFunc=setEmailError
