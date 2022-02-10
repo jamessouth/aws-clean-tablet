@@ -26,8 +26,8 @@ let make = (~wsConnected, ~playerGame, ~leadertoken, ~games, ~send, ~wsError, ~s
         </p>
       | (true, Some(gs)) =>
         <div className="flex flex-col items-center">
-          <div className="relative m-auto w-max">
-            <img src="../../assets/ekko.png" alt="" className="block" width="421" height="80" />
+          <div className="relative m-auto <newgmimg:w-11/12 w-max">
+            <img src="../../assets/ekko.png" alt="" className="block <newgmimg:max-w-full" width="421" height="80" />
             {switch playerGame === "" {
             | true =>
               <button

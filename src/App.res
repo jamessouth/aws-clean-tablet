@@ -115,7 +115,7 @@ let make = () => {
 
   <>
     <p className="font-flow text-warm-gray-100 text-4xl h-10 font-bold text-center">{React.string(playerName)}</p>
-    <h1 style={ReactDOM.Style.make(~backgroundColor={playerColor}, ())} className="text-6xl mt-11 text-center font-arch decay-mask text-warm-gray-100">
+    <h1 style={ReactDOM.Style.make(~backgroundColor={playerColor}, ())} className="text-6xl mt-11 mx-auto w-11/12 text-center font-arch decay-mask text-warm-gray-100">
       {"CLEAN TABLET"->React.string}
     </h1>
     <div className="mt-10">
@@ -176,7 +176,7 @@ let make = () => {
         }
 
       | (list{"getusername"}, None) =>
-        <GetUsername userpool cognitoUser setCognitoUser cognitoError setCognitoError />
+        <GetUsername userpool cognitoUser setCognitoUser cognitoError setCognitoError usernameFuncList/>
 
       | (list{"signup"}, Some(_t)) => {
           RescriptReactRouter.replace("/lobby")

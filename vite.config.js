@@ -50,6 +50,9 @@ export default defineConfig({
             lineHeight: {
               '12rem': '12rem',
             },
+            screens: {
+              'newgmimg': '459px',//11/12*459=421
+            },
             textShadow: {
               '2xl': '1px 0px 4px #f5f5f4bb',
             },
