@@ -1,9 +1,3 @@
-type cognitoPayload = {
-  action: string,
-  gameno: string,
-  tipe: string,
-}
-
 @new @module("amazon-cognito-identity-js")
 external userConstructor: Types.userDataInput => Signup.usr = "CognitoUser"
 
@@ -50,12 +44,6 @@ type passwordPWCB = {
   onSuccess: string => unit,
 }
 
-type forgotPasswordData = {
-  userPoolId: string,
-  clientId: string,
-  username: string,
-}
-
 @send
 external forgotPassword: (
   Js.Nullable.t<Signup.usr>, //user object
@@ -97,31 +85,16 @@ let make = (
     },
   }
 
-
-
   React.useEffect1(() => {
     switch Js.Nullable.isNullable(cognitoUser) {
     | true => ()
     | false =>
       switch url.search {
-      | "pw" => {
-        let pl = {
-          action: "cognito",
-          data: {
-            userPoolId: userpool.userPoolId,
-            clientId: userpool.clientId,
-            username,
-          },
-          tipe: "forgotPassword",
-        }
-        send(. Js.Json.stringifyAny(pl))
-
-
-      }
-      | _ => RescriptReactRouter.push(`/confirm?${url.search}`)
+      | "pw" => cognitoUser->forgotPassword(forgotPWcb, Js.Nullable.null)
+      | _ => ()
       }
 
-      
+      RescriptReactRouter.push(`/confirm?${url.search}`)
     }
     None
   }, [cognitoUser])
