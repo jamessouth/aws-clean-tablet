@@ -1,4 +1,45 @@
 @new @module("amazon-cognito-identity-js")
+external userAttributeConstructor: Types.attributeDataInput => Types.attributeData =
+  "CognitoUserAttribute"
+
+type clientMetadata = {key: string}
+
+// type usr = {
+//   // @as("Session") session: Js.Nullable.t<userSession>,
+//   // authenticationFlowType: string,
+//   // client: clnt,
+//   // keyPrefix: string,
+//   // pool: pl,
+//   // signInUserSession: Js.Nullable.t<string>,
+//   // storage: {"length": float},
+//   // userDataKey: string,
+//   username: string,
+// }
+
+
+type signupOk = {
+  // codeDeliveryDetails: cdd,
+  user: Signup.usr,
+  // userConfirmed: bool,
+  // userSub: string
+}
+
+type signUpCB = (. Js.Nullable.t<Js.Exn.t>, Js.Nullable.t<signupOk>) => unit
+
+@send
+external signUp: (
+  Types.poolData,
+  string,
+  string,
+  Js.Nullable.t<array<Types.attributeData>>,
+  Js.Nullable.t<array<Types.attributeData>>,
+  signUpCB,
+  Js.Nullable.t<clientMetadata>,
+) => unit = "signUp"
+
+
+
+@new @module("amazon-cognito-identity-js")
 external userConstructor: Types.userDataInput => Signup.usr = "CognitoUser"
 
 type cdd = {
@@ -20,24 +61,24 @@ type pl = {
   userPoolId: string,
 }
 
-type usr = {
-  @as("Session") session: Js.Nullable.t<string>,
-  authenticationFlowType: string,
-  client: clnt,
-  keyPrefix: string,
-  pool: pl,
-  signInUserSession: Js.Nullable.t<string>,
-  storage: {"length": float},
-  userDataKey: string,
-  username: string,
-}
+// type usr = {
+//   @as("Session") session: Js.Nullable.t<string>,
+//   authenticationFlowType: string,
+//   client: clnt,
+//   keyPrefix: string,
+//   pool: pl,
+//   signInUserSession: Js.Nullable.t<string>,
+//   storage: {"length": float},
+//   userDataKey: string,
+//   username: string,
+// }
 
-type signupOk = {
-  codeDeliveryDetails: cdd,
-  user: usr,
-  userConfirmed: bool,
-  userSub: string,
-}
+// type signupOk = {
+//   codeDeliveryDetails: cdd,
+//   user: usr,
+//   userConfirmed: bool,
+//   userSub: string,
+// }
 
 type passwordPWCB = {
   onFailure: Js.Exn.t => unit,
@@ -50,6 +91,13 @@ external forgotPassword: (
   passwordPWCB, //cb obj
   Js.Nullable.t<Signup.clientMetadata>,
 ) => unit = "forgotPassword"
+
+let cbToOption = (f, . err, res) =>
+  switch (Js.Nullable.toOption(err), Js.Nullable.toOption(res)) {
+  | (Some(err), _) => f(Error(err))
+  | (_, Some(res)) => f(Ok(res))
+  | _ => invalid_arg("invalid argument for cbToOption")
+  }
 
 @react.component
 let make = (
@@ -85,16 +133,71 @@ let make = (
     },
   }
 
+  let dummyEmail = "success@simulator.amazonses.com"
+  let dummyPassword = "lllLLL!!!111"
+
+
+  React.useEffect1(() => {
+    switch cognitoError {
+    | None => ()
+    | Some(err) => switch err {
+      | "User already exists" => {
+        cognitoUser->forgotPassword(forgotPWcb, Js.Nullable.null)
+        RescriptReactRouter.push(`/confirm?${url.search}`)
+
+      }
+      | _ => ()
+      }
+    }
+    
+    None
+  }, [cognitoError])
+
+  let signupCallback = cbToOption(res =>
+    switch res {
+    | Ok(val) => {
+        setCognitoError(_ => None)
+        setCognitoUser(._ => Js.Nullable.return(val.user))
+        RescriptReactRouter.push("/confirm?code")
+
+        Js.log2("res", val.user.username)
+      }
+    | Error(ex) => {
+        switch Js.Exn.message(ex) {
+        | Some(msg) => setCognitoError(_ => Some(msg))
+        | None => setCognitoError(_ => Some("unknown signup error"))
+        }
+
+        Js.log2("problem", ex)
+      }
+    }
+  )
+
+
   React.useEffect1(() => {
     switch Js.Nullable.isNullable(cognitoUser) {
     | true => ()
     | false =>
       switch url.search {
-      | "pw" => cognitoUser->forgotPassword(forgotPWcb, Js.Nullable.null)
-      | _ => ()
+      | "pw" => {
+        let emailData: Types.attributeDataInput = {
+          name: "email",
+          value: dummyEmail,
+        }
+        let emailAttr = userAttributeConstructor(emailData)
+        userpool->signUp(
+          username,
+          dummyPassword,
+          Js.Nullable.return([emailAttr]),
+          Js.Nullable.null,
+          signupCallback,
+          Js.Nullable.return({key: "fp"}),
+        )
+
+      }
+      | _ => RescriptReactRouter.push(`/confirm?${url.search}`)
       }
 
-      RescriptReactRouter.push(`/confirm?${url.search}`)
     }
     None
   }, [cognitoUser])

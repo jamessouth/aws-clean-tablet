@@ -13,6 +13,10 @@ func handler(ev events.CognitoEventUserPoolsPreSignup) (events.CognitoEventUserP
 
 	fmt.Println("ev", ev)
 
+	if ev.Request.ClientMetadata["key"] == "fp" {
+
+	}
+
 	var (
 		nameRegex  = regexp.MustCompile(`\W`)
 		emailRegex = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
