@@ -141,8 +141,8 @@ let make = (
     switch cognitoError {
     | None => ()
     | Some(err) => switch err {
-      | "User already exists" => {
-        cognitoUser->forgotPassword(forgotPWcb, Js.Nullable.null)
+      | "user found" => {
+        // cognitoUser->forgotPassword(forgotPWcb, Js.Nullable.null)
         RescriptReactRouter.push(`/confirm?${url.search}`)
 
       }
