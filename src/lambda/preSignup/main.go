@@ -74,7 +74,7 @@ func handler(ctx context.Context, ev events.CognitoEventUserPoolsPreSignup) (eve
 		fmt.Printf("\n%s, %+v\n", "users", status)
 
 		if status != types.UserStatusTypeConfirmed {
-			return ev, errors.New("user not confirmed - status is " + string(status))
+			return ev, errors.New("user not confirmed - status: " + string(status))
 		}
 
 		fp, err := svc.ForgotPassword(ctx, &cog.ForgotPasswordInput{

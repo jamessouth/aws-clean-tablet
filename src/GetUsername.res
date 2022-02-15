@@ -16,7 +16,6 @@ type clientMetadata = {key: string}
 //   username: string,
 // }
 
-
 type signupOk = {
   // codeDeliveryDetails: cdd,
   user: Signup.usr,
@@ -36,8 +35,6 @@ external signUp: (
   signUpCB,
   Js.Nullable.t<clientMetadata>,
 ) => unit = "signUp"
-
-
 
 @new @module("amazon-cognito-identity-js")
 external userConstructor: Types.userDataInput => Signup.usr = "CognitoUser"
@@ -118,40 +115,23 @@ let make = (
 
   let (submitClicked, setSubmitClicked) = React.useState(_ => false)
 
-  let forgotPWcb = {
-    onSuccess: str => {
-      setCognitoError(_ => None)
-      Js.log2("forgot pw initiated: ", str)
-      // RescriptReactRouter.push("/confirm")
-    },
-    onFailure: err => {
-      switch Js.Exn.message(err) {
-      | Some(msg) => setCognitoError(_ => Some(msg))
-      | None => setCognitoError(_ => Some("unknown forgot pw error"))
-      }
-      Js.log2("forgot pw problem: ", err)
-    },
-  }
+  // let forgotPWcb = {
+  //   onSuccess: str => {
+  //     setCognitoError(_ => None)
+  //     Js.log2("forgot pw initiated: ", str)
+  //     // RescriptReactRouter.push("/confirm")
+  //   },
+  //   onFailure: err => {
+  //     switch Js.Exn.message(err) {
+  //     | Some(msg) => setCognitoError(_ => Some(msg))
+  //     | None => setCognitoError(_ => Some("unknown forgot pw error"))
+  //     }
+  //     Js.log2("forgot pw problem: ", err)
+  //   },
+  // }
 
   let dummyEmail = "success@simulator.amazonses.com"
   let dummyPassword = "lllLLL!!!111"
-
-
-  React.useEffect1(() => {
-    switch cognitoError {
-    | None => ()
-    | Some(err) => switch err {
-      | "user found" => {
-        // cognitoUser->forgotPassword(forgotPWcb, Js.Nullable.null)
-        RescriptReactRouter.push(`/confirm?${url.search}`)
-
-      }
-      | _ => ()
-      }
-    }
-    
-    None
-  }, [cognitoError])
 
   let signupCallback = cbToOption(res =>
     switch res {
@@ -164,15 +144,21 @@ let make = (
       }
     | Error(ex) => {
         switch Js.Exn.message(ex) {
-        | Some(msg) => setCognitoError(_ => Some(msg))
+        | Some(msg) =>
+          switch msg {
+          | "PreSignUp failed with error user found." => {
+              setCognitoError(_ => None)
+              RescriptReactRouter.push(`/confirm?${url.search}`)
+            }
+
+          | _ => setCognitoError(_ => Some(msg))
+          }
         | None => setCognitoError(_ => Some("unknown signup error"))
         }
-
         Js.log2("problem", ex)
       }
     }
   )
-
 
   React.useEffect1(() => {
     switch Js.Nullable.isNullable(cognitoUser) {
@@ -180,24 +166,22 @@ let make = (
     | false =>
       switch url.search {
       | "pw" => {
-        let emailData: Types.attributeDataInput = {
-          name: "email",
-          value: dummyEmail,
+          let emailData: Types.attributeDataInput = {
+            name: "email",
+            value: dummyEmail,
+          }
+          let emailAttr = userAttributeConstructor(emailData)
+          userpool->signUp(
+            username,
+            dummyPassword,
+            Js.Nullable.return([emailAttr]),
+            Js.Nullable.null,
+            signupCallback,
+            Js.Nullable.return({key: "fp"}),
+          )
         }
-        let emailAttr = userAttributeConstructor(emailData)
-        userpool->signUp(
-          username,
-          dummyPassword,
-          Js.Nullable.return([emailAttr]),
-          Js.Nullable.null,
-          signupCallback,
-          Js.Nullable.return({key: "fp"}),
-        )
-
-      }
       | _ => RescriptReactRouter.push(`/confirm?${url.search}`)
       }
-
     }
     None
   }, [cognitoUser])
