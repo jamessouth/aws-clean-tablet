@@ -207,12 +207,25 @@ let make = (
   }
 
   switch url.search {
-  | "code" | "pw" =>
+  | "confcode" | "password" =>
+  | _ => <div> {React.string("other")} </div>
+  }
+
+
+
+
+
+
+
+
     <main>
       <form className="w-4/5 m-auto relative">
         <fieldset className="flex flex-col items-center justify-around h-52">
           <legend className="text-warm-gray-100 m-auto mb-8 text-3xl font-fred">
-            {React.string("Enter username")}
+            {switch url.search {
+              | "un_em" => React.string("Enter email")
+              | _ => React.string("Enter username")
+            }}
           </legend>
           {switch submitClicked {
           | false => React.null
@@ -231,6 +244,6 @@ let make = (
         <Button text="submit" onClick />
       </form>
     </main>
-  | _ => <div> {React.string("other")} </div>
-  }
+
+
 }

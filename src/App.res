@@ -137,17 +137,17 @@ let make = () => {
             content="SIGN UP"
           />
           <Link
-            url="/getusername?code"
+            url="/getinfo?cd_un"
             className="w-3/5 text-right text-warm-gray-100 block font-anon text-sm mt-4 max-w-80"
             content="verification code?"
           />
           <Link
-            url="/getusername?pw"
+            url="/getinfo?pw_un"
             className="w-3/5 text-right text-warm-gray-100 block font-anon text-sm mt-4 max-w-80"
             content="forgot password?"
           />
           <Link
-            url="/getusername?un"
+            url="/getinfo?un_em"
             className="w-3/5 text-right text-warm-gray-100 block font-anon text-sm mt-4 max-w-80"
             content="forgot username?"
           />
@@ -175,13 +175,13 @@ let make = () => {
 
       | (list{"confirm"}, None) => <Confirm cognitoUser cognitoError setCognitoError />
 
-      | (list{"getusername"}, Some(_t)) => {
+      | (list{"getinfo"}, Some(_t)) => {
           RescriptReactRouter.replace("/lobby")
           React.null
         }
 
-      | (list{"getusername"}, None) =>
-        <GetUsername userpool cognitoUser setCognitoUser cognitoError setCognitoError usernameFuncList/>
+      | (list{"getinfo"}, None) =>
+        <GetInfo userpool cognitoUser setCognitoUser cognitoError setCognitoError usernameFuncList/>
 
       | (list{"signup"}, Some(_t)) => {
           RescriptReactRouter.replace("/lobby")
