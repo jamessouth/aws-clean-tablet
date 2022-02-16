@@ -171,7 +171,28 @@ let make = (
     | true => ()
     | false =>
       switch url.search {
-      | "pw" => {
+      | "pw" => 
+      | _ => RescriptReactRouter.push(`/confirm?${url.search}`)
+      }
+    }
+    None
+  }, [cognitoUser])
+
+  let onClick = tipe => {
+    setSubmitClicked(_ => true)
+  switch tipe {
+  | "cd_un" => switch usernameError {
+    | None => {
+        let userdata: Types.userDataInput = {
+          username: username,
+          pool: userpool,
+        }
+        setCognitoUser(._ => Js.Nullable.return(userConstructor(userdata)))
+      }
+    | Some(_) => ()
+    }
+  | "pw_un" => switch usernameError {
+    | None => {
           let emailData: Types.attributeDataInput = {
             name: "email",
             value: dummyEmail,
@@ -186,25 +207,42 @@ let make = (
             Js.Nullable.return({key: "fp"}),
           )
         }
-      | _ => RescriptReactRouter.push(`/confirm?${url.search}`)
-      }
-    }
-    None
-  }, [cognitoUser])
-
-  let onClick = _ => {
-    setSubmitClicked(_ => true)
-    switch usernameError {
-    | None => {
-        let userdata: Types.userDataInput = {
-          username: username,
-          pool: userpool,
-        }
-        setCognitoUser(._ => Js.Nullable.return(userConstructor(userdata)))
-      }
     | Some(_) => ()
     }
+  | "un_em" => switch emailError {
+    | None => {
+          let emailData: Types.attributeDataInput = {
+            name: "email",
+            value: email,
+          }
+          let emailAttr = userAttributeConstructor(emailData)
+          userpool->signUp(
+            dummyUsername,
+            dummyPassword,
+            Js.Nullable.return([emailAttr]),
+            Js.Nullable.null,
+            signupCallback,
+            Js.Nullable.return({key: "fp"}),
+          )
+        }
+    | Some(_) => ()
+    }
+  | _ => expression
   }
+
+
+
+
+    
+  }
+
+
+
+
+
+
+
+
 
   switch url.search {
   | "confcode" | "password" =>
@@ -229,19 +267,39 @@ let make = (
           </legend>
           {switch submitClicked {
           | false => React.null
-          | true => <Error validationError=usernameError cognitoError />
+          | true => <Error validationError={switch url.search {
+            | "un_em" => emailError
+            | _ => usernameError
+          }} cognitoError />
           }}
-          <Input
-            submitClicked
-            value=username
-            setFunc=setUsername
-            setErrorFunc=setUsernameError
-            funcList=usernameFuncList
-            propName="username"
-            validationError=usernameError
-          />
+          {
+            switch url.search {
+            | "un_em" => <Input
+                            submitClicked
+                            value=email
+                            setFunc=setEmail
+                            setErrorFunc=setEmailError
+                            funcList=emailFuncList
+                            propName="email"
+                            validationError=emailError
+                          />
+            | _ => <Input
+                      submitClicked
+                      value=username
+                      setFunc=setUsername
+                      setErrorFunc=setUsernameError
+                      funcList=usernameFuncList
+                      propName="username"
+                      validationError=usernameError
+                    />
+            }
+          }
+          
         </fieldset>
-        <Button text="submit" onClick />
+        <Button
+          text="submit"
+          onClick={onClick(url.search)}
+        />
       </form>
     </main>
 
