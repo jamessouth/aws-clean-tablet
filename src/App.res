@@ -147,6 +147,11 @@ let make = () => {
             content="forgot password?"
           />
           <Link
+            url="/getusername?un"
+            className="w-3/5 text-right text-warm-gray-100 block font-anon text-sm mt-4 max-w-80"
+            content="forgot username?"
+          />
+          <Link
             url="/leaderboards"
             className="w-3/5 border border-warm-gray-100 text-center text-warm-gray-100 block font-anon text-xl mt-30 max-w-80"
             content="Leaderboards"

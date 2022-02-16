@@ -82,12 +82,12 @@ type passwordPWCB = {
   onSuccess: string => unit,
 }
 
-@send
-external forgotPassword: (
-  Js.Nullable.t<Signup.usr>, //user object
-  passwordPWCB, //cb obj
-  Js.Nullable.t<Signup.clientMetadata>,
-) => unit = "forgotPassword"
+// @send
+// external forgotPassword: (
+//   Js.Nullable.t<Signup.usr>, //user object
+//   passwordPWCB, //cb obj
+//   Js.Nullable.t<Signup.clientMetadata>,
+// ) => unit = "forgotPassword"
 
 let cbToOption = (f, . err, res) =>
   switch (Js.Nullable.toOption(err), Js.Nullable.toOption(res)) {
@@ -113,6 +113,11 @@ let make = (
   let (username, setUsername) = React.useState(_ => "")
   let (usernameError, setUsernameError) = React.useState(_ => Some("username: 3-10 characters; "))
 
+  let (email, setEmail) = React.useState(_ => "")
+  let (emailError, setEmailError) = React.useState(_ => Some(
+    "email: 5-99 characters; enter a valid email address.",
+  ))
+
   let (submitClicked, setSubmitClicked) = React.useState(_ => false)
 
   // let forgotPWcb = {
@@ -132,6 +137,7 @@ let make = (
 
   let dummyEmail = "success@simulator.amazonses.com"
   let dummyPassword = "lllLLL!!!111"
+  let dummyUsername = "letmein"
 
   let signupCallback = cbToOption(res =>
     switch res {
