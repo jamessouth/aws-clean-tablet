@@ -104,6 +104,7 @@ let make = (
   ~cognitoError,
   ~setCognitoError,
   ~usernameFuncList,
+  ~emailFuncList,
 ) => {
   // let pwInput = React.useRef(Js.Nullable.null)
 
@@ -120,22 +121,9 @@ let make = (
 
   let (submitClicked, setSubmitClicked) = React.useState(_ => false)
 
-  // let forgotPWcb = {
-  //   onSuccess: str => {
-  //     setCognitoError(_ => None)
-  //     Js.log2("forgot pw initiated: ", str)
-  //     // RescriptReactRouter.push("/confirm")
-  //   },
-  //   onFailure: err => {
-  //     switch Js.Exn.message(err) {
-  //     | Some(msg) => setCognitoError(_ => Some(msg))
-  //     | None => setCognitoError(_ => Some("unknown forgot pw error"))
-  //     }
-  //     Js.log2("forgot pw problem: ", err)
-  //   },
-  // }
 
-  let dummyEmail = "success@simulator.amazonses.com"
+
+  // let dummyEmail = "success@simulator.amazonses.com"
   let dummyPassword = "lllLLL!!!111"
   let dummyUsername = "letmein"
 
@@ -156,6 +144,10 @@ let make = (
               setCognitoError(_ => None)
               RescriptReactRouter.push(`/confirm?${url.search}`)
             }
+          | "PreSignUp failed with error user email found." => {
+              setCognitoError(_ => None)
+              RescriptReactRouter.push(`/confirm?${url.search}`)
+            }
 
           | _ => setCognitoError(_ => Some(msg))
           }
@@ -169,16 +161,12 @@ let make = (
   React.useEffect1(() => {
     switch Js.Nullable.isNullable(cognitoUser) {
     | true => ()
-    | false =>
-      switch url.search {
-      | "pw" => 
-      | _ => RescriptReactRouter.push(`/confirm?${url.search}`)
-      }
+    | false => RescriptReactRouter.push(`/confirm?${url.search}`)
     }
     None
   }, [cognitoUser])
 
-  let onClick = tipe => {
+  let onClick = (tipe, _) => {
     setSubmitClicked(_ => true)
   switch tipe {
   | "cd_un" => switch usernameError {
@@ -192,21 +180,14 @@ let make = (
     | Some(_) => ()
     }
   | "pw_un" => switch usernameError {
-    | None => {
-          let emailData: Types.attributeDataInput = {
-            name: "email",
-            value: dummyEmail,
-          }
-          let emailAttr = userAttributeConstructor(emailData)
-          userpool->signUp(
+    | None => userpool->signUp(
             username,
             dummyPassword,
-            Js.Nullable.return([emailAttr]),
+            Js.Nullable.null,
             Js.Nullable.null,
             signupCallback,
-            Js.Nullable.return({key: "fp"}),
+            Js.Nullable.return({key: "forgotpassword"}),
           )
-        }
     | Some(_) => ()
     }
   | "un_em" => switch emailError {
@@ -222,12 +203,12 @@ let make = (
             Js.Nullable.return([emailAttr]),
             Js.Nullable.null,
             signupCallback,
-            Js.Nullable.return({key: "fp"}),
+            Js.Nullable.return({key: "forgotusername"}),
           )
         }
     | Some(_) => ()
     }
-  | _ => expression
+  | _ => ()
   }
 
 
@@ -245,18 +226,7 @@ let make = (
 
 
   switch url.search {
-  | "confcode" | "password" =>
-  | _ => <div> {React.string("other")} </div>
-  }
-
-
-
-
-
-
-
-
-    <main>
+  | "cd_un" | "pw_un" | "un_em" =>     <main>
       <form className="w-4/5 m-auto relative">
         <fieldset className="flex flex-col items-center justify-around h-52">
           <legend className="text-warm-gray-100 m-auto mb-8 text-3xl font-fred">
@@ -302,6 +272,17 @@ let make = (
         />
       </form>
     </main>
+  | _ => <div className="text-warm-gray-100"> {React.string("unknown path, please try again")} </div>
+  }
+
+
+
+
+
+
+
+
+
 
 
 }

@@ -16,7 +16,7 @@ external confirmPassword: (
   Js.Nullable.t<Signup.usr>, //user object
   string, //conf code
   string, //new pw
-  GetUsername.passwordPWCB, //cb obj
+  GetInfo.passwordPWCB, //cb obj
   Js.Nullable.t<Signup.clientMetadata>,
 ) => unit = "confirmPassword"
 
@@ -170,7 +170,7 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
     }
   )
 
-  let confirmpasswordCallback: GetUsername.passwordPWCB = {
+  let confirmpasswordCallback: GetInfo.passwordPWCB = {
     onSuccess: str => {
         setCognitoError(_ => None)
         RescriptReactRouter.push("/signin")

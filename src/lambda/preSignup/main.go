@@ -44,7 +44,7 @@ func handler(ctx context.Context, ev events.CognitoEventUserPoolsPreSignup) (eve
 		return ev, errors.New("username must be letters, numbers, and underscores only; no whitespace or symbols")
 	}
 
-	if req.ClientMetadata["key"] == "fp" {
+	if req.ClientMetadata["key"] == "forgotpassword" {
 		reg := head.Region
 
 		cfg, err := config.LoadDefaultConfig(ctx,
@@ -55,11 +55,12 @@ func handler(ctx context.Context, ev events.CognitoEventUserPoolsPreSignup) (eve
 		}
 
 		svc := cog.NewFromConfig(cfg)
+		attr := "username"
 
 		lu, err := svc.ListUsers(ctx, &cog.ListUsersInput{
 			UserPoolId:      aws.String(head.UserPoolID),
 			AttributesToGet: []string{},
-			Filter:          aws.String(fmt.Sprintf("%s = %q", "username", username)),
+			Filter:          aws.String(fmt.Sprintf("%s = %q", attr, username)),
 			Limit:           aws.Int32(1),
 		})
 		if err != nil {
@@ -68,7 +69,7 @@ func handler(ctx context.Context, ev events.CognitoEventUserPoolsPreSignup) (eve
 
 		user := *lu
 		if len(user.Users) < 1 {
-			return ev, errors.New("username not found")
+			return ev, errors.New(attr + " not found")
 		}
 		status := user.Users[0].UserStatus
 		fmt.Printf("\n%s, %+v\n", "users", status)
@@ -98,6 +99,45 @@ func handler(ctx context.Context, ev events.CognitoEventUserPoolsPreSignup) (eve
 		}
 	} else {
 		return ev, errors.New("email attribute not present")
+	}
+
+	if req.ClientMetadata["key"] == "forgotusername" {
+		reg := head.Region
+
+		cfg, err := config.LoadDefaultConfig(ctx,
+			config.WithRegion(reg),
+		)
+		if err != nil {
+			return ev, err
+		}
+
+		svc := cog.NewFromConfig(cfg)
+		attr := "email"
+
+		lu, err := svc.ListUsers(ctx, &cog.ListUsersInput{
+			UserPoolId:      aws.String(head.UserPoolID),
+			AttributesToGet: []string{},
+			Filter:          aws.String(fmt.Sprintf("%s = %q", attr, email)),
+			Limit:           aws.Int32(1),
+		})
+		if err != nil {
+			return ev, err
+		}
+
+		res := *lu
+		if len(res.Users) < 1 {
+			return ev, errors.New(attr + " not found")
+		}
+		user := res.Users[0]
+		status := user.UserStatus
+		name := *user.Username
+		fmt.Printf("\n%s, %+v\n", "users2", user)
+
+		if status != types.UserStatusTypeConfirmed {
+			return ev, errors.New("user not confirmed - status: " + string(status))
+		}
+
+		return ev, errors.New("user email found")
 	}
 
 	return ev, nil

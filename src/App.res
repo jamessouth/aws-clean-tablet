@@ -181,7 +181,7 @@ let make = () => {
         }
 
       | (list{"getinfo"}, None) =>
-        <GetInfo userpool cognitoUser setCognitoUser cognitoError setCognitoError usernameFuncList/>
+        <GetInfo userpool cognitoUser setCognitoUser cognitoError setCognitoError usernameFuncList emailFuncList/>
 
       | (list{"signup"}, Some(_t)) => {
           RescriptReactRouter.replace("/lobby")

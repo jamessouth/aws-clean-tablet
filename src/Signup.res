@@ -151,7 +151,7 @@ let make = (
           Js.Nullable.return([emailAttr]),
           Js.Nullable.null,
           signupCallback,
-          Js.Nullable.return({key: "sprbl"}),
+          Js.Nullable.null,
         )
       }
     | Some(_) => ()
