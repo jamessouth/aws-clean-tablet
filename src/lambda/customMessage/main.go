@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -14,35 +13,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 )
 
-const (
-	minEmailLength    int = 5
-	minUsernameLength int = 3
-	maxUsernameLength int = 10
-)
-
-func handler(ctx context.Context, ev events.CognitoEventUserPoolsPreSignup) (events.CognitoEventUserPoolsPreSignup, error) {
+func handler(ctx context.Context, ev events.CognitoEventUserPoolsCustomMessage) (events.CognitoEventUserPoolsCustomMessage, error) {
 
 	fmt.Println("ev", ev)
 
-	ev.Response.AutoConfirmUser = false
-	ev.Response.AutoVerifyEmail = false
-	ev.Response.AutoVerifyPhone = false
-
 	var (
-		head       = ev.CognitoEventUserPoolsHeader
-		req        = ev.Request
-		username   = head.UserName
-		nameRegex  = regexp.MustCompile(`\W`)
-		emailRegex = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+		head     = ev.CognitoEventUserPoolsHeader
+		req      = ev.Request
+		username = head.UserName
 	)
-
-	if len(username) < minUsernameLength || len(username) > maxUsernameLength {
-		return ev, errors.New("username must be 3-10 characters long")
-	}
-
-	if nameRegex.MatchString(username) {
-		return ev, errors.New("username must be letters, numbers, and underscores only; no whitespace or symbols")
-	}
 
 	if req.ClientMetadata["key"] == "forgotpassword" {
 		reg := head.Region
@@ -90,15 +69,6 @@ func handler(ctx context.Context, ev events.CognitoEventUserPoolsPreSignup) (eve
 		fmt.Printf("\n%s, %+v\n", "fp", fpo)
 
 		return ev, errors.New("user found")
-	}
-
-	email, ok := req.UserAttributes["email"]
-	if ok {
-		if len(email) < minEmailLength || !emailRegex.MatchString(email) {
-			return ev, errors.New("a properly formatted email address is required")
-		}
-	} else {
-		return ev, errors.New("email attribute not present")
 	}
 
 	if req.ClientMetadata["key"] == "forgotusername" {
