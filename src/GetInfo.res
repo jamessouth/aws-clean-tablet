@@ -105,6 +105,7 @@ let make = (
   ~setCognitoError,
   ~usernameFuncList,
   ~emailFuncList,
+  ~setShowName,
 ) => {
   // let pwInput = React.useRef(Js.Nullable.null)
 
@@ -120,8 +121,6 @@ let make = (
   ))
 
   let (submitClicked, setSubmitClicked) = React.useState(_ => false)
-
-
 
   // let dummyEmail = "success@simulator.amazonses.com"
   let dummyPassword = "lllLLL!!!111"
@@ -139,17 +138,20 @@ let make = (
     | Error(ex) => {
         switch Js.Exn.message(ex) {
         | Some(msg) =>
-          switch msg {
-          | "PreSignUp failed with error user found." => {
+          switch Js.String2.startsWith(msg, "PreSignUp failed with error user found") {
+          | true => {
               setCognitoError(_ => None)
-              RescriptReactRouter.push(`/confirm?${url.search}`)
-            }
-          | "PreSignUp failed with error user email found." => {
-              setCognitoError(_ => None)
-              RescriptReactRouter.push(`/confirm?${url.search}`)
+
+              switch Js.String2.endsWith(msg, "error user found.") {
+              | true => RescriptReactRouter.push(`/confirm?${url.search}`)
+              | false => {
+                  RescriptReactRouter.push("/")
+                  setShowName(._ => Js.String2.sliceToEnd(msg, ~from=41))
+                }
+              }
             }
 
-          | _ => setCognitoError(_ => Some(msg))
+          | false => setCognitoError(_ => Some(msg))
           }
         | None => setCognitoError(_ => Some("unknown signup error"))
         }
@@ -168,30 +170,34 @@ let make = (
 
   let onClick = (tipe, _) => {
     setSubmitClicked(_ => true)
-  switch tipe {
-  | "cd_un" => switch usernameError {
-    | None => {
-        let userdata: Types.userDataInput = {
-          username: username,
-          pool: userpool,
+    switch tipe {
+    | "cd_un" =>
+      switch usernameError {
+      | None => {
+          let userdata: Types.userDataInput = {
+            username: username,
+            pool: userpool,
+          }
+          setCognitoUser(._ => Js.Nullable.return(userConstructor(userdata)))
         }
-        setCognitoUser(._ => Js.Nullable.return(userConstructor(userdata)))
+      | Some(_) => ()
       }
-    | Some(_) => ()
-    }
-  | "pw_un" => switch usernameError {
-    | None => userpool->signUp(
-            username,
-            dummyPassword,
-            Js.Nullable.null,
-            Js.Nullable.null,
-            signupCallback,
-            Js.Nullable.return({key: "forgotpassword"}),
-          )
-    | Some(_) => ()
-    }
-  | "un_em" => switch emailError {
-    | None => {
+    | "pw_un" =>
+      switch usernameError {
+      | None =>
+        userpool->signUp(
+          username,
+          dummyPassword,
+          Js.Nullable.null,
+          Js.Nullable.null,
+          signupCallback,
+          Js.Nullable.return({key: "forgotpassword"}),
+        )
+      | Some(_) => ()
+      }
+    | "un_em" =>
+      switch emailError {
+      | None => {
           let emailData: Types.attributeDataInput = {
             name: "email",
             value: email,
@@ -206,83 +212,61 @@ let make = (
             Js.Nullable.return({key: "forgotusername"}),
           )
         }
-    | Some(_) => ()
+      | Some(_) => ()
+      }
+    | _ => ()
     }
-  | _ => ()
   }
-
-
-
-
-    
-  }
-
-
-
-
-
-
-
-
 
   switch url.search {
-  | "cd_un" | "pw_un" | "un_em" =>     <main>
+  | "cd_un" | "pw_un" | "un_em" =>
+    <main>
       <form className="w-4/5 m-auto relative">
         <fieldset className="flex flex-col items-center justify-around h-52">
           <legend className="text-warm-gray-100 m-auto mb-8 text-3xl font-fred">
             {switch url.search {
-              | "un_em" => React.string("Enter email")
-              | _ => React.string("Enter username")
+            | "un_em" => React.string("Enter email")
+            | _ => React.string("Enter username")
             }}
           </legend>
           {switch submitClicked {
           | false => React.null
-          | true => <Error validationError={switch url.search {
-            | "un_em" => emailError
-            | _ => usernameError
-          }} cognitoError />
+          | true =>
+            <Error
+              validationError={switch url.search {
+              | "un_em" => emailError
+              | _ => usernameError
+              }}
+              cognitoError
+            />
           }}
-          {
-            switch url.search {
-            | "un_em" => <Input
-                            submitClicked
-                            value=email
-                            setFunc=setEmail
-                            setErrorFunc=setEmailError
-                            funcList=emailFuncList
-                            propName="email"
-                            validationError=emailError
-                          />
-            | _ => <Input
-                      submitClicked
-                      value=username
-                      setFunc=setUsername
-                      setErrorFunc=setUsernameError
-                      funcList=usernameFuncList
-                      propName="username"
-                      validationError=usernameError
-                    />
-            }
-          }
-          
+          {switch url.search {
+          | "un_em" =>
+            <Input
+              submitClicked
+              value=email
+              setFunc=setEmail
+              setErrorFunc=setEmailError
+              funcList=emailFuncList
+              propName="email"
+              validationError=emailError
+            />
+          | _ =>
+            <Input
+              submitClicked
+              value=username
+              setFunc=setUsername
+              setErrorFunc=setUsernameError
+              funcList=usernameFuncList
+              propName="username"
+              validationError=usernameError
+            />
+          }}
         </fieldset>
-        <Button
-          text="submit"
-          onClick={onClick(url.search)}
-        />
+        <Button text="submit" onClick={onClick(url.search)} />
       </form>
     </main>
-  | _ => <div className="text-warm-gray-100"> {React.string("unknown path, please try again")} </div>
+  | _ =>
+    <div className="text-warm-gray-100"> {React.string("unknown path, please try again")} </div>
   }
-
-
-
-
-
-
-
-
-
-
-
 }

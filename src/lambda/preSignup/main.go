@@ -130,25 +130,10 @@ func handler(ctx context.Context, ev events.CognitoEventUserPoolsPreSignup) (eve
 		}
 		user := res.Users[0]
 		// status := user.UserStatus
-		name := user.Username
+		name := *user.Username
 		fmt.Printf("\n%s, %+v\n", "users2", user)
 
-		// if status != types.UserStatusTypeConfirmed {
-		// 	return ev, errors.New("user not confirmed - status: " + string(status))
-		// }
-
-		fp, err := svc.ForgotPassword(ctx, &cog.ForgotPasswordInput{
-			ClientId: aws.String(head.CallerContext.ClientID),
-			Username: name,
-		})
-		if err != nil {
-			return ev, err
-		}
-
-		fpo := *fp
-		fmt.Printf("\n%s, %+v\n", "fp", fpo)
-
-		return ev, errors.New("user email found")
+		return ev, errors.New("user found - " + name)
 	}
 
 	return ev, nil

@@ -86,6 +86,8 @@ let make = () => {
   let (playerName, setPlayerName) = React.Uncurried.useState(_ => "")
 
   let (token, setToken) = React.Uncurried.useState(_ => None)
+  let (showName, setShowName) = React.Uncurried.useState(_ => "")
+
 
   React.useEffect1(() => {
     switch Js.Nullable.toOption(cognitoUser) {
@@ -125,7 +127,7 @@ let make = () => {
           React.null
         }
       | (list{}, None) =>
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center relative">
           <Link
             url="/signin"
             className="w-3/5 border border-warm-gray-100 block font-fred text-center text-warm-gray-100 decay-mask text-3xl p-2 mb-8 max-w-80 sm:mb-16"
@@ -153,9 +155,13 @@ let make = () => {
           />
           <Link
             url="/leaderboards"
-            className="w-3/5 border border-warm-gray-100 text-center text-warm-gray-100 block font-anon text-xl mt-30 max-w-80"
+            className="w-3/5 border border-warm-gray-100 text-center text-warm-gray-100 block font-anon text-xl mt-24 max-w-80"
             content="Leaderboards"
           />
+          {switch showName == "" {
+          | true => React.null
+          | false => <p className="text-warm-gray-100 absolute -top-20 w-4/5 bg-blue-gray-800 p-2 font-anon">{React.string("The username associated with the email you submitted is:" ++ showName)}</p>
+          }}
         </div>
 
       | (list{"leaderboards"}, _) => <div> {"leaderboard"->React.string} </div>
@@ -181,7 +187,7 @@ let make = () => {
         }
 
       | (list{"getinfo"}, None) =>
-        <GetInfo userpool cognitoUser setCognitoUser cognitoError setCognitoError usernameFuncList emailFuncList/>
+        <GetInfo userpool cognitoUser setCognitoUser cognitoError setCognitoError usernameFuncList emailFuncList setShowName/>
 
       | (list{"signup"}, Some(_t)) => {
           RescriptReactRouter.replace("/lobby")

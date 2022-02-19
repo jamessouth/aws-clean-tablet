@@ -46,8 +46,9 @@
   background-image: url('../../assets/fossen.png');
 }
 
+
 body{
-  background-image: url('../../assets/mob.jpg');
+  background-image: url('../../assets/fox.webp'), url('../../assets/mob.jpg');
 }
 /* button{
   font-size: 1.375rem;
