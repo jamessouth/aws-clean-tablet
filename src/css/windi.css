@@ -48,7 +48,12 @@
 
 
 body{
-  background-image: url('../../assets/fox.webp'), url('../../assets/mob.jpg');
+  background-image: -webkit-image-set(
+    url("../../assets/mob1x.webp") 1x,
+    url("../../assets/mob2x.webp") 2x);
+  background-image: image-set(
+    url("../../assets/mob1x.webp") 1x,
+    url("../../assets/mob2x.webp") 2x);
 }
 /* button{
   font-size: 1.375rem;
@@ -105,8 +110,12 @@ footer a:hover{
 }
 @media screen and (min-width: 768px){
   body{
-    /* background-image: paint(bod); */
-    background: url('../../assets/tab.jpg');
+    background-image: -webkit-image-set(
+      url("../../assets/tab1x.webp") 1x,
+      url("../../assets/tab2x.webp") 2x);
+    background-image: image-set(
+      url("../../assets/tab1x.webp") 1x,
+      url("../../assets/tab2x.webp") 2x);
   }
   .h1{
     font-size: 3.5rem;
@@ -114,6 +123,11 @@ footer a:hover{
 }
 @media screen and (min-width: 1440px){
   body{
-    background: url('../../assets/big.jpg');
+    background-image: -webkit-image-set(
+      url("../../assets/big1x.webp") 1x,
+      url("../../assets/big2x.webp") 2x);
+    background-image: image-set(
+      url("../../assets/big1x.webp") 1x,
+      url("../../assets/big2x.webp") 2x);
   }
 }
