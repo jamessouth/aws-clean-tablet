@@ -127,14 +127,9 @@ let make = (
   let dummyUsername = "letmein"
 
   let signupCallback = cbToOption(res =>
+    Js.log2("signup cb", url.search)
     switch res {
-    | Ok(val) => {
-        setCognitoError(_ => None)
-        setCognitoUser(._ => Js.Nullable.return(val.user))
-        RescriptReactRouter.push("/confirm?code")
-
-        Js.log2("res", val.user.username)
-      }
+    | Ok(val) => ()
     | Error(ex) => {
         switch Js.Exn.message(ex) {
         | Some(msg) =>
@@ -161,6 +156,7 @@ let make = (
   )
 
   React.useEffect1(() => {
+    Js.log2("coguser useeff", url.search)
     switch Js.Nullable.isNullable(cognitoUser) {
     | true => ()
     | false => RescriptReactRouter.push(`/confirm?${url.search}`)

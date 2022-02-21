@@ -206,37 +206,38 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
   }
 
   switch url.search {
-  | "code" | "pw" =>
+  | "cd_un" | "pw_un" =>
     <main>
-      <form className="w-4/5 m-auto" onSubmit={handleSubmit}>
+      <form className="w-4/5 m-auto relative">
         <fieldset className="flex flex-col justify-between h-52">
           <legend className="text-warm-gray-100 m-auto mb-8 text-3xl font-fred">
             {switch url.search {
-            | "code" => React.string("Confirm code")
-            | "pw" => React.string("Change password")
-            | _ => React.string("other")
+            | "pw_un" => React.string("Change password")
+            | _ => React.string("Confirm code")
             }}
           </legend>
+
+        <Input //code
+          submitClicked
+          value=password
+          setFunc=setPassword
+          setErrorFunc=setPasswordError
+          funcList=passwordFuncList
+          propName="code"
+          autoComplete="one-time-code"
+          toggleProp=showPassword
+          toggleButton
+          validationError
+        />
+
+
           <div className="relative">
-            <label className="block text-2xl text-warm-gray-100 font-flow" htmlFor="verif-code">
-              {"enter code:"->React.string}
-            </label>
             <input
-              autoComplete="one-time-code"
-              autoFocus=true
-              className="h-8 text-xl outline-none text-warm-gray-100 bg-transparent border-b-1 border-warm-gray-100"
-              id="verif-code"
-              maxLength=6
-              minLength=6
               inputMode="numeric"
-              name="verifcode"
-              onChange={onChange(setVerifCode)}
-              // placeholder="Enter password"
-              // ref={pwInput->ReactDOM.Ref.domRef}
-              pattern="^\d{6}$"
-              required=true
               size=6
-              spellCheck=false
+
+
+           
               type_={switch showVerifCode {
               | true => "text"
               | false => "password"
@@ -253,6 +254,9 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
               }}
             </button>
           </div>
+
+
+
           {switch url.search {
           | "pw" =>
             <div className="relative">

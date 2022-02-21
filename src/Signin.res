@@ -27,19 +27,21 @@ external authenticateUser: (Js.Nullable.t<Signup.usr>, authDetails, callback) =>
   "authenticateUser"
 
 @react.component
-let make = (~userpool, ~setCognitoUser, ~setToken, ~cognitoUser, ~cognitoError, ~setCognitoError) => {
-  
+let make = (
+  ~userpool,
+  ~setCognitoUser,
+  ~setToken,
+  ~cognitoUser,
+  ~cognitoError,
+  ~setCognitoError,
+) => {
   let (showPassword, setShowPassword) = React.useState(_ => false)
-  let (disabled, setDisabled) = React.useState(_ => true)
+
   let (username, setUsername) = React.useState(_ => "")
   let (password, setPassword) = React.useState(_ => "")
-  let onChange = (func, e) => {
-    let value = ReactEvent.Form.target(e)["value"]
-    (_ => value)->func
-  }
 
-  let onSubmit = e => {
-    e->ReactEvent.Form.preventDefault
+  let onClick = _ => {
+    setSubmitClicked(_ => true)
     let cbs = {
       onSuccess: res => {
         setCognitoError(_ => None)
@@ -81,87 +83,39 @@ let make = (~userpool, ~setCognitoUser, ~setToken, ~cognitoUser, ~cognitoError, 
     }
   }
 
-  let onClick = _e => {
-    (prev => !prev)->setShowPassword
-  }
-
-  React.useEffect2(() => {
-    switch (username->Js.String2.length > 3, password->Js.String2.length > 7) {
-    | (true, true) => (_ => false)->setDisabled
-    | (false, true) | (true, false) | (false, false) => (_ => true)->setDisabled
-    }
-
-    None
-  }, (username, password))
-
   <main>
-    <form className="w-4/5 m-auto" onSubmit>
+    <form className="w-4/5 m-auto relative">
       <fieldset className="flex flex-col items-center justify-around h-72">
         <legend className="text-warm-gray-100 m-auto mb-6 text-3xl font-fred">
-          {"Sign in"->React.string}
+          {React.string("Sign in")}
         </legend>
-        <div>
-          <label className="text-2xl text-warm-gray-100 font-flow" htmlFor="username">
-            {"username:"->React.string}
-          </label>
-          <input
-            autoComplete="username"
-            autoFocus=true
-            className="h-6 w-full text-xl pl-1 text-left font-anon outline-none text-warm-gray-100 bg-transparent border-b-1 border-warm-gray-100"
-            id="username"
-            minLength=4
-            name="username"
-            onChange={onChange(setUsername)}
-            // placeholder="Enter username"
-            required=true
-            spellCheck=false
-            type_="text"
-            value={username}
-          />
-        </div>
-        <div className="relative">
-          <label className="text-2xl text-warm-gray-100 font-flow" htmlFor="password">
-            {"password:"->React.string}
-          </label>
-          <input
-            autoComplete="current-password"
-            autoFocus=false
-            className="h-6 w-full text-xl pl-1 text-left outline-none text-warm-gray-100 bg-transparent border-b-1 border-warm-gray-100"
-            id="password"
-            minLength=8
-            name="password"
-            onChange={onChange(setPassword)}
-            // placeholder="Enter password"
-            required=true
-            spellCheck=false
-            type_={switch showPassword {
-            | true => "text"
-            | false => "password"
-            }}
-            value={password}
-          />
-          <button
-            type_="button"
-            className="font-arch bg-transparent text-warm-gray-100 text-2xl absolute right-0 top-0 cursor-pointer"
-            onClick>
-            {switch showPassword {
-            | true => React.string("hide")
-            | false => React.string("show")
-            }}
-          </button>
-        </div>
+        {switch submitClicked {
+        | false => React.null
+        | true => <Error validationError cognitoError />
+        }}
+        <Input
+          submitClicked
+          value=username
+          setFunc=setUsername
+          setErrorFunc=setUsernameError
+          funcList=usernameFuncList
+          propName="username"
+          validationError=usernameError
+        />
+        <Input
+          submitClicked
+          value=password
+          setFunc=setPassword
+          setErrorFunc=setPasswordError
+          funcList=passwordFuncList
+          propName="password"
+          autoComplete="current-password"
+          toggleProp=showPassword
+          toggleButton
+          validationError
+        />
       </fieldset>
-      {
-        switch cognitoError {
-        | Some(msg) => <span className="text-sm text-warm-gray-100 absolute bg-red-500 text-center w-full left-1/2 transform max-w-lg -translate-x-1/2">{React.string(msg)}</span>
-        | None => React.null
-        }
-      }
-      <button
-        disabled
-        className="text-gray-700 mt-14 bg-warm-gray-100 block font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7">
-        {React.string("submit")}
-      </button>
+      <Button text="submit" onClick />
     </form>
   </main>
 }
