@@ -1,7 +1,9 @@
 
   .decay-mask{
-    -webkit-mask-image: url('../../assets/decaying.png');
-    mask-image: url('../../assets/decaying.png');
+    /* -webkit-mask-image: url('../../assets/decaying.png');
+    mask-image: url('../../assets/decaying.png'); */
+    -webkit-mask-image: url('../../assets/decaying.webp');
+    mask-image: url('../../assets/decaying.webp');
   }
 
 
@@ -28,22 +30,58 @@
 
 
 .game0{
-  background-image: url('../../assets/soria.png');
+  /* background-image: url('../../assets/soria.png'); */
+  background-image: -webkit-image-set(
+    url("../../assets/soria1x.webp") 1x,
+    url("../../assets/soria2x.webp") 2x);
+  background-image: image-set(
+    url("../../assets/soria1x.webp") 1x,
+    url("../../assets/soria2x.webp") 2x);
 }
 .game1{
-  background-image: url('../../assets/huldra.png');
+  /* background-image: url('../../assets/huldra.png'); */
+  background-image: -webkit-image-set(
+    url("../../assets/huldra1x.webp") 1x,
+    url("../../assets/huldra2x.webp") 2x);
+  background-image: image-set(
+    url("../../assets/huldra1x.webp") 1x,
+    url("../../assets/huldra2x.webp") 2x);
 }
 .game2{
-  background-image: url('../../assets/svaelg.png');
+  /* background-image: url('../../assets/svaelg.png'); */
+  background-image: -webkit-image-set(
+    url("../../assets/svaelg1x.webp") 1x,
+    url("../../assets/svaelg2x.webp") 2x);
+  background-image: image-set(
+    url("../../assets/svaelg1x.webp") 1x,
+    url("../../assets/svaelg2x.webp") 2x);
 }
 .game3{
-  background-image: url('../../assets/corn.png');
+  /* background-image: url('../../assets/corn.png'); */
+  background-image: -webkit-image-set(
+    url("../../assets/korn1x.webp") 1x,
+    url("../../assets/korn2x.webp") 2x);
+  background-image: image-set(
+    url("../../assets/korn1x.webp") 1x,
+    url("../../assets/korn2x.webp") 2x);
 }
 .game4{
-  background-image: url('../../assets/dammen.png');
+  /* background-image: url('../../assets/dammen.png'); */
+  background-image: -webkit-image-set(
+    url("../../assets/dammen1x.webp") 1x,
+    url("../../assets/dammen2x.webp") 2x);
+  background-image: image-set(
+    url("../../assets/dammen1x.webp") 1x,
+    url("../../assets/dammen2x.webp") 2x);
 }
 .game5{
-  background-image: url('../../assets/fossen.png');
+  /* background-image: url('../../assets/fossen.png'); */
+  background-image: -webkit-image-set(
+    url("../../assets/fossen1x.webp") 1x,
+    url("../../assets/fossen2x.webp") 2x);
+  background-image: image-set(
+    url("../../assets/fossen1x.webp") 1x,
+    url("../../assets/fossen2x.webp") 2x);
 }
 
 
