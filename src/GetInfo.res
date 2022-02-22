@@ -245,6 +245,7 @@ let make = (
               setErrorFunc=setEmailError
               funcList=emailFuncList
               propName="email"
+              inputMode="email"
               validationError=emailError
             />
           | _ =>

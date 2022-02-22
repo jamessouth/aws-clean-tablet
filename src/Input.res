@@ -9,6 +9,7 @@ let make = (
   ~autoComplete=propName,
   ~toggleProp=false,
   ~toggleButton=React.null,
+  ~inputMode="text",
   ~validationError,
 ) => {
   let (class, setClass) = React.useState(_ => "warm-gray-100")
@@ -49,6 +50,7 @@ let make = (
       autoComplete
       className={`h-6 w-full text-xl font-anon bg-transparent border-b-1 text-warm-gray-100 border-${class}`}
       id=autoComplete
+      inputMode
       name=propName
       onChange
       spellCheck=false
