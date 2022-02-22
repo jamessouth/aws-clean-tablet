@@ -34,52 +34,82 @@ let make = (
   ~cognitoUser,
   ~cognitoError,
   ~setCognitoError,
+  ~usernameFuncList,
+  ~passwordFuncList,
 ) => {
-  let (showPassword, setShowPassword) = React.useState(_ => false)
-
   let (username, setUsername) = React.useState(_ => "")
   let (password, setPassword) = React.useState(_ => "")
 
+  let (usernameError, setUsernameError) = React.useState(_ => Some("username: 3-10 characters; "))
+  let (passwordError, setPasswordError) = React.useState(_ => Some(
+    "password: 8-98 characters; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; ",
+  ))
+
+  let (validationError, setValidationError) = React.useState(_ => Some(
+    "username: 3-10 characters; ",
+  ))
+
+  let (submitClicked, setSubmitClicked) = React.useState(_ => false)
+  let (showPassword, setShowPassword) = React.useState(_ => false)
+
+  React.useEffect2(() => {
+    switch (usernameError, passwordError) {
+    | (None, None) => setValidationError(_ => None)
+    | (Some(err), _) | (_, Some(err)) => setValidationError(_ => Some(err))
+    }
+    None
+  }, (usernameError, passwordError))
+
+    let toggleButton = React.useMemo1(
+    _ => <Toggle toggleProp=showPassword toggleSetFunc=setShowPassword />,
+    [showPassword],
+  )
+
   let onClick = _ => {
     setSubmitClicked(_ => true)
-    let cbs = {
-      onSuccess: res => {
-        setCognitoError(_ => None)
-        Js.log2("signin result:", res)
-        setToken(._ => Some(res.accessToken.jwtToken))
-      },
-      onFailure: ex => {
-        switch Js.Exn.message(ex) {
-        | Some(msg) => setCognitoError(_ => Some(msg))
-        | None => setCognitoError(_ => Some("unknown signin error"))
+    switch validationError {
+    | None => {
+        let cbs = {
+          onSuccess: res => {
+            setCognitoError(_ => None)
+            Js.log2("signin result:", res)
+            setToken(._ => Some(res.accessToken.jwtToken))
+          },
+          onFailure: ex => {
+            switch Js.Exn.message(ex) {
+            | Some(msg) => setCognitoError(_ => Some(msg))
+            | None => setCognitoError(_ => Some("unknown signin error"))
+            }
+
+            Js.log2("problem", ex)
+          },
+          newPasswordRequired: Js.Nullable.null,
+          mfaRequired: Js.Nullable.null,
+          customChallenge: Js.Nullable.null,
         }
-
-        Js.log2("problem", ex)
-      },
-      newPasswordRequired: Js.Nullable.null,
-      mfaRequired: Js.Nullable.null,
-      customChallenge: Js.Nullable.null,
-    }
-    let authnData = {
-      username: username,
-      password: password,
-      validationData: Js.Nullable.null,
-      authParameters: Js.Nullable.null,
-      clientMetadata: Js.Nullable.null,
-    }
-    let authnDetails = authenticationDetailsConstructor(authnData)
-
-    switch Js.Nullable.isNullable(cognitoUser) {
-    | true => {
-        let userdata: Types.userDataInput = {
+        let authnData = {
           username: username,
-          pool: userpool,
+          password: password,
+          validationData: Js.Nullable.null,
+          authParameters: Js.Nullable.null,
+          clientMetadata: Js.Nullable.null,
         }
-        let user = Js.Nullable.return(userConstructor(userdata))
-        user->authenticateUser(authnDetails, cbs)
-        setCognitoUser(._ => user)
+        let authnDetails = authenticationDetailsConstructor(authnData)
+
+        switch Js.Nullable.isNullable(cognitoUser) {
+        | true => {
+            let userdata: Types.userDataInput = {
+              username: username,
+              pool: userpool,
+            }
+            let user = Js.Nullable.return(userConstructor(userdata))
+            user->authenticateUser(authnDetails, cbs)
+            setCognitoUser(._ => user)
+          }
+        | false => cognitoUser->authenticateUser(authnDetails, cbs)
+        }
       }
-    | false => cognitoUser->authenticateUser(authnDetails, cbs)
+    | Some(_) => ()
     }
   }
 
@@ -100,7 +130,7 @@ let make = (
           setErrorFunc=setUsernameError
           funcList=usernameFuncList
           propName="username"
-          validationError=usernameError
+          validationError
         />
         <Input
           submitClicked

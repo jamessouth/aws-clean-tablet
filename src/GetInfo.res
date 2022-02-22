@@ -126,17 +126,16 @@ let make = (
   let dummyPassword = "lllLLL!!!111"
   let dummyUsername = "letmein"
 
-  let signupCallback = cbToOption(res =>
+  let signupCallback = cbToOption(res => {
     Js.log2("signup cb", url.search)
     switch res {
-    | Ok(val) => ()
+    | Ok(_) => ()
     | Error(ex) => {
         switch Js.Exn.message(ex) {
         | Some(msg) =>
           switch Js.String2.startsWith(msg, "PreSignUp failed with error user found") {
           | true => {
               setCognitoError(_ => None)
-
               switch Js.String2.endsWith(msg, "error user found.") {
               | true => RescriptReactRouter.push(`/confirm?${url.search}`)
               | false => {
@@ -145,7 +144,6 @@ let make = (
                 }
               }
             }
-
           | false => setCognitoError(_ => Some(msg))
           }
         | None => setCognitoError(_ => Some("unknown signup error"))
@@ -153,7 +151,7 @@ let make = (
         Js.log2("problem", ex)
       }
     }
-  )
+  })
 
   React.useEffect1(() => {
     Js.log2("coguser useeff", url.search)

@@ -21,30 +21,51 @@ external confirmPassword: (
 ) => unit = "confirmPassword"
 
 @react.component
-let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
+let make = (~cognitoUser, ~cognitoError, ~setCognitoError, ~passwordFuncList, ~codeFuncList) => {
   let url = RescriptReactRouter.useUrl()
   Js.log3("user", cognitoUser, url)
+
+  let (code, setCode) = React.useState(_ => "")
   let (password, setPassword) = React.useState(_ => "")
+
+  let (codeError, setCodeError) = React.useState(_ => Some("code: 6-digit number only."))
+  let (passwordError, setPasswordError) = React.useState(_ => Some(
+    "password: 8-98 characters; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; ",
+  ))
+
+  let (validationError, setValidationError) = React.useState(_ => Some(
+    "code: 6-digit number only.",
+  ))
+
+  let (submitClicked, setSubmitClicked) = React.useState(_ => false)
   let (showPassword, setShowPassword) = React.useState(_ => false)
 
-  let (pwErr, setPwErr) = React.useState(_ => None)
-  let (showVerifCode, setShowVerifCode) = React.useState(_ => false)
-  let (verifCode, setVerifCode) = React.useState(_ => "")
+  React.useEffect2(() => {
+    switch (codeError, passwordError) {
+    | (None, None) => setValidationError(_ => None)
+    | (Some(err), _) | (_, Some(err)) => setValidationError(_ => Some(err))
+    }
+    None
+  }, (codeError, passwordError))
+
+  let toggleButton = React.useMemo1(
+    _ => <Toggle toggleProp=showPassword toggleSetFunc=setShowPassword />,
+    [showPassword],
+  )
 
   let confirmregistrationCallback = Signup.cbToOption(res =>
     switch res {
     | Ok(val) => {
         setCognitoError(_ => None)
         RescriptReactRouter.push("/signin")
-        Js.log2("conf rego res", val)
+        Js.log2("conf res", val)
       }
     | Error(ex) => {
         switch Js.Exn.message(ex) {
         | Some(msg) => setCognitoError(_ => Some(msg))
-        | None => setCognitoError(_ => Some("unknown confirm rego error"))
+        | None => setCognitoError(_ => Some("unknown confirm error"))
         }
-
-        Js.log2("conf rego problem", ex)
+        Js.log2("conf problem", ex)
       }
     }
   )
@@ -66,21 +87,36 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
 
   let onClick = _ => {
     setSubmitClicked(_ => true)
+    switch validationError {
+    | None =>
+      switch Js.Nullable.isNullable(cognitoUser) {
+      | false =>
+        switch url.search {
+        | "cd_un" =>
+          cognitoUser->confirmRegistration(
+            code,
+            false,
+            confirmregistrationCallback,
+            Js.Nullable.null,
+          )
+        | "pw_un" =>
+          cognitoUser->confirmPassword(code, password, confirmpasswordCallback, Js.Nullable.null)
+        | _ => (_ => Some("unknown method - not submitting"))->setCognitoError
+        }
+      | true => (_ => Some("null user - not submitting"))->setCognitoError
+      }
+    | Some(_) => ()
+    }
+
     switch Js.Nullable.isNullable(cognitoUser) {
     | false =>
       switch url.search {
-      | "code" =>
-        cognitoUser->confirmRegistration(
-          verifCode,
-          false,
-          confirmregistrationCallback,
-          Js.Nullable.null,
-        )
-      | "pw" =>
-        cognitoUser->confirmPassword(verifCode, password, confirmpasswordCallback, Js.Nullable.null)
+      | "cd_un" =>
+        cognitoUser->confirmRegistration(code, false, confirmregistrationCallback, Js.Nullable.null)
+      | "pw_un" =>
+        cognitoUser->confirmPassword(code, password, confirmpasswordCallback, Js.Nullable.null)
       | _ => (_ => Some("unknown method - not submitting"))->setCognitoError
       }
-
     | true => (_ => Some("null user - not submitting"))->setCognitoError
     }
   }
@@ -100,12 +136,12 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
           | false => React.null
           | true => <Error validationError cognitoError />
           }}
-          <Input //code
+          <Input
             submitClicked
-            value=password
-            setFunc=setPassword
-            setErrorFunc=setPasswordError
-            funcList=passwordFuncList
+            value=code
+            setFunc=setCode
+            setErrorFunc=setCodeError
+            funcList=codeFuncList
             propName="code"
             autoComplete="one-time-code"
             inputMode="numeric"
@@ -125,7 +161,6 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
               toggleButton
               validationError
             />
-
           | _ => React.null
           }}
         </fieldset>

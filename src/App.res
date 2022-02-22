@@ -18,60 +18,54 @@ let pool: Types.poolDataInput = {
 }
 let userpool = userPoolConstructor(pool)
 
+let checkLength = (min, max, str) =>
+  switch Js.String2.length(str) < min || Js.String2.length(str) > max {
+  | false => ""
+  | true => j`$min-$max characters; `
+  }
+let checkInclusion = (re, msg, str) =>
+  switch Js.String2.match_(str, re) {
+  | None => msg
+  | Some(_) => ""
+  }
+let checkExclusion = (re, msg, str) =>
+  switch Js.String2.match_(str, re) {
+  | None => ""
+  | Some(_) => msg
+  }
 
+let usernameFuncList = [
+  s => checkLength(3, 10, s),
+  s =>
+    checkExclusion(
+      %re("/\W/"),
+      "letters, numbers, and underscores only; no whitespace or symbols.",
+      s,
+    ),
+]
 
+let passwordFuncList = [
+  s => checkLength(8, 98, s),
+  s => checkInclusion(%re("/[!-/:-@\[-`{-~]/"), "at least 1 symbol; ", s),
+  s => checkInclusion(%re("/\d/"), "at least 1 number; ", s),
+  s => checkInclusion(%re("/[A-Z]/"), "at least 1 uppercase letter; ", s),
+  s => checkInclusion(%re("/[a-z]/"), "at least 1 lowercase letter; ", s),
+  s => checkExclusion(%re("/\s/"), "no whitespace.", s),
+]
 
+let codeFuncList = [s => checkInclusion(%re("/^\d{6}$/"), "6-digit number only.", s)]
 
-
-
-    let checkLength = (min, max, str) =>
-    switch Js.String2.length(str) < min || Js.String2.length(str) > max {
-    | false => ""
-    | true => j`$min-$max characters; `
-    }
-  let checkInclusion = (re, msg, str) =>
-    switch Js.String2.match_(str, re) {
-    | None => msg
-    | Some(_) => ""
-    }
-  let checkExclusion = (re, msg, str) =>
-    switch Js.String2.match_(str, re) {
-    | None => ""
-    | Some(_) => msg
-    }
-
-
-  let usernameFuncList = [
-    s => checkLength(3, 10, s),
-    s =>
-      checkExclusion(
-        %re("/\W/"),
-        "letters, numbers, and underscores only; no whitespace or symbols.",
-        s,
+let emailFuncList = [
+  s => checkLength(5, 99, s),
+  s =>
+    checkInclusion(
+      %re(
+        "/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/"
       ),
-  ]
-
-  let passwordFuncList = [
-    s => checkLength(8, 98, s),
-    s => checkInclusion(%re("/[!-/:-@\[-`{-~]/"), "at least 1 symbol; ", s),
-    s => checkInclusion(%re("/\d/"), "at least 1 number; ", s),
-    s => checkInclusion(%re("/[A-Z]/"), "at least 1 uppercase letter; ", s),
-    s => checkInclusion(%re("/[a-z]/"), "at least 1 lowercase letter; ", s),
-    s => checkExclusion(%re("/\s/"), "no whitespace.", s),
-  ]
-
-  let emailFuncList = [
-    s => checkLength(5, 99, s),
-    s =>
-      checkInclusion(
-        %re(
-          "/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/"
-        ),
-        "enter a valid email address.",
-        s,
-      ),
-  ]
-
+      "enter a valid email address.",
+      s,
+    ),
+]
 
 @react.component
 let make = () => {
@@ -87,7 +81,6 @@ let make = () => {
 
   let (token, setToken) = React.Uncurried.useState(_ => None)
   let (showName, setShowName) = React.Uncurried.useState(_ => "")
-
 
   React.useEffect1(() => {
     switch Js.Nullable.toOption(cognitoUser) {
@@ -116,8 +109,12 @@ let make = () => {
   let signOut = <SignOut send playerGame close />
 
   <>
-    <p className="font-flow text-warm-gray-100 text-4xl h-10 font-bold text-center">{React.string(playerName)}</p>
-    <h1 style={ReactDOM.Style.make(~backgroundColor={playerColor}, ())} className="text-6xl mt-11 mx-auto w-11/12 text-center font-arch decay-mask text-warm-gray-100">
+    <p className="font-flow text-warm-gray-100 text-4xl h-10 font-bold text-center">
+      {React.string(playerName)}
+    </p>
+    <h1
+      style={ReactDOM.Style.make(~backgroundColor={playerColor}, ())}
+      className="text-6xl mt-11 mx-auto w-11/12 text-center font-arch decay-mask text-warm-gray-100">
       {"CLEAN TABLET"->React.string}
     </h1>
     <div className="mt-10">
@@ -160,7 +157,10 @@ let make = () => {
           />
           {switch showName == "" {
           | true => React.null
-          | false => <p className="text-warm-gray-100 absolute -top-20 w-4/5 bg-blue-gray-800 p-2 font-anon">{React.string("The username associated with the email you submitted is:" ++ showName)}</p>
+          | false =>
+            <p className="text-warm-gray-100 absolute -top-20 w-4/5 bg-blue-gray-800 p-2 font-anon">
+              {React.string("The username associated with the email you submitted is:" ++ showName)}
+            </p>
           }}
         </div>
 
@@ -172,14 +172,24 @@ let make = () => {
         }
 
       | (list{"signin"}, None) =>
-        <Signin userpool setCognitoUser setToken cognitoUser cognitoError setCognitoError />
+        <Signin
+          userpool
+          setCognitoUser
+          setToken
+          cognitoUser
+          cognitoError
+          setCognitoError
+          passwordFuncList
+          usernameFuncList
+        />
 
       | (list{"confirm"}, Some(_t)) => {
           RescriptReactRouter.replace("/lobby")
           React.null
         }
 
-      | (list{"confirm"}, None) => <Confirm cognitoUser cognitoError setCognitoError />
+      | (list{"confirm"}, None) =>
+        <Confirm cognitoUser cognitoError setCognitoError passwordFuncList codeFuncList />
 
       | (list{"getinfo"}, Some(_t)) => {
           RescriptReactRouter.replace("/lobby")
@@ -187,14 +197,32 @@ let make = () => {
         }
 
       | (list{"getinfo"}, None) =>
-        <GetInfo userpool cognitoUser setCognitoUser cognitoError setCognitoError usernameFuncList emailFuncList setShowName/>
+        <GetInfo
+          userpool
+          cognitoUser
+          setCognitoUser
+          cognitoError
+          setCognitoError
+          usernameFuncList
+          emailFuncList
+          setShowName
+        />
 
       | (list{"signup"}, Some(_t)) => {
           RescriptReactRouter.replace("/lobby")
           React.null
         }
 
-      | (list{"signup"}, None) => <Signup userpool setCognitoUser cognitoError setCognitoError usernameFuncList passwordFuncList emailFuncList/>
+      | (list{"signup"}, None) =>
+        <Signup
+          userpool
+          setCognitoUser
+          cognitoError
+          setCognitoError
+          usernameFuncList
+          passwordFuncList
+          emailFuncList
+        />
 
       | (list{"lobby"}, Some(_)) =>
         <Lobby
@@ -212,7 +240,8 @@ let make = () => {
         }
 
       // playerName
-      | (list{"game", _gameno}, Some(_)) => <Play wsConnected game playerColor send wsError leadertoken={playerName ++ connID}/>
+      | (list{"game", _gameno}, Some(_)) =>
+        <Play wsConnected game playerColor send wsError leadertoken={playerName ++ connID} />
 
       | (_, _) => <div> {"other"->React.string} </div> // <PageNotFound/>
       }}
