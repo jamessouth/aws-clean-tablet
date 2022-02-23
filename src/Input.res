@@ -1,54 +1,26 @@
 @react.component
 let make = (
-  ~submitClicked,
   ~value,
-  ~setFunc,
-  ~setErrorFunc,
-  ~funcList,
   ~propName,
   ~autoComplete=propName,
   ~toggleProp=false,
   ~toggleButton=React.null,
   ~inputMode="text",
-  ~validationError,
+  ~setFunc,
 ) => {
-  let (class, setClass) = React.useState(_ => "warm-gray-100")
-
-  React.useEffect2(() => {
-    switch submitClicked {
-    | false => ()
-    | true =>
-      switch validationError {
-      | None => setClass(_ => "warm-gray-100")
-      | Some(err) =>
-        switch Js.String2.startsWith(err, propName) {
-        | false => setClass(_ => "warm-gray-100")
-        | true => setClass(_ => "red-500")
-        }
-      }
-    }
-    None
-  }, (validationError, submitClicked))
-
-  React.useEffect1(() => {
-    let error = funcList->Js.Array2.reduce((acc, f) => acc ++ f(value), "")
-    let final = switch error == "" {
-    | true => None
-    | false => Some(propName ++ ": " ++ error)
-    }
-    setErrorFunc(_ => final)
-    None
-  }, [value])
-
   let onChange = e => setFunc(_ => ReactEvent.Form.target(e)["value"])
 
-  <div className="w-full">
-    <label className={`text-2xl font-flow text-${class}`} htmlFor=autoComplete>
+  <div
+    className={switch Js.Nullable.isNullable(Js.Nullable.return(toggleButton)) {
+    | true => "w-full"
+    | false => "w-full relative"
+    }}>
+    <label className="text-2xl font-flow text-warm-gray-100" htmlFor=autoComplete>
       {React.string(propName)}
     </label>
     <input
       autoComplete
-      className={`h-6 w-full text-xl font-anon bg-transparent border-b-1 text-warm-gray-100 border-${class}`}
+      className="h-6 w-full text-xl font-anon bg-transparent border-b-1 text-warm-gray-100 border-warm-gray-100"
       id=autoComplete
       inputMode
       name=propName

@@ -103,8 +103,6 @@ let make = (
   ~setCognitoUser,
   ~cognitoError,
   ~setCognitoError,
-  ~usernameFuncList,
-  ~emailFuncList,
   ~setShowName,
 ) => {
   // let pwInput = React.useRef(Js.Nullable.null)
@@ -122,7 +120,9 @@ let make = (
 
   let (submitClicked, setSubmitClicked) = React.useState(_ => false)
 
-  // let dummyEmail = "success@simulator.amazonses.com"
+  ErrorHook.useError(username, "username", setUsernameError)
+  ErrorHook.useError(email, "email", setEmailError)
+
   let dummyPassword = "lllLLL!!!111"
   let dummyUsername = "letmein"
 
@@ -235,27 +235,8 @@ let make = (
             />
           }}
           {switch url.search {
-          | "un_em" =>
-            <Input
-              submitClicked
-              value=email
-              setFunc=setEmail
-              setErrorFunc=setEmailError
-              funcList=emailFuncList
-              propName="email"
-              inputMode="email"
-              validationError=emailError
-            />
-          | _ =>
-            <Input
-              submitClicked
-              value=username
-              setFunc=setUsername
-              setErrorFunc=setUsernameError
-              funcList=usernameFuncList
-              propName="username"
-              validationError=usernameError
-            />
+          | "un_em" => <Input value=email propName="email" inputMode="email" setFunc=setEmail />
+          | _ => <Input value=username propName="username" setFunc=setUsername />
           }}
         </fieldset>
         <Button text="submit" onClick={onClick(url.search)} />

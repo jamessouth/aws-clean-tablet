@@ -21,7 +21,7 @@ external confirmPassword: (
 ) => unit = "confirmPassword"
 
 @react.component
-let make = (~cognitoUser, ~cognitoError, ~setCognitoError, ~passwordFuncList, ~codeFuncList) => {
+let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
   let url = RescriptReactRouter.useUrl()
   Js.log3("user", cognitoUser, url)
 
@@ -39,6 +39,9 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError, ~passwordFuncList, ~c
 
   let (submitClicked, setSubmitClicked) = React.useState(_ => false)
   let (showPassword, setShowPassword) = React.useState(_ => false)
+
+  ErrorHook.useError(code, "code", setCodeError)
+  ErrorHook.useError(password, "password", setPasswordError)
 
   React.useEffect2(() => {
     switch (codeError, passwordError) {
@@ -137,29 +140,21 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError, ~passwordFuncList, ~c
           | true => <Error validationError cognitoError />
           }}
           <Input
-            submitClicked
             value=code
-            setFunc=setCode
-            setErrorFunc=setCodeError
-            funcList=codeFuncList
             propName="code"
             autoComplete="one-time-code"
             inputMode="numeric"
-            validationError
+            setFunc=setCode
           />
           {switch url.search {
           | "pw_un" =>
             <Input
-              submitClicked
               value=password
-              setFunc=setPassword
-              setErrorFunc=setPasswordError
-              funcList=passwordFuncList
               propName="password"
               autoComplete="new-password"
               toggleProp=showPassword
               toggleButton
-              validationError
+              setFunc=setPassword
             />
           | _ => React.null
           }}

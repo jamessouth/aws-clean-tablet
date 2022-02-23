@@ -34,8 +34,6 @@ let make = (
   ~cognitoUser,
   ~cognitoError,
   ~setCognitoError,
-  ~usernameFuncList,
-  ~passwordFuncList,
 ) => {
   let (username, setUsername) = React.useState(_ => "")
   let (password, setPassword) = React.useState(_ => "")
@@ -52,6 +50,9 @@ let make = (
   let (submitClicked, setSubmitClicked) = React.useState(_ => false)
   let (showPassword, setShowPassword) = React.useState(_ => false)
 
+  ErrorHook.useError(username, "username", setUsernameError)
+  ErrorHook.useError(password, "password", setPasswordError)
+
   React.useEffect2(() => {
     switch (usernameError, passwordError) {
     | (None, None) => setValidationError(_ => None)
@@ -60,7 +61,7 @@ let make = (
     None
   }, (usernameError, passwordError))
 
-    let toggleButton = React.useMemo1(
+  let toggleButton = React.useMemo1(
     _ => <Toggle toggleProp=showPassword toggleSetFunc=setShowPassword />,
     [showPassword],
   )
@@ -123,26 +124,14 @@ let make = (
         | false => React.null
         | true => <Error validationError cognitoError />
         }}
+        <Input value=username propName="username" setFunc=setUsername />
         <Input
-          submitClicked
-          value=username
-          setFunc=setUsername
-          setErrorFunc=setUsernameError
-          funcList=usernameFuncList
-          propName="username"
-          validationError
-        />
-        <Input
-          submitClicked
           value=password
-          setFunc=setPassword
-          setErrorFunc=setPasswordError
-          funcList=passwordFuncList
           propName="password"
           autoComplete="current-password"
           toggleProp=showPassword
           toggleButton
-          validationError
+          setFunc=setPassword
         />
       </fieldset>
       <Button text="submit" onClick />

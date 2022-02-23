@@ -74,19 +74,11 @@ let cbToOption = (f, . err, res) =>
   }
 
 @react.component
-let make = (
-  ~userpool,
-  ~setCognitoUser,
-  ~cognitoError,
-  ~setCognitoError,
-  ~usernameFuncList,
-  ~passwordFuncList,
-  ~emailFuncList,
-) => {
+let make = (~userpool, ~setCognitoUser, ~cognitoError, ~setCognitoError) => {
   let (username, setUsername) = React.useState(_ => "")
   let (password, setPassword) = React.useState(_ => "")
   let (email, setEmail) = React.useState(_ => "")
-
+  Js.log("url22")
   let (usernameError, setUsernameError) = React.useState(_ => Some("username: 3-10 characters; "))
   let (passwordError, setPasswordError) = React.useState(_ => Some(
     "password: 8-98 characters; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; ",
@@ -101,6 +93,10 @@ let make = (
 
   let (submitClicked, setSubmitClicked) = React.useState(_ => false)
   let (showPassword, setShowPassword) = React.useState(_ => false)
+
+  ErrorHook.useError(username, "username", setUsernameError)
+  ErrorHook.useError(password, "password", setPasswordError)
+  ErrorHook.useError(email, "email", setEmailError)
 
   React.useEffect3(() => {
     switch (usernameError, passwordError, emailError) {
@@ -168,39 +164,18 @@ let make = (
         | false => React.null
         | true => <Error validationError cognitoError />
         }}
+        <Input value=username propName="username" setFunc=setUsername />
         <Input
-          submitClicked
-          value=username
-          setFunc=setUsername
-          setErrorFunc=setUsernameError
-          funcList=usernameFuncList
-          propName="username"
-          validationError
-        />
-        <Input
-          submitClicked
           value=password
-          setFunc=setPassword
-          setErrorFunc=setPasswordError
-          funcList=passwordFuncList
           propName="password"
           autoComplete="new-password"
           toggleProp=showPassword
           toggleButton
-          validationError
+          setFunc=setPassword
         />
-        <Input
-          submitClicked
-          value=email
-          setFunc=setEmail
-          setErrorFunc=setEmailError
-          funcList=emailFuncList
-          propName="email"
-          inputMode="email"
-          validationError
-        />
+        <Input value=email propName="email" inputMode="email" setFunc=setEmail />
       </fieldset>
-      <Button text="create" onClick/>
+      <Button text="create" onClick />
     </form>
   </main>
 }
