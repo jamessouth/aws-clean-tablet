@@ -38,8 +38,8 @@ let make = (
   let (username, setUsername) = React.useState(_ => "")
   let (password, setPassword) = React.useState(_ => "")
 
-  let (usernameError, setUsernameError) = React.useState(_ => Some("username: 3-10 characters; "))
-  let (passwordError, setPasswordError) = React.useState(_ => Some(
+  let (usernameError, _setUsernameError) = React.useState(_ => Some("username: 3-10 characters; "))
+  let (passwordError, _setPasswordError) = React.useState(_ => Some(
     "password: 8-98 characters; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; ",
   ))
 
@@ -50,8 +50,9 @@ let make = (
   let (submitClicked, setSubmitClicked) = React.useState(_ => false)
   let (showPassword, setShowPassword) = React.useState(_ => false)
 
-  ErrorHook.useError(username, "username", setUsernameError)
-  ErrorHook.useError(password, "password", setPasswordError)
+  // ErrorHook.useError(username, "username", setUsernameError)
+  // ErrorHook.useError(password, "password", setPasswordError)
+  ErrorHook.useError([], setValidationError)
 
   React.useEffect2(() => {
     switch (usernameError, passwordError) {

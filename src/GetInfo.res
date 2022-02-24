@@ -111,7 +111,7 @@ let make = (
   Js.log2("url", url)
 
   let (username, setUsername) = React.useState(_ => "")
-  let (usernameError, setUsernameError) = React.useState(_ => Some("username: 3-10 characters; "))
+  let (usernameError, _setUsernameError) = React.useState(_ => Some("username: 3-10 characters; "))
 
   let (email, setEmail) = React.useState(_ => "")
   let (emailError, setEmailError) = React.useState(_ => Some(
@@ -120,8 +120,9 @@ let make = (
 
   let (submitClicked, setSubmitClicked) = React.useState(_ => false)
 
-  ErrorHook.useError(username, "username", setUsernameError)
-  ErrorHook.useError(email, "email", setEmailError)
+  // ErrorHook.useError(username, "username", setUsernameError)
+  // ErrorHook.useError(email, "email", setEmailError)
+  ErrorHook.useError([], setEmailError)
 
   let dummyPassword = "lllLLL!!!111"
   let dummyUsername = "letmein"

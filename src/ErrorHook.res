@@ -21,7 +21,7 @@ let getFuncs = input =>
       s =>
         checkExclusion(
           %re("/\W/"),
-          "letters, numbers, and underscores only; no whitespace or symbols.",
+          "letters, numbers, and underscores only; no whitespace or symbols; ",
           s,
         ),
     ]
@@ -31,9 +31,9 @@ let getFuncs = input =>
       s => checkInclusion(%re("/\d/"), "at least 1 number; ", s),
       s => checkInclusion(%re("/[A-Z]/"), "at least 1 uppercase letter; ", s),
       s => checkInclusion(%re("/[a-z]/"), "at least 1 lowercase letter; ", s),
-      s => checkExclusion(%re("/\s/"), "no whitespace.", s),
+      s => checkExclusion(%re("/\s/"), "no whitespace; ", s),
     ]
-  | "code" => [s => checkInclusion(%re("/^\d{6}$/"), "6-digit number only.", s)]
+  | "code" => [s => checkInclusion(%re("/^\d{6}$/"), "6-digit number only; ", s)]
   | "email" => [
       s => checkLength(5, 99, s),
       s =>
@@ -48,16 +48,24 @@ let getFuncs = input =>
   | _ => []
   }
 
-let useError = (value, propName, setErrorFunc) => {
+let useError = (fields, setErrorFunc) => {
   Js.log("Errorhook")
 
   React.useEffect1(() => {
-    let error = getFuncs(propName)->Js.Array2.reduce((acc, f) => acc ++ f(value), "")
-    let final = switch error == "" {
+    let errs = fields->Js.Array2.map(fld => {
+      let (val, prop) = fld
+      let error = getFuncs(prop)->Js.Array2.reduce((acc, f) => acc ++ f(val), "")
+      switch error == "" {
+      | true => ""
+      | false => Js.String2.toUpperCase(prop) ++ ": " ++ error
+      }
+    })
+    let total = errs->Js.Array2.joinWith("")
+    let final = switch total == "" {
     | true => None
-    | false => Some(propName ++ ": " ++ error)
+    | false => Some(total)
     }
     setErrorFunc(_ => final)
     None
-  }, [value])
+  }, [fields])
 }

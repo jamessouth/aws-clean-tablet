@@ -79,33 +79,29 @@ let make = (~userpool, ~setCognitoUser, ~cognitoError, ~setCognitoError) => {
   let (password, setPassword) = React.useState(_ => "")
   let (email, setEmail) = React.useState(_ => "")
   Js.log("url22")
-  let (usernameError, setUsernameError) = React.useState(_ => Some("username: 3-10 characters; "))
-  let (passwordError, setPasswordError) = React.useState(_ => Some(
-    "password: 8-98 characters; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; ",
-  ))
-  let (emailError, setEmailError) = React.useState(_ => Some(
-    "email: 5-99 characters; enter a valid email address.",
-  ))
+  
+  
 
-  let (validationError, setValidationError) = React.useState(_ => Some(
-    "username: 3-10 characters; ",
-  ))
+
+
+
+  let (validationError, setValidationError) = React.useState(_ => Some("USERNAME: 3-10 characters; PASSWORD: 8-98 characters; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; EMAIL: 5-99 characters; enter a valid email address."))
 
   let (submitClicked, setSubmitClicked) = React.useState(_ => false)
   let (showPassword, setShowPassword) = React.useState(_ => false)
 
-  ErrorHook.useError(username, "username", setUsernameError)
-  ErrorHook.useError(password, "password", setPasswordError)
-  ErrorHook.useError(email, "email", setEmailError)
+  ErrorHook.useError([(username, "username"), (password, "password"), (email, "email")], setValidationError)
 
-  React.useEffect3(() => {
-    switch (usernameError, passwordError, emailError) {
-    | (None, None, None) => setValidationError(_ => None)
-    | (Some(err), _, _) | (_, Some(err), _) | (_, _, Some(err)) =>
-      setValidationError(_ => Some(err))
-    }
-    None
-  }, (usernameError, passwordError, emailError))
+  
+
+  // React.useEffect3(() => {
+  //   switch (usernameError, passwordError, emailError) {
+  //   | (None, None, None) => setValidationError(_ => None)
+  //   | (Some(err), _, _) | (_, Some(err), _) | (_, _, Some(err)) =>
+  //     setValidationError(_ => Some(err))
+  //   }
+  //   None
+  // }, (usernameError, passwordError, emailError))
 
   let toggleButton = React.useMemo1(
     _ => <Toggle toggleProp=showPassword toggleSetFunc=setShowPassword />,

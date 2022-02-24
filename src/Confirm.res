@@ -28,8 +28,8 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
   let (code, setCode) = React.useState(_ => "")
   let (password, setPassword) = React.useState(_ => "")
 
-  let (codeError, setCodeError) = React.useState(_ => Some("code: 6-digit number only."))
-  let (passwordError, setPasswordError) = React.useState(_ => Some(
+  let (codeError, _setCodeError) = React.useState(_ => Some("code: 6-digit number only."))
+  let (passwordError, _setPasswordError) = React.useState(_ => Some(
     "password: 8-98 characters; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; ",
   ))
 
@@ -40,8 +40,9 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
   let (submitClicked, setSubmitClicked) = React.useState(_ => false)
   let (showPassword, setShowPassword) = React.useState(_ => false)
 
-  ErrorHook.useError(code, "code", setCodeError)
-  ErrorHook.useError(password, "password", setPasswordError)
+  // ErrorHook.useError(code, "code", setCodeError)
+  // ErrorHook.useError(password, "password", setPasswordError)
+  ErrorHook.useError([], setValidationError)
 
   React.useEffect2(() => {
     switch (codeError, passwordError) {
