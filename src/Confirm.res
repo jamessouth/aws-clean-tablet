@@ -28,29 +28,14 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
   let (code, setCode) = React.useState(_ => "")
   let (password, setPassword) = React.useState(_ => "")
 
-  let (codeError, _setCodeError) = React.useState(_ => Some("code: 6-digit number only."))
-  let (passwordError, _setPasswordError) = React.useState(_ => Some(
-    "password: 8-98 characters; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; ",
-  ))
-
   let (validationError, setValidationError) = React.useState(_ => Some(
-    "code: 6-digit number only.",
+    "CODE: 6-digit number only; PASSWORD: 8-98 characters; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; ",
   ))
 
   let (submitClicked, setSubmitClicked) = React.useState(_ => false)
   let (showPassword, setShowPassword) = React.useState(_ => false)
 
-  // ErrorHook.useError(code, "code", setCodeError)
-  // ErrorHook.useError(password, "password", setPasswordError)
-  ErrorHook.useError([], setValidationError)
-
-  React.useEffect2(() => {
-    switch (codeError, passwordError) {
-    | (None, None) => setValidationError(_ => None)
-    | (Some(err), _) | (_, Some(err)) => setValidationError(_ => Some(err))
-    }
-    None
-  }, (codeError, passwordError))
+  ErrorHook.useError([(code, "code"), (password, "password")], setValidationError)
 
   let toggleButton = React.useMemo1(
     _ => <Toggle toggleProp=showPassword toggleSetFunc=setShowPassword />,
@@ -110,18 +95,6 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
       | true => (_ => Some("null user - not submitting"))->setCognitoError
       }
     | Some(_) => ()
-    }
-
-    switch Js.Nullable.isNullable(cognitoUser) {
-    | false =>
-      switch url.search {
-      | "cd_un" =>
-        cognitoUser->confirmRegistration(code, false, confirmregistrationCallback, Js.Nullable.null)
-      | "pw_un" =>
-        cognitoUser->confirmPassword(code, password, confirmpasswordCallback, Js.Nullable.null)
-      | _ => (_ => Some("unknown method - not submitting"))->setCognitoError
-      }
-    | true => (_ => Some("null user - not submitting"))->setCognitoError
     }
   }
 

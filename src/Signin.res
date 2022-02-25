@@ -38,29 +38,14 @@ let make = (
   let (username, setUsername) = React.useState(_ => "")
   let (password, setPassword) = React.useState(_ => "")
 
-  let (usernameError, _setUsernameError) = React.useState(_ => Some("username: 3-10 characters; "))
-  let (passwordError, _setPasswordError) = React.useState(_ => Some(
-    "password: 8-98 characters; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; ",
-  ))
-
   let (validationError, setValidationError) = React.useState(_ => Some(
-    "username: 3-10 characters; ",
+    "USERNAME: 3-10 characters; PASSWORD: 8-98 characters; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; ",
   ))
 
   let (submitClicked, setSubmitClicked) = React.useState(_ => false)
   let (showPassword, setShowPassword) = React.useState(_ => false)
 
-  // ErrorHook.useError(username, "username", setUsernameError)
-  // ErrorHook.useError(password, "password", setPasswordError)
-  ErrorHook.useError([], setValidationError)
-
-  React.useEffect2(() => {
-    switch (usernameError, passwordError) {
-    | (None, None) => setValidationError(_ => None)
-    | (Some(err), _) | (_, Some(err)) => setValidationError(_ => Some(err))
-    }
-    None
-  }, (usernameError, passwordError))
+  ErrorHook.useError([(username, "username"), (password, "password")], setValidationError)
 
   let toggleButton = React.useMemo1(
     _ => <Toggle toggleProp=showPassword toggleSetFunc=setShowPassword />,
