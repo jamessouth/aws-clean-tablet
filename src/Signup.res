@@ -85,16 +85,10 @@ let make = (~userpool, ~setCognitoUser, ~cognitoError, ~setCognitoError) => {
   ))
 
   let (submitClicked, setSubmitClicked) = React.useState(_ => false)
-  let (showPassword, setShowPassword) = React.useState(_ => false)
 
   ErrorHook.useError(
     [(username, "username"), (password, "password"), (email, "email")],
     setValidationError,
-  )
-
-  let toggleButton = React.useMemo1(
-    _ => <Toggle toggleProp=showPassword toggleSetFunc=setShowPassword />,
-    [showPassword],
   )
 
   let signupCallback = cbToOption(res =>
@@ -150,14 +144,7 @@ let make = (~userpool, ~setCognitoUser, ~cognitoError, ~setCognitoError) => {
         | true => <Error validationError cognitoError />
         }}
         <Input value=username propName="username" setFunc=setUsername />
-        <Input
-          value=password
-          propName="password"
-          autoComplete="new-password"
-          toggleProp=showPassword
-          toggleButton
-          setFunc=setPassword
-        />
+        <Input value=password propName="password" autoComplete="new-password" setFunc=setPassword />
         <Input value=email propName="email" inputMode="email" setFunc=setEmail />
       </fieldset>
       <Button text="create" onClick />

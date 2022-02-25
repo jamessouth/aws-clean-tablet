@@ -35,6 +35,7 @@ let make = (
   ~cognitoError,
   ~setCognitoError,
 ) => {
+  Js.log("sinin")
   let (username, setUsername) = React.useState(_ => "")
   let (password, setPassword) = React.useState(_ => "")
 
@@ -43,14 +44,8 @@ let make = (
   ))
 
   let (submitClicked, setSubmitClicked) = React.useState(_ => false)
-  let (showPassword, setShowPassword) = React.useState(_ => false)
 
   ErrorHook.useError([(username, "username"), (password, "password")], setValidationError)
-
-  let toggleButton = React.useMemo1(
-    _ => <Toggle toggleProp=showPassword toggleSetFunc=setShowPassword />,
-    [showPassword],
-  )
 
   let onClick = _ => {
     setSubmitClicked(_ => true)
@@ -112,12 +107,7 @@ let make = (
         }}
         <Input value=username propName="username" setFunc=setUsername />
         <Input
-          value=password
-          propName="password"
-          autoComplete="current-password"
-          toggleProp=showPassword
-          toggleButton
-          setFunc=setPassword
+          value=password propName="password" autoComplete="current-password" setFunc=setPassword
         />
       </fieldset>
       <Button text="submit" onClick />

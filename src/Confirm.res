@@ -33,14 +33,8 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
   ))
 
   let (submitClicked, setSubmitClicked) = React.useState(_ => false)
-  let (showPassword, setShowPassword) = React.useState(_ => false)
 
   ErrorHook.useError([(code, "code"), (password, "password")], setValidationError)
-
-  let toggleButton = React.useMemo1(
-    _ => <Toggle toggleProp=showPassword toggleSetFunc=setShowPassword />,
-    [showPassword],
-  )
 
   let confirmregistrationCallback = Signup.cbToOption(res =>
     switch res {
@@ -123,12 +117,7 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
           {switch url.search {
           | "pw_un" =>
             <Input
-              value=password
-              propName="password"
-              autoComplete="new-password"
-              toggleProp=showPassword
-              toggleButton
-              setFunc=setPassword
+              value=password propName="password" autoComplete="new-password" setFunc=setPassword
             />
           | _ => React.null
           }}

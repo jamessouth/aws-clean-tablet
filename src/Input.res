@@ -1,19 +1,13 @@
 @react.component
-let make = (
-  ~value,
-  ~propName,
-  ~autoComplete=propName,
-  ~toggleProp=false,
-  ~toggleButton=React.null,
-  ~inputMode="text",
-  ~setFunc,
-) => {
+let make = (~value, ~propName, ~autoComplete=propName, ~inputMode="text", ~setFunc) => {
+  let (showPassword, setShowPassword) = React.useState(_ => false)
+
   let onChange = e => setFunc(_ => ReactEvent.Form.target(e)["value"])
 
   <div
-    className={switch Js.Nullable.isNullable(Js.Nullable.return(toggleButton)) {
-    | true => "w-full"
-    | false => "w-full relative"
+    className={switch propName == "password" {
+    | true => "w-full relative"
+    | false => "w-full"
     }}>
     <label className="text-2xl font-flow text-warm-gray-100" htmlFor=autoComplete>
       {React.string(propName)}
@@ -26,12 +20,15 @@ let make = (
       name=propName
       onChange
       spellCheck=false
-      type_={switch propName == "username" || toggleProp {
+      type_={switch propName == "username" || showPassword {
       | true => "text"
       | false => propName
       }}
       value
     />
-    {toggleButton}
+    {switch propName == "password" {
+    | true => <Toggle toggleProp=showPassword toggleSetFunc=setShowPassword />
+    | false => React.null
+    }}
   </div>
 }
