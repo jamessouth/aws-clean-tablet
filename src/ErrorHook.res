@@ -16,7 +16,7 @@ let checkExclusion = (re, msg, str) =>
 
 let getFuncs = input =>
   switch input {
-  | "username" => [
+  | "USERNAME" => [
       s => checkLength(3, 10, s),
       s =>
         checkExclusion(
@@ -25,7 +25,7 @@ let getFuncs = input =>
           s,
         ),
     ]
-  | "password" => [
+  | "PASSWORD" => [
       s => checkLength(8, 98, s),
       s => checkInclusion(%re("/[!-/:-@\[-`{-~]/"), "at least 1 symbol; ", s),
       s => checkInclusion(%re("/\d/"), "at least 1 number; ", s),
@@ -33,8 +33,8 @@ let getFuncs = input =>
       s => checkInclusion(%re("/[a-z]/"), "at least 1 lowercase letter; ", s),
       s => checkExclusion(%re("/\s/"), "no whitespace; ", s),
     ]
-  | "code" => [s => checkInclusion(%re("/^\d{6}$/"), "6-digit number only; ", s)]
-  | "email" => [
+  | "CODE" => [s => checkInclusion(%re("/^\d{6}$/"), "6-digit number only; ", s)]
+  | "EMAIL" => [
       s => checkLength(5, 99, s),
       s =>
         checkInclusion(
@@ -48,24 +48,32 @@ let getFuncs = input =>
   | _ => []
   }
 
-let useError = (fields, setErrorFunc) => {
+let useMultiError = (fields, setErrorFunc) => {
   Js.log("Errorhook")
 
-  React.useEffect1(() => {
-    let errs = fields->Js.Array2.map(fld => {
-      let (val, prop) = fld
-      let error = getFuncs(prop)->Js.Array2.reduce((acc, f) => acc ++ f(val), "")
-      switch error == "" {
-      | true => ""
-      | false => Js.String2.toUpperCase(prop) ++ ": " ++ error
-      }
-    })
-    let total = errs->Js.Array2.joinWith("")
-    let final = switch total == "" {
-    | true => None
-    | false => Some(total)
+  let errs = fields->Js.Array2.map(fld => {
+    let (val, prop) = fld
+    let error = getFuncs(prop)->Js.Array2.reduce((acc, f) => acc ++ f(val), "")
+    switch error == "" {
+    | true => ""
+    | false => prop ++ ": " ++ error
     }
-    setErrorFunc(_ => final)
-    None
-  }, [fields])
+  })
+  let total = errs->Js.Array2.joinWith("")
+  let final = switch total == "" {
+  | true => None
+  | false => Some(total)
+  }
+  setErrorFunc(_ => final)
+}
+
+let useError = (value, propName, setErrorFunc) => {
+  Js.log("Errorhook2")
+
+  let error = getFuncs(propName)->Js.Array2.reduce((acc, f) => acc ++ f(value), "")
+  let final = switch error == "" {
+  | true => None
+  | false => Some(propName ++ ": " ++ error)
+  }
+  setErrorFunc(_ => final)
 }

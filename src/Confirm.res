@@ -23,18 +23,26 @@ external confirmPassword: (
 @react.component
 let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
   let url = RescriptReactRouter.useUrl()
+  let valErr = switch url.search {
+  | "cd_un" => "CODE: 6-digit number only; "
+  | _ => "CODE: 6-digit number only; PASSWORD: 8-98 characters; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; "
+  }
   Js.log3("user", cognitoUser, url)
 
   let (code, setCode) = React.useState(_ => "")
   let (password, setPassword) = React.useState(_ => "")
 
-  let (validationError, setValidationError) = React.useState(_ => Some(
-    "CODE: 6-digit number only; PASSWORD: 8-98 characters; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; ",
-  ))
+  let (validationError, setValidationError) = React.useState(_ => Some(valErr))
 
   let (submitClicked, setSubmitClicked) = React.useState(_ => false)
 
-  ErrorHook.useError([(code, "code"), (password, "password")], setValidationError)
+  React.useEffect3(() => {
+    switch url.search {
+    | "cd_un" => ErrorHook.useError(code, "CODE", setValidationError)
+    | _ => ErrorHook.useMultiError([(code, "CODE"), (password, "PASSWORD")], setValidationError)
+    }
+    None
+  }, (code, password, url.search))
 
   let confirmregistrationCallback = Signup.cbToOption(res =>
     switch res {

@@ -86,10 +86,13 @@ let make = (~userpool, ~setCognitoUser, ~cognitoError, ~setCognitoError) => {
 
   let (submitClicked, setSubmitClicked) = React.useState(_ => false)
 
-  ErrorHook.useError(
-    [(username, "username"), (password, "password"), (email, "email")],
-    setValidationError,
-  )
+  React.useEffect3(() => {
+    ErrorHook.useMultiError(
+      [(username, "USERNAME"), (password, "PASSWORD"), (email, "EMAIL")],
+      setValidationError,
+    )
+    None
+  }, (username, password, email))
 
   let signupCallback = cbToOption(res =>
     switch res {

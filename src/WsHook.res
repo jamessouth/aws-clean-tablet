@@ -30,6 +30,14 @@ type closeEventHandler = closeEvent => unit
 
 @send external sendString: (Js.Nullable.t<t>, string) => unit = "send"
 
+
+
+@val external document: Dom.document = "document"
+@get external body: Dom.document => Dom.htmlBodyElement = "body"
+
+
+
+
 type return = {
   playerGame: string,
   // setPlayerGame: (. string => string) => unit,
@@ -139,6 +147,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
       ws->onOpen(e => {
         setWsConnected(._ => true)
         Js.log2("open", e)
+        Js.log2("bod", body(document))
       })
       ws->onError(e => {
         Js.log2("errrr", e)

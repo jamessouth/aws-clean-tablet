@@ -45,7 +45,10 @@ let make = (
 
   let (submitClicked, setSubmitClicked) = React.useState(_ => false)
 
-  ErrorHook.useError([(username, "username"), (password, "password")], setValidationError)
+  React.useEffect2(() => {
+    ErrorHook.useMultiError([(username, "USERNAME"), (password, "PASSWORD")], setValidationError)
+    None
+  }, (username, password))
 
   let onClick = _ => {
     setSubmitClicked(_ => true)

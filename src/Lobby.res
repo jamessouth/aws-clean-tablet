@@ -1,5 +1,3 @@
-let startBtnStyles = " mb-14 w-1/2 bg-warm-gray-100 text-gray-700 h-8 text-lg font-anon cursor-pointer"
-
 @react.component
 let make = (~wsConnected, ~playerGame, ~leadertoken, ~games, ~send, ~wsError, ~signOut) => {
   let onClick = _ => {

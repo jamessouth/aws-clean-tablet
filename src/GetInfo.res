@@ -120,8 +120,15 @@ let make = (
 
   let (submitClicked, setSubmitClicked) = React.useState(_ => false)
 
-  ErrorHook.useError([(username, "username")], setUsernameError)
-  ErrorHook.useError([(email, "email")], setEmailError)
+  React.useEffect1(() => {
+    ErrorHook.useError(username, "USERNAME", setUsernameError)
+    None
+  }, [username])
+
+  React.useEffect1(() => {
+    ErrorHook.useError(email, "EMAIL", setEmailError)
+    None
+  }, [email])
 
   let dummyPassword = "lllLLL!!!111"
   let dummyUsername = "letmein"
