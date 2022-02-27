@@ -85,13 +85,21 @@
 }
 
 
-body{
+.bodmob{
   background-image: -webkit-image-set(
     url("../../assets/mob1x.webp") 1x,
     url("../../assets/mob2x.webp") 2x);
   background-image: image-set(
     url("../../assets/mob1x.webp") 1x,
     url("../../assets/mob2x.webp") 2x);
+}
+.bodchmob{
+  background-image: -webkit-image-set(
+    url("../../assets/chmob1x.webp") 1x,
+    url("../../assets/chmob2x.webp") 2x);
+  background-image: image-set(
+    url("../../assets/chmob1x.webp") 1x,
+    url("../../assets/chmob2x.webp") 2x);
 }
 /* button{
   font-size: 1.375rem;
@@ -146,26 +154,39 @@ footer a:hover{
       filter: hue-rotate(360deg);
   }
 }
-@media screen and (min-width: 768px){
-  body{
-    background-image: -webkit-image-set(
-      url("../../assets/tab1x.webp") 1x,
-      url("../../assets/tab2x.webp") 2x);
-    background-image: image-set(
-      url("../../assets/tab1x.webp") 1x,
-      url("../../assets/tab2x.webp") 2x);
-  }
-  .h1{
-    font-size: 3.5rem;
-  }
+
+.bodtab{
+  background-image: -webkit-image-set(
+    url("../../assets/tab1x.webp") 1x,
+    url("../../assets/tab2x.webp") 2x);
+  background-image: image-set(
+    url("../../assets/tab1x.webp") 1x,
+    url("../../assets/tab2x.webp") 2x);
 }
-@media screen and (min-width: 1440px){
-  body{
-    background-image: -webkit-image-set(
-      url("../../assets/big1x.webp") 1x,
-      url("../../assets/big2x.webp") 2x);
-    background-image: image-set(
-      url("../../assets/big1x.webp") 1x,
-      url("../../assets/big2x.webp") 2x);
-  }
+.bodchtab{
+  background-image: -webkit-image-set(
+    url("../../assets/chtab1x.webp") 1x,
+    url("../../assets/chtab2x.webp") 2x);
+  background-image: image-set(
+    url("../../assets/chtab1x.webp") 1x,
+    url("../../assets/chtab2x.webp") 2x);
 }
+
+
+.bodbig{
+  background-image: -webkit-image-set(
+    url("../../assets/big1x.webp") 1x,
+    url("../../assets/big2x.webp") 2x);
+  background-image: image-set(
+    url("../../assets/big1x.webp") 1x,
+    url("../../assets/big2x.webp") 2x);
+}
+.bodchbig{
+  background-image: -webkit-image-set(
+    url("../../assets/chbig1x.webp") 1x,
+    url("../../assets/chbig2x.webp") 2x);
+  background-image: image-set(
+    url("../../assets/chbig1x.webp") 1x,
+    url("../../assets/chbig2x.webp") 2x);
+}
+

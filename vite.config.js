@@ -52,12 +52,17 @@ export default defineConfig({
             },
             screens: {
               'newgmimg': '459px',//11/12*459=421
+              'desk': '1440px',
             },
             textShadow: {
               '2xl': '1px 0px 4px #f5f5f4bb',
             },
           },
         },
+        // shortcuts: {
+        //   'pubbody': '',
+        //   'privbody': '',
+        // },
       },
 
 

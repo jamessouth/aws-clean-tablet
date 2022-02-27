@@ -66,6 +66,7 @@ let make = (
             | None => setCognitoError(_ => Some("unknown signin error"))
             }
 
+            setCognitoUser(._ => Js.Nullable.null)
             Js.log2("problem", ex)
           },
           newPasswordRequired: Js.Nullable.null,

@@ -66,7 +66,7 @@ let make = () => {
     <h1
       style={ReactDOM.Style.make(~backgroundColor={playerColor}, ())}
       className="text-6xl mt-11 mx-auto w-11/12 text-center font-arch decay-mask text-warm-gray-100">
-      {"CLEAN TABLET"->React.string}
+      {React.string("CLEAN TABLET")}
     </h1>
     <div className="mt-10">
       {switch (url.path, token) {

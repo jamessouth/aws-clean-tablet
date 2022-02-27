@@ -7,7 +7,7 @@ external stage: string = "VITE_STAGE"
 
 type t
 type openEventHandler = unit => unit
-type errorEventHandler = unit => unit
+type errorEventHandler = Dom.errorEvent => unit
 type messageEvent = {data: string}
 type messageEventHandler = messageEvent => unit
 type closeEvent = {
@@ -30,13 +30,9 @@ type closeEventHandler = closeEvent => unit
 
 @send external sendString: (Js.Nullable.t<t>, string) => unit = "send"
 
-
-
 @val external document: Dom.document = "document"
 @get external body: Dom.document => Dom.htmlBodyElement = "body"
-
-
-
+@set external setClassName: (Dom.htmlBodyElement, string) => unit = "className"
 
 type return = {
   playerGame: string,
@@ -147,7 +143,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
       ws->onOpen(e => {
         setWsConnected(._ => true)
         Js.log2("open", e)
-        Js.log2("bod", body(document))
+        body(document)->setClassName("bodchmob md:bodchtab desk:bodchbig")
       })
       ws->onError(e => {
         Js.log2("errrr", e)
@@ -212,6 +208,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
         setConnID(._ => "")
         setWs(._ => Js.Nullable.null)
         dispatch((ResetPlayerState: Reducer.action))
+        body(document)->setClassName("bg-no-repeat bg-center bg-cover bodmob md:bodtab desk:bodbig")
       })
     }
 
