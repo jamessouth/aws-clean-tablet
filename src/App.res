@@ -41,23 +41,22 @@ let make = () => {
     None
   }, [cognitoUser])
 
-  let {
-    playerGame,
-    // setPlayerGame,
-    playerColor,
-    wsConnected,
-    game,
-    games,
-    connID,
-    // setConnID,
-    send,
-    close,
-    wsError,
-    // setWs,
-    // dispatch
-  } = WsHook.useWs(token, setToken, cognitoUser, setCognitoUser, setPlayerName)
+  let (playerGame, playerColor, wsConnected, game, games, connID, send, close, wsError) = WsHook.useWs(token, setToken, cognitoUser, setCognitoUser, setPlayerName)
 
-  let signOut = <SignOut send playerGame close />
+  let signOut = _ => {
+    Js.log("sign out click")
+
+    let pl: Game.lobbyPayload = {
+      action: "lobby",
+      gameno: switch playerGame == "" {
+      | true => "dc"
+      | false => playerGame
+      },
+      tipe: "disconnect",
+    }
+    send(. Js.Json.stringifyAny(pl))
+    close(. 1000, "user sign-out")
+  }
 
   <>
     <p className="font-flow text-warm-gray-100 text-4xl h-10 font-bold text-center">
@@ -123,7 +122,9 @@ let make = () => {
         }
 
       | (list{"signin"}, None) =>
-        <Signin userpool setCognitoUser setToken cognitoUser cognitoError setCognitoError />
+        <Signin
+          userpool setCognitoUser setToken cognitoUser cognitoError setCognitoError playerName
+        />
 
       | (list{"confirm"}, Some(_t)) => {
           RescriptReactRouter.replace("/lobby")

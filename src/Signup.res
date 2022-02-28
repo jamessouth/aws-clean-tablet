@@ -99,7 +99,7 @@ let make = (~userpool, ~setCognitoUser, ~cognitoError, ~setCognitoError) => {
     | Ok(val) => {
         setCognitoError(_ => None)
         setCognitoUser(._ => Js.Nullable.return(val.user))
-        RescriptReactRouter.push("/confirm?code")
+        RescriptReactRouter.push("/confirm?cd_un")
 
         Js.log2("res", val.user.username)
       }

@@ -34,9 +34,10 @@ let make = (
   ~cognitoUser,
   ~cognitoError,
   ~setCognitoError,
+  ~playerName,
 ) => {
   Js.log("sinin")
-  let (username, setUsername) = React.useState(_ => "")
+  let (username, setUsername) = React.useState(_ => playerName)
   let (password, setPassword) = React.useState(_ => "")
 
   let (validationError, setValidationError) = React.useState(_ => Some(

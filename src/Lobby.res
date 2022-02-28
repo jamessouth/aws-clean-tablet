@@ -10,7 +10,10 @@ let make = (~wsConnected, ~playerGame, ~leadertoken, ~games, ~send, ~wsError, ~s
   }
 
   <>
-    {signOut}
+      <button
+    className="absolute top-5px right-5px bg-transparent cursor-pointer" onClick=signOut type_="button">
+    <img className="block" src="../assets/signout.png" />
+  </button>
     {switch wsError !== "" {
     | true =>
       <p className="text-center text-warm-gray-100 font-anon text-lg">

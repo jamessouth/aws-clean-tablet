@@ -34,23 +34,7 @@ type closeEventHandler = closeEvent => unit
 @get external body: Dom.document => Dom.htmlBodyElement = "body"
 @set external setClassName: (Dom.htmlBodyElement, string) => unit = "className"
 
-type return = {
-  playerGame: string,
-  // setPlayerGame: (. string => string) => unit,
-  playerColor: string,
-  wsConnected: bool,
-  game: Reducer.liveGame,
-  games: Js.Nullable.t<array<Reducer.listGame>>,
-  // currentWord: string,
-  // previousWord: string,
-  connID: string,
-  // setConnID: (. string => string) => unit,
-  send: (. option<string>) => unit,
-  close: (. int, string) => unit,
-  wsError: string,
-  // setWs: (. Js.Nullable.t<t> => Js.Nullable.t<t>) => unit,
-  // dispatch: Reducer.action => unit,
-}
+
 
 type listGamesData = {listGms: array<Reducer.listGame>, connID: string}
 @scope("JSON") @val
@@ -143,7 +127,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
       ws->onOpen(e => {
         setWsConnected(._ => true)
         Js.log2("open", e)
-        body(document)->setClassName("bodchmob md:bodchtab desk:bodchbig")
+        body(document)->setClassName("bodchmob bodchtab bodchbig")
       })
       ws->onError(e => {
         Js.log2("errrr", e)
@@ -208,7 +192,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
         setConnID(._ => "")
         setWs(._ => Js.Nullable.null)
         dispatch((ResetPlayerState: Reducer.action))
-        body(document)->setClassName("bg-no-repeat bg-center bg-cover bodmob md:bodtab desk:bodbig")
+        body(document)->setClassName("bg-no-repeat bg-center bg-cover bodmob bodtab bodbig")
       })
     }
 
@@ -222,36 +206,19 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
     Some(cleanup)
   }, [ws])
 
-  let send = (. str) => {
-    // let dict = Js.Dict.empty()
-    // Js.Dict.set(dict, "name", Js.Json.string("John Doe"))
-    // Js.Dict.set(dict, "age", Js.Json.number(30.0))
-    // Js.Dict.set(dict, "likes", Js.Json.stringArray(["bucklescript", "ocaml", "js"]))
 
-    // ws->sendString(Js.Json.stringify(Js.Json.object_(dict)))
+// React.useMemo1(_ => (
+  let send = (. str) => {
     switch str {
     | None => ()
     | Some(s) => ws->sendString(s)
     }
   }
+  // ), [ws])
 
   let close = (. code, reason) => ws->closeCodeReason(code, reason)
 
-  {
-    playerGame: playerGame,
-    // setPlayerGame: setPlayerGame,
-    playerColor: playerColor,
-    wsConnected: wsConnected,
-    game: state.game,
-    games: state.gamesList,
-    // currentWord: currentWord,
-    // previousWord: previousWord,
-    connID: connID,
-    // setConnID: setConnID,
-    send: send,
-    close: close,
-    wsError: wsError,
-    // setWs: setWs,
-    // dispatch: dispatch,
-  }
+
+
+  (playerGame, playerColor, wsConnected, state.game, state.gamesList, connID, send, close, wsError)
 }
