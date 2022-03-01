@@ -12,12 +12,11 @@ type startPayload = {
 let chk = Js.String2.fromCharCode(10003)
 
 @react.component
-let make = (~game: Reducer.listGame, ~leadertoken, ~playerGame, ~send, ~class, ~readyColor) => {
+let make = (~game: Reducer.listGame, ~leader, ~playerGame, ~send, ~class, ~readyColor) => {
   let (ready, setReady) = React.Uncurried.useState(_ => true)
   let (count, setCount) = React.useState(_ => 5)
   let (disabled1, setDisabled1) = React.useState(_ => false)
   let (disabled2, setDisabled2) = React.useState(_ => true)
-  let (leader, setLeader) = React.useState(_ => false)
 
   let onClick1 = _ => {
     let pl = {
@@ -79,18 +78,6 @@ let make = (~game: Reducer.listGame, ~leadertoken, ~playerGame, ~send, ~class, ~
       },
     )
   }, (game.ready, game.no, playerGame))
-
-  React.useEffect2(() => {
-    switch Js.Array2.length(game.players) > 0 {
-    | true =>
-      switch game.players[0].name ++ game.players[0].connid == leadertoken {
-      | true => setLeader(_ => true)
-      | false => setLeader(_ => false)
-      }
-    | false => setLeader(_ => false)
-    }
-    None
-  }, (game.players, leadertoken))
 
   React.useEffect4(() => {
     switch (playerGame === game.no && count === 0, leader) {

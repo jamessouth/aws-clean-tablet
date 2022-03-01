@@ -73,7 +73,7 @@ let make = (~playerGame, ~leadertoken, ~games, ~send, ~wsError, ~close) => {
             <ul
               className="m-12 w-11/12 <md:(flex max-w-lg flex-col) md:(grid grid-cols-2 gap-8) lg:(gap-10 justify-items-center) xl:(grid-cols-3 gap-12 max-w-1688px)">
               {gs
-              ->Js.Array2.mapi((game, i) => {
+              ->Js.Array2.mapi((game: Reducer.listGame, i) => {
                 let (class, readyColor) = switch mod(i, 6) {
                 | 0 => ("game0", "#cc9e48")
                 | 1 => ("game1", "#213e10")
@@ -82,7 +82,13 @@ let make = (~playerGame, ~leadertoken, ~games, ~send, ~wsError, ~close) => {
                 | 4 => ("game4", "#5f4500")
                 | _ => ("game5", "#8d4f36")
                 }
-                {React.useMemo3(_ => {<Game key=game.no game leadertoken playerGame send class readyColor />}, (game, playerGame, leadertoken))}
+
+                let leader = if Js.Array2.length(game.players) < 1 {false} else {
+                  let fp = game.players[0]
+                  fp.name ++ fp.connid == leadertoken
+                }
+                
+                {React.useMemo3(_ => {<Game key=game.no game leader playerGame send class readyColor />}, (game, playerGame, leadertoken))}
                 
               })
               ->React.array}
