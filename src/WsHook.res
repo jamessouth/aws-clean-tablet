@@ -96,9 +96,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
   let (playerColor, setPlayerColor) = React.Uncurried.useState(_ => "transparent")
   let (wsConnected, setWsConnected) = React.Uncurried.useState(_ => false)
   let (wsError, setWsError) = React.Uncurried.useState(_ => "")
-  // let (currentWord, _setCurrentWord) = React.Uncurried.useState(_ => "")
-  // let (previousWord, _setPreviousWord) = React.Uncurried.useState(_ => "")
-  // let (game, setGame) = React.Uncurried.useState(_ => emptyGame)
+
   let (connID, setConnID) = React.Uncurried.useState(_ => "")
 
   let {initialState, reducer} = Reducer.appState()
@@ -207,17 +205,24 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
   }, [ws])
 
 
-// React.useMemo1(_ => (
-  let send = (. str) => {
+  // let send = (. str) => {
+  //   switch str {
+  //   | None => ()
+  //   | Some(s) => ws->sendString(s)
+  //   }
+  // }
+
+  // let close = (. code, reason) => ws->closeCodeReason(code, reason)
+
+
+  let send = React.useMemo1(_ => ((. str) => {
     switch str {
     | None => ()
     | Some(s) => ws->sendString(s)
     }
-  }
-  // ), [ws])
+  }), [ws])
 
-  let close = (. code, reason) => ws->closeCodeReason(code, reason)
-
+  let close = React.useMemo1(_ => ((. code, reason) => ws->closeCodeReason(code, reason)), [ws])
 
 
   (playerGame, playerColor, wsConnected, state.game, state.gamesList, connID, send, close, wsError)

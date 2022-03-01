@@ -16,7 +16,7 @@ let make = (~game: Reducer.listGame, ~leadertoken, ~playerGame, ~send, ~class, ~
   let (ready, setReady) = React.Uncurried.useState(_ => true)
   let (count, setCount) = React.useState(_ => 5)
   let (disabled1, setDisabled1) = React.useState(_ => false)
-  let (disabled2, setDisabled2) = React.useState(_ => false)
+  let (disabled2, setDisabled2) = React.useState(_ => true)
   let (leader, setLeader) = React.useState(_ => false)
 
   let onClick1 = _ => {

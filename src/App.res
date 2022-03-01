@@ -41,22 +41,17 @@ let make = () => {
     None
   }, [cognitoUser])
 
-  let (playerGame, playerColor, wsConnected, game, games, connID, send, close, wsError) = WsHook.useWs(token, setToken, cognitoUser, setCognitoUser, setPlayerName)
-
-  let signOut = _ => {
-    Js.log("sign out click")
-
-    let pl: Game.lobbyPayload = {
-      action: "lobby",
-      gameno: switch playerGame == "" {
-      | true => "dc"
-      | false => playerGame
-      },
-      tipe: "disconnect",
-    }
-    send(. Js.Json.stringifyAny(pl))
-    close(. 1000, "user sign-out")
-  }
+  let (
+    playerGame,
+    playerColor,
+    wsConnected,
+    game,
+    games,
+    connID,
+    send,
+    close,
+    wsError,
+  ) = WsHook.useWs(token, setToken, cognitoUser, setCognitoUser, setPlayerName)
 
   <>
     <p className="font-flow text-warm-gray-100 text-4xl h-10 font-bold text-center">
@@ -114,7 +109,7 @@ let make = () => {
           }}
         </div>
 
-      | (list{"leaderboards"}, _) => <div> {"leaderboard"->React.string} </div>
+      | (list{"leaderboards"}, _) => <div> {React.string("leaderboard")} </div>
 
       | (list{"signin"}, Some(_)) => {
           RescriptReactRouter.replace("/lobby")
@@ -149,9 +144,13 @@ let make = () => {
       | (list{"signup"}, None) => <Signup userpool setCognitoUser cognitoError setCognitoError />
 
       | (list{"lobby"}, Some(_)) =>
-        <Lobby
-          wsConnected playerGame leadertoken={playerName ++ connID} games send wsError signOut
-        />
+        switch (wsConnected, connID == "") {
+        | (false, _) | (true, true) =>
+          <p className="text-center text-warm-gray-100 font-anon text-lg">
+            {React.string("loading games...")}
+          </p>
+        | _ => <Lobby playerGame leadertoken={playerName ++ connID} games send wsError close />
+        }
 
       | (list{"lobby"}, None) => {
           RescriptReactRouter.replace("/")
@@ -165,7 +164,13 @@ let make = () => {
 
       // playerName
       | (list{"game", _gameno}, Some(_)) =>
-        <Play wsConnected game playerColor send wsError leadertoken={playerName ++ connID} />
+        switch wsConnected {
+        | true => <Play game playerColor send wsError leadertoken={playerName ++ connID} />
+        | false =>
+          <p className="text-center text-warm-gray-100 font-anon text-lg">
+            {React.string("not connected...")}
+          </p>
+        }
 
       | (_, _) => <div> {"other"->React.string} </div> // <PageNotFound/>
       }}
