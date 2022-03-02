@@ -88,7 +88,7 @@ let make = (~playerGame, ~leadertoken, ~games, ~send, ~wsError, ~close) => {
                   fp.name ++ fp.connid == leadertoken
                 }
                 
-                {React.useMemo3(_ => {<Game key=game.no game leader playerGame send class readyColor />}, (game, playerGame, leadertoken))}
+                {React.useMemo3(_ => {<Game key=game.no game leader playerGame send class readyColor />}, (game, playerGame, leader))}
                 
               })
               ->React.array}

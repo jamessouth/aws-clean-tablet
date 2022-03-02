@@ -307,13 +307,8 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 		if recType == "CONNECT" {
 
 			var connRecord struct {
-				Pk      string
-				Sk      string
-				Game    string
-				Playing bool
-				Color   string
-				GSI1PK  string
-				GSI1SK  string
+				Pk, Sk, Game, Color, GSI1PK, GSI1SK string
+				Playing, Leader                     bool
 			}
 			err = attributevalue.UnmarshalMap(item, &connRecord)
 			if err != nil {
