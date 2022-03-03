@@ -47,7 +47,6 @@ let make = () => {
     wsConnected,
     game,
     games,
-    // connID,
     leader,
     send,
     close,

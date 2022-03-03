@@ -52,6 +52,21 @@ let make = (~game: Reducer.listGame, ~leader, ~playerGame, ~send, ~class, ~ready
     | (false, false, _) | (true, _, true) => setDisabled1(_ => true)
     | (_, _, _) => setDisabled1(_ => false)
     }
+
+      // if Js.Array2.length(game.players) > 7 {} else {}
+    switch (playerGame === game.no, playerGame == "") {
+    | (true, _) => {
+      setDisabled1(_ => false)
+      setDisabled2(_ => false)
+    }
+    | (false, false) => {
+      setDisabled1(_ => true)
+      setDisabled2(_ => true)
+      }
+
+
+    | (_, true) => 
+    }
     None
   }, (playerGame, game.no, game.players))
 
@@ -104,11 +119,11 @@ let make = (~game: Reducer.listGame, ~leader, ~playerGame, ~send, ~class, ~ready
     <p className="col-span-2"></p>
 
     {game.players
-    ->Js.Array2.map(p => {
+    ->Js.Array2.mapi((p, i) => {
       <p className={switch p.ready {
         | true => `underline decoration-[${readyColor}] decoration-4`
         | false => ""
-        }} key=p.connid>
+        }} key=j`${p.name}$i`>
         {React.string(p.name)}
       </p>
     })
@@ -164,8 +179,8 @@ let make = (~game: Reducer.listGame, ~leader, ~playerGame, ~send, ~class, ~ready
       className="cursor-pointer text-base text-warm-gray-100 font-anon w-1/2 bottom-0 h-8 right-0 absolute bg-smoke-700 bg-opacity-70"
       disabled=disabled2>
       {switch ready {
-      | true => "ready"->React.string
-      | false => "not ready"->React.string
+      | true => React.string("ready")
+      | false => React.string("not ready")
       }}
     </button>
   </li>

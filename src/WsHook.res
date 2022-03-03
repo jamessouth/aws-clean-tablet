@@ -97,7 +97,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
   let (wsConnected, setWsConnected) = React.Uncurried.useState(_ => false)
   let (wsError, setWsError) = React.Uncurried.useState(_ => "")
 
-  // let (connID, setConnID) = React.Uncurried.useState(_ => "")
+
   let (leader, setLeader) = React.Uncurried.useState(_ => false)
 
   let {initialState, reducer} = Reducer.appState()
