@@ -47,7 +47,8 @@ let make = () => {
     wsConnected,
     game,
     games,
-    connID,
+    // connID,
+    leader,
     send,
     close,
     wsError,
@@ -143,14 +144,14 @@ let make = () => {
 
       | (list{"signup"}, None) => <Signup userpool setCognitoUser cognitoError setCognitoError />
 
-      | (list{"lobby"}, Some(_)) =>
-        switch (wsConnected, connID == "") {
-        | (false, _) | (true, true) =>
-          <p className="text-center text-warm-gray-100 font-anon text-lg">
+      | (list{"lobby"}, Some(_)) => switch wsConnected {
+      | false => <p className="text-center text-warm-gray-100 font-anon text-lg">
             {React.string("loading games...")}
           </p>
-        | _ => <Lobby playerGame leadertoken={playerName ++ connID} games send wsError close />
-        }
+      | true => <Lobby playerGame leader games send wsError close />
+      }
+
+
 
       | (list{"lobby"}, None) => {
           RescriptReactRouter.replace("/")
@@ -165,7 +166,7 @@ let make = () => {
       // playerName
       | (list{"game", _gameno}, Some(_)) =>
         switch wsConnected {
-        | true => <Play game playerColor send wsError leadertoken={playerName ++ connID} />
+        | true => <Play game playerColor send wsError leader />
         | false =>
           <p className="text-center text-warm-gray-100 font-anon text-lg">
             {React.string("not connected...")}

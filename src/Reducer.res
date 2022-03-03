@@ -1,12 +1,11 @@
 type listPlayer = {
   name: string,
-  connid: string,
   ready: bool,
 }
 
 type livePlayer = {
   name: string,
-  connid: string,
+  // connid: string,
   color: string,
   score: string,
   answer: string,

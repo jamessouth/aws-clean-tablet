@@ -24,9 +24,9 @@ import (
 )
 
 type listPlayer struct {
-	Name   string `json:"name" dynamodbav:"name"`
-	ConnID string `json:"connid" dynamodbav:"connid"`
-	Ready  bool   `json:"ready" dynamodbav:"ready"`
+	Name string `json:"name" dynamodbav:"name"`
+	// ConnID string `json:"connid" dynamodbav:"connid"`
+	Ready bool `json:"ready" dynamodbav:"ready"`
 }
 
 type frontListGame struct {
@@ -341,10 +341,8 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 				payload, err = json.Marshal(struct {
 					ListGames []frontListGame `json:"listGms"`
-					ConnID    string          `json:"connID"`
 				}{
 					ListGames: getFrontListGames(listGames),
-					ConnID:    connRecord.GSI1SK,
 				})
 				if err != nil {
 					return callErr(err)
@@ -355,9 +353,11 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				payload, err = json.Marshal(struct {
 					ModConnGm string `json:"modConn"`
 					Color     string `json:"color"`
+					Leader    bool   `json:"leader"`
 				}{
 					ModConnGm: connRecord.Game,
 					Color:     connRecord.Color,
+					Leader:    connRecord.Leader,
 				})
 				if err != nil {
 					return callErr(err)

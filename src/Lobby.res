@@ -1,5 +1,5 @@
 @react.component
-let make = (~playerGame, ~leadertoken, ~games, ~send, ~wsError, ~close) => {
+let make = (~playerGame, ~leader, ~games, ~send, ~wsError, ~close) => {
   let onClick = _ => {
     let pl: Game.lobbyPayload = {
       action: "lobby",
@@ -83,12 +83,11 @@ let make = (~playerGame, ~leadertoken, ~games, ~send, ~wsError, ~close) => {
                 | _ => ("game5", "#8d4f36")
                 }
 
-                let leader = if Js.Array2.length(game.players) < 1 {false} else {
-                  let fp = game.players[0]
-                  fp.name ++ fp.connid == leadertoken
-                }
+
                 
-                {React.useMemo3(_ => {<Game key=game.no game leader playerGame send class readyColor />}, (game, playerGame, leader))}
+                // {React.useMemo3(_ => {
+                  <Game key=game.no game leader playerGame send class readyColor />
+                  // }, (game, playerGame, leader))}
                 
               })
               ->React.array}

@@ -36,11 +36,11 @@ type closeEventHandler = closeEvent => unit
 
 
 
-type listGamesData = {listGms: array<Reducer.listGame>, connID: string}
+type listGamesData = {listGms: array<Reducer.listGame>}
 @scope("JSON") @val
 external parseListGames: string => listGamesData = "parse"
 
-type modConnData = {modConn: string, color: string}
+type modConnData = {modConn: string, color: string, leader: bool}
 @scope("JSON") @val
 external parseModConn: string => modConnData = "parse"
 
@@ -97,7 +97,8 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
   let (wsConnected, setWsConnected) = React.Uncurried.useState(_ => false)
   let (wsError, setWsError) = React.Uncurried.useState(_ => "")
 
-  let (connID, setConnID) = React.Uncurried.useState(_ => "")
+  // let (connID, setConnID) = React.Uncurried.useState(_ => "")
+  let (leader, setLeader) = React.Uncurried.useState(_ => false)
 
   let {initialState, reducer} = Reducer.appState()
 
@@ -137,16 +138,16 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
 
         switch getMsgType(data) {
         | InsertConn => {
-            let {listGms, connID} = parseListGames(data)
-            Js.log3("parsedlistgames", listGms, connID)
+            let {listGms} = parseListGames(data)
+            Js.log2("parsedlistgames", listGms)
             dispatch(ListGames(Js.Nullable.return(listGms)))
-            setConnID(._ => connID)
           }
         | ModifyConn => {
-            let {modConn, color} = parseModConn(data)
-            Js.log2("parsedmodconn", modConn)
+            let {modConn, color, leader} = parseModConn(data)
+            Js.log4("parsedmodconn", modConn, color, leader)
             setPlayerGame(._ => modConn)
             setPlayerColor(._ => color)
+            setLeader(._ => leader)
           }
         | InsertGame => {
             let {addGame} = parseAddGame(data)
@@ -187,7 +188,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
         setPlayerColor(._ => "transparent")
 
         setPlayerGame(._ => "")
-        setConnID(._ => "")
+        setLeader(._ => false)
         setWs(._ => Js.Nullable.null)
         dispatch((ResetPlayerState: Reducer.action))
         body(document)->setClassName("bg-no-repeat bg-center bg-cover bodmob bodtab bodbig")
@@ -225,5 +226,5 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
   let close = React.useMemo1(_ => ((. code, reason) => ws->closeCodeReason(code, reason)), [ws])
 
 
-  (playerGame, playerColor, wsConnected, state.game, state.gamesList, connID, send, close, wsError)
+  (playerGame, playerColor, wsConnected, state.game, state.gamesList, leader, send, close, wsError)
 }

@@ -42,9 +42,9 @@ var sortListPlayers = []struct {
 	description     string
 }{
 	{
-		input: []listPlayer{{Name: "bill", ConnID: "111", Ready: false}, {Name: "artie", ConnID: "222", Ready: false}, {Name: "wendel", ConnID: "333", Ready: false}, {Name: "will", ConnID: "111", Ready: false}, {Name: "mike", ConnID: "111", Ready: false}},
+		input: []listPlayer{{Name: "bill", Ready: false}, {Name: "artie", Ready: false}, {Name: "wendel", Ready: false}, {Name: "will", Ready: false}, {Name: "mike", Ready: false}},
 
-		expected:    []listPlayer{{Name: "artie", ConnID: "222", Ready: false}, {Name: "bill", ConnID: "111", Ready: false}, {Name: "mike", ConnID: "111", Ready: false}, {Name: "wendel", ConnID: "333", Ready: false}, {Name: "will", ConnID: "111", Ready: false}},
+		expected:    []listPlayer{{Name: "artie", Ready: false}, {Name: "bill", Ready: false}, {Name: "mike", Ready: false}, {Name: "wendel", Ready: false}, {Name: "will", Ready: false}},
 		description: "by name",
 	},
 }
@@ -83,17 +83,17 @@ var listGamePayload_MarshalJSON_Tests = []struct {
 	description string
 }{
 	{
-		input:       listGamePayload{Game: frontListGame{No: "999", Players: []listPlayer{{Name: "p1", ConnID: "111"}, {Name: "p2", ConnID: "222"}, {Name: "p3", ConnID: "333"}}}, Tag: "addGame"},
+		input:       listGamePayload{Game: frontListGame{No: "999", Players: []listPlayer{{Name: "p1"}, {Name: "p2"}, {Name: "p3"}}}, Tag: "addGame"},
 		expected:    append([]byte{123, 34, 97, 100, 100, 71, 97, 109, 101, 34, 58}, bp...),
 		description: "add game",
 	},
 	{
-		input:       listGamePayload{Game: frontListGame{No: "999", Players: []listPlayer{{Name: "p1", ConnID: "111"}, {Name: "p2", ConnID: "222"}, {Name: "p3", ConnID: "333"}}}, Tag: "mdLstGm"},
+		input:       listGamePayload{Game: frontListGame{No: "999", Players: []listPlayer{{Name: "p1"}, {Name: "p2"}, {Name: "p3"}}}, Tag: "mdLstGm"},
 		expected:    append([]byte{123, 34, 109, 100, 76, 115, 116, 71, 109, 34, 58}, bp...),
 		description: "mod game",
 	},
 	{
-		input:       listGamePayload{Game: frontListGame{No: "999", Players: []listPlayer{{Name: "p1", ConnID: "111"}, {Name: "p2", ConnID: "222"}, {Name: "p3", ConnID: "333"}}}, Tag: "rmvGame"},
+		input:       listGamePayload{Game: frontListGame{No: "999", Players: []listPlayer{{Name: "p1"}, {Name: "p2"}, {Name: "p3"}}}, Tag: "rmvGame"},
 		expected:    append([]byte{123, 34, 114, 109, 118, 71, 97, 109, 101, 34, 58}, bp...),
 		description: "remove game",
 	},
