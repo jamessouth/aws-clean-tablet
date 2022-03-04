@@ -86,7 +86,7 @@ let make = (~playerGame, ~leader, ~games, ~send, ~wsError, ~close) => {
 
                 
                 // {React.useMemo3(_ => {                  
-                  <Game key=game.no game leader playerGame send class readyColor />
+                  <Game key=game.no game leader inThisGame=(playerGame == game.no) inAGame=(playerGame != "") send class readyColor />
                   // }, (game, playerGame, leader))}
                 
               })

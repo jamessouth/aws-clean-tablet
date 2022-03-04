@@ -12,29 +12,29 @@ type startPayload = {
 let chk = Js.String2.fromCharCode(10003)
 
 @react.component
-let make = (~game: Reducer.listGame, ~leader, ~playerGame, ~send, ~class, ~readyColor) => {
+let make = (~game: Reducer.listGame, ~leader, ~inThisGame, ~inAGame, ~send, ~class, ~readyColor) => {
   let (ready, setReady) = React.Uncurried.useState(_ => true)
   let (count, setCount) = React.useState(_ => 5)
-  let (disabled1, setDisabled1) = React.useState(_ => false)
-  let (disabled2, setDisabled2) = React.useState(_ => true)
+  let (disabledJoin, setDisabledJoin) = React.useState(_ => false)
+  let (disabledReady, setDisabledReady) = React.useState(_ => true)
 
-  let onClick1 = _ => {
+  let onClickJoin = _ => {
     let pl = {
       action: "lobby",
       gameno: game.no,
-      tipe: switch playerGame === game.no {
+      tipe: switch inThisGame {
       | true => "leave"
       | false => "join"
       },
     }
     send(. Js.Json.stringifyAny(pl))
-    switch playerGame === game.no {
+    switch inThisGame {
     | true => setReady(._ => true)
     | false => ()
     }
   }
 
-  let onClick2 = _ => {
+  let onClickReady = _ => {
     let pl = {
       action: "lobby",
       gameno: game.no,
@@ -48,38 +48,34 @@ let make = (~game: Reducer.listGame, ~leader, ~playerGame, ~send, ~class, ~ready
   }
 
   React.useEffect3(() => {
-    switch (playerGame == "", playerGame === game.no, Js.Array2.length(game.players) > 7) {
-    | (false, false, _) | (true, _, true) => setDisabled1(_ => true)
-    | (_, _, _) => setDisabled1(_ => false)
-    }
-
-      // if Js.Array2.length(game.players) > 7 {} else {}
-    switch (playerGame === game.no, playerGame == "") {
-    | (true, _) => {
-      setDisabled1(_ => false)
-      setDisabled2(_ => false)
-    }
-    | (false, false) => {
-      setDisabled1(_ => true)
-      setDisabled2(_ => true)
+    let size = Js.Array2.length(game.players)
+    switch (inThisGame, inAGame) {
+    | (true, _) => {//in this game
+        setDisabledJoin(_ => false)
+        if size < 3 {
+          setDisabledReady(_ => true)
+        } else {
+          setDisabledReady(_ => false)
+        }
       }
-
-
-    | (_, true) => 
+    | (false, true) => {//in another game
+        setDisabledJoin(_ => true)
+        setDisabledReady(_ => true)
+      }
+    | (_, false) => {//not in a game
+        setDisabledReady(_ => true)
+        if size > 7 {
+          setDisabledJoin(_ => true)
+        } else {
+          setDisabledJoin(_ => false)
+        }
+      }
     }
     None
-  }, (playerGame, game.no, game.players))
+  }, (inThisGame, inAGame, game.players))
 
-  React.useEffect3(() => {
-    switch (playerGame == "", playerGame === game.no, Js.Array2.length(game.players) < 3) {
-    | (false, false, _) | (true, _, _) | (_, _, true) => setDisabled2(_ => true)
-    | (_, _, _) => setDisabled2(_ => false)
-    }
-    None
-  }, (playerGame, game.no, game.players))
-
-  React.useEffect3(() => {
-    let id = if game.ready && game.no === playerGame {
+  React.useEffect2(() => {
+    let id = if game.ready && inThisGame {
       Js.Global.setInterval(() => {
         setCount(c => c - 1)
       }, 1000)
@@ -92,10 +88,10 @@ let make = (~game: Reducer.listGame, ~leader, ~playerGame, ~send, ~class, ~ready
         Js.Global.clearInterval(id)
       },
     )
-  }, (game.ready, game.no, playerGame))
+  }, (inThisGame, game.ready))
 
   React.useEffect4(() => {
-    switch (playerGame === game.no && count === 0, leader) {
+    switch (inThisGame && count === 0, leader) {
     | (true, true) => {
         RescriptReactRouter.push(`/game/${game.no}`)
 
@@ -110,55 +106,46 @@ let make = (~game: Reducer.listGame, ~leader, ~playerGame, ~send, ~class, ~ready
     | (false, _) => ()
     }
     None
-  }, (count, game.no, playerGame, leader))
+  }, (inThisGame, count, game.no, leader))
 
-  <li className={`<md:mb-16 grid grid-cols-2 grid-rows-6 relative text-xl bg-bottom bg-no-repeat text-center font-bold text-dark-800 font-anon pb-8 ${class} lg:(max-w-lg w-full)`}>
+  <li
+    className={`<md:mb-16 grid grid-cols-2 grid-rows-6 relative text-xl bg-bottom bg-no-repeat text-center font-bold text-dark-800 font-anon pb-8 ${class} lg:(max-w-lg w-full)`}>
     <p className="absolute text-warm-gray-100 text-xs left-1/2 transform -translate-x-2/4 -top-3.5">
       {React.string(game.no)}
     </p>
-    <p className="col-span-2"></p>
-
+    <p className="col-span-2" />
     {game.players
     ->Js.Array2.mapi((p, i) => {
-      <p className={switch p.ready {
+      <p
+        className={switch p.ready {
         | true => `underline decoration-[${readyColor}] decoration-4`
         | false => ""
-        }} key=j`${p.name}$i`>
+        }}
+        key={j`${p.name}$i`}>
         {React.string(p.name)}
       </p>
     })
     ->React.array}
-<p key="2">
-        {React.string("z1")}
-      </p><p key="23">
-        {React.string("z11")}
-      </p><p key="24">
-        {React.string("z111")}
-      </p><p key="25">
-        {React.string("z1111")}
-      </p><p key="26">
-        {React.string("z11111")}
-      </p><p key="27">
-        {React.string("z111111")}
-      </p><p key="28">
-        {React.string("z1111111")}
-      </p>
-
-
-
-
-    {switch (game.ready, playerGame !== game.no) {
-    | (true, true) =>
+    <p key="2"> {React.string("z1")} </p>
+    <p key="23"> {React.string("z11")} </p>
+    <p key="24"> {React.string("z111")} </p>
+    <p key="25"> {React.string("z1111")} </p>
+    <p key="26"> {React.string("z11111")} </p>
+    <p key="27"> {React.string("z111111")} </p>
+    <p key="28"> {React.string("z1111111")} </p>
+    {switch (game.ready, inThisGame) {
+    | (true, false) =>
       <p
         className={"absolute text-3xl animate-pulse font-bold left-1/2 bottom-1/4 transform -translate-x-2/4"}>
         {React.string("Starting soon...")}
       </p>
 
-    | (true, false) => switch count > 0 {
+    | (true, true) =>
+      switch count > 0 {
       | true =>
         <p
           className={"absolute text-3xl animate-ping font-bold left-1/2 bottom-1/4 transform -translate-x-2/4"}>
-          {count->Js.Int.toString->React.string}
+          {React.string(Js.Int.toString(count))}
         </p>
       | false => React.null
       }
@@ -166,18 +153,18 @@ let make = (~game: Reducer.listGame, ~leader, ~playerGame, ~send, ~class, ~ready
     | (false, _) => React.null
     }}
     <button
-      onClick=onClick1
+      onClick=onClickJoin
       className="cursor-pointer text-base text-warm-gray-100 font-anon w-1/2 bottom-0 h-8 left-0 absolute bg-smoke-700 bg-opacity-70"
-      disabled=disabled1>
-      {switch playerGame === game.no {
+      disabled=disabledJoin>
+      {switch inThisGame {
       | true => React.string("leave")
       | false => React.string("join")
       }}
     </button>
     <button
-      onClick=onClick2
+      onClick=onClickReady
       className="cursor-pointer text-base text-warm-gray-100 font-anon w-1/2 bottom-0 h-8 right-0 absolute bg-smoke-700 bg-opacity-70"
-      disabled=disabled2>
+      disabled=disabledReady>
       {switch ready {
       | true => React.string("ready")
       | false => React.string("not ready")
