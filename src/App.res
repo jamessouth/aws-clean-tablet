@@ -126,7 +126,13 @@ let make = () => {
           React.null
         }
 
-      | (list{"confirm"}, None) => <Confirm cognitoUser cognitoError setCognitoError />
+      | (list{"confirm"}, None) =>
+        switch url.search {
+        | "cd_un" | "pw_un" => <Confirm cognitoUser cognitoError setCognitoError />
+        | _ => <div className="text-warm-gray-100">
+            {React.string("unknown path, please try again")}
+          </div>
+        }
 
       | (list{"getinfo"}, Some(_t)) => {
           RescriptReactRouter.replace("/lobby")
@@ -134,7 +140,14 @@ let make = () => {
         }
 
       | (list{"getinfo"}, None) =>
-        <GetInfo userpool cognitoUser setCognitoUser cognitoError setCognitoError setShowName />
+        switch url.search {
+        | "cd_un" | "pw_un" | "un_em" =>
+          <GetInfo userpool cognitoUser setCognitoUser cognitoError setCognitoError setShowName />
+        | _ =>
+          <div className="text-warm-gray-100">
+            {React.string("unknown path, please try again")}
+          </div>
+        }
 
       | (list{"signup"}, Some(_t)) => {
           RescriptReactRouter.replace("/lobby")
@@ -143,14 +156,14 @@ let make = () => {
 
       | (list{"signup"}, None) => <Signup userpool setCognitoUser cognitoError setCognitoError />
 
-      | (list{"lobby"}, Some(_)) => switch wsConnected {
-      | false => <p className="text-center text-warm-gray-100 font-anon text-lg">
+      | (list{"lobby"}, Some(_)) =>
+        switch wsConnected {
+        | false =>
+          <p className="text-center text-warm-gray-100 font-anon text-lg">
             {React.string("loading games...")}
           </p>
-      | true => <Lobby playerGame leader games send wsError close />
-      }
-
-
+        | true => <Lobby playerGame leader games send wsError close />
+        }
 
       | (list{"lobby"}, None) => {
           RescriptReactRouter.replace("/")

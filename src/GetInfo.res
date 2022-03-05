@@ -219,37 +219,38 @@ let make = (
     }
   }
 
-  switch url.search {
-  | "cd_un" | "pw_un" | "un_em" =>
-    <main>
-      <form className="w-4/5 m-auto relative">
-        <fieldset className="flex flex-col items-center justify-around h-52">
-          <legend className="text-warm-gray-100 m-auto mb-8 text-3xl font-fred">
-            {switch url.search {
-            | "un_em" => React.string("Enter email")
-            | _ => React.string("Enter username")
-            }}
-          </legend>
-          {switch submitClicked {
-          | false => React.null
-          | true =>
-            <Error
-              validationError={switch url.search {
-              | "un_em" => emailError
-              | _ => usernameError
-              }}
-              cognitoError
-            />
-          }}
+  <main>
+    <form className="w-4/5 m-auto relative">
+      <fieldset className="flex flex-col items-center justify-around h-52">
+        <legend className="text-warm-gray-100 m-auto mb-8 text-3xl font-fred">
           {switch url.search {
-          | "un_em" => <Input value=email propName="email" inputMode="email" setFunc=setEmail />
-          | _ => <Input value=username propName="username" setFunc=setUsername />
+          | "un_em" => React.string("Enter email")
+          | _ => React.string("Enter username")
           }}
-        </fieldset>
-        <Button text="submit" onClick={onClick(url.search)} />
-      </form>
-    </main>
-  | _ =>
-    <div className="text-warm-gray-100"> {React.string("unknown path, please try again")} </div>
-  }
+        </legend>
+        {switch submitClicked {
+        | false => React.null
+        | true =>
+          <Error
+            validationError={switch url.search {
+            | "un_em" => emailError
+            | _ => usernameError
+            }}
+            cognitoError
+          />
+        }}
+        {switch url.search {
+        | "un_em" => React.useMemo1(
+            _ => {<Input value=email propName="email" inputMode="email" setFunc=setEmail />},
+            [email],
+          )
+        | _ => React.useMemo1(
+            _ => {<Input value=username propName="username" setFunc=setUsername />},
+            [username],
+          )
+        }}
+      </fieldset>
+      <Button text="submit" onClick={onClick(url.search)} />
+    </form>
+  </main>
 }

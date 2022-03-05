@@ -100,21 +100,20 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
     }
   }
 
-  switch url.search {
-  | "cd_un" | "pw_un" =>
-    <main>
-      <form className="w-4/5 m-auto relative">
-        <fieldset className="flex flex-col justify-between h-52">
-          <legend className="text-warm-gray-100 m-auto mb-8 text-3xl font-fred">
-            {switch url.search {
-            | "pw_un" => React.string("Change password")
-            | _ => React.string("Confirm code")
-            }}
-          </legend>
-          {switch submitClicked {
-          | false => React.null
-          | true => <Error validationError cognitoError />
+  <main>
+    <form className="w-4/5 m-auto relative">
+      <fieldset className="flex flex-col justify-between h-52">
+        <legend className="text-warm-gray-100 m-auto mb-8 text-3xl font-fred">
+          {switch url.search {
+          | "pw_un" => React.string("Change password")
+          | _ => React.string("Confirm code")
           }}
+        </legend>
+        {switch submitClicked {
+        | false => React.null
+        | true => <Error validationError cognitoError />
+        }}
+        {React.useMemo1(_ => {
           <Input
             value=code
             propName="code"
@@ -122,17 +121,17 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
             inputMode="numeric"
             setFunc=setCode
           />
-          {switch url.search {
-          | "pw_un" =>
+        }, [code])}
+        {switch url.search {
+        | "pw_un" => React.useMemo1(_ => {
             <Input
               value=password propName="password" autoComplete="new-password" setFunc=setPassword
             />
-          | _ => React.null
-          }}
-        </fieldset>
-        <Button text="confirm" onClick />
-      </form>
-    </main>
-  | _ => <div> {React.string("other")} </div>
-  }
+          }, [password])
+        | _ => React.null
+        }}
+      </fieldset>
+      <Button text="confirm" onClick />
+    </form>
+  </main>
 }
