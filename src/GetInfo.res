@@ -110,15 +110,15 @@ let make = (
   let url = RescriptReactRouter.useUrl()
   Js.log2("url", url)
 
-  let (username, setUsername) = React.useState(_ => "")
-  let (usernameError, setUsernameError) = React.useState(_ => Some("USERNAME: 3-10 characters; "))
+  let (username, setUsername) = React.Uncurried.useState(_ => "")
+  let (usernameError, setUsernameError) = React.Uncurried.useState(_ => Some("USERNAME: 3-10 characters; "))
 
-  let (email, setEmail) = React.useState(_ => "")
-  let (emailError, setEmailError) = React.useState(_ => Some(
+  let (email, setEmail) = React.Uncurried.useState(_ => "")
+  let (emailError, setEmailError) = React.Uncurried.useState(_ => Some(
     "EMAIL: 5-99 characters; enter a valid email address.",
   ))
 
-  let (submitClicked, setSubmitClicked) = React.useState(_ => false)
+  let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
 
   React.useEffect1(() => {
     ErrorHook.useError(username, "USERNAME", setUsernameError)
@@ -142,7 +142,7 @@ let make = (
         | Some(msg) =>
           switch Js.String2.startsWith(msg, "PreSignUp failed with error user found") {
           | true => {
-              setCognitoError(_ => None)
+              setCognitoError(._ => None)
               switch Js.String2.endsWith(msg, "error user found.") {
               | true => RescriptReactRouter.push(`/confirm?${url.search}`)
               | false => {
@@ -151,9 +151,9 @@ let make = (
                 }
               }
             }
-          | false => setCognitoError(_ => Some(msg))
+          | false => setCognitoError(._ => Some(msg))
           }
-        | None => setCognitoError(_ => Some("unknown signup error"))
+        | None => setCognitoError(._ => Some("unknown signup error"))
         }
         Js.log2("problem", ex)
       }
@@ -170,7 +170,7 @@ let make = (
   }, [cognitoUser])
 
   let onClick = (tipe, _) => {
-    setSubmitClicked(_ => true)
+    setSubmitClicked(._ => true)
     switch tipe {
     | "cd_un" =>
       switch usernameError {

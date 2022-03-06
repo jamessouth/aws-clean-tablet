@@ -75,16 +75,16 @@ let cbToOption = (f, . err, res) =>
 
 @react.component
 let make = (~userpool, ~setCognitoUser, ~cognitoError, ~setCognitoError) => {
-  let (username, setUsername) = React.useState(_ => "")
-  let (password, setPassword) = React.useState(_ => "")
-  let (email, setEmail) = React.useState(_ => "")
+  let (username, setUsername) = React.Uncurried.useState(_ => "")
+  let (password, setPassword) = React.Uncurried.useState(_ => "")
+  let (email, setEmail) = React.Uncurried.useState(_ => "")
   Js.log("url22")
 
-  let (validationError, setValidationError) = React.useState(_ => Some(
+  let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(
     "USERNAME: 3-10 characters; PASSWORD: 8-98 characters; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; EMAIL: 5-99 characters; enter a valid email address.",
   ))
 
-  let (submitClicked, setSubmitClicked) = React.useState(_ => false)
+  let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
 
   React.useEffect3(() => {
     ErrorHook.useMultiError(
@@ -97,7 +97,7 @@ let make = (~userpool, ~setCognitoUser, ~cognitoError, ~setCognitoError) => {
   let signupCallback = cbToOption(res =>
     switch res {
     | Ok(val) => {
-        setCognitoError(_ => None)
+        setCognitoError(._ => None)
         setCognitoUser(._ => Js.Nullable.return(val.user))
         RescriptReactRouter.push("/confirm?cd_un")
 
@@ -105,8 +105,8 @@ let make = (~userpool, ~setCognitoUser, ~cognitoError, ~setCognitoError) => {
       }
     | Error(ex) => {
         switch Js.Exn.message(ex) {
-        | Some(msg) => setCognitoError(_ => Some(msg))
-        | None => setCognitoError(_ => Some("unknown signup error"))
+        | Some(msg) => setCognitoError(._ => Some(msg))
+        | None => setCognitoError(._ => Some("unknown signup error"))
         }
 
         Js.log2("problem", ex)
@@ -115,7 +115,7 @@ let make = (~userpool, ~setCognitoUser, ~cognitoError, ~setCognitoError) => {
   )
 
   let onClick = _ => {
-    setSubmitClicked(_ => true)
+    setSubmitClicked(._ => true)
     switch validationError {
     | None => {
         let emailData: Types.attributeDataInput = {

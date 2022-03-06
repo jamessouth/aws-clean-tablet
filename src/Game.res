@@ -14,9 +14,9 @@ let chk = Js.String2.fromCharCode(10003)
 @react.component
 let make = (~game: Reducer.listGame, ~leader, ~inThisGame, ~inAGame, ~send, ~class, ~readyColor) => {
   let (ready, setReady) = React.Uncurried.useState(_ => true)
-  let (count, setCount) = React.useState(_ => 5)
-  let (disabledJoin, setDisabledJoin) = React.useState(_ => false)
-  let (disabledReady, setDisabledReady) = React.useState(_ => true)
+  let (count, setCount) = React.Uncurried.useState(_ => 5)
+  let (disabledJoin, setDisabledJoin) = React.Uncurried.useState(_ => false)
+  let (disabledReady, setDisabledReady) = React.Uncurried.useState(_ => true)
 
   let onClickJoin = _ => {
     let pl = {
@@ -51,23 +51,23 @@ let make = (~game: Reducer.listGame, ~leader, ~inThisGame, ~inAGame, ~send, ~cla
     let size = Js.Array2.length(game.players)
     switch (inThisGame, inAGame) {
     | (true, _) => {//in this game
-        setDisabledJoin(_ => false)
+        setDisabledJoin(._ => false)
         if size < 3 {
-          setDisabledReady(_ => true)
+          setDisabledReady(._ => true)
         } else {
-          setDisabledReady(_ => false)
+          setDisabledReady(._ => false)
         }
       }
     | (false, true) => {//in another game
-        setDisabledJoin(_ => true)
-        setDisabledReady(_ => true)
+        setDisabledJoin(._ => true)
+        setDisabledReady(._ => true)
       }
     | (_, false) => {//not in a game
-        setDisabledReady(_ => true)
+        setDisabledReady(._ => true)
         if size > 7 {
-          setDisabledJoin(_ => true)
+          setDisabledJoin(._ => true)
         } else {
-          setDisabledJoin(_ => false)
+          setDisabledJoin(._ => false)
         }
       }
     }
@@ -77,14 +77,14 @@ let make = (~game: Reducer.listGame, ~leader, ~inThisGame, ~inAGame, ~send, ~cla
   React.useEffect2(() => {
     let id = if game.ready && inThisGame {
       Js.Global.setInterval(() => {
-        setCount(c => c - 1)
+        setCount(.c => c - 1)
       }, 1000)
     } else {
       Js.Global.setInterval(() => (), 3600000)
     }
     Some(
       () => {
-        setCount(_ => 5)
+        setCount(._ => 5)
         Js.Global.clearInterval(id)
       },
     )

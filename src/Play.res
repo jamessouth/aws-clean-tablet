@@ -18,8 +18,8 @@ let answer_max_length = 12
 let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~wsError, ~leader) => {
   Js.log3("play", wsError, game)
 
-  let (answered, setAnswered) = React.useState(_ => false)
-  let (inputText, setInputText) = React.useState(_ => "")
+  let (answered, setAnswered) = React.Uncurried.useState(_ => false)
+  let (inputText, setInputText) = React.Uncurried.useState(_ => "")
   // let (leader, setLeader) = React.useState(_ => false)
 
   let {players, currentWord, previousWord, showAnswers, sk} = game
@@ -63,7 +63,7 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~wsError, ~leader) => 
       }, 8564)->ignore
 
     | (true, false) => {
-        setAnswered(_ => false)
+        setAnswered(._ => false)
         switch hasRendered.current {
         | true => Js.Global.setTimeout(() => {
             let pl: Game.startPayload = {
@@ -77,7 +77,7 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~wsError, ~leader) => 
         }
       }
 
-    | (false, false) => setAnswered(_ => false)
+    | (false, false) => setAnswered(._ => false)
     | (false, true) => ()
     }
     None
@@ -95,8 +95,8 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~wsError, ~leader) => 
       index: index,
     }
     send(. Js.Json.stringifyAny(pl))
-    setAnswered(_ => true)
-    setInputText(_ => "")
+    setAnswered(._ => true)
+    setInputText(._ => "")
   }
 
   let onAnimationEnd = _ => {
@@ -106,7 +106,7 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~wsError, ~leader) => 
     Js.log("onanimend")
   }
 
-  let onEnter = _ => {
+  let onEnter = (. _) => {
     if !answered {
       sendAnswer()
     }

@@ -1,6 +1,6 @@
 @react.component
 let make = (~onAnimationEnd, ~playerColor, ~currentWord: string, ~answered, ~showTimer) => {
-  let (alpha, setAlpha) = React.useState(_ => "")
+  let (alpha, setAlpha) = React.Uncurried.useState(_ => "")
 
   let blankPos = switch currentWord->Js.String2.startsWith("_") {
   | true => "a blank then a word"
@@ -14,7 +14,7 @@ let make = (~onAnimationEnd, ~playerColor, ~currentWord: string, ~answered, ~sho
     | true => "70"
     | false => ""
     }
-    (_ => alph)->setAlpha
+    setAlpha(._ => alph)
     None
   }, [answered])
 

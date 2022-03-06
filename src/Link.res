@@ -8,5 +8,5 @@ let make = (~url, ~className, ~content) => {
         url->RescriptReactRouter.push
     }
 Js.log(url)
-    <a onClick className href={url}>{content->React.string}</a>
+    <a onClick className href={url}>{React.string(content)}</a>
 }

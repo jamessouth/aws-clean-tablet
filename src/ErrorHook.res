@@ -1,14 +1,14 @@
-let checkLength = (min, max, str) =>
+let checkLength = (. min, max, str) =>
   switch Js.String2.length(str) < min || Js.String2.length(str) > max {
   | false => ""
   | true => j`$min-$max characters; `
   }
-let checkInclusion = (re, msg, str) =>
+let checkInclusion = (. re, msg, str) =>
   switch Js.String2.match_(str, re) {
   | None => msg
   | Some(_) => ""
   }
-let checkExclusion = (re, msg, str) =>
+let checkExclusion = (. re, msg, str) =>
   switch Js.String2.match_(str, re) {
   | None => ""
   | Some(_) => msg
@@ -17,27 +17,27 @@ let checkExclusion = (re, msg, str) =>
 let getFuncs = input =>
   switch input {
   | "USERNAME" => [
-      s => checkLength(3, 10, s),
-      s =>
-        checkExclusion(
+      (. s) => checkLength(. 3, 10, s),
+      (. s) =>
+        checkExclusion(.
           %re("/\W/"),
           "letters, numbers, and underscores only; no whitespace or symbols; ",
           s,
         ),
     ]
   | "PASSWORD" => [
-      s => checkLength(8, 98, s),
-      s => checkInclusion(%re("/[!-/:-@\[-`{-~]/"), "at least 1 symbol; ", s),
-      s => checkInclusion(%re("/\d/"), "at least 1 number; ", s),
-      s => checkInclusion(%re("/[A-Z]/"), "at least 1 uppercase letter; ", s),
-      s => checkInclusion(%re("/[a-z]/"), "at least 1 lowercase letter; ", s),
-      s => checkExclusion(%re("/\s/"), "no whitespace; ", s),
+      (. s) => checkLength(. 8, 98, s),
+      (. s) => checkInclusion(. %re("/[!-/:-@\[-`{-~]/"), "at least 1 symbol; ", s),
+      (. s) => checkInclusion(. %re("/\d/"), "at least 1 number; ", s),
+      (. s) => checkInclusion(. %re("/[A-Z]/"), "at least 1 uppercase letter; ", s),
+      (. s) => checkInclusion(. %re("/[a-z]/"), "at least 1 lowercase letter; ", s),
+      (. s) => checkExclusion(. %re("/\s/"), "no whitespace; ", s),
     ]
-  | "CODE" => [s => checkInclusion(%re("/^\d{6}$/"), "6-digit number only; ", s)]
+  | "CODE" => [(. s) => checkInclusion(. %re("/^\d{6}$/"), "6-digit number only; ", s)]
   | "EMAIL" => [
-      s => checkLength(5, 99, s),
-      s =>
-        checkInclusion(
+      (. s) => checkLength(. 5, 99, s),
+      (. s) =>
+        checkInclusion(. 
           %re(
             "/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/"
           ),
@@ -53,7 +53,7 @@ let useMultiError = (fields, setErrorFunc) => {
 
   let errs = fields->Js.Array2.map(fld => {
     let (val, prop) = fld
-    let error = getFuncs(prop)->Js.Array2.reduce((acc, f) => acc ++ f(val), "")
+    let error = getFuncs(prop)->Js.Array2.reduce((acc, f) => acc ++ f(. val), "")
     switch error == "" {
     | true => ""
     | false => prop ++ ": " ++ error
@@ -64,16 +64,16 @@ let useMultiError = (fields, setErrorFunc) => {
   | true => None
   | false => Some(total)
   }
-  setErrorFunc(_ => final)
+  setErrorFunc(._ => final)
 }
 
 let useError = (value, propName, setErrorFunc) => {
   Js.log("Errorhook2")
 
-  let error = getFuncs(propName)->Js.Array2.reduce((acc, f) => acc ++ f(value), "")
+  let error = getFuncs(propName)->Js.Array2.reduce((acc, f) => acc ++ f(. value), "")
   let final = switch error == "" {
   | true => None
   | false => Some(propName ++ ": " ++ error)
   }
-  setErrorFunc(_ => final)
+  setErrorFunc(._ => final)
 }

@@ -7,36 +7,36 @@ let make = (~answer_max_length, ~answered, ~inputText, ~onEnter, ~setInputText, 
   let inputBox = React.useRef(Js.Nullable.null)
   let input_min_length = 2
 
-  let (disableSubmit, setDisableSubmit) = React.useState(_ => true)
-  let (isValidInput, setIsValidInput) = React.useState(_ => true)
-  let (badChar: option<string>, setBadChar) = React.useState(_ => None)
+  let (disableSubmit, setDisableSubmit) = React.Uncurried.useState(_ => true)
+  let (isValidInput, setIsValidInput) = React.Uncurried.useState(_ => true)
+  let (badChar: option<string>, setBadChar) = React.Uncurried.useState(_ => None)
 
   let onKeyPress = evt => {
     let key = ReactEvent.Keyboard.key(evt)
     switch (key, disableSubmit) {
-    | ("Enter", false) => onEnter()
+    | ("Enter", false) => onEnter(. ignore())
     | (_, _) => ()
     }
   }
 
   let onChange = evt => {
     let value = ReactEvent.Form.currentTarget(evt)["value"]
-    setInputText(value)
+    setInputText(._ => value)
   }
 
   let onClick = _ => {
-    onEnter()
+    onEnter(. ignore())
   }
 
   React.useEffect1(() => {
     switch inputText->Js.String2.match_(%re("/[^a-z '-]+/i")) {
     | Some(arr) => {
-        setBadChar(_ => Some(arr[0]))
-        setIsValidInput(_ => false)
+        setBadChar(._ => Some(arr[0]))
+        setIsValidInput(._ => false)
       }
     | None => {
-        setBadChar(_ => None)
-        setIsValidInput(_ => true)
+        setBadChar(._ => None)
+        setIsValidInput(._ => true)
       }
     }
     None
@@ -51,7 +51,7 @@ let make = (~answer_max_length, ~answered, ~inputText, ~onEnter, ~setInputText, 
   }, (answered, inputBox.current))
 
   React.useEffect4(() => {
-    setDisableSubmit(_ =>
+    setDisableSubmit(._ =>
       Js.String2.length(Js.String2.trim(inputText)) < input_min_length ||
       Js.String2.length(Js.String2.trim(inputText)) > answer_max_length ||
       answered ||
@@ -101,7 +101,7 @@ let make = (~answer_max_length, ~answered, ~inputText, ~onEnter, ~setInputText, 
       | true => true
       | false => false
       }}>
-      {"Submit"->React.string}
+      {React.string("Submit")}
     </button>
   </section>
 }

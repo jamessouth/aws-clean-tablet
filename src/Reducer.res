@@ -42,14 +42,11 @@ type action =
   | UpdateLiveGame(liveGame)
   | ResetPlayerState
 
-type return = {
-  initialState: state,
-  reducer: (state, action) => state,
-}
+
 
 let appState = () => {
   Js.log("appState")
-  let init = {
+  let initialState = {
     gamesList: Js.Nullable.null,
     game: {
       sk: "",
@@ -63,7 +60,7 @@ let appState = () => {
   }
   let reducer = (state, action) =>
     switch (Js.Nullable.toOption(state.gamesList), action) {
-    | (_, ResetPlayerState) => init
+    | (_, ResetPlayerState) => initialState
     | (None, ListGames(games)) => {...state, gamesList: games}
 
     | (None, _) | (Some(_), ListGames(_)) => state
@@ -96,8 +93,7 @@ let appState = () => {
       }
     }
 
-  {
-    initialState: init,
-    reducer: reducer,
-  }
+  
+    (initialState, reducer)
+  
 }

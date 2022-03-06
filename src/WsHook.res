@@ -97,9 +97,9 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
 
   let (leader, setLeader) = React.Uncurried.useState(_ => false)
 
-  let {initialState, reducer} = Reducer.appState()
+  let (initialState, reducer) = Reducer.appState()
 
-  let (state, dispatch) = React.useReducer(reducer, initialState)
+  let (state, dispatch) = React.Uncurried.useReducer(reducer, initialState)
 
   React.useEffect1(() => {
     // Js.log2("effect ", token)
@@ -137,7 +137,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
         | InsertConn => {
             let {listGms} = parseListGames(data)
             Js.log2("parsedlistgames", listGms)
-            dispatch(ListGames(Js.Nullable.return(listGms)))
+            dispatch(.ListGames(Js.Nullable.return(listGms)))
           }
         | ModifyConn => {
             let {modConn, color, leader} = parseModConn(data)
@@ -149,22 +149,22 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
         | InsertGame => {
             let {addGame} = parseAddGame(data)
             Js.log2("parsedaddgame", addGame)
-            dispatch(AddGame(addGame))
+            dispatch(.AddGame(addGame))
           }
         | ModifyListGame => {
             let {mdLstGm} = parseModListGame(data)
             Js.log2("parsedmodlistgame", mdLstGm)
-            dispatch(UpdateListGame(mdLstGm))
+            dispatch(.UpdateListGame(mdLstGm))
           }
         | ModifyLiveGame => {
             let {mdLveGm} = parseModLiveGame(data)
             Js.log2("parsedmodlivegame", mdLveGm)
-            dispatch(UpdateLiveGame(mdLveGm))
+            dispatch(.UpdateLiveGame(mdLveGm))
           }
         | RemoveGame => {
             let {rmvGame} = parseRmvGame(data)
             Js.log2("parsedremgame", rmvGame)
-            dispatch(RemoveGame(rmvGame))
+            dispatch(.RemoveGame(rmvGame))
           }
         | Other => Js.log2("unknown json data", data)
         }
@@ -187,7 +187,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
         setPlayerGame(._ => "")
         setLeader(._ => false)
         setWs(._ => Js.Nullable.null)
-        dispatch((ResetPlayerState: Reducer.action))
+        dispatch(.(ResetPlayerState: Reducer.action))
         body(document)->setClassName("bg-no-repeat bg-center bg-cover bodmob bodtab bodbig")
       })
     }
@@ -201,15 +201,6 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
     }
     Some(cleanup)
   }, [ws])
-
-  // let send = (. str) => {
-  //   switch str {
-  //   | None => ()
-  //   | Some(s) => ws->sendString(s)
-  //   }
-  // }
-
-  // let close = (. code, reason) => ws->closeCodeReason(code, reason)
 
   let send = (. str) => {
     switch str {

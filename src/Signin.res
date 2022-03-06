@@ -37,14 +37,14 @@ let make = (
   ~playerName,
 ) => {
   Js.log("sinin")
-  let (username, setUsername) = React.useState(_ => playerName)
-  let (password, setPassword) = React.useState(_ => "")
+  let (username, setUsername) = React.Uncurried.useState(_ => playerName)
+  let (password, setPassword) = React.Uncurried.useState(_ => "")
 
-  let (validationError, setValidationError) = React.useState(_ => Some(
+  let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(
     "USERNAME: 3-10 characters; PASSWORD: 8-98 characters; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; ",
   ))
 
-  let (submitClicked, setSubmitClicked) = React.useState(_ => false)
+  let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
 
   React.useEffect2(() => {
     ErrorHook.useMultiError([(username, "USERNAME"), (password, "PASSWORD")], setValidationError)
@@ -52,19 +52,19 @@ let make = (
   }, (username, password))
 
   let onClick = _ => {
-    setSubmitClicked(_ => true)
+    setSubmitClicked(._ => true)
     switch validationError {
     | None => {
         let cbs = {
           onSuccess: res => {
-            setCognitoError(_ => None)
+            setCognitoError(._ => None)
             Js.log2("signin result:", res)
             setToken(._ => Some(res.accessToken.jwtToken))
           },
           onFailure: ex => {
             switch Js.Exn.message(ex) {
-            | Some(msg) => setCognitoError(_ => Some(msg))
-            | None => setCognitoError(_ => Some("unknown signin error"))
+            | Some(msg) => setCognitoError(._ => Some(msg))
+            | None => setCognitoError(._ => Some("unknown signin error"))
             }
 
             setCognitoUser(._ => Js.Nullable.null)

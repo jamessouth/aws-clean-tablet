@@ -26,7 +26,7 @@ let make = () => {
   let (cognitoUser: Js.Nullable.t<Signup.usr>, setCognitoUser) = React.Uncurried.useState(_ =>
     Js.Nullable.null
   )
-  let (cognitoError, setCognitoError) = React.useState(_ => None)
+  let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
 
   let (playerName, setPlayerName) = React.Uncurried.useState(_ => "")
 
@@ -82,7 +82,7 @@ let make = () => {
           />
           <Link
             url="/getinfo?cd_un"
-            className="w-3/5 text-warm-gray-100 block font-bold font-anon text-sm mt-4 max-w-80"
+            className="w-3/5 text-warm-gray-100 block font-bold font-anon text-sm mt-8 max-w-80"
             content="verification code?"
           />
           <Link
@@ -185,7 +185,7 @@ let make = () => {
           </p>
         }
 
-      | (_, _) => <div> {"other"->React.string} </div> // <PageNotFound/>
+      | (_, _) => <div> {React.string("other")} </div> // <PageNotFound/>
       }}
     </div>
   </>

@@ -29,12 +29,12 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
   }
   Js.log3("user", cognitoUser, url)
 
-  let (code, setCode) = React.useState(_ => "")
-  let (password, setPassword) = React.useState(_ => "")
+  let (code, setCode) = React.Uncurried.useState(_ => "")
+  let (password, setPassword) = React.Uncurried.useState(_ => "")
 
-  let (validationError, setValidationError) = React.useState(_ => Some(valErr))
+  let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(valErr))
 
-  let (submitClicked, setSubmitClicked) = React.useState(_ => false)
+  let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
 
   React.useEffect3(() => {
     switch url.search {
@@ -47,14 +47,14 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
   let confirmregistrationCallback = Signup.cbToOption(res =>
     switch res {
     | Ok(val) => {
-        setCognitoError(_ => None)
+        setCognitoError(._ => None)
         RescriptReactRouter.push("/signin")
         Js.log2("conf res", val)
       }
     | Error(ex) => {
         switch Js.Exn.message(ex) {
-        | Some(msg) => setCognitoError(_ => Some(msg))
-        | None => setCognitoError(_ => Some("unknown confirm error"))
+        | Some(msg) => setCognitoError(._ => Some(msg))
+        | None => setCognitoError(._ => Some("unknown confirm error"))
         }
         Js.log2("conf problem", ex)
       }
@@ -63,21 +63,21 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
 
   let confirmpasswordCallback: GetInfo.passwordPWCB = {
     onSuccess: str => {
-      setCognitoError(_ => None)
+      setCognitoError(._ => None)
       RescriptReactRouter.push("/signin")
       Js.log2("pw confirmed: ", str)
     },
     onFailure: err => {
       switch Js.Exn.message(err) {
-      | Some(msg) => setCognitoError(_ => Some(msg))
-      | None => setCognitoError(_ => Some("unknown confirm pw error"))
+      | Some(msg) => setCognitoError(._ => Some(msg))
+      | None => setCognitoError(._ => Some("unknown confirm pw error"))
       }
       Js.log2("confirm pw problem: ", err)
     },
   }
 
   let onClick = _ => {
-    setSubmitClicked(_ => true)
+    setSubmitClicked(._ => true)
     switch validationError {
     | None =>
       switch Js.Nullable.isNullable(cognitoUser) {
@@ -92,9 +92,9 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
           )
         | "pw_un" =>
           cognitoUser->confirmPassword(code, password, confirmpasswordCallback, Js.Nullable.null)
-        | _ => (_ => Some("unknown method - not submitting"))->setCognitoError
+        | _ => setCognitoError(._ => Some("unknown method - not submitting"))
         }
-      | true => (_ => Some("null user - not submitting"))->setCognitoError
+      | true => setCognitoError(._ => Some("null user - not submitting"))
       }
     | Some(_) => ()
     }

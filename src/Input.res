@@ -1,13 +1,13 @@
 @react.component
 let make = (~value, ~propName, ~autoComplete=propName, ~inputMode="text", ~setFunc) => {
-  let (showPassword, setShowPassword) = React.useState(_ => false)
+  let (showPassword, setShowPassword) = React.Uncurried.useState(_ => false)
 
-  let onChange = e => setFunc(_ => ReactEvent.Form.target(e)["value"])
+  let onChange = e => setFunc(._ => ReactEvent.Form.target(e)["value"])
 
   <div
     className={switch propName == "password" {
-    | true => "w-full relative"
-    | false => "w-full"
+    | true => "max-w-xs lg:max-w-sm w-full relative"
+    | false => "max-w-xs lg:max-w-sm w-full"
     }}>
     <label className="text-2xl font-flow text-warm-gray-100" htmlFor=autoComplete>
       {React.string(propName)}
