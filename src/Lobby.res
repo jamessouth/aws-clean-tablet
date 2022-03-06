@@ -82,13 +82,16 @@ let make = (~playerGame, ~leader, ~games, ~send, ~wsError, ~close) => {
                 | 4 => ("game4", "#5f4500")
                 | _ => ("game5", "#8d4f36")
                 }
-
-
-                
-                // {React.useMemo3(_ => {                  
-                  <Game key=game.no game leader inThisGame=(playerGame == game.no) inAGame=(playerGame != "") send class readyColor />
-                  // }, (game, playerGame, leader))}
-                
+                <Game
+                  key=game.no
+                  game
+                  leader
+                  inThisGame={playerGame == game.no}
+                  inAGame={playerGame != ""}
+                  send
+                  class
+                  readyColor
+                />
               })
               ->React.array}
             </ul>

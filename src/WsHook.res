@@ -34,8 +34,6 @@ type closeEventHandler = closeEvent => unit
 @get external body: Dom.document => Dom.htmlBodyElement = "body"
 @set external setClassName: (Dom.htmlBodyElement, string) => unit = "className"
 
-
-
 type listGamesData = {listGms: array<Reducer.listGame>}
 @scope("JSON") @val
 external parseListGames: string => listGamesData = "parse"
@@ -96,7 +94,6 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
   let (playerColor, setPlayerColor) = React.Uncurried.useState(_ => "transparent")
   let (wsConnected, setWsConnected) = React.Uncurried.useState(_ => false)
   let (wsError, setWsError) = React.Uncurried.useState(_ => "")
-
 
   let (leader, setLeader) = React.Uncurried.useState(_ => false)
 
@@ -205,7 +202,6 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
     Some(cleanup)
   }, [ws])
 
-
   // let send = (. str) => {
   //   switch str {
   //   | None => ()
@@ -215,16 +211,14 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
 
   // let close = (. code, reason) => ws->closeCodeReason(code, reason)
 
-
-  let send = React.useMemo1(_ => ((. str) => {
+  let send = (. str) => {
     switch str {
     | None => ()
     | Some(s) => ws->sendString(s)
     }
-  }), [ws])
+  }
 
-  let close = React.useMemo1(_ => ((. code, reason) => ws->closeCodeReason(code, reason)), [ws])
-
+  let close = (. code, reason) => ws->closeCodeReason(code, reason)
 
   (playerGame, playerColor, wsConnected, state.game, state.gamesList, leader, send, close, wsError)
 }

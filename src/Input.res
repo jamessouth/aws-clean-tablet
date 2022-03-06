@@ -27,11 +27,7 @@ let make = (~value, ~propName, ~autoComplete=propName, ~inputMode="text", ~setFu
       value
     />
     {switch propName == "password" {
-    | true =>
-      React.useMemo1(
-        _ => {<Toggle toggleProp=showPassword toggleSetFunc=setShowPassword />},
-        [showPassword],
-      )
+    | true => <Toggle toggleProp=showPassword toggleSetFunc=setShowPassword />
     | false => React.null
     }}
   </div>

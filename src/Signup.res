@@ -146,19 +146,11 @@ let make = (~userpool, ~setCognitoUser, ~cognitoError, ~setCognitoError) => {
         | false => React.null
         | true => <Error validationError cognitoError />
         }}
-        {React.useMemo1(
-          _ => {<Input value=username propName="username" setFunc=setUsername />},
-          [username],
-        )}
-        {React.useMemo1(_ => {
-          <Input
-            value=password propName="password" autoComplete="current-password" setFunc=setPassword
-          />
-        }, [password])}
-        {React.useMemo1(
-          _ => {<Input value=email propName="email" inputMode="email" setFunc=setEmail />},
-          [email],
-        )}
+        <Input value=username propName="username" setFunc=setUsername />
+        <Input
+          value=password propName="password" autoComplete="current-password" setFunc=setPassword
+        />
+        <Input value=email propName="email" inputMode="email" setFunc=setEmail />
       </fieldset>
       <Button text="create" onClick />
     </form>

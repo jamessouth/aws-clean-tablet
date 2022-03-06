@@ -240,14 +240,8 @@ let make = (
           />
         }}
         {switch url.search {
-        | "un_em" => React.useMemo1(
-            _ => {<Input value=email propName="email" inputMode="email" setFunc=setEmail />},
-            [email],
-          )
-        | _ => React.useMemo1(
-            _ => {<Input value=username propName="username" setFunc=setUsername />},
-            [username],
-          )
+        | "un_em" => <Input value=email propName="email" inputMode="email" setFunc=setEmail />
+        | _ => <Input value=username propName="username" setFunc=setUsername />
         }}
       </fieldset>
       <Button text="submit" onClick={onClick(url.search)} />

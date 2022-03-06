@@ -113,21 +113,18 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
         | false => React.null
         | true => <Error validationError cognitoError />
         }}
-        {React.useMemo1(_ => {
-          <Input
-            value=code
-            propName="code"
-            autoComplete="one-time-code"
-            inputMode="numeric"
-            setFunc=setCode
-          />
-        }, [code])}
+        <Input
+          value=code
+          propName="code"
+          autoComplete="one-time-code"
+          inputMode="numeric"
+          setFunc=setCode
+        />
         {switch url.search {
-        | "pw_un" => React.useMemo1(_ => {
-            <Input
-              value=password propName="password" autoComplete="new-password" setFunc=setPassword
-            />
-          }, [password])
+        | "pw_un" =>
+          <Input
+            value=password propName="password" autoComplete="new-password" setFunc=setPassword
+          />
         | _ => React.null
         }}
       </fieldset>
