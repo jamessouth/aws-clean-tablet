@@ -94,6 +94,6 @@ let appState = () => {
     }
 
   
-    (initialState, reducer)
+    (reducer, initialState)
   
 }

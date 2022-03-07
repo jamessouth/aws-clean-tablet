@@ -44,22 +44,23 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
     None
   }, (code, password, url.search))
 
-  let confirmregistrationCallback = Signup.cbToOption(res =>
-    switch res {
-    | Ok(val) => {
+  let confirmregistrationCallback = (. err, res) =>
+    switch (Js.Nullable.toOption(err), Js.Nullable.toOption(res)) {
+    | (_, Some(val)) => {
         setCognitoError(._ => None)
         RescriptReactRouter.push("/signin")
         Js.log2("conf res", val)
       }
-    | Error(ex) => {
+    | (Some(ex), _) => {
         switch Js.Exn.message(ex) {
         | Some(msg) => setCognitoError(._ => Some(msg))
         | None => setCognitoError(._ => Some("unknown confirm error"))
         }
         Js.log2("conf problem", ex)
       }
+      | _ => Js.Exn.raiseError("invalid cb argument")
     }
-  )
+  
 
   let confirmpasswordCallback: GetInfo.passwordPWCB = {
     onSuccess: str => {

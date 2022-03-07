@@ -66,12 +66,12 @@ external signUp: (
   Js.Nullable.t<clientMetadata>,
 ) => unit = "signUp"
 
-let cbToOption = (f, . err, res) =>
-  switch (Js.Nullable.toOption(err), Js.Nullable.toOption(res)) {
-  | (Some(err), _) => f(Error(err))
-  | (_, Some(res)) => f(Ok(res))
-  | _ => invalid_arg("invalid argument for cbToOption")
-  }
+// let cbToOption = (f, . err, res) =>
+//   switch (Js.Nullable.toOption(err), Js.Nullable.toOption(res)) {
+//   | (Some(err), _) => f(Error(err))
+//   | (_, Some(res)) => f(Ok(res))
+//   | _ => invalid_arg("invalid argument for cbToOption")
+//   }
 
 @react.component
 let make = (~userpool, ~setCognitoUser, ~cognitoError, ~setCognitoError) => {
@@ -94,16 +94,16 @@ let make = (~userpool, ~setCognitoUser, ~cognitoError, ~setCognitoError) => {
     None
   }, (username, password, email))
 
-  let signupCallback = cbToOption(res =>
-    switch res {
-    | Ok(val) => {
+  let signupCallback = (. err, res) =>
+    switch (Js.Nullable.toOption(err), Js.Nullable.toOption(res)) {
+    | (_, Some(val)) => {
         setCognitoError(._ => None)
         setCognitoUser(._ => Js.Nullable.return(val.user))
         RescriptReactRouter.push("/confirm?cd_un")
 
         Js.log2("res", val.user.username)
       }
-    | Error(ex) => {
+    | (Some(ex), _) => {
         switch Js.Exn.message(ex) {
         | Some(msg) => setCognitoError(._ => Some(msg))
         | None => setCognitoError(._ => Some("unknown signup error"))
@@ -111,8 +111,9 @@ let make = (~userpool, ~setCognitoUser, ~cognitoError, ~setCognitoError) => {
 
         Js.log2("problem", ex)
       }
+      | _ => Js.Exn.raiseError("invalid cb argument")
     }
-  )
+  
 
   let onClick = _ => {
     setSubmitClicked(._ => true)

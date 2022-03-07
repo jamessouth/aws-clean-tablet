@@ -89,12 +89,12 @@ type passwordPWCB = {
 //   Js.Nullable.t<Signup.clientMetadata>,
 // ) => unit = "forgotPassword"
 
-let cbToOption = (f, . err, res) =>
-  switch (Js.Nullable.toOption(err), Js.Nullable.toOption(res)) {
-  | (Some(err), _) => f(Error(err))
-  | (_, Some(res)) => f(Ok(res))
-  | _ => invalid_arg("invalid argument for cbToOption")
-  }
+// let cbToOption = (f, . err, res) =>
+//   switch (Js.Nullable.toOption(err), Js.Nullable.toOption(res)) {
+//   | (Some(err), _) => f(Error(err))
+//   | (_, Some(res)) => f(Ok(res))
+//   | _ => invalid_arg("invalid argument for cbToOption")
+//   }
 
 @react.component
 let make = (
@@ -133,11 +133,18 @@ let make = (
   let dummyPassword = "lllLLL!!!111"
   let dummyUsername = "letmein"
 
-  let signupCallback = cbToOption(res => {
+  // let cbToOption = (f, . err, res) =>
+  // switch (Js.Nullable.toOption(err), Js.Nullable.toOption(res)) {
+  // | (Some(err), _) => f(Error(err))
+  // | (_, Some(res)) => f(Ok(res))
+  // | _ => invalid_arg("invalid argument for cbToOption")
+  // }
+
+  let signupCallback = (. err, res) => {
     Js.log2("signup cb", url.search)
-    switch res {
-    | Ok(_) => ()
-    | Error(ex) => {
+    switch (Js.Nullable.toOption(err), Js.Nullable.toOption(res)) {
+    | (_, Some(_)) => ()
+    | (Some(ex), _) => {
         switch Js.Exn.message(ex) {
         | Some(msg) =>
           switch Js.String2.startsWith(msg, "PreSignUp failed with error user found") {
@@ -157,8 +164,9 @@ let make = (
         }
         Js.log2("problem", ex)
       }
+      | _ => Js.Exn.raiseError("invalid cb argument")
     }
-  })
+  }
 
   React.useEffect1(() => {
     Js.log2("coguser useeff", url.search)
