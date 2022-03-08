@@ -115,7 +115,11 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
         | false => React.null
         | true =>
           switch (validationError, cognitoError) {
-          | (Some(error), _) | (_, Some(error)) => <Error error />
+          | (Some(error), _) | (_, Some(error)) =>
+            <span
+              className="absolute right-0 -top-24 text-sm text-warm-gray-100 bg-red-600 font-anon w-4/5 leading-4 p-1">
+              {React.string(error)}
+            </span>
           | (None, None) => React.null
           }
         }}

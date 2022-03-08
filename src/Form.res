@@ -2,6 +2,8 @@
 
 let sectionClass = "relative flex flex-col justify-between items-center h-40 text-xl mb-12 "
 
+let className = "font-anon text-xl text-true-gray-700 bg-true-gray-100 h-7 w-2/3 max-w-250px cursor-pointer border-none disabled:cursor-not-allowed disabled:contrast-[0.25]"
+
 @react.component
 let make = (~answer_max_length, ~answered, ~inputText, ~onEnter, ~setInputText, ~currentWord) => {
   let inputBox = React.useRef(Js.Nullable.null)
@@ -22,10 +24,6 @@ let make = (~answer_max_length, ~answered, ~inputText, ~onEnter, ~setInputText, 
   let onChange = evt => {
     let value = ReactEvent.Form.currentTarget(evt)["value"]
     setInputText(._ => value)
-  }
-
-  let onClick = _ => {
-    onEnter(. ignore())
   }
 
   React.useEffect1(() => {
@@ -93,15 +91,13 @@ let make = (~answer_max_length, ~answered, ~inputText, ~onEnter, ~setInputText, 
       | false => false
       }}
     />
-    <button
-      className="font-anon text-xl text-true-gray-700 bg-true-gray-100 h-7 w-2/3 max-w-250px cursor-pointer border-none disabled:cursor-not-allowed disabled:contrast-[0.25]"
-      type_="button"
-      onClick
-      disabled={switch disableSubmit {
-      | true => true
-      | false => false
-      }}>
-      {React.string("Submit")}
-    </button>
+    <Button
+      textTrue="submit"
+      textFalse="submit"
+      textProp=true
+      onClick={_ => onEnter(. ignore())}
+      disabled=disableSubmit
+      className
+    />
   </section>
 }

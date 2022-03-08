@@ -1,3 +1,5 @@
+let className = "font-arch bg-transparent text-warm-gray-100 text-2xl absolute right-0 top-0 cursor-pointer"
+
 @react.component
 let make = (~value, ~propName, ~autoComplete=propName, ~inputMode="text", ~setFunc) => {
   let (showPassword, setShowPassword) = React.Uncurried.useState(_ => false)
@@ -27,7 +29,15 @@ let make = (~value, ~propName, ~autoComplete=propName, ~inputMode="text", ~setFu
       value
     />
     {switch propName == "password" {
-    | true => <Toggle toggleProp=showPassword toggleSetFunc=setShowPassword />
+    | true =>
+      <Button
+        textTrue="hide"
+        textFalse="show"
+        textProp=showPassword
+        onClick={_ => setShowPassword(.prev => !prev)}
+        disabled=false
+        className
+      />
     | false => React.null
     }}
   </div>
