@@ -108,7 +108,11 @@ let make = (
         </legend>
         {switch submitClicked {
         | false => React.null
-        | true => <Error validationError cognitoError />
+        | true =>
+          switch (validationError, cognitoError) {
+          | (Some(error), _) | (_, Some(error)) => <Error error />
+          | (None, None) => React.null
+          }
         }}
         <Input value=username propName="username" setFunc=setUsername />
         <Input

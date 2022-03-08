@@ -29,12 +29,12 @@ let make = (~answer_max_length, ~answered, ~inputText, ~onEnter, ~setInputText, 
   }
 
   React.useEffect1(() => {
-    switch inputText->Js.String2.match_(%re("/[^a-z '-]+/i")) {
-    | Some(arr) => {
-        setBadChar(._ => Some(arr[0]))
+    switch %re("/[^a-z '-]+/i")->Js.Re.test_(inputText) {
+    | true => {
+        setBadChar(._ => Some(inputText))
         setIsValidInput(._ => false)
       }
-    | None => {
+    | false => {
         setBadChar(._ => None)
         setIsValidInput(._ => true)
       }

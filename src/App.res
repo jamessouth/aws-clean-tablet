@@ -41,6 +41,19 @@ let make = () => {
     None
   }, [cognitoUser])
 
+  let initialState: Reducer.state = {
+    gamesList: Js.Nullable.null,
+    game: {
+      sk: "",
+      players: [],
+      currentWord: "",
+      previousWord: "",
+      hiScore: 0,
+      gameTied: true,
+      showAnswers: false,
+    },
+  }
+
   let (
     playerGame,
     playerColor,
@@ -51,7 +64,7 @@ let make = () => {
     send,
     close,
     wsError,
-  ) = WsHook.useWs(token, setToken, cognitoUser, setCognitoUser, setPlayerName)
+  ) = WsHook.useWs(token, setToken, cognitoUser, setCognitoUser, setPlayerName, initialState)
 
   <>
     <p className="font-flow text-warm-gray-100 text-4xl h-10 font-bold text-center">
@@ -129,7 +142,8 @@ let make = () => {
       | (list{"confirm"}, None) =>
         switch url.search {
         | "cd_un" | "pw_un" => <Confirm cognitoUser cognitoError setCognitoError />
-        | _ => <div className="text-warm-gray-100">
+        | _ =>
+          <div className="text-warm-gray-100">
             {React.string("unknown path, please try again")}
           </div>
         }

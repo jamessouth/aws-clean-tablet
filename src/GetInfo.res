@@ -108,10 +108,11 @@ let make = (
   // let pwInput = React.useRef(Js.Nullable.null)
 
   let url = RescriptReactRouter.useUrl()
-  Js.log2("url", url)
 
   let (username, setUsername) = React.Uncurried.useState(_ => "")
-  let (usernameError, setUsernameError) = React.Uncurried.useState(_ => Some("USERNAME: 3-10 characters; "))
+  let (usernameError, setUsernameError) = React.Uncurried.useState(_ => Some(
+    "USERNAME: 3-10 characters; ",
+  ))
 
   let (email, setEmail) = React.Uncurried.useState(_ => "")
   let (emailError, setEmailError) = React.Uncurried.useState(_ => Some(
@@ -119,6 +120,7 @@ let make = (
   ))
 
   let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
+  Js.log4("url", emailError, usernameError, cognitoError)
 
   React.useEffect1(() => {
     ErrorHook.useError(username, "USERNAME", setUsernameError)
@@ -132,13 +134,6 @@ let make = (
 
   let dummyPassword = "lllLLL!!!111"
   let dummyUsername = "letmein"
-
-  // let cbToOption = (f, . err, res) =>
-  // switch (Js.Nullable.toOption(err), Js.Nullable.toOption(res)) {
-  // | (Some(err), _) => f(Error(err))
-  // | (_, Some(res)) => f(Ok(res))
-  // | _ => invalid_arg("invalid argument for cbToOption")
-  // }
 
   let signupCallback = (. err, res) => {
     Js.log2("signup cb", url.search)
@@ -164,7 +159,7 @@ let make = (
         }
         Js.log2("problem", ex)
       }
-      | _ => Js.Exn.raiseError("invalid cb argument")
+    | _ => Js.Exn.raiseError("invalid cb argument")
     }
   }
 
@@ -239,13 +234,18 @@ let make = (
         {switch submitClicked {
         | false => React.null
         | true =>
-          <Error
-            validationError={switch url.search {
-            | "un_em" => emailError
-            | _ => usernameError
-            }}
-            cognitoError
-          />
+          switch url.search {
+          | "un_em" =>
+            switch (emailError, cognitoError) {
+            | (Some(error), _) | (_, Some(error)) => <Error error />
+            | (None, None) => React.null
+            }
+          | _ =>
+            switch (usernameError, cognitoError) {
+            | (Some(error), _) | (_, Some(error)) => <Error error />
+            | (None, None) => React.null
+            }
+          }
         }}
         {switch url.search {
         | "un_em" => <Input value=email propName="email" inputMode="email" setFunc=setEmail />

@@ -66,13 +66,6 @@ external signUp: (
   Js.Nullable.t<clientMetadata>,
 ) => unit = "signUp"
 
-// let cbToOption = (f, . err, res) =>
-//   switch (Js.Nullable.toOption(err), Js.Nullable.toOption(res)) {
-//   | (Some(err), _) => f(Error(err))
-//   | (_, Some(res)) => f(Ok(res))
-//   | _ => invalid_arg("invalid argument for cbToOption")
-//   }
-
 @react.component
 let make = (~userpool, ~setCognitoUser, ~cognitoError, ~setCognitoError) => {
   let (username, setUsername) = React.Uncurried.useState(_ => "")
@@ -111,9 +104,8 @@ let make = (~userpool, ~setCognitoUser, ~cognitoError, ~setCognitoError) => {
 
         Js.log2("problem", ex)
       }
-      | _ => Js.Exn.raiseError("invalid cb argument")
+    | _ => Js.Exn.raiseError("invalid cb argument")
     }
-  
 
   let onClick = _ => {
     setSubmitClicked(._ => true)
@@ -145,7 +137,11 @@ let make = (~userpool, ~setCognitoUser, ~cognitoError, ~setCognitoError) => {
         </legend>
         {switch submitClicked {
         | false => React.null
-        | true => <Error validationError cognitoError />
+        | true =>
+          switch (validationError, cognitoError) {
+          | (Some(error), _) | (_, Some(error)) => <Error error />
+          | (None, None) => React.null
+          }
         }}
         <Input value=username propName="username" setFunc=setUsername />
         <Input

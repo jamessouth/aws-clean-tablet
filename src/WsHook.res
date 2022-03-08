@@ -85,7 +85,7 @@ type revokeTokenCallback = Js.Exn.t => unit
 external signOut: (Js.Nullable.t<Signup.usr>, Js.Nullable.t<revokeTokenCallback>) => unit =
   "signOut"
 
-let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
+let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName, initialState) => {
   // Js.log2("wshook ", token)
 
   let (ws, setWs) = React.Uncurried.useState(_ => Js.Nullable.null)
@@ -97,9 +97,11 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
 
   let (leader, setLeader) = React.Uncurried.useState(_ => false)
 
-  let (reducer, initialState) = Reducer.appState()
-
-  let (state, dispatch) = React.Uncurried.useReducer(reducer, initialState)
+  let (state, dispatch) = React.Uncurried.useReducerWithMapState(
+    Reducer.reducer,
+    initialState,
+    Reducer.init,
+  )
 
   React.useEffect1(() => {
     // Js.log2("effect ", token)
@@ -137,7 +139,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
         | InsertConn => {
             let {listGms} = parseListGames(data)
             Js.log2("parsedlistgames", listGms)
-            dispatch(.ListGames(Js.Nullable.return(listGms)))
+            dispatch(. ListGames(Js.Nullable.return(listGms)))
           }
         | ModifyConn => {
             let {modConn, color, leader} = parseModConn(data)
@@ -149,22 +151,22 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
         | InsertGame => {
             let {addGame} = parseAddGame(data)
             Js.log2("parsedaddgame", addGame)
-            dispatch(.AddGame(addGame))
+            dispatch(. AddGame(addGame))
           }
         | ModifyListGame => {
             let {mdLstGm} = parseModListGame(data)
             Js.log2("parsedmodlistgame", mdLstGm)
-            dispatch(.UpdateListGame(mdLstGm))
+            dispatch(. UpdateListGame(mdLstGm))
           }
         | ModifyLiveGame => {
             let {mdLveGm} = parseModLiveGame(data)
             Js.log2("parsedmodlivegame", mdLveGm)
-            dispatch(.UpdateLiveGame(mdLveGm))
+            dispatch(. UpdateLiveGame(mdLveGm))
           }
         | RemoveGame => {
             let {rmvGame} = parseRmvGame(data)
             Js.log2("parsedremgame", rmvGame)
-            dispatch(.RemoveGame(rmvGame))
+            dispatch(. RemoveGame(rmvGame))
           }
         | Other => Js.log2("unknown json data", data)
         }
@@ -187,7 +189,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName) => {
         setPlayerGame(._ => "")
         setLeader(._ => false)
         setWs(._ => Js.Nullable.null)
-        dispatch(.(ResetPlayerState: Reducer.action))
+        dispatch(. ResetPlayerState(initialState))
         body(document)->setClassName("bg-no-repeat bg-center bg-cover bodmob bodtab bodbig")
       })
     }
