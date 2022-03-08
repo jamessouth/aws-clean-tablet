@@ -26,6 +26,8 @@ external authenticationDetailsConstructor: authDetails => authDetails = "Authent
 external authenticateUser: (Js.Nullable.t<Signup.usr>, authDetails, callback) => unit =
   "authenticateUser"
 
+let className = "text-gray-700 mt-14 bg-warm-gray-100 block max-w-xs lg:max-w-sm font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7"
+
 @react.component
 let make = (
   ~userpool,
@@ -119,7 +121,7 @@ let make = (
           value=password propName="password" autoComplete="current-password" setFunc=setPassword
         />
       </fieldset>
-      <Button text="submit" onClick />
+      <Button textTrue="submit" textFalse="submit" textProp=true onClick disabled=false className />
     </form>
   </main>
 }

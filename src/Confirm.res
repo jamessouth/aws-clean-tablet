@@ -20,6 +20,8 @@ external confirmPassword: (
   Js.Nullable.t<Signup.clientMetadata>,
 ) => unit = "confirmPassword"
 
+let className = "text-gray-700 mt-14 bg-warm-gray-100 block max-w-xs lg:max-w-sm font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7"
+
 @react.component
 let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
   let url = RescriptReactRouter.useUrl()
@@ -58,9 +60,8 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
         }
         Js.log2("conf problem", ex)
       }
-      | _ => Js.Exn.raiseError("invalid cb argument")
+    | _ => Js.Exn.raiseError("invalid cb argument")
     }
-  
 
   let confirmpasswordCallback: GetInfo.passwordPWCB = {
     onSuccess: str => {
@@ -133,7 +134,9 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
         | _ => React.null
         }}
       </fieldset>
-      <Button text="confirm" onClick />
+      <Button
+        textTrue="confirm" textFalse="confirm" textProp=true onClick disabled=false className
+      />
     </form>
   </main>
 }

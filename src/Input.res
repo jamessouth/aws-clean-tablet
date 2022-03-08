@@ -14,7 +14,7 @@ let make = (~value, ~propName, ~autoComplete=propName, ~inputMode="text", ~setFu
     </label>
     <input
       autoComplete
-      className="h-6 w-full text-xl font-anon bg-transparent border-b-1 text-warm-gray-100 border-warm-gray-100"
+      className="h-6 w-full text-xl outline-none font-anon bg-transparent border-b-1 text-warm-gray-100 border-warm-gray-100"
       id=autoComplete
       inputMode
       name=propName

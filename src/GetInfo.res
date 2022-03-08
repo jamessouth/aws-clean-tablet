@@ -89,12 +89,7 @@ type passwordPWCB = {
 //   Js.Nullable.t<Signup.clientMetadata>,
 // ) => unit = "forgotPassword"
 
-// let cbToOption = (f, . err, res) =>
-//   switch (Js.Nullable.toOption(err), Js.Nullable.toOption(res)) {
-//   | (Some(err), _) => f(Error(err))
-//   | (_, Some(res)) => f(Ok(res))
-//   | _ => invalid_arg("invalid argument for cbToOption")
-//   }
+let className = "text-gray-700 mt-14 bg-warm-gray-100 block max-w-xs lg:max-w-sm font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7"
 
 @react.component
 let make = (
@@ -252,7 +247,14 @@ let make = (
         | _ => <Input value=username propName="username" setFunc=setUsername />
         }}
       </fieldset>
-      <Button text="submit" onClick={onClick(url.search)} />
+      <Button
+        textTrue="submit"
+        textFalse="submit"
+        textProp=true
+        onClick={onClick(url.search)}
+        disabled=false
+        className
+      />
     </form>
   </main>
 }

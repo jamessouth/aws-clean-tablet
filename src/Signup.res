@@ -66,6 +66,8 @@ external signUp: (
   Js.Nullable.t<clientMetadata>,
 ) => unit = "signUp"
 
+let className = "text-gray-700 mt-14 bg-warm-gray-100 block max-w-xs lg:max-w-sm font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7"
+
 @react.component
 let make = (~userpool, ~setCognitoUser, ~cognitoError, ~setCognitoError) => {
   let (username, setUsername) = React.Uncurried.useState(_ => "")
@@ -149,7 +151,7 @@ let make = (~userpool, ~setCognitoUser, ~cognitoError, ~setCognitoError) => {
         />
         <Input value=email propName="email" inputMode="email" setFunc=setEmail />
       </fieldset>
-      <Button text="create" onClick />
+      <Button textTrue="create" textFalse="create" textProp=true onClick disabled=false className />
     </form>
   </main>
 }

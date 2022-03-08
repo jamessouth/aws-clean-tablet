@@ -1,3 +1,5 @@
+let className = "h-full right-0 top-0 w-1/2 bg-transparent text-warm-gray-100 text-2xl font-flow cursor-pointer absolute border-l-2 border-gray-500/50"
+
 @react.component
 let make = (~playerGame, ~leader, ~games, ~send, ~wsError, ~close) => {
   let onClick = _ => {
@@ -25,12 +27,15 @@ let make = (~playerGame, ~leader, ~games, ~send, ~wsError, ~close) => {
   }
 
   <>
-    <button
-      className="absolute top-5px right-5px bg-transparent cursor-pointer"
+    <Button
+      textTrue=""
+      textFalse=""
+      textProp=true
       onClick=signOut
-      type_="button">
-      <img className="block" src="../assets/signout.png" />
-    </button>
+      disabled=false
+      className="absolute top-5px right-5px bg-transparent cursor-pointer"
+      img={<img className="block" src="../assets/signout.png" />}
+    />
     {switch wsError !== "" {
     | true =>
       <p className="text-center text-warm-gray-100 font-anon text-lg">
@@ -55,12 +60,14 @@ let make = (~playerGame, ~leader, ~games, ~send, ~wsError, ~close) => {
             />
             {switch playerGame === "" {
             | true =>
-              <button
-                className="h-full right-0 top-0 w-1/2 bg-transparent text-warm-gray-100 text-2xl font-flow cursor-pointer absolute border-l-2 border-gray-500/50"
-                type_="button"
-                onClick>
-                {React.string("start a new game")}
-              </button>
+              <Button
+                textTrue="start a new game"
+                textFalse="start a new game"
+                textProp=true
+                onClick
+                disabled=false
+                className
+              />
             | false => React.null
             }}
           </div>

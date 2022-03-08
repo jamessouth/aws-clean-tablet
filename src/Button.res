@@ -1,9 +1,10 @@
 @react.component
-let make = (~text, ~onClick) => {
-  <button
-    type_="button"
-    className="text-gray-700 mt-14 bg-warm-gray-100 block max-w-xs lg:max-w-sm font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7"
-    onClick>
-    {React.string(text)}
+let make = (~textTrue, ~textFalse, ~textProp, ~onClick, ~disabled, ~img=React.null, ~className) => {
+  <button type_="button" className onClick disabled>
+    {switch textProp {
+    | true => React.string(textTrue)
+    | false => React.string(textFalse)
+    }}
+    {img}
   </button>
 }
