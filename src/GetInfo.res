@@ -1,94 +1,3 @@
-@new @module("amazon-cognito-identity-js")
-external userAttributeConstructor: Types.attributeDataInput => Types.attributeData =
-  "CognitoUserAttribute"
-
-type clientMetadata = {key: string}
-
-// type usr = {
-//   // @as("Session") session: Js.Nullable.t<userSession>,
-//   // authenticationFlowType: string,
-//   // client: clnt,
-//   // keyPrefix: string,
-//   // pool: pl,
-//   // signInUserSession: Js.Nullable.t<string>,
-//   // storage: {"length": float},
-//   // userDataKey: string,
-//   username: string,
-// }
-
-type signupOk = {
-  // codeDeliveryDetails: cdd,
-  user: Signup.usr,
-  // userConfirmed: bool,
-  // userSub: string
-}
-
-type signUpCB = (. Js.Nullable.t<Js.Exn.t>, Js.Nullable.t<signupOk>) => unit
-
-@send
-external signUp: (
-  Types.poolData,
-  string,
-  string,
-  Js.Nullable.t<array<Types.attributeData>>,
-  Js.Nullable.t<array<Types.attributeData>>,
-  signUpCB,
-  Js.Nullable.t<clientMetadata>,
-) => unit = "signUp"
-
-@new @module("amazon-cognito-identity-js")
-external userConstructor: Types.userDataInput => Signup.usr = "CognitoUser"
-
-type cdd = {
-  @as("AttributeName") attributeName: string,
-  @as("DeliveryMedium") deliveryMedium: string,
-  @as("Destination") destination: string,
-}
-
-type clnt = {
-  endpoint: string,
-  fetchOptions: {.},
-}
-
-type pl = {
-  advancedSecurityDataCollectionFlag: bool,
-  client: clnt,
-  clientId: string,
-  storage: {"length": float},
-  userPoolId: string,
-}
-
-// type usr = {
-//   @as("Session") session: Js.Nullable.t<string>,
-//   authenticationFlowType: string,
-//   client: clnt,
-//   keyPrefix: string,
-//   pool: pl,
-//   signInUserSession: Js.Nullable.t<string>,
-//   storage: {"length": float},
-//   userDataKey: string,
-//   username: string,
-// }
-
-// type signupOk = {
-//   codeDeliveryDetails: cdd,
-//   user: usr,
-//   userConfirmed: bool,
-//   userSub: string,
-// }
-
-type passwordPWCB = {
-  onFailure: Js.Exn.t => unit,
-  onSuccess: string => unit,
-}
-
-// @send
-// external forgotPassword: (
-//   Js.Nullable.t<Signup.usr>, //user object
-//   passwordPWCB, //cb obj
-//   Js.Nullable.t<Signup.clientMetadata>,
-// ) => unit = "forgotPassword"
-
 let className = "text-gray-700 mt-14 bg-warm-gray-100 block max-w-xs lg:max-w-sm font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7"
 
 @react.component
@@ -100,8 +9,6 @@ let make = (
   ~setCognitoError,
   ~setShowName,
 ) => {
-  // let pwInput = React.useRef(Js.Nullable.null)
-
   let url = RescriptReactRouter.useUrl()
 
   let (username, setUsername) = React.Uncurried.useState(_ => "")
@@ -168,12 +75,13 @@ let make = (
   }, [cognitoUser])
 
   let onClick = (tipe, _) => {
+    open Cognito
     setSubmitClicked(._ => true)
     switch tipe {
     | "cd_un" =>
       switch usernameError {
       | None => {
-          let userdata: Types.userDataInput = {
+          let userdata: userDataInput = {
             username: username,
             pool: userpool,
           }
@@ -197,7 +105,7 @@ let make = (
     | "un_em" =>
       switch emailError {
       | None => {
-          let emailData: Types.attributeDataInput = {
+          let emailData: attributeDataInput = {
             name: "email",
             value: email,
           }

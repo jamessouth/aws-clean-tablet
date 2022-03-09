@@ -1,25 +1,3 @@
-type t
-
-type confirmRegistrationCB = (. Js.Nullable.t<Js.Exn.t>, Js.Nullable.t<t>) => unit
-
-@send
-external confirmRegistration: (
-  Js.Nullable.t<Signup.usr>,
-  string,
-  bool,
-  confirmRegistrationCB,
-  Js.Nullable.t<Signup.clientMetadata>,
-) => unit = "confirmRegistration"
-
-@send
-external confirmPassword: (
-  Js.Nullable.t<Signup.usr>, //user object
-  string, //conf code
-  string, //new pw
-  GetInfo.passwordPWCB, //cb obj
-  Js.Nullable.t<Signup.clientMetadata>,
-) => unit = "confirmPassword"
-
 let className = "text-gray-700 mt-14 bg-warm-gray-100 block max-w-xs lg:max-w-sm font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7"
 
 @react.component
@@ -63,7 +41,8 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
     | _ => Js.Exn.raiseError("invalid cb argument")
     }
 
-  let confirmpasswordCallback: GetInfo.passwordPWCB = {
+  open Cognito
+  let confirmpasswordCallback = {
     onSuccess: str => {
       setCognitoError(._ => None)
       RescriptReactRouter.push("/signin")

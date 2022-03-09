@@ -1,31 +1,3 @@
-@new @module("amazon-cognito-identity-js")
-external userConstructor: Types.userDataInput => Signup.usr = "CognitoUser"
-
-type callback = {
-  onFailure: Js.Exn.t => unit,
-  newPasswordRequired: Js.Nullable.t<
-    (array<Types.attributeData>, array<Types.attributeData>) => unit,
-  >,
-  mfaRequired: Js.Nullable.t<(string, string) => unit>,
-  customChallenge: Js.Nullable.t<string => unit>,
-  onSuccess: Signup.userSession => unit,
-}
-
-type authDetails = {
-  @as("ValidationData") validationData: Js.Nullable.t<array<Types.attributeData>>,
-  @as("Username") username: string,
-  @as("Password") password: string,
-  @as("AuthParameters") authParameters: Js.Nullable.t<array<Types.attributeData>>,
-  @as("ClientMetadata") clientMetadata: Js.Nullable.t<Signup.clientMetadata>,
-}
-
-@new @module("amazon-cognito-identity-js")
-external authenticationDetailsConstructor: authDetails => authDetails = "AuthenticationDetails"
-
-@send
-external authenticateUser: (Js.Nullable.t<Signup.usr>, authDetails, callback) => unit =
-  "authenticateUser"
-
 let className = "text-gray-700 mt-14 bg-warm-gray-100 block max-w-xs lg:max-w-sm font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7"
 
 @react.component
@@ -53,6 +25,7 @@ let make = (
     None
   }, (username, password))
 
+  open Cognito
   let onClick = _ => {
     setSubmitClicked(._ => true)
     switch validationError {
@@ -87,7 +60,7 @@ let make = (
 
         switch Js.Nullable.isNullable(cognitoUser) {
         | true => {
-            let userdata: Types.userDataInput = {
+            let userdata = {
               username: username,
               pool: userpool,
             }

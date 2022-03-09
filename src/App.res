@@ -6,24 +6,18 @@ external cid: string = "VITE_CID"
 @val external localStorage: Dom.Storage2.t = "localStorage"
 external getItem: (Dom.Storage2.t, string) => option<string> = "getItem"
 
-// @module external signoutimg: string =
-
-@new @module("amazon-cognito-identity-js")
-external userPoolConstructor: Types.poolDataInput => Types.poolData = "CognitoUserPool"
-
-let pool: Types.poolDataInput = {
-  userPoolId: upid,
-  clientId: cid,
-  advancedSecurityDataCollectionFlag: false,
-}
-let userpool = userPoolConstructor(pool)
-
 @react.component
 let make = () => {
+  open Cognito
+  let userpool = userPoolConstructor({
+    userPoolId: upid,
+    clientId: cid,
+    advancedSecurityDataCollectionFlag: false,
+  })
   Js.log("app")
   let url = RescriptReactRouter.useUrl()
 
-  let (cognitoUser: Js.Nullable.t<Signup.usr>, setCognitoUser) = React.Uncurried.useState(_ =>
+  let (cognitoUser: Js.Nullable.t<usr>, setCognitoUser) = React.Uncurried.useState(_ =>
     Js.Nullable.null
   )
   let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)

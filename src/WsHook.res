@@ -79,11 +79,7 @@ let getMsgType = tag => {
   }
 }
 
-type revokeTokenCallback = Js.Exn.t => unit
 
-@send
-external signOut: (Js.Nullable.t<Signup.usr>, Js.Nullable.t<revokeTokenCallback>) => unit =
-  "signOut"
 
 let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName, initialState) => {
   // Js.log2("wshook ", token)
@@ -173,6 +169,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName, initia
       })
 
       ws->onClose(({code, reason, wasClean}) => {
+        open Cognito
         Js.log4("close", code, reason, wasClean)
         setToken(._ => None)
         setWsConnected(._ => false)
