@@ -1,5 +1,3 @@
-// let dot = Js.String2.fromCharCode(8901)
-
 @react.component
 let make = (~players: array<Reducer.livePlayer>, ~previousWord, ~showAnswers) => {
   Js.log2("score", players)
@@ -20,7 +18,7 @@ let make = (~players: array<Reducer.livePlayer>, ~previousWord, ~showAnswers) =>
         <li
           className="w-full flex flex-row h-7 py-0 px-2 justify-between items-center text-xl text-warm-gray-100"
           style={ReactDOM.Style.make(~backgroundColor=p.color, ())}
-          key=j`${p.name}$i`>
+          key={j`${p.name}$i`}>
           <p
             className={switch p.hasAnswered {
             | true => "after:content-['\\22C5'] after:text-yellow-200 after:text-5xl after:absolute after:leading-25px"

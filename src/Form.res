@@ -1,5 +1,3 @@
-@send external blur: Dom.element => unit = "blur"
-
 let sectionClass = "relative flex flex-col justify-between items-center h-40 text-xl mb-12 "
 
 let className = "font-anon text-xl text-true-gray-700 bg-true-gray-100 h-7 w-2/3 max-w-250px cursor-pointer border-none disabled:cursor-not-allowed disabled:contrast-[0.25]"
@@ -42,7 +40,7 @@ let make = (~answer_max_length, ~answered, ~inputText, ~onEnter, ~setInputText, 
 
   React.useEffect2(() => {
     switch (answered, Js.Nullable.toOption(inputBox.current)) {
-    | (true, Some(inp)) => blur(inp)
+    | (true, Some(inp)) => Web.blur(inp)
     | (true, None) | (false, _) => ()
     }
     None

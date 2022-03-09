@@ -3,9 +3,6 @@ external upid: string = "VITE_UPID"
 @val @scope(("import", "meta", "env"))
 external cid: string = "VITE_CID"
 
-@val external localStorage: Dom.Storage2.t = "localStorage"
-external getItem: (Dom.Storage2.t, string) => option<string> = "getItem"
-
 @react.component
 let make = () => {
   open Cognito

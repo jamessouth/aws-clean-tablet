@@ -41,8 +41,7 @@ let make = (~onAnimationEnd, ~playerColor, ~currentWord: string, ~answered, ~sho
       className={switch Js.String2.length(currentWord) > 12 {
       | true => "text-3xl" ++ pStyle
       | false => "text-4xl" ++ pStyle
-      }}
-    >
+      }}>
       {React.string(currentWord)}
     </p>
   </div>
