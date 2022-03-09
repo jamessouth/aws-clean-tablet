@@ -4,7 +4,7 @@
 let make = (~players: array<Reducer.livePlayer>, ~previousWord, ~showAnswers) => {
   Js.log2("score", players)
 
-  let noplrs = players->Js.Array2.length
+  let noplrs = Js.Array2.length(players)
 
   <div className="w-full" style={ReactDOM.Style.make(~height=j`calc(82px + (28px * $noplrs))`, ())}>
     <h2 className="text-center font-anon mb-5 text-warm-gray-100">

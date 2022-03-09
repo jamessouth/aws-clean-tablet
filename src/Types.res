@@ -1,11 +1,3 @@
-
-
-
-
-
-
-type t
-
 type poolData
 type poolDataInput = {
   @as("UserPoolId") userPoolId: string,
@@ -24,8 +16,6 @@ type userDataInput = {
   @as("Username") username: string,
   @as("Pool") pool: poolData,
 }
-
-
 
 
 

@@ -64,7 +64,7 @@ let reducer = (state, action) =>
       ...state,
       gamesList: Js.Nullable.return(
         gl->Js.Array2.map(gm =>
-          switch gm.no === game.no {
+          switch gm.no == game.no {
           | true => game
           | false => gm
           }

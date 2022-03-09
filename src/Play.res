@@ -24,18 +24,6 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~wsError, ~leader) => 
 
   let {players, currentWord, previousWord, showAnswers, sk} = game
 
-  // React.useEffect2(() => {
-  //   switch Js.Array2.length(players) > 0 {
-  //   | true =>
-  //     switch players[0].name ++ players[0].connid == leadertoken {
-  //     | true => setLeader(_ => true)
-  //     | false => setLeader(_ => false)
-  //     }
-  //   | false => setLeader(_ => false)
-  //   }
-  //   None
-  // }, (players, leadertoken))
-
   React.useEffect2(() => {
     switch (leader, playerColor == "") {
     | (_, true) | (false, false) => ()

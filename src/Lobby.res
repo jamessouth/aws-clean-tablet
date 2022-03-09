@@ -58,7 +58,7 @@ let make = (~playerGame, ~leader, ~games, ~send, ~wsError, ~close) => {
               width="421"
               height="80"
             />
-            {switch playerGame === "" {
+            {switch playerGame == "" {
             | true =>
               <Button
                 textTrue="start a new game"
@@ -71,7 +71,7 @@ let make = (~playerGame, ~leader, ~games, ~send, ~wsError, ~close) => {
             | false => React.null
             }}
           </div>
-          {switch gs->Js.Array2.length < 1 {
+          {switch Js.Array2.length(gs) < 1 {
           | true =>
             <p className="text-warm-gray-100 font-anon text-lg">
               {React.string("no games found. start a new one!")}

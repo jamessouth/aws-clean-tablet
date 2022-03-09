@@ -103,7 +103,7 @@ let make = (
   }, (inThisGame, game.ready))
 
   React.useEffect4(() => {
-    switch (inThisGame && count === 0, leader) {
+    switch (inThisGame && count == 0, leader) {
     | (true, true) => {
         RescriptReactRouter.push(`/game/${game.no}`)
 
