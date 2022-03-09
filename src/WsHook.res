@@ -5,51 +5,6 @@ external region: string = "VITE_REGION"
 @val @scope(("import", "meta", "env"))
 external stage: string = "VITE_STAGE"
 
-type listGamesData = {listGms: array<Reducer.listGame>}
-@scope("JSON") @val
-external parseListGames: string => listGamesData = "parse"
-
-type modConnData = {modConn: string, color: string, leader: bool}
-@scope("JSON") @val
-external parseModConn: string => modConnData = "parse"
-
-type addGameData = {addGame: Reducer.listGame}
-@scope("JSON") @val
-external parseAddGame: string => addGameData = "parse"
-
-type modListGameData = {mdLstGm: Reducer.listGame}
-@scope("JSON") @val
-external parseModListGame: string => modListGameData = "parse"
-
-type modLiveGameData = {mdLveGm: Reducer.liveGame}
-@scope("JSON") @val
-external parseModLiveGame: string => modLiveGameData = "parse"
-
-type rmvGameData = {rmvGame: Reducer.listGame}
-@scope("JSON") @val
-external parseRmvGame: string => rmvGameData = "parse"
-
-type msgType =
-  | InsertConn
-  | ModifyConn
-  | InsertGame
-  | ModifyListGame
-  | ModifyLiveGame
-  | RemoveGame
-  | Other
-
-let getMsgType = tag => {
-  switch tag->Js.String2.slice(~from=2, ~to_=9) {
-  | "listGms" => InsertConn
-  | "modConn" => ModifyConn
-  | "addGame" => InsertGame
-  | "mdLstGm" => ModifyListGame
-  | "mdLveGm" => ModifyLiveGame
-  | "rmvGame" => RemoveGame
-  | _ => Other
-  }
-}
-
 let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName, initialState) => {
   open Web
 
@@ -98,6 +53,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName, initia
       })
 
       ws->onMessage(({data}) => {
+        open Json
         Js.log2("msg", data)
 
         switch getMsgType(data) {
