@@ -6,23 +6,19 @@ external region: string = "VITE_REGION"
 external stage: string = "VITE_STAGE"
 
 let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName, initialState) => {
-  open Web
-
   let (ws, setWs) = React.Uncurried.useState(_ => Js.Nullable.null)
-
   let (playerGame, setPlayerGame) = React.Uncurried.useState(_ => "")
   let (playerColor, setPlayerColor) = React.Uncurried.useState(_ => "transparent")
   let (wsConnected, setWsConnected) = React.Uncurried.useState(_ => false)
   let (wsError, setWsError) = React.Uncurried.useState(_ => "")
-
   let (leader, setLeader) = React.Uncurried.useState(_ => false)
-
   let (state, dispatch) = React.Uncurried.useReducerWithMapState(
     Reducer.reducer,
     initialState,
     Reducer.init,
   )
 
+  open Web
   React.useEffect1(() => {
     // Js.log2("effect ", token)
     switch token {

@@ -5,7 +5,6 @@ type listPlayer = {
 
 type livePlayer = {
   name: string,
-  // connid: string,
   color: string,
   score: string,
   answer: string,

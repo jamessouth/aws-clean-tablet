@@ -1,5 +1,5 @@
 @react.component
-let make = (~onAnimationEnd, ~playerColor, ~currentWord: string, ~answered, ~showTimer) => {
+let make = (~onAnimationEnd, ~playerColor, ~currentWord, ~answered, ~showTimer) => {
   let (alpha, setAlpha) = React.Uncurried.useState(_ => "")
 
   let blankPos = switch currentWord->Js.String2.startsWith("_") {

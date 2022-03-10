@@ -13,7 +13,6 @@ type scorePayload = {
 let circ = Js.String2.fromCharCode(8635)
 let answer_max_length = 12
 
-// ~playerName,
 @react.component
 let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~wsError, ~leader) => {
   Js.log3("play", wsError, game)

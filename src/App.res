@@ -5,22 +5,19 @@ external cid: string = "VITE_CID"
 
 @react.component
 let make = () => {
+  Js.log("app")
   open Cognito
   let userpool = userPoolConstructor({
     userPoolId: upid,
     clientId: cid,
     advancedSecurityDataCollectionFlag: false,
   })
-  Js.log("app")
   let url = RescriptReactRouter.useUrl()
-
   let (cognitoUser: Js.Nullable.t<usr>, setCognitoUser) = React.Uncurried.useState(_ =>
     Js.Nullable.null
   )
   let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
-
   let (playerName, setPlayerName) = React.Uncurried.useState(_ => "")
-
   let (token, setToken) = React.Uncurried.useState(_ => None)
   let (showName, setShowName) = React.Uncurried.useState(_ => "")
 

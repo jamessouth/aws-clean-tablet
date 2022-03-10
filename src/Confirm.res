@@ -11,9 +11,7 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
 
   let (code, setCode) = React.Uncurried.useState(_ => "")
   let (password, setPassword) = React.Uncurried.useState(_ => "")
-
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(valErr))
-
   let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
 
   React.useEffect3(() => {

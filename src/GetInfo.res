@@ -15,12 +15,10 @@ let make = (
   let (usernameError, setUsernameError) = React.Uncurried.useState(_ => Some(
     "USERNAME: 3-10 characters; ",
   ))
-
   let (email, setEmail) = React.Uncurried.useState(_ => "")
   let (emailError, setEmailError) = React.Uncurried.useState(_ => Some(
     "EMAIL: 5-99 characters; enter a valid email address.",
   ))
-
   let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
   Js.log4("url", emailError, usernameError, cognitoError)
 

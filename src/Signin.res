@@ -13,11 +13,9 @@ let make = (
   Js.log("sinin")
   let (username, setUsername) = React.Uncurried.useState(_ => playerName)
   let (password, setPassword) = React.Uncurried.useState(_ => "")
-
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(
     "USERNAME: 3-10 characters; PASSWORD: 8-98 characters; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; ",
   ))
-
   let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
 
   React.useEffect2(() => {
