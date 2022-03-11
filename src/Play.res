@@ -111,7 +111,7 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~wsError, ~leader) => 
     | _ => React.null
     }}
     <Word onAnimationEnd playerColor currentWord answered showTimer={currentWord != ""} />
-    <Form answer_max_length answered inputText onEnter setInputText currentWord />
+    <Answer answer_max_length answered inputText onEnter setInputText currentWord />
 
     // <Prompt></Prompt>
   </div>

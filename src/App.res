@@ -54,19 +54,21 @@ let make = () => {
     wsError,
   ) = WsHook.useWs(token, setToken, cognitoUser, setCognitoUser, setPlayerName, initialState)
 
-  <main>
-    <p className="font-flow text-warm-gray-100 text-4xl h-10 font-bold text-center">
-      {React.string(playerName)}
-    </p>
-    <h1
-      style={ReactDOM.Style.make(~backgroundColor={playerColor}, ())}
-      className="text-6xl mt-11 mx-auto w-11/12 text-center font-arch decay-mask text-warm-gray-100">
-      {React.string("CLEAN TABLET")}
-    </h1>
-    <div className="mt-10">
+  <>
+    <header className="mb-10">
+      <p className="font-flow text-warm-gray-100 text-4xl h-10 font-bold text-center">
+        {React.string(playerName)}
+      </p>
+      <h1
+        style={ReactDOM.Style.make(~backgroundColor={playerColor}, ())}
+        className="text-6xl mt-11 mx-auto w-11/12 text-center font-arch decay-mask text-warm-gray-100">
+        {React.string("CLEAN TABLET")}
+      </h1>
+    </header>
+    <main>
       {switch (url.path, token) {
       | (list{}, None) =>
-        <div className="flex flex-col items-center relative">
+        <nav className="flex flex-col items-center relative">
           <Link
             url="/signin"
             className="w-3/5 border border-warm-gray-100 block bg-warm-gray-800/40 font-fred text-center text-warm-gray-100 decay-mask text-3xl p-2 mb-8 max-w-80 sm:mb-16"
@@ -94,7 +96,7 @@ let make = () => {
           />
           <Link
             url="/leaderboards"
-            className="w-3/5 border border-warm-gray-100 text-center mb-5 text-warm-gray-100 block bg-warm-gray-800/40 font-anon text-xl mt-24 max-w-80"
+            className="w-3/5 border border-warm-gray-100 text-center mb-5 text-warm-gray-100 block bg-warm-gray-800/40 font-anon text-xl mt-20 max-w-80"
             content="Leaderboards"
           />
           {switch showName == "" {
@@ -104,7 +106,7 @@ let make = () => {
               {React.string("The username associated with the email you submitted is:" ++ showName)}
             </p>
           }}
-        </div>
+        </nav>
 
       | (list{"signin"}, None) =>
         <Signin
@@ -168,6 +170,6 @@ let make = () => {
 
       | (_, _) => <div> {React.string("other")} </div> // <PageNotFound/>
       }}
-    </div>
-  </main>
+    </main>
+  </>
 }

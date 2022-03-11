@@ -79,45 +79,37 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
     }
   }
 
-  <main>
-    <form className="w-4/5 m-auto relative">
-      <fieldset className="flex flex-col justify-between h-52">
-        <legend className="text-warm-gray-100 m-auto mb-8 text-3xl font-fred">
-          {switch url.search {
-          | "pw_un" => React.string("Change password")
-          | _ => React.string("Confirm code")
-          }}
-        </legend>
-        {switch submitClicked {
-        | false => React.null
-        | true =>
-          switch (validationError, cognitoError) {
-          | (Some(error), _) | (_, Some(error)) =>
-            <span
-              className="absolute right-0 -top-24 text-sm text-warm-gray-100 bg-red-600 font-anon w-4/5 leading-4 p-1">
-              {React.string(error)}
-            </span>
-          | (None, None) => React.null
-          }
-        }}
-        <Input
-          value=code
-          propName="code"
-          autoComplete="one-time-code"
-          inputMode="numeric"
-          setFunc=setCode
-        />
-        {switch url.search {
-        | "pw_un" =>
-          <Input
-            value=password propName="password" autoComplete="new-password" setFunc=setPassword
-          />
-        | _ => React.null
-        }}
-      </fieldset>
-      <Button
-        textTrue="confirm" textFalse="confirm" textProp=true onClick disabled=false className
-      />
-    </form>
-  </main>
+  let error = switch submitClicked {
+  | false => React.null
+  | true =>
+    switch (validationError, cognitoError) {
+    | (Some(error), _) | (_, Some(error)) =>
+      <span
+        className="absolute right-0 -top-24 text-sm text-warm-gray-100 bg-red-600 font-anon w-4/5 leading-4 p-1">
+        {React.string(error)}
+      </span>
+    | (None, None) => React.null
+    }
+  }
+
+  let btn =
+    <Button textTrue="confirm" textFalse="confirm" textProp=true onClick disabled=false className />
+
+  <Form
+    ht="52"
+    btn
+    leg={switch url.search {
+    | "pw_un" => "Change password"
+    | _ => "Confirm code"
+    }}>
+    {error}
+    <Input
+      value=code propName="code" autoComplete="one-time-code" inputMode="numeric" setFunc=setCode
+    />
+    {switch url.search {
+    | "pw_un" =>
+      <Input value=password propName="password" autoComplete="new-password" setFunc=setPassword />
+    | _ => React.null
+    }}
+  </Form>
 }

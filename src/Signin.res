@@ -73,30 +73,25 @@ let make = (
     }
   }
 
-  <main>
-    <form className="w-4/5 m-auto relative">
-      <fieldset className="flex flex-col items-center justify-around h-72">
-        <legend className="text-warm-gray-100 m-auto mb-6 text-3xl font-fred">
-          {React.string("Sign in")}
-        </legend>
-        {switch submitClicked {
-        | false => React.null
-        | true =>
-          switch (validationError, cognitoError) {
-          | (Some(error), _) | (_, Some(error)) =>
-            <span
-              className="absolute right-0 -top-24 text-sm text-warm-gray-100 bg-red-600 font-anon w-4/5 leading-4 p-1">
-              {React.string(error)}
-            </span>
-          | (None, None) => React.null
-          }
-        }}
-        <Input value=username propName="username" setFunc=setUsername />
-        <Input
-          value=password propName="password" autoComplete="current-password" setFunc=setPassword
-        />
-      </fieldset>
-      <Button textTrue="submit" textFalse="submit" textProp=true onClick disabled=false className />
-    </form>
-  </main>
+  let error = switch submitClicked {
+  | false => React.null
+  | true =>
+    switch (validationError, cognitoError) {
+    | (Some(error), _) | (_, Some(error)) =>
+      <span
+        className="absolute right-0 -top-24 text-sm text-warm-gray-100 bg-red-600 font-anon w-4/5 leading-4 p-1">
+        {React.string(error)}
+      </span>
+    | (None, None) => React.null
+    }
+  }
+
+  let btn =
+    <Button textTrue="submit" textFalse="submit" textProp=true onClick disabled=false className />
+
+  <Form btn leg="Sign in">
+    {error}
+    <Input value=username propName="username" setFunc=setUsername />
+    <Input value=password propName="password" autoComplete="current-password" setFunc=setPassword />
+  </Form>
 }

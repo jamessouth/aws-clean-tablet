@@ -123,52 +123,52 @@ let make = (
     }
   }
 
-  <main>
-    <form className="w-4/5 m-auto relative">
-      <fieldset className="flex flex-col items-center justify-around h-52">
-        <legend className="text-warm-gray-100 m-auto mb-8 text-3xl font-fred">
-          {switch url.search {
-          | "un_em" => React.string("Enter email")
-          | _ => React.string("Enter username")
-          }}
-        </legend>
-        {switch submitClicked {
-        | false => React.null
-        | true =>
-          switch url.search {
-          | "un_em" =>
-            switch (emailError, cognitoError) {
-            | (Some(error), _) | (_, Some(error)) =>
-              <span
-                className="absolute right-0 -top-24 text-sm text-warm-gray-100 bg-red-600 font-anon w-4/5 leading-4 p-1">
-                {React.string(error)}
-              </span>
-            | (None, None) => React.null
-            }
-          | _ =>
-            switch (usernameError, cognitoError) {
-            | (Some(error), _) | (_, Some(error)) =>
-              <span
-                className="absolute right-0 -top-24 text-sm text-warm-gray-100 bg-red-600 font-anon w-4/5 leading-4 p-1">
-                {React.string(error)}
-              </span>
-            | (None, None) => React.null
-            }
-          }
-        }}
-        {switch url.search {
-        | "un_em" => <Input value=email propName="email" inputMode="email" setFunc=setEmail />
-        | _ => <Input value=username propName="username" setFunc=setUsername />
-        }}
-      </fieldset>
-      <Button
-        textTrue="submit"
-        textFalse="submit"
-        textProp=true
-        onClick={onClick(url.search)}
-        disabled=false
-        className
-      />
-    </form>
-  </main>
+  let error = switch submitClicked {
+  | false => React.null
+  | true =>
+    switch url.search {
+    | "un_em" =>
+      switch (emailError, cognitoError) {
+      | (Some(error), _) | (_, Some(error)) =>
+        <span
+          className="absolute right-0 -top-24 text-sm text-warm-gray-100 bg-red-600 font-anon w-4/5 leading-4 p-1">
+          {React.string(error)}
+        </span>
+      | (None, None) => React.null
+      }
+    | _ =>
+      switch (usernameError, cognitoError) {
+      | (Some(error), _) | (_, Some(error)) =>
+        <span
+          className="absolute right-0 -top-24 text-sm text-warm-gray-100 bg-red-600 font-anon w-4/5 leading-4 p-1">
+          {React.string(error)}
+        </span>
+      | (None, None) => React.null
+      }
+    }
+  }
+
+  let btn =
+    <Button
+      textTrue="submit"
+      textFalse="submit"
+      textProp=true
+      onClick={onClick(url.search)}
+      disabled=false
+      className
+    />
+
+  <Form
+    ht="52"
+    btn
+    leg={switch url.search {
+    | "un_em" => "Enter email"
+    | _ => "Enter username"
+    }}>
+    {error}
+    {switch url.search {
+    | "un_em" => <Input value=email propName="email" inputMode="email" setFunc=setEmail />
+    | _ => <Input value=username propName="username" setFunc=setUsername />
+    }}
+  </Form>
 }
