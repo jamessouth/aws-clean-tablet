@@ -150,11 +150,7 @@ let make = (
 
   let btn =
     <Button
-      textTrue="submit"
-      textFalse="submit"
-      textProp=true
       onClick={onClick(url.search)}
-      disabled=false
       className
     />
 

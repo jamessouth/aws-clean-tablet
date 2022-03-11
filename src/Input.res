@@ -35,7 +35,6 @@ let make = (~value, ~propName, ~autoComplete=propName, ~inputMode="text", ~setFu
         textFalse="show"
         textProp=showPassword
         onClick={_ => setShowPassword(.prev => !prev)}
-        disabled=false
         className
       />
     | false => React.null

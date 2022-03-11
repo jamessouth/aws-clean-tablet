@@ -30,9 +30,7 @@ let make = (~playerGame, ~leader, ~games, ~send, ~wsError, ~close) => {
     <Button
       textTrue=""
       textFalse=""
-      textProp=true
       onClick=signOut
-      disabled=false
       className="absolute top-5px right-5px bg-transparent cursor-pointer"
       img={<img className="block" src="../assets/signout.png" />}
     />
@@ -63,9 +61,7 @@ let make = (~playerGame, ~leader, ~games, ~send, ~wsError, ~close) => {
               <Button
                 textTrue="start a new game"
                 textFalse="start a new game"
-                textProp=true
                 onClick
-                disabled=false
                 className
               />
             | false => React.null

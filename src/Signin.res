@@ -86,8 +86,7 @@ let make = (
     }
   }
 
-  let btn =
-    <Button textTrue="submit" textFalse="submit" textProp=true onClick disabled=false className />
+  let btn = <Button onClick className />
 
   <Form btn leg="Sign in">
     {error}

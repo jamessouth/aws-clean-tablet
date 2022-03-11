@@ -90,9 +90,6 @@ let make = (~answer_max_length, ~answered, ~inputText, ~onEnter, ~setInputText, 
       }}
     />
     <Button
-      textTrue="submit"
-      textFalse="submit"
-      textProp=true
       onClick={_ => onEnter(. ignore())}
       disabled=disableSubmit
       className

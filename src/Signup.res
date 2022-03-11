@@ -75,8 +75,7 @@ let make = (~userpool, ~setCognitoUser, ~cognitoError, ~setCognitoError) => {
     }
   }
 
-  let btn =
-    <Button textTrue="create" textFalse="create" textProp=true onClick disabled=false className />
+  let btn = <Button onClick className />
 
   <Form btn leg="Sign up">
     {error}

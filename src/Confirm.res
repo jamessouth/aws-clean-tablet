@@ -92,8 +92,7 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
     }
   }
 
-  let btn =
-    <Button textTrue="confirm" textFalse="confirm" textProp=true onClick disabled=false className />
+  let btn = <Button onClick className />
 
   <Form
     ht="52"
