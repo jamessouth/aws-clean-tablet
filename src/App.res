@@ -54,6 +54,18 @@ let make = () => {
     wsError,
   ) = WsHook.useWs(token, setToken, cognitoUser, setCognitoUser, setPlayerName, initialState)
 
+  let (username, setUsername) = React.Uncurried.useState(_ => playerName)
+  let (password, setPassword) = React.Uncurried.useState(_ => "")
+  let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
+  let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(
+    "USERNAME: 3-10 characters; PASSWORD: 8-98 characters; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; ",
+  ))
+
+  React.useEffect2(() => {
+    ErrorHook.useMultiError([(username, "USERNAME"), (password, "PASSWORD")], setValidationError)
+    None
+  }, (username, password))
+
   <>
     <header className="mb-10">
       <p className="font-flow text-warm-gray-100 text-4xl h-10 font-bold text-center">
@@ -65,7 +77,7 @@ let make = () => {
         {React.string("CLEAN TABLET")}
       </h1>
     </header>
-    <main>
+    <main className="mb-8">
       {switch (url.path, token) {
       | (list{}, None) =>
         <nav className="flex flex-col items-center relative">
@@ -108,10 +120,30 @@ let make = () => {
           }}
         </nav>
 
-      | (list{"signin"}, None) =>
-        <Signin
-          userpool setCognitoUser setToken cognitoUser cognitoError setCognitoError playerName
-        />
+      | (list{"signin"}, None) => {
+          let signinOnClick = CognitoHook.useCB(
+            setSubmitClicked,
+            validationError,
+            setCognitoError,
+            setCognitoUser,
+            setToken,
+            username,
+            password,
+            cognitoUser,
+            userpool,
+          )
+
+          <Signin
+            signinOnClick
+            cognitoError
+            submitClicked
+            validationError
+            username
+            password
+            setUsername
+            setPassword
+          />
+        }
 
       | (list{"signup"}, None) => <Signup userpool setCognitoUser cognitoError setCognitoError />
 

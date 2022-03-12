@@ -31,7 +31,7 @@ let make = (~playerGame, ~leader, ~games, ~send, ~wsError, ~close) => {
       textTrue=""
       textFalse=""
       onClick=signOut
-      className="absolute top-5px right-5px bg-transparent cursor-pointer"
+      className="absolute top-1 right-1 bg-transparent cursor-pointer"
       img={<img className="block" src="../assets/signout.png" />}
     />
     {switch wsError !== "" {
@@ -58,12 +58,7 @@ let make = (~playerGame, ~leader, ~games, ~send, ~wsError, ~close) => {
             />
             {switch playerGame == "" {
             | true =>
-              <Button
-                textTrue="start a new game"
-                textFalse="start a new game"
-                onClick
-                className
-              />
+              <Button textTrue="start a new game" textFalse="start a new game" onClick className />
             | false => React.null
             }}
           </div>
