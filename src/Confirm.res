@@ -1,9 +1,7 @@
-let className = "text-gray-700 mt-14 bg-warm-gray-100 block max-w-xs lg:max-w-sm font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7"
-
 @react.component
 let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
   let url = RescriptReactRouter.useUrl()
-  let valErr = switch url.search {
+  let valErrInit = switch url.search {
   | "cd_un" => "CODE: 6-digit number only; "
   | _ => "CODE: 6-digit number only; PASSWORD: 8-98 characters; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; "
   }
@@ -11,7 +9,7 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
 
   let (code, setCode) = React.Uncurried.useState(_ => "")
   let (password, setPassword) = React.Uncurried.useState(_ => "")
-  let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(valErr))
+  let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(valErrInit))
   let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
 
   React.useEffect3(() => {
@@ -79,29 +77,16 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
     }
   }
 
-  let error = switch submitClicked {
-  | false => React.null
-  | true =>
-    switch (validationError, cognitoError) {
-    | (Some(error), _) | (_, Some(error)) =>
-      <span
-        className="absolute right-0 -top-24 text-sm text-warm-gray-100 bg-red-600 font-anon w-4/5 leading-4 p-1">
-        {React.string(error)}
-      </span>
-    | (None, None) => React.null
-    }
-  }
-
-  let btn = <Button onClick className />
-
   <Form
-    ht="52"
-    btn
+    ht="h-52"
+    onClick
     leg={switch url.search {
     | "pw_un" => "Change password"
     | _ => "Confirm code"
-    }}>
-    {error}
+    }}
+    submitClicked
+    validationError
+    cognitoError>
     <Input
       value=code propName="code" autoComplete="one-time-code" inputMode="numeric" setFunc=setCode
     />

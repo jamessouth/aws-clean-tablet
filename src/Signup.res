@@ -1,5 +1,3 @@
-let className = "text-gray-700 mt-14 bg-warm-gray-100 block max-w-xs lg:max-w-sm font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7"
-
 @react.component
 let make = (~userpool, ~setCognitoUser, ~cognitoError, ~setCognitoError) => {
   let (username, setUsername) = React.Uncurried.useState(_ => "")
@@ -62,23 +60,7 @@ let make = (~userpool, ~setCognitoUser, ~cognitoError, ~setCognitoError) => {
     }
   }
 
-  let error = switch submitClicked {
-  | false => React.null
-  | true =>
-    switch (validationError, cognitoError) {
-    | (Some(error), _) | (_, Some(error)) =>
-      <span
-        className="absolute right-0 -top-24 text-sm text-warm-gray-100 bg-red-600 font-anon w-4/5 leading-4 p-1">
-        {React.string(error)}
-      </span>
-    | (None, None) => React.null
-    }
-  }
-
-  let btn = <Button onClick className />
-
-  <Form btn leg="Sign up">
-    {error}
+  <Form onClick leg="Sign up" submitClicked validationError cognitoError>
     <Input value=username propName="username" setFunc=setUsername />
     <Input value=password propName="password" autoComplete="new-password" setFunc=setPassword />
     <Input value=email propName="email" inputMode="email" setFunc=setEmail />

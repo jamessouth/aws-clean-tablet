@@ -1,4 +1,5 @@
-let className = "text-gray-700 mt-14 bg-warm-gray-100 block max-w-xs lg:max-w-sm font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7"
+let dummyPassword = "lllLLL!!!111"
+let dummyUsername = "letmein"
 
 @react.component
 let make = (
@@ -11,29 +12,24 @@ let make = (
 ) => {
   let url = RescriptReactRouter.useUrl()
 
+  let valErrInit = switch url.search {
+  | "un_em" => "EMAIL: 5-99 characters; enter a valid email address."
+  | _ => "USERNAME: 3-10 characters; "
+  }
   let (username, setUsername) = React.Uncurried.useState(_ => "")
-  let (usernameError, setUsernameError) = React.Uncurried.useState(_ => Some(
-    "USERNAME: 3-10 characters; ",
-  ))
   let (email, setEmail) = React.Uncurried.useState(_ => "")
-  let (emailError, setEmailError) = React.Uncurried.useState(_ => Some(
-    "EMAIL: 5-99 characters; enter a valid email address.",
-  ))
+  let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(valErrInit))
   let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
-  Js.log4("url", emailError, usernameError, cognitoError)
+  Js.log("getinfo")
 
-  React.useEffect1(() => {
-    ErrorHook.useError(username, "USERNAME", setUsernameError)
+  React.useEffect2(() => {
+    switch url.search {
+    | "un_em" => ErrorHook.useError(email, "EMAIL", setValidationError)
+    | _ => ErrorHook.useError(username, "USERNAME", setValidationError)
+    }
+
     None
-  }, [username])
-
-  React.useEffect1(() => {
-    ErrorHook.useError(email, "EMAIL", setEmailError)
-    None
-  }, [email])
-
-  let dummyPassword = "lllLLL!!!111"
-  let dummyUsername = "letmein"
+  }, (username, email))
 
   let signupCallback = (. err, res) => {
     Js.log2("signup cb", url.search)
@@ -77,7 +73,7 @@ let make = (
     setSubmitClicked(._ => true)
     switch tipe {
     | "cd_un" =>
-      switch usernameError {
+      switch validationError {
       | None => {
           let userdata: userDataInput = {
             username: username,
@@ -88,7 +84,7 @@ let make = (
       | Some(_) => ()
       }
     | "pw_un" =>
-      switch usernameError {
+      switch validationError {
       | None =>
         userpool->signUp(
           username,
@@ -101,7 +97,7 @@ let make = (
       | Some(_) => ()
       }
     | "un_em" =>
-      switch emailError {
+      switch validationError {
       | None => {
           let emailData: attributeDataInput = {
             name: "email",
@@ -123,45 +119,16 @@ let make = (
     }
   }
 
-  let error = switch submitClicked {
-  | false => React.null
-  | true =>
-    switch url.search {
-    | "un_em" =>
-      switch (emailError, cognitoError) {
-      | (Some(error), _) | (_, Some(error)) =>
-        <span
-          className="absolute right-0 -top-24 text-sm text-warm-gray-100 bg-red-600 font-anon w-4/5 leading-4 p-1">
-          {React.string(error)}
-        </span>
-      | (None, None) => React.null
-      }
-    | _ =>
-      switch (usernameError, cognitoError) {
-      | (Some(error), _) | (_, Some(error)) =>
-        <span
-          className="absolute right-0 -top-24 text-sm text-warm-gray-100 bg-red-600 font-anon w-4/5 leading-4 p-1">
-          {React.string(error)}
-        </span>
-      | (None, None) => React.null
-      }
-    }
-  }
-
-  let btn =
-    <Button
-      onClick={onClick(url.search)}
-      className
-    />
-
   <Form
-    ht="52"
-    btn
+    ht="h-52"
+    onClick={onClick(url.search)}
     leg={switch url.search {
     | "un_em" => "Enter email"
     | _ => "Enter username"
-    }}>
-    {error}
+    }}
+    submitClicked
+    validationError
+    cognitoError>
     {switch url.search {
     | "un_em" => <Input value=email propName="email" inputMode="email" setFunc=setEmail />
     | _ => <Input value=username propName="username" setFunc=setUsername />
