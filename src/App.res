@@ -6,13 +6,19 @@ external cid: string = "VITE_CID"
 @react.component
 let make = () => {
   Js.log("app")
+
+  let linkBase = "w-3/5 text-warm-gray-100 block font-bold font-anon text-sm max-w-80 "
+
+  let linkBase2 = "w-3/5 border border-warm-gray-100 block bg-warm-gray-800/40 text-center text-warm-gray-100 "
+
   open Cognito
   let userpool = userPoolConstructor({
     userPoolId: upid,
     clientId: cid,
     advancedSecurityDataCollectionFlag: false,
   })
-  let url = RescriptReactRouter.useUrl()
+
+  let {path, search} = RescriptReactRouter.useUrl()
   let (cognitoUser: Js.Nullable.t<usr>, setCognitoUser) = React.Uncurried.useState(_ =>
     Js.Nullable.null
   )
@@ -66,37 +72,25 @@ let make = () => {
       </h1>
     </header>
     <main className="mb-8">
-      {switch (url.path, token) {
+      {switch (path, token) {
       | (list{}, None) =>
         <nav className="flex flex-col items-center relative">
           <Link
             url="/signin"
-            className="w-3/5 border border-warm-gray-100 block bg-warm-gray-800/40 font-fred text-center text-warm-gray-100 decay-mask text-3xl p-2 mb-8 max-w-80 sm:mb-16"
+            className={linkBase2 ++ "decay-mask text-3xl p-2 max-w-80 font-fred mb-8 sm:mb-16"}
             content="SIGN IN"
           />
           <Link
             url="/signup"
-            className="w-3/5 border border-warm-gray-100 block bg-warm-gray-800/40 font-fred text-center text-warm-gray-100 decay-mask text-3xl p-2 max-w-80"
+            className={linkBase2 ++ "decay-mask text-3xl p-2 max-w-80 font-fred"}
             content="SIGN UP"
           />
-          <Link
-            url="/getinfo?cd_un"
-            className="w-3/5 text-warm-gray-100 block font-bold font-anon text-sm mt-8 max-w-80"
-            content="verification code?"
-          />
-          <Link
-            url="/getinfo?pw_un"
-            className="w-3/5 text-warm-gray-100 block font-bold font-anon text-sm mt-4 max-w-80"
-            content="forgot password?"
-          />
-          <Link
-            url="/getinfo?un_em"
-            className="w-3/5 text-warm-gray-100 block font-bold font-anon text-sm mt-4 max-w-80"
-            content="forgot username?"
-          />
+          <Link url="/getinfo?cd_un" className={linkBase ++ "mt-8"} content="verification code?" />
+          <Link url="/getinfo?pw_un" className={linkBase ++ "mt-4"} content="forgot password?" />
+          <Link url="/getinfo?un_em" className={linkBase ++ "mt-4"} content="forgot username?" />
           <Link
             url="/leaderboards"
-            className="w-3/5 border border-warm-gray-100 text-center mb-5 text-warm-gray-100 block bg-warm-gray-800/40 font-anon text-xl mt-20 max-w-80"
+            className={linkBase2 ++ "font-anon text-xl mt-20 max-w-80"}
             content="Leaderboards"
           />
           {switch showName == "" {
@@ -116,9 +110,11 @@ let make = () => {
       | (list{"signup"}, None) => <Signup userpool setCognitoUser cognitoError setCognitoError />
 
       | (list{"getinfo"}, None) =>
-        switch url.search {
+        switch search {
         | "cd_un" | "pw_un" | "un_em" =>
-          <GetInfo userpool cognitoUser setCognitoUser cognitoError setCognitoError setShowName />
+          <GetInfo
+            userpool cognitoUser setCognitoUser cognitoError setCognitoError setShowName search
+          />
         | _ =>
           <div className="text-warm-gray-100">
             {React.string("unknown path, please try again")}
@@ -126,8 +122,8 @@ let make = () => {
         }
 
       | (list{"confirm"}, None) =>
-        switch url.search {
-        | "cd_un" | "pw_un" => <Confirm cognitoUser cognitoError setCognitoError />
+        switch search {
+        | "cd_un" | "pw_un" => <Confirm cognitoUser cognitoError setCognitoError search />
         | _ =>
           <div className="text-warm-gray-100">
             {React.string("unknown path, please try again")}

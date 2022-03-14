@@ -1,11 +1,10 @@
 @react.component
-let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
-  let url = RescriptReactRouter.useUrl()
-  let valErrInit = switch url.search {
+let make = (~cognitoUser, ~cognitoError, ~setCognitoError, ~search) => {
+  let valErrInit = switch search {
   | "cd_un" => "CODE: 6-digit number only; "
   | _ => "CODE: 6-digit number only; PASSWORD: 8-98 characters; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; "
   }
-  Js.log3("user", cognitoUser, url)
+  Js.log3("user", cognitoUser, search)
 
   let (code, setCode) = React.Uncurried.useState(_ => "")
   let (password, setPassword) = React.Uncurried.useState(_ => "")
@@ -13,12 +12,12 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
   let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
 
   React.useEffect3(() => {
-    switch url.search {
+    switch search {
     | "cd_un" => ErrorHook.useError(code, "CODE", setValidationError)
     | _ => ErrorHook.useMultiError([(code, "CODE"), (password, "PASSWORD")], setValidationError)
     }
     None
-  }, (code, password, url.search))
+  }, (code, password, search))
 
   let confirmregistrationCallback = (. err, res) =>
     switch (Js.Nullable.toOption(err), Js.Nullable.toOption(res)) {
@@ -59,7 +58,7 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
     | None =>
       switch Js.Nullable.isNullable(cognitoUser) {
       | false =>
-        switch url.search {
+        switch search {
         | "cd_un" =>
           cognitoUser->confirmRegistration(
             code,
@@ -80,7 +79,7 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
   <Form
     ht="h-52"
     onClick
-    leg={switch url.search {
+    leg={switch search {
     | "pw_un" => "Change password"
     | _ => "Confirm code"
     }}
@@ -90,7 +89,7 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError) => {
     <Input
       value=code propName="code" autoComplete="one-time-code" inputMode="numeric" setFunc=setCode
     />
-    {switch url.search {
+    {switch search {
     | "pw_un" =>
       <Input value=password propName="password" autoComplete="new-password" setFunc=setPassword />
     | _ => React.null
