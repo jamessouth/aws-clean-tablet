@@ -9,9 +9,6 @@ type startPayload = {
   gameno: string,
 }
 
-let chk = Js.String2.fromCharCode(10003)
-let btnStyle = " cursor-pointer text-base font-bold text-warm-gray-100 font-anon w-1/2 bottom-0 h-8 absolute bg-smoke-700 bg-opacity-70"
-
 @react.component
 let make = (
   ~game: Reducer.listGame,
@@ -22,6 +19,7 @@ let make = (
   ~class,
   ~readyColor,
 ) => {
+  let btnStyle = " cursor-pointer text-base font-bold text-warm-gray-100 font-anon w-1/2 bottom-0 h-8 absolute bg-smoke-700 bg-opacity-70"
   let (ready, setReady) = React.Uncurried.useState(_ => true)
   let (count, setCount) = React.Uncurried.useState(_ => 5)
   let (disabledJoin, setDisabledJoin) = React.Uncurried.useState(_ => false)
@@ -106,7 +104,6 @@ let make = (
     switch (inThisGame && count == 0, leader) {
     | (true, true) => {
         RescriptReactRouter.push(`/game/${game.no}`)
-
         let pl = {
           action: "prep",
           gameno: game.no,
@@ -114,7 +111,6 @@ let make = (
         send(. Js.Json.stringifyAny(pl))
       }
     | (true, false) => RescriptReactRouter.push(`/game/${game.no}`)
-
     | (false, _) => ()
     }
     None
@@ -149,15 +145,15 @@ let make = (
       switch (game.ready, inThisGame) {
       | (true, false) =>
         <p
-          className={"absolute text-3xl animate-pulse font-bold left-1/2 bottom-1/4 transform -translate-x-2/4"}>
-          {React.string("Starting soon...")}
+          className="absolute text-3xl animate-pulse font-bold left-1/2 top-1/4 transform -translate-x-2/4">
+          {React.string("Starting...")}
         </p>
 
       | (true, true) =>
         switch count > 0 {
         | true =>
           <p
-            className={"absolute text-3xl animate-ping font-bold left-1/2 bottom-1/4 transform -translate-x-2/4"}>
+            className="absolute text-3xl animate-ping font-bold left-1/2 top-1/4 transform -translate-x-2/4">
             {React.string(Js.Int.toString(count))}
           </p>
         | false => React.null

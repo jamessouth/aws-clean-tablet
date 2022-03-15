@@ -10,17 +10,14 @@ type scorePayload = {
   game: Reducer.liveGame,
 }
 
-let circ = Js.String2.fromCharCode(8635)
-let answer_max_length = 12
-
 @react.component
 let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~wsError, ~leader) => {
-  Js.log3("play", wsError, game)
+  let circ = Js.String2.fromCharCode(8635)
+  let answer_max_length = 12
+  Js.log4("play", wsError, game, leader)
 
   let (answered, setAnswered) = React.Uncurried.useState(_ => false)
   let (inputText, setInputText) = React.Uncurried.useState(_ => "")
-  // let (leader, setLeader) = React.useState(_ => false)
-
   let {players, currentWord, previousWord, showAnswers, sk} = game
 
   React.useEffect2(() => {
