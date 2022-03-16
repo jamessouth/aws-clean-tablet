@@ -8,7 +8,7 @@ let make = (
   ~setCognitoError,
   ~playerName,
 ) => {
-  Js.log("signin")
+  
   let (username, setUsername) = React.Uncurried.useState(_ => playerName)
   let (password, setPassword) = React.Uncurried.useState(_ => "")
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(

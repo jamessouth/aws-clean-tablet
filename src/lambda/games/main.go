@@ -64,6 +64,7 @@ type liveGame struct {
 	PreviousWord string         `json:"previousWord"`
 	AnswersCount int            `json:"answersCount"`
 	ShowAnswers  bool           `json:"showAnswers"`
+	Winner       bool           `json:"winner"`
 }
 
 type modifyLiveGamePayload struct {
@@ -449,12 +450,10 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			if rec.EventName == dynamodbstreams.OperationTypeInsert || rec.EventName == dynamodbstreams.OperationTypeModify {
 
 				var gameRecord struct {
-					Sk           string
-					Players      livePlayerList
-					CurrentWord  string
-					PreviousWord string
-					AnswersCount int
-					ShowAnswers  bool
+					Sk, CurrentWord, PreviousWord string
+					Players                       livePlayerList
+					AnswersCount                  int
+					ShowAnswers, Winner           bool
 				}
 				err = attributevalue.UnmarshalMap(item, &gameRecord)
 				if err != nil {
@@ -479,6 +478,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 						PreviousWord: gameRecord.PreviousWord,
 						AnswersCount: gameRecord.AnswersCount,
 						ShowAnswers:  gameRecord.ShowAnswers,
+						Winner:       gameRecord.Winner,
 					},
 				}
 

@@ -153,9 +153,17 @@ let make = () => {
         | true => <Lobby playerGame leader games send wsError close />
         }
 
-      | (list{"game", _gameno}, Some(_)) =>
+      | (list{"game", gameno}, Some(_)) =>
         switch wsConnected {
-        | true => <Play game playerColor send wsError leader />
+        | true =>
+          switch gameno == game.sk {
+          | true => <Play game playerColor send leader />
+          | false =>
+            <p className="text-center text-warm-gray-100 font-anon text-lg">
+              {React.string("loading game...")}
+            </p>
+          }
+
         | false =>
           <p className="text-center text-warm-gray-100 font-anon text-lg">
             {React.string("not connected...")}

@@ -11,19 +11,20 @@ type scorePayload = {
 }
 
 @react.component
-let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~wsError, ~leader) => {
+let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~leader) => {
   let circ = Js.String2.fromCharCode(8635)
   let answer_max_length = 12
-  Js.log4("play", wsError, game, leader)
 
   let (answered, setAnswered) = React.Uncurried.useState(_ => false)
   let (inputText, setInputText) = React.Uncurried.useState(_ => "")
   let {players, currentWord, previousWord, showAnswers, sk} = game
 
   React.useEffect2(() => {
-    switch (leader, playerColor == "") {
-    | (_, true) | (false, false) => ()
+    Js.log("send start useeff")
+    switch (leader, playerColor == "transparent") {
+    | (_, true) | (false, _) => ()
     | (true, false) => {
+        Js.log3("send start", leader, playerColor)
         let pl: Game.startPayload = {
           action: "start",
           gameno: sk,
@@ -35,6 +36,7 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~wsError, ~leader) => 
   }, (leader, playerColor))
 
   let hasRendered = React.useRef(false)
+  Js.log3("play", game, hasRendered)
 
   React.useEffect2(() => {
     switch (leader, showAnswers) {
@@ -100,7 +102,7 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~wsError, ~leader) => 
   <div>
     // playerName
     <Scoreboard players previousWord showAnswers />
-    {switch (playerColor == "", currentWord == "") {
+    {switch (playerColor == "transparent", currentWord == "") {
     | (true, true) =>
       <span className="animate-spin text-yellow-200 text-2xl font-bold absolute left-1/2">
         {React.string(circ)}
