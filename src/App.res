@@ -45,6 +45,7 @@ let make = () => {
       hiScore: 0,
       gameTied: true,
       showAnswers: false,
+      winner: false,
     },
   }
 

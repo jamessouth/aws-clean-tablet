@@ -26,6 +26,7 @@ type liveGame = {
   hiScore: int,
   gameTied: bool,
   showAnswers: bool,
+  winner: bool,
 }
 
 type state = {

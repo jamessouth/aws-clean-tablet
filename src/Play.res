@@ -38,9 +38,9 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~leader) => {
   let hasRendered = React.useRef(false)
   Js.log3("play", game, hasRendered)
 
-  React.useEffect2(() => {
-    switch (leader, showAnswers) {
-    | (true, true) => Js.Global.setTimeout(() => {
+  React.useEffect3(() => {
+    switch (leader, showAnswers, game.winner) {
+    | (true, true, _) => Js.Global.setTimeout(() => {
         let pl: scorePayload = {
           action: "score",
           game: game,
@@ -48,7 +48,7 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~leader) => {
         send(. Js.Json.stringifyAny(pl))
       }, 8564)->ignore
 
-    | (true, false) => {
+    | (true, false, false) => {
         setAnswered(._ => false)
         switch hasRendered.current {
         | true => Js.Global.setTimeout(() => {
@@ -63,11 +63,11 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~leader) => {
         }
       }
 
-    | (false, false) => setAnswered(._ => false)
-    | (false, true) => ()
+    | (false, false, false) => setAnswered(._ => false)
+    | (false, true, _) | (_, false, true) => ()
     }
     None
-  }, (leader, showAnswers))
+  }, (leader, showAnswers, game.winner))
 
   let sendAnswer = _ => {
     let index = switch players->Js.Array2.find(p => p.color == playerColor) {
@@ -101,7 +101,7 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~leader) => {
 
   <div>
     // playerName
-    <Scoreboard players previousWord showAnswers />
+    <Scoreboard players previousWord showAnswers winner=game.winner />
     {switch (playerColor == "transparent", currentWord == "") {
     | (true, true) =>
       <span className="animate-spin text-yellow-200 text-2xl font-bold absolute left-1/2">
@@ -109,8 +109,13 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~leader) => {
       </span>
     | _ => React.null
     }}
-    <Word onAnimationEnd playerColor currentWord answered showTimer={currentWord != ""} />
-    <Answer answer_max_length answered inputText onEnter setInputText currentWord />
+    {switch game.winner {
+    | true => React.null
+    | false => <>
+        <Word onAnimationEnd playerColor currentWord answered showTimer={currentWord != ""} />
+        <Answer answer_max_length answered inputText onEnter setInputText currentWord />
+      </>
+    }}
 
     // <Prompt></Prompt>
   </div>
