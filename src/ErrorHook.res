@@ -37,7 +37,7 @@ let getFuncs = input =>
   | "EMAIL" => [
       (. s) => checkLength(. 5, 99, s),
       (. s) =>
-        checkInclusion(. 
+        checkInclusion(.
           %re(
             "/^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/"
           ),
@@ -49,8 +49,6 @@ let getFuncs = input =>
   }
 
 let useMultiError = (fields, setErrorFunc) => {
-  Js.log("Errorhook")
-
   let errs = fields->Js.Array2.map(fld => {
     let (val, prop) = fld
     let error = getFuncs(prop)->Js.Array2.reduce((acc, f) => acc ++ f(. val), "")

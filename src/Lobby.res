@@ -2,6 +2,10 @@ let className = "h-full right-0 top-0 w-1/2 bg-transparent text-warm-gray-100 te
 
 @react.component
 let make = (~playerGame, ~leader, ~games, ~send, ~wsError, ~close) => {
+  let (rand, _setRand) = React.Uncurried.useState(_ =>
+    Js.Math.unsafe_trunc(Js.Math.random() *. 10.)
+  )
+
   let onClick = _ => {
     let pl: Game.lobbyPayload = {
       action: "lobby",
@@ -72,7 +76,7 @@ let make = (~playerGame, ~leader, ~games, ~send, ~wsError, ~close) => {
               className="m-12 w-11/12 <md:(flex max-w-lg flex-col) md:(grid grid-cols-2 gap-8) lg:(gap-10 justify-items-center) xl:(grid-cols-3 gap-12 max-w-1688px)">
               {gs
               ->Js.Array2.mapi((game: Reducer.listGame, i) => {
-                let (class, readyColor) = switch mod(i, 6) {
+                let (class, readyColor) = switch mod(i + rand, 6) {
                 | 0 => ("game0", "#cc9e48")
                 | 1 => ("game1", "#213e10")
                 | 2 => ("game2", "#4e3942")
