@@ -27,16 +27,17 @@ type livePlayer struct {
 	ConnID      string `dynamodbav:"connid"`
 	Color       string `dynamodbav:"color"`
 	Score       int    `dynamodbav:"score"`
-	Answer      string `dynamodbav:"answer"`
-	HasAnswered bool   `dynamodbav:"hasAnswered"`
+	Answer      string
+	HasAnswered bool `dynamodbav:"hasAnswered"`
 }
 
 func clearHasAnswered(pl []livePlayer) []livePlayer {
+	fmt.Printf("%s: %+v\n", "ansplrs1", pl)
 	for i, p := range pl {
 		p.HasAnswered = false
 		pl[i] = p
 	}
-
+	fmt.Printf("%s: %+v\n", "ansplrs2", pl)
 	return pl
 }
 
@@ -85,7 +86,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		TableName: aws.String(tableName),
 		ExpressionAttributeNames: map[string]string{
 			"#P": "players",
-			"#A": "answer",
+			"#A": "Answer",
 			"#C": "answersCount",
 			"#H": "hasAnswered",
 		},
@@ -111,6 +112,8 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	if err != nil {
 		return callErr(err)
 	}
+
+	fmt.Printf("%s%+v\n", "anzzzz ", gm)
 
 	if len(gm.Players) == gm.AnswersCount {
 

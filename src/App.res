@@ -68,7 +68,7 @@ let make = () => {
       </p>
       <h1
         style={ReactDOM.Style.make(~backgroundColor={playerColor}, ())}
-        className="text-6xl mt-11 mx-auto w-11/12 text-center font-arch decay-mask text-warm-gray-100">
+        className="text-6xl mt-11 mx-auto px-6 text-center font-arch decay-mask text-warm-gray-100">
         {React.string("CLEAN TABLET")}
       </h1>
     </header>

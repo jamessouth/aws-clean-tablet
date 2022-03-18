@@ -68,8 +68,8 @@ let make = (~playerGame, ~leader, ~games, ~send, ~wsError, ~close) => {
           </div>
           {switch Js.Array2.length(gs) < 1 {
           | true =>
-            <p className="text-warm-gray-100 font-anon text-lg">
-              {React.string("no games found. start a new one!")}
+            <p className="text-warm-gray-100 font-anon text-lg mt-8">
+              {React.string("no games found.")}
             </p>
           | false =>
             <ul

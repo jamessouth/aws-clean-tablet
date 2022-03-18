@@ -746,4 +746,74 @@ var bunchOfTests = []struct {
 		Winner: true,
 	}, description: "0:0, 1:0, 3:6, winner",
 	},
+
+	{input: game{
+		Players: []livePlayer{
+			{
+				PlayerID: "p1",
+				Name:     "test",
+				ConnID:   "PKhVldMK",
+				Color:    "#c026d3",
+				Score:    0,
+				Answer:   "qqq",
+			},
+			{
+				PlayerID: "p2",
+				Name:     "test2",
+				ConnID:   "PKhXdeP",
+				Color:    "#7c2d12",
+				Score:    0,
+				Answer:   "qqq",
+			},
+			{
+				PlayerID: "p3",
+				Name:     "test3",
+				ConnID:   "PKhaid",
+				Color:    "#16a34a",
+				Score:    0,
+				Answer:   "zzz",
+			},
+		},
+		Answers: map[string][]string{},
+		Scores:  map[string]int{},
+		Winner:  false,
+	}, expected: game{
+		Players: []livePlayer{
+			{
+				PlayerID: "p1",
+				Name:     "test",
+				ConnID:   "PKhVldMK",
+				Color:    "#c026d3",
+				Score:    3,
+				Answer:   "",
+			},
+			{
+				PlayerID: "p2",
+				Name:     "test2",
+				ConnID:   "PKhXdeP",
+				Color:    "#7c2d12",
+				Score:    3,
+				Answer:   "",
+			},
+			{
+				PlayerID: "p3",
+				Name:     "test3",
+				ConnID:   "PKhaid",
+				Color:    "#16a34a",
+				Score:    0,
+				Answer:   "",
+			},
+		},
+		Answers: map[string][]string{
+			"qqq": {"p1", "p2"},
+			"zzz": {"p3"},
+		},
+		Scores: map[string]int{
+			"p1": 3,
+			"p2": 3,
+			"p3": 0,
+		},
+		Winner: false,
+	}, description: "real",
+	},
 }

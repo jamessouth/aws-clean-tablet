@@ -74,6 +74,8 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		return callErr(err)
 	}
 
+	fmt.Printf("%s%+v\n", "scrsss ", body)
+
 	updatedScoreData := game{
 		Players: body.Game.Players,
 		Answers: map[string][]string{},
@@ -123,6 +125,7 @@ func main() {
 }
 
 func (data game) getAnswersMap() game {
+	fmt.Printf("%s%+v\n", "anzzzz map ", data)
 	for _, v := range data.Players {
 		data.Answers[v.Answer] = append(data.Answers[v.Answer], v.PlayerID)
 	}
@@ -131,10 +134,12 @@ func (data game) getAnswersMap() game {
 }
 
 func (data game) getScoresMap() game {
+	fmt.Printf("%s%+v\n", "scr map ", data)
 	for k, v := range data.Answers {
 		switch {
 		case len(k) < 2:
 			for _, id := range v {
+				fmt.Println("id0", id)
 				data.Scores[id] = zeroPoints
 			}
 		case len(v) > 2:
@@ -143,6 +148,7 @@ func (data game) getScoresMap() game {
 			}
 		case len(v) == 2:
 			for _, id := range v {
+				fmt.Println("id3", id)
 				data.Scores[id] = threePoints
 			}
 		default:
@@ -156,6 +162,7 @@ func (data game) getScoresMap() game {
 }
 
 func (data game) updateScoresAndClearAnswers() game {
+	fmt.Printf("%s%+v\n", "updclr ans ", data)
 	for i, p := range data.Players {
 		p.Score += data.Scores[p.PlayerID]
 		p.Answer = ""
@@ -166,6 +173,7 @@ func (data game) updateScoresAndClearAnswers() game {
 }
 
 func (data game) getWinner() game {
+	fmt.Printf("%s%+v\n", "winner in", data)
 	hiScore := zeroPoints
 	gameTied := false
 
@@ -182,6 +190,7 @@ func (data game) getWinner() game {
 	if !gameTied && hiScore > winThreshold {
 		data.Winner = true
 	}
+	fmt.Printf("%s%+v\n", "winner out", data)
 
 	return data
 }

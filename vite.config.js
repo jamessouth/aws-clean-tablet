@@ -73,17 +73,3 @@ export default defineConfig({
     "global": {},
   }
 })
-
-
-
-
-// {
-//   extract: {
-//     include: ['./**/*.html', 'src/**/*.{js}'],
-//     exclude: [
-//       'node_modules/**/*',
-//       '.git/**/*',
-//     ],
-//   },
-
-// }
