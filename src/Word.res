@@ -1,5 +1,6 @@
 @react.component
 let make = (~onAnimationEnd, ~playerColor, ~currentWord, ~answered, ~showTimer) => {
+  // let circ = Js.String2.fromCharCode(8635)
   let (alpha, setAlpha) = React.Uncurried.useState(_ => "")
 
   let blankPos = switch currentWord->Js.String2.startsWith("_") {
@@ -20,6 +21,10 @@ let make = (~onAnimationEnd, ~playerColor, ~currentWord, ~answered, ~showTimer) 
 
   <div
     className="mt-20 mb-10 mx-auto bg-smoke-100 relative w-80 h-36 flex items-center justify-center">
+    {switch (playerColor == "transparent", currentWord == "") {
+    | (true, true) => <Loading />
+    | _ => React.null
+    }}
     {switch showTimer {
     | true =>
       <svg className="overflow-auto absolute top-0 left-0 w-full h-full" preserveAspectRatio="none">

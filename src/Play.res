@@ -12,7 +12,7 @@ type scorePayload = {
 
 @react.component
 let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~leader) => {
-  let circ = Js.String2.fromCharCode(8635)
+  
   let answer_max_length = 12
 
   let (answered, setAnswered) = React.Uncurried.useState(_ => false)
@@ -102,13 +102,6 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~leader) => {
   <div>
     // playerName
     <Scoreboard players previousWord showAnswers winner=game.winner />
-    {switch (playerColor == "transparent", currentWord == "") {
-    | (true, true) =>
-      <span className="animate-spin text-yellow-200 text-2xl font-bold absolute left-1/2">
-        {React.string(circ)}
-      </span>
-    | _ => React.null
-    }}
     {switch game.winner {
     | true => React.null
     | false => <>

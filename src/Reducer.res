@@ -4,6 +4,7 @@ type listPlayer = {
 }
 
 type livePlayer = {
+  playerid: string,
   name: string,
   color: string,
   score: string,

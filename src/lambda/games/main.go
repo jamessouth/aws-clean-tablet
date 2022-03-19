@@ -48,6 +48,7 @@ type backListGame struct {
 }
 
 type livePlayerList []struct {
+	PlayerID    string `json:"playerid"`
 	Name        string `json:"name"`
 	ConnID      string `json:"connid"`
 	Color       string `json:"color"`

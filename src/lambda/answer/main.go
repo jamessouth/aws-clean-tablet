@@ -23,6 +23,7 @@ import (
 )
 
 type livePlayer struct {
+	PlayerID    string `dynamodbav:"playerid"`
 	Name        string `dynamodbav:"name"`
 	ConnID      string `dynamodbav:"connid"`
 	Color       string `dynamodbav:"color"`
