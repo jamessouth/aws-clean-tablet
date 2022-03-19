@@ -1,8 +1,8 @@
 @react.component
-let make = () => {
+let make = (~fillColor="fill-warm-gray-100") => {
   <div className="h-8 m-auto w-8">
     <svg
-      className="w-8 h-8 animate-spin fill-warm-gray-100"
+      className=`w-8 h-8 animate-spin ${fillColor}`
       viewBox="0 0 100 100"
       fill="none"
       xmlns="http://www.w3.org/2000/svg">

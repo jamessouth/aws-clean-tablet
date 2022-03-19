@@ -51,9 +51,9 @@ func getSliceAndAssignColors(pm map[string]struct{ Name, ConnID string }) (res [
 	count := 0
 	clrs := colors.shuffleList(len(colors))
 
-	for _, v := range pm {
+	for k, v := range pm {
 		res = append(res, livePlayer{
-			PlayerID: v.ConnID + v.Name,
+			PlayerID: k,
 			Name:     v.Name,
 			ConnID:   v.ConnID,
 			Color:    clrs[count],

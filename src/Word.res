@@ -20,9 +20,9 @@ let make = (~onAnimationEnd, ~playerColor, ~currentWord, ~answered, ~showTimer) 
   }, [answered])
 
   <div
-    className="mt-20 mb-10 mx-auto bg-smoke-100 relative w-80 h-36 flex items-center justify-center">
+    className="mt-20 mb-10 mx-auto bg-smoke-100 relative w-80 h-36 flex flex-col items-center justify-center">
     {switch (playerColor == "transparent", currentWord == "") {
-    | (true, true) => <Loading />
+    | (true, true) => <Loading fillColor="fill-warm-gray-800"/>
     | _ => React.null
     }}
     {switch showTimer {
