@@ -30,44 +30,35 @@ let make = (~players: array<Reducer.livePlayer>, ~previousWord, ~showAnswers, ~w
     </h2>
     <ul
       className="bg-yellow-300 opacity-80 border-2 border-solid border-yellow-400 p-3 w-11/12 max-w-lg my-0 mx-auto flex flex-col justify-around items-center">
+      {players
+      ->Js.Array2.mapi((p, i) =>
+        <li
+          className={"w-full flex flex-row h-7 py-0 px-2 justify-between items-center text-xl text-warm-gray-100 " ++ if (
+            winner && i != 0
+          ) {
+            "brightness-50"
+          } else {
+            ""
+          }}
+          key={j`${p.name}$i`}
+          style={ReactDOM.Style.make(~backgroundColor=p.color, ())}>
+          <p
+            className={switch p.hasAnswered {
+            | true => "after:content-['\\22C5'] after:text-yellow-200 after:text-5xl after:absolute after:leading-25px"
+            | false => ""
+            }}>
+            {React.string(p.name)}
+          </p>
+          {switch showAnswers {
+          | true => <p> {React.string(p.answer)} </p>
+          | false => <p> {React.string(p.score)} </p>
+          }}
+        </li>
+      )
+      ->React.array}
       {switch winner {
-      | true => <>
-          {players
-          ->Js.Array2.mapi((p, i) => {
-            switch i == 0 {
-            | false => React.null
-            | true =>
-              <li
-                className="w-full flex flex-row h-7 py-0 px-2 justify-between items-center text-xl text-warm-gray-100"
-                style={ReactDOM.Style.make(~backgroundColor=p.color, ())}
-                key={j`${p.name}$i`}>
-                <p> {React.string(p.name)} </p> <p> {React.string(p.score)} </p>
-              </li>
-            }
-          })
-          ->React.array}
-          <Button textTrue="Return to lobby" textFalse="Return to lobby" onClick className />
-        </>
-      | false => players
-        ->Js.Array2.mapi((p, i) => {
-          <li
-            className="w-full flex flex-row h-7 py-0 px-2 justify-between items-center text-xl text-warm-gray-100"
-            style={ReactDOM.Style.make(~backgroundColor=p.color, ())}
-            key={j`${p.name}$i`}>
-            <p
-              className={switch p.hasAnswered {
-              | true => "after:content-['\\22C5'] after:text-yellow-200 after:text-5xl after:absolute after:leading-25px"
-              | false => ""
-              }}>
-              {React.string(p.name)}
-            </p>
-            {switch showAnswers {
-            | true => <p> {React.string(p.answer)} </p>
-            | false => <p> {React.string(p.score)} </p>
-            }}
-          </li>
-        })
-        ->React.array
+      | true => <Button textTrue="Return to lobby" textFalse="Return to lobby" onClick className />
+      | false => React.null
       }}
     </ul>
   </div>
