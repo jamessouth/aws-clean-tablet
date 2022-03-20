@@ -66,6 +66,15 @@ func getSliceAndAssignColors(pm map[string]struct{ Name, ConnID string }) (res [
 	return
 }
 
+func changeIDs(pl []livePlayer) []livePlayer {
+	for i, p := range pl {
+		p.PlayerID = p.ConnID + p.Color + p.Name
+		pl[i] = p
+	}
+
+	return pl
+}
+
 const (
 	slope     int = -3
 	intercept int = 52
@@ -120,38 +129,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		return callErr(err)
 	}
 
-	fmt.Printf("%s%+v\n", "livegame ", game)
-
-	numberOfWords := slope*len(game.Players) + intercept
-
-	marshalledWordsList, err := attributevalue.Marshal(words.shuffleList(numberOfWords))
-	if err != nil {
-		return callErr(err)
-	}
-
 	playersList := getSliceAndAssignColors(game.Players)
-
-	marshalledPlayersList, err := attributevalue.Marshal(playersList)
-	if err != nil {
-		return callErr(err)
-	}
-
-	_, err = ddbsvc.PutItem(ctx, &dynamodb.PutItemInput{
-		Item: map[string]types.AttributeValue{
-			"pk":           &types.AttributeValueMemberS{Value: "LIVEGME"},
-			"sk":           &types.AttributeValueMemberS{Value: game.Sk},
-			"answersCount": &types.AttributeValueMemberN{Value: "0"},
-			"currentWord":  &types.AttributeValueMemberS{Value: ""},
-			"previousWord": &types.AttributeValueMemberS{Value: ""},
-			"players":      marshalledPlayersList,
-			"wordList":     marshalledWordsList,
-		},
-		TableName: aws.String(tableName),
-	})
-
-	if err != nil {
-		return callErr(err)
-	}
 
 	sfnInput, err := json.Marshal(struct {
 		Players []livePlayer `json:"players"`
@@ -177,6 +155,34 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	if sseo.Status == sfntypes.SyncExecutionStatusFailed || sseo.Status == sfntypes.SyncExecutionStatusTimedOut {
 		err := fmt.Errorf("step function %s, execution %s, failed with status %s. error code: %s. cause: %s. ", *sseo.StateMachineArn, *sseo.ExecutionArn, sseo.Status, *sseo.Error, *sseo.Cause)
+		return callErr(err)
+	}
+
+	numberOfWords := slope*len(game.Players) + intercept
+
+	marshalledWordsList, err := attributevalue.Marshal(words.shuffleList(numberOfWords))
+	if err != nil {
+		return callErr(err)
+	}
+
+	marshalledPlayersList, err := attributevalue.Marshal(changeIDs(playersList))
+	if err != nil {
+		return callErr(err)
+	}
+
+	_, err = ddbsvc.PutItem(ctx, &dynamodb.PutItemInput{
+		Item: map[string]types.AttributeValue{
+			"pk":           &types.AttributeValueMemberS{Value: "LIVEGME"},
+			"sk":           &types.AttributeValueMemberS{Value: game.Sk},
+			"answersCount": &types.AttributeValueMemberN{Value: "0"},
+			"currentWord":  &types.AttributeValueMemberS{Value: ""},
+			"previousWord": &types.AttributeValueMemberS{Value: ""},
+			"players":      marshalledPlayersList,
+			"wordList":     marshalledWordsList,
+		},
+		TableName: aws.String(tableName),
+	})
+	if err != nil {
 		return callErr(err)
 	}
 

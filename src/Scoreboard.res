@@ -2,7 +2,7 @@
 let make = (~players: array<Reducer.livePlayer>, ~previousWord, ~showAnswers, ~winner) => {
   Js.log2("score", players)
 
-  let className = "font-arch bg-transparent text-warm-gray-100 text-2xl absolute right-0 top-0 cursor-pointer"
+  let className = "block cursor-pointer text-warm-gray-800 font-perm m-auto px-8 py-2 text-2xl"
 
   let noplrs = Js.Array2.length(players)
 
