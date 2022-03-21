@@ -77,6 +77,14 @@
     url("../../assets/fossen1x.webp") 1x,
     url("../../assets/fossen2x.webp") 2x);
 }
+.game6{
+  background-image: -webkit-image-set(
+    url("../../assets/pluk1x.webp") 1x,
+    url("../../assets/pluk2x.webp") 2x);
+  background-image: image-set(
+    url("../../assets/pluk1x.webp") 1x,
+    url("../../assets/pluk2x.webp") 2x);
+}
 
 
 .bodmob{
@@ -132,21 +140,6 @@ footer a{
 footer a:focus,
 footer a:hover{
   border: 2px solid #ffee58;
-}
-.winner{
-  font-size: 3rem;
-  font-family: 'Luckiest Guy', cursive;
-  color: transparent;
-  background-clip: text;
-  -webkit-background-clip: text;
-  filter: hue-rotate(0deg);
-  background-image: linear-gradient(#ffee58, #ffee58);
-  animation: rotate 5s ease-in-out infinite;
-}
-@keyframes rotate {
-  to {
-      filter: hue-rotate(360deg);
-  }
 }
 
 

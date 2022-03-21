@@ -36,7 +36,9 @@ let make = (~players: array<Reducer.livePlayer>, ~previousWord, ~showAnswers, ~w
           className={"w-full flex flex-row h-7 py-0 px-2 justify-between items-center text-xl text-warm-gray-100 " ++ if (
             winner && i != 0
           ) {
-            "brightness-50"
+            "filter brightness-35"
+          } else if winner && i == 0 {
+            "animate-rotate"
           } else {
             ""
           }}
@@ -56,10 +58,10 @@ let make = (~players: array<Reducer.livePlayer>, ~previousWord, ~showAnswers, ~w
         </li>
       )
       ->React.array}
-      {switch winner {
-      | true => <Button textTrue="Return to lobby" textFalse="Return to lobby" onClick className />
-      | false => React.null
-      }}
     </ul>
+    {switch winner {
+    | true => <Button textTrue="Return to lobby" textFalse="Return to lobby" onClick className />
+    | false => React.null
+    }}
   </div>
 }

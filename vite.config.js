@@ -24,6 +24,7 @@ export default defineConfig({
             animation: {
               // 'erase': 'erase 3s cubic-bezier(.03,.74,.03,1) forwards 1',
               'change': 'change 35s linear forwards 1',
+              'rotate': 'rotate 4s ease-in-out infinite',
             },
             colors: {
               smoke: colors.trueGray
@@ -45,6 +46,9 @@ export default defineConfig({
               },
               erase: {
                 '100%': { opacity: '0' },
+              },
+              rotate: {
+                'to': { filter: 'hue-rotate(360deg)' },
               },
             },
             lineHeight: {
