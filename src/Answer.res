@@ -1,6 +1,6 @@
 let sectionClass = "relative flex flex-col justify-between items-center h-40 text-xl mb-12 "
 
-let className = "font-anon text-xl text-true-gray-700 bg-true-gray-100 h-7 w-2/3 max-w-250px cursor-pointer border-none disabled:cursor-not-allowed disabled:contrast-[0.25]"
+let className = "font-anon text-xl text-true-gray-700 bg-true-gray-100 h-7 w-2/3 max-w-250px cursor-pointer border-none filter disabled:cursor-not-allowed disabled:contrast-[0.25]"
 
 @react.component
 let make = (~answer_max_length, ~answered, ~inputText, ~onEnter, ~setInputText, ~currentWord) => {
@@ -64,7 +64,7 @@ let make = (~answer_max_length, ~answered, ~inputText, ~onEnter, ~setInputText, 
     {switch isValidInput {
     | true => React.null
     | false =>
-      <p className="absolute text-smoke-100 bg-smoke-800 font-bold w-11/12 max-w-xl">
+      <p className="absolute text-stone-100 bg-red-800 font-bold w-11/12 max-w-xl">
         {switch badChar {
         | Some(bc) => React.string(bc ++ " is not allowed")
         | None => React.string("That input is not allowed")
@@ -73,7 +73,7 @@ let make = (~answer_max_length, ~answered, ~inputText, ~onEnter, ~setInputText, 
     }}
     <label htmlFor="inputbox"> {React.string("Enter your answer:")} </label>
     <input
-      className="h-7 w-3/5 text-xl pl-1 text-left bg-warm-gray-100 border-none text-smoke-700"
+      className="h-7 w-3/5 text-xl pl-1 text-left bg-stone-100 border-none text-stone-800"
       id="inputbox"
       autoComplete="off"
       // autoFocus

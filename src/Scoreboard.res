@@ -2,7 +2,7 @@
 let make = (~players: array<Reducer.livePlayer>, ~previousWord, ~showAnswers, ~winner) => {
   Js.log2("score", players)
 
-  let className = "block cursor-pointer text-warm-gray-800 font-perm m-auto px-8 py-2 text-2xl"
+  let className = "mt-10 block cursor-pointer text-stone-800 font-perm m-auto px-8 py-2 text-2xl"
 
   let noplrs = Js.Array2.length(players)
 
@@ -18,13 +18,13 @@ let make = (~players: array<Reducer.livePlayer>, ~previousWord, ~showAnswers, ~w
   }
 
   <div className="w-full" style={ReactDOM.Style.make(~height=j`calc(82px + (28px * $noplrs))`, ())}>
-    <h2 className="text-center font-anon mb-5 text-warm-gray-100">
+    <h2 className="text-center font-anon mb-5 text-stone-100">
       {switch showAnswers {
-      | true => React.string(previousWord)
+      | true => React.string("Last round: " ++ previousWord)
       | false =>
         switch winner {
-        | true => React.string("Winner!")
-        | false => React.string("scores")
+        | true => React.string("Game over!")
+        | false => React.string("Scores:")
         }
       }}
     </h2>
@@ -33,10 +33,10 @@ let make = (~players: array<Reducer.livePlayer>, ~previousWord, ~showAnswers, ~w
       {players
       ->Js.Array2.mapi((p, i) =>
         <li
-          className={"w-full flex flex-row h-7 py-0 px-2 justify-between items-center text-xl text-warm-gray-100 " ++ if (
+          className={"w-full flex flex-row h-7 py-0 px-2 justify-between items-center text-xl text-stone-100 " ++ if (
             winner && i != 0
           ) {
-            "filter brightness-35"
+            "filter brightness-25"
           } else if winner && i == 0 {
             "animate-rotate"
           } else {

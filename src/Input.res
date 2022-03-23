@@ -1,4 +1,4 @@
-let className = "font-arch bg-transparent text-warm-gray-100 text-2xl absolute right-0 top-0 cursor-pointer"
+let className = "font-arch bg-transparent text-stone-100 text-2xl absolute right-0 top-0 cursor-pointer"
 
 @react.component
 let make = (~value, ~propName, ~autoComplete=propName, ~inputMode="text", ~setFunc) => {
@@ -11,12 +11,12 @@ let make = (~value, ~propName, ~autoComplete=propName, ~inputMode="text", ~setFu
     | true => "max-w-xs lg:max-w-sm w-full relative"
     | false => "max-w-xs lg:max-w-sm w-full"
     }}>
-    <label className="text-2xl font-flow text-warm-gray-100" htmlFor=autoComplete>
+    <label className="text-2xl font-flow text-stone-100" htmlFor=autoComplete>
       {React.string(propName)}
     </label>
     <input
       autoComplete
-      className="h-6 w-full text-xl outline-none font-anon bg-transparent border-b-1 text-warm-gray-100 border-warm-gray-100"
+      className="h-6 w-full text-xl outline-none font-anon bg-transparent border-b-1 text-stone-100 border-stone-100"
       id=autoComplete
       inputMode
       name=propName

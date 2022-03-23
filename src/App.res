@@ -7,9 +7,9 @@ external cid: string = "VITE_CID"
 let make = () => {
   Js.log("app")
 
-  let linkBase = "w-3/5 text-warm-gray-100 block font-bold font-anon text-sm max-w-80 "
+  let linkBase = "w-3/5 text-stone-100 block font-bold font-anon text-sm max-w-80 "
 
-  let linkBase2 = "w-3/5 border border-warm-gray-100 block bg-warm-gray-800/40 text-center text-warm-gray-100 "
+  let linkBase2 = "w-3/5 border border-stone-100 block bg-stone-800/40 text-center text-stone-100 "
 
   open Cognito
   let userpool = userPoolConstructor({
@@ -63,12 +63,12 @@ let make = () => {
 
   <>
     <header className="mb-10">
-      <p className="font-flow text-warm-gray-100 text-4xl h-10 font-bold text-center">
+      <p className="font-flow text-stone-100 text-4xl h-10 font-bold text-center">
         {React.string(playerName)}
       </p>
       <h1
         style={ReactDOM.Style.make(~backgroundColor={playerColor}, ())}
-        className="text-6xl mt-11 mx-auto px-6 text-center font-arch decay-mask text-warm-gray-100">
+        className="text-6xl mt-11 mx-auto px-6 text-center font-arch decay-mask text-stone-100">
         {React.string("CLEAN TABLET")}
       </h1>
     </header>
@@ -97,7 +97,7 @@ let make = () => {
           {switch showName == "" {
           | true => React.null
           | false =>
-            <p className="text-warm-gray-100 absolute -top-20 w-4/5 bg-blue-gray-800 p-2 font-anon">
+            <p className="text-stone-100 absolute -top-20 w-4/5 bg-blue-gray-800 p-2 font-anon">
               {React.string("The username associated with the email you submitted is:" ++ showName)}
             </p>
           }}
@@ -117,7 +117,7 @@ let make = () => {
             userpool cognitoUser setCognitoUser cognitoError setCognitoError setShowName search
           />
         | _ =>
-          <div className="text-warm-gray-100">
+          <div className="text-stone-100">
             {React.string("unknown path, please try again")}
           </div>
         }
@@ -126,7 +126,7 @@ let make = () => {
         switch search {
         | "cd_un" | "pw_un" => <Confirm cognitoUser cognitoError setCognitoError search />
         | _ =>
-          <div className="text-warm-gray-100">
+          <div className="text-stone-100">
             {React.string("unknown path, please try again")}
           </div>
         }
@@ -148,7 +148,7 @@ let make = () => {
       | (list{"lobby"}, Some(_)) =>
         switch wsConnected {
         | false => <>
-          <p className="text-center text-warm-gray-100 font-anon text-lg">
+          <p className="text-center text-stone-100 font-anon text-lg">
             {React.string("loading games...")}
           </p>
           <Loading />
@@ -162,7 +162,7 @@ let make = () => {
           switch gameno == game.sk {
           | true => <Play game playerColor send leader />
           | false => <>
-            <p className="text-center text-warm-gray-100 font-anon text-lg">
+            <p className="text-center text-stone-100 font-anon text-lg">
               {React.string("loading game...")}
             </p>
             <Loading />
@@ -170,7 +170,7 @@ let make = () => {
           }
 
         | false =>
-          <p className="text-center text-warm-gray-100 font-anon text-lg">
+          <p className="text-center text-stone-100 font-anon text-lg">
             {React.string("not connected...")}
           </p>
         }

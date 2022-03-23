@@ -22,12 +22,8 @@ export default defineConfig({
         theme: {
           extend: {
             animation: {
-              // 'erase': 'erase 3s cubic-bezier(.03,.74,.03,1) forwards 1',
               'change': 'change 35s linear forwards 1',
-              'rotate': 'rotate 4s ease-in-out infinite',
-            },
-            colors: {
-              smoke: colors.trueGray
+              'rotate': 'rotate 3s linear infinite',
             },
             fontFamily: {
               'anon': 'Anonymous Pro, monospace',
@@ -37,15 +33,9 @@ export default defineConfig({
               'luck': 'Luckiest Guy, cursive',
               'perm': 'Permanent Marker, cursive',
             },
-            height: {
-              // '40vh': '40vh',
-            },
             keyframes: {
               change: {
                 '100%': { 'stroke-dashoffset': '1000' },
-              },
-              erase: {
-                '100%': { opacity: '0' },
               },
               rotate: {
                 'to': { filter: 'hue-rotate(360deg)' },

@@ -8,7 +8,7 @@ let make = (~onAnimationEnd, ~playerColor, ~currentWord, ~answered, ~showTimer) 
   | false => "a word then a blank"
   }
 
-  let pStyle = " text-smoke-700 py-0 px-6 font-perm"
+  let pStyle = " text-stone-700 py-0 px-6 font-perm"
 
   React.useEffect1(() => {
     let alph = switch answered {
@@ -20,9 +20,9 @@ let make = (~onAnimationEnd, ~playerColor, ~currentWord, ~answered, ~showTimer) 
   }, [answered])
 
   <div
-    className="mt-20 mb-10 mx-auto bg-smoke-100 relative w-80 h-36 flex flex-col items-center justify-center">
+    className="mt-20 mb-10 mx-auto bg-stone-100 relative w-80 h-36 flex flex-col items-center justify-center">
     {switch (playerColor == "transparent", currentWord == "") {
-    | (true, true) => <Loading fillColor="fill-warm-gray-800"/>
+    | (true, true) => <Loading fillColor="fill-stone-800"/>
     | _ => React.null
     }}
     {switch showTimer {

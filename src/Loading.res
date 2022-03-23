@@ -1,5 +1,5 @@
 @react.component
-let make = (~fillColor="fill-warm-gray-100") => {
+let make = (~fillColor="fill-stone-100") => {
   <div className="h-8 m-auto w-8">
     <svg
       className=`w-8 h-8 animate-spin ${fillColor}`

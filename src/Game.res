@@ -17,9 +17,8 @@ let make = (
   ~inAGame,
   ~send,
   ~class,
-  ~readyColor,
 ) => {
-  let btnStyle = " cursor-pointer text-base font-bold text-warm-gray-100 font-anon w-1/2 bottom-0 h-8 absolute bg-smoke-700 bg-opacity-70"
+  let btnStyle = " cursor-pointer text-base font-bold text-stone-100 font-anon w-1/2 bottom-0 h-8 absolute bg-stone-700 bg-opacity-70 filter disabled:cursor-not-allowed disabled:contrast-[0.25]"
   let (ready, setReady) = React.Uncurried.useState(_ => true)
   let (count, setCount) = React.Uncurried.useState(_ => 5)
   let (disabledJoin, setDisabledJoin) = React.Uncurried.useState(_ => false)
@@ -118,7 +117,7 @@ let make = (
 
   <li
     className={`<md:mb-16 grid grid-cols-2 grid-rows-6 relative text-xl bg-bottom bg-no-repeat h-200px text-center font-bold text-dark-800 font-anon pb-8 ${class} lg:(max-w-lg w-full)`}>
-    <p className="absolute text-warm-gray-100 text-xs left-1/2 transform -translate-x-2/4 -top-3.5">
+    <p className="absolute text-stone-100 text-xs left-1/2 transform -translate-x-2/4 -top-3.5">
       {React.string(game.no)}
     </p>
     <p className="col-span-2" />
@@ -126,7 +125,7 @@ let make = (
     ->Js.Array2.mapi((p, i) => {
       <p
         className={switch p.ready {
-        | true => `underline decoration-[${readyColor}] decoration-4`
+        | true => `underline decoration-stone-800 decoration-3 italic`
         | false => ""
         }}
         key={j`${p.name}$i`}>
