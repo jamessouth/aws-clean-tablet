@@ -723,7 +723,7 @@ var bunchOfTests = []struct {
 			},
 			{
 				PlayerID: "p6",
-				Name:     "",
+				Name:     "dorian",
 				ConnID:   "",
 				Color:    "",
 				Score:    26,

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -125,7 +126,6 @@ func main() {
 }
 
 func (data game) getAnswersMap() game {
-	fmt.Printf("%s%+v\n", "anzzzz map ", data)
 	for _, v := range data.Players {
 		data.Answers[v.Answer] = append(data.Answers[v.Answer], v.PlayerID)
 	}
@@ -134,12 +134,10 @@ func (data game) getAnswersMap() game {
 }
 
 func (data game) getScoresMap() game {
-	fmt.Printf("%s%+v\n", "scr map ", data)
 	for k, v := range data.Answers {
 		switch {
 		case len(k) < 2:
 			for _, id := range v {
-				fmt.Println("id0", id)
 				data.Scores[id] = zeroPoints
 			}
 		case len(v) > 2:
@@ -148,7 +146,6 @@ func (data game) getScoresMap() game {
 			}
 		case len(v) == 2:
 			for _, id := range v {
-				fmt.Println("id3", id)
 				data.Scores[id] = threePoints
 			}
 		default:
@@ -162,7 +159,6 @@ func (data game) getScoresMap() game {
 }
 
 func (data game) updateScoresAndClearAnswers() game {
-	fmt.Printf("%s%+v\n", "updclr ans ", data)
 	for i, p := range data.Players {
 		p.Score += data.Scores[p.PlayerID]
 		p.Answer = ""
@@ -172,28 +168,20 @@ func (data game) updateScoresAndClearAnswers() game {
 	return data
 }
 
+func sortByScore(players []livePlayer) []livePlayer {
+	sort.Slice(players, func(i, j int) bool {
+		return players[i].Score > players[j].Score
+	})
+
+	return players
+}
+
 func (data game) getWinner() game {
-	fmt.Printf("%s%+v\n", "winner in", data)
-	hiScore := zeroPoints
-	gameTied := false
+	sortedScores := sortByScore(data.Players)
 
-	for _, p := range data.Players {
-		if p.Score == hiScore {
-			gameTied = true
-		}
-		if p.Score > hiScore {
-			hiScore = p.Score
-			gameTied = false
-		}
+	if sortedScores[0].Score != sortedScores[1].Score && sortedScores[0].Score > winThreshold {
+		data.Winner = sortedScores[0].Name
 	}
-
-	if !gameTied && hiScore > winThreshold {
-
-		// todo
-
-		data.Winner = true
-	}
-	fmt.Printf("%s%+v\n", "winner out", data)
 
 	return data
 }
