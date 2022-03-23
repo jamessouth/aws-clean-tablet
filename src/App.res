@@ -42,10 +42,8 @@ let make = () => {
       players: [],
       currentWord: "",
       previousWord: "",
-      hiScore: 0,
-      gameTied: true,
       showAnswers: false,
-      winner: false,
+      winner: "",
     },
   }
 

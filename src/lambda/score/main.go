@@ -34,7 +34,7 @@ type game struct {
 	Players []livePlayer `dynamodbav:"players"`
 	Answers map[string][]string
 	Scores  map[string]int
-	Winner  bool
+	Winner  string
 }
 
 const (
@@ -80,7 +80,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		Players: body.Game.Players,
 		Answers: map[string][]string{},
 		Scores:  map[string]int{},
-		Winner:  false,
+		Winner:  "",
 	}.getAnswersMap().getScoresMap().updateScoresAndClearAnswers().getWinner()
 
 	marshalledPlayersMap, err := attributevalue.Marshal(updatedScoreData.Players)
@@ -101,7 +101,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		},
 		ExpressionAttributeValues: map[string]types.AttributeValue{
 			":p": marshalledPlayersMap,
-			":w": &types.AttributeValueMemberBOOL{Value: updatedScoreData.Winner},
+			":w": &types.AttributeValueMemberS{Value: updatedScoreData.Winner},
 			":f": &types.AttributeValueMemberBOOL{Value: false},
 		},
 		UpdateExpression: aws.String("SET #P = :p, #W = :w, #S = :f"),
@@ -188,6 +188,9 @@ func (data game) getWinner() game {
 	}
 
 	if !gameTied && hiScore > winThreshold {
+
+		// todo
+
 		data.Winner = true
 	}
 	fmt.Printf("%s%+v\n", "winner out", data)

@@ -7,6 +7,8 @@ let make = (~players: array<Reducer.livePlayer>, ~previousWord, ~showAnswers, ~w
   let noplrs = Js.Array2.length(players)
 
   let onClick = _ => {
+    // reset conns, delete game
+    
     // let pl: Game.lobbyPayload = {
     //   action: "lobby",
     //   gameno: "new",
@@ -22,9 +24,9 @@ let make = (~players: array<Reducer.livePlayer>, ~previousWord, ~showAnswers, ~w
       {switch showAnswers {
       | true => React.string("Last round: " ++ previousWord)
       | false =>
-        switch winner {
-        | true => React.string("Game over!")
-        | false => React.string("Scores:")
+        switch winner == "" {
+        | false => React.string(winner ++ " wins!")
+        | true => React.string("Scores:")
         }
       }}
     </h2>
@@ -34,10 +36,10 @@ let make = (~players: array<Reducer.livePlayer>, ~previousWord, ~showAnswers, ~w
       ->Js.Array2.mapi((p, i) =>
         <li
           className={"w-full flex flex-row h-7 py-0 px-2 justify-between items-center text-xl text-stone-100 " ++ if (
-            winner && i != 0
+            winner != "" && i != 0
           ) {
             "filter brightness-25"
-          } else if winner && i == 0 {
+          } else if winner != "" && i == 0 {
             "animate-rotate"
           } else {
             ""
@@ -59,9 +61,9 @@ let make = (~players: array<Reducer.livePlayer>, ~previousWord, ~showAnswers, ~w
       )
       ->React.array}
     </ul>
-    {switch winner {
-    | true => <Button textTrue="Return to lobby" textFalse="Return to lobby" onClick className />
-    | false => React.null
+    {switch winner == "" {
+    | false => <Button textTrue="Return to lobby" textFalse="Return to lobby" onClick className />
+    | true => React.null
     }}
   </div>
 }

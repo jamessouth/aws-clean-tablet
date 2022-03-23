@@ -24,10 +24,8 @@ type liveGame = {
   currentWord: string,
   previousWord: string,
   players: array<livePlayer>,
-  hiScore: int,
-  gameTied: bool,
   showAnswers: bool,
-  winner: bool,
+  winner: string,
 }
 
 type state = {

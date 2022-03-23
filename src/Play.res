@@ -39,7 +39,7 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~leader) => {
   Js.log3("play", game, hasRendered)
 
   React.useEffect3(() => {
-    switch (leader, showAnswers, game.winner) {
+    switch (leader, showAnswers, game.winner == "") {
     | (true, true, _) => Js.Global.setTimeout(() => {
         let pl: scorePayload = {
           action: "score",
@@ -48,7 +48,7 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~leader) => {
         send(. Js.Json.stringifyAny(pl))
       }, 8564)->ignore
 
-    | (true, false, false) => {
+    | (true, false, true) => {
         setAnswered(._ => false)
         switch hasRendered.current {
         | true => Js.Global.setTimeout(() => {
@@ -63,8 +63,8 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~leader) => {
         }
       }
 
-    | (false, false, false) => setAnswered(._ => false)
-    | (false, true, _) | (_, false, true) => ()
+    | (false, false, true) => setAnswered(._ => false)
+    | (false, true, _) | (_, false, false) => ()
     }
     None
   }, (leader, showAnswers, game.winner))
@@ -102,9 +102,9 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~leader) => {
   <div>
     // playerName
     <Scoreboard players previousWord showAnswers winner=game.winner />
-    {switch game.winner {
-    | true => React.null
-    | false => <>
+    {switch game.winner == "" {
+    | false => React.null
+    | true => <>
         <Word onAnimationEnd playerColor currentWord answered showTimer={currentWord != ""} />
         <Answer answer_max_length answered inputText onEnter setInputText currentWord />
       </>
