@@ -18,6 +18,13 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName, initia
     Reducer.init,
   )
 
+  let resetConnState = _ => {
+    dispatch(. ResetPlayerState(initialState))
+    setPlayerColor(._ => "transparent")
+    setPlayerGame(._ => "")
+    setLeader(._ => false)
+  }
+
   open Web
   React.useEffect1(() => {
     // Js.log2("effect ", token)
@@ -54,8 +61,12 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName, initia
 
         switch getMsgType(data) {
         | InsertConn => {
-            let {listGms} = parseListGames(data)
-            Js.log2("parsedlistgames", listGms)
+            let {listGms, returning} = parseListGames(data)
+            Js.log3("parsedlistgames", listGms, returning)
+            switch returning {
+            | true => resetConnState()
+            | false => ()
+            }
             dispatch(. ListGames(Js.Nullable.return(listGms)))
           }
         | ModifyConn => {
@@ -101,13 +112,10 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName, initia
         | false => cognitoUser->signOut(Js.Nullable.null)
         }
         setCognitoUser(._ => Js.Nullable.null)
-        setPlayerName(._ => "")
-        setPlayerColor(._ => "transparent")
-
-        setPlayerGame(._ => "")
-        setLeader(._ => false)
         setWs(._ => Js.Nullable.null)
-        dispatch(. ResetPlayerState(initialState))
+        setPlayerName(._ => "")
+
+        resetConnState()
         body(document)->setClassName("bg-no-repeat bg-center bg-cover bodmob bodtab bodbig")
       })
     }

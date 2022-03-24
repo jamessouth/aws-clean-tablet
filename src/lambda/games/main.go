@@ -310,7 +310,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			var connRecord struct {
 				Pk, Sk, Game, Color, GSI1PK, GSI1SK string
-				Playing, Leader                     bool
+				Playing, Leader, Returning          bool
 			}
 			err = attributevalue.UnmarshalMap(item, &connRecord)
 			if err != nil {
@@ -321,7 +321,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			var payload []byte
 
-			if rec.EventName == dynamodbstreams.OperationTypeInsert {
+			if rec.EventName == dynamodbstreams.OperationTypeInsert || (rec.EventName == dynamodbstreams.OperationTypeModify && connRecord.Returning) {
 
 				listGamesResults, err := ddbsvc.Query(ctx, &dynamodb.QueryInput{
 					TableName:              aws.String(tableName),
@@ -343,8 +343,10 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 				payload, err = json.Marshal(struct {
 					ListGames []frontListGame `json:"listGms"`
+					Returning bool            `json:"returning"`
 				}{
 					ListGames: getFrontListGames(listGames),
+					Returning: connRecord.Returning,
 				})
 				if err != nil {
 					return callErr(err)

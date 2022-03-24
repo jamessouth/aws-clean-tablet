@@ -1,23 +1,16 @@
 @react.component
-let make = (~players: array<Reducer.livePlayer>, ~previousWord, ~showAnswers, ~winner) => {
+let make = (
+  ~players: array<Reducer.livePlayer>,
+  ~previousWord,
+  ~showAnswers,
+  ~winner,
+  ~onClick,
+) => {
   Js.log2("score", players)
 
   let className = "mt-10 block cursor-pointer text-stone-800 font-perm m-auto px-8 py-2 text-2xl"
 
   let noplrs = Js.Array2.length(players)
-
-  let onClick = _ => {
-    // reset conns, delete game
-    
-    // let pl: Game.lobbyPayload = {
-    //   action: "lobby",
-    //   gameno: "new",
-    //   tipe: "join",
-    // }
-    // send(. Js.Json.stringifyAny(pl))
-
-    RescriptReactRouter.push("/lobby")
-  }
 
   <div className="w-full" style={ReactDOM.Style.make(~height=j`calc(82px + (28px * $noplrs))`, ())}>
     <h2 className="text-center font-anon mb-5 text-stone-100">

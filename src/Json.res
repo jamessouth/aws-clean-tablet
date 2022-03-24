@@ -1,4 +1,4 @@
-type listGamesData = {listGms: array<Reducer.listGame>}
+type listGamesData = {listGms: array<Reducer.listGame>, returning: bool}
 type modConnData = {modConn: string, color: string, leader: bool}
 type addGameData = {addGame: Reducer.listGame}
 type modListGameData = {mdLstGm: Reducer.listGame}

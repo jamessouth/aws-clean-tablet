@@ -136,12 +136,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			ConditionExpression: aws.String("size (#G) = :z"),
 			ExpressionAttributeNames: map[string]string{
 				"#G": "game",
+				"#R": "returning",
 			},
 			ExpressionAttributeValues: map[string]types.AttributeValue{
 				":g": &types.AttributeValueMemberS{Value: gameno},
 				":z": &types.AttributeValueMemberN{Value: "0"},
+				":f": &types.AttributeValueMemberBOOL{Value: false},
 			},
-			UpdateExpression: aws.String("SET #G = :g"),
+			UpdateExpression: aws.String("SET #G = :g, #R = :f"),
 		}
 
 		_, err = svc.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{
@@ -216,6 +218,31 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		callErr(err)
 
 		callFunction(ui2.Attributes, gameItemKey, tableName, ctx, svc)
+
+	} else if body.Tipe == "gameover" {
+
+		_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+			Key: map[string]types.AttributeValue{
+				"pk": &types.AttributeValueMemberS{Value: "CONNECT#" + id},
+				"sk": &types.AttributeValueMemberS{Value: name},
+			},
+			TableName: aws.String(tableName),
+			ExpressionAttributeNames: map[string]string{
+				"#G": "game",
+				"#L": "leader",
+				"#P": "playing",
+				"#C": "color",
+				"#R": "returning",
+			},
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":g": &types.AttributeValueMemberS{Value: ""},
+				":f": &types.AttributeValueMemberBOOL{Value: false},
+				":c": &types.AttributeValueMemberS{Value: "transparent"},
+				":t": &types.AttributeValueMemberBOOL{Value: true},
+			},
+			UpdateExpression: aws.String("SET #G = :g, #L = :f, #P = :f, #C = :c, #R = :t"),
+		})
+		callErr(err)
 
 	} else if body.Tipe == "ready" {
 

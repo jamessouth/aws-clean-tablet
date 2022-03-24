@@ -12,7 +12,6 @@ type scorePayload = {
 
 @react.component
 let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~leader) => {
-  
   let answer_max_length = 12
 
   let (answered, setAnswered) = React.Uncurried.useState(_ => false)
@@ -99,9 +98,22 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~leader) => {
     Js.log("onenter")
   }
 
+  let onClick = _ => {
+    // reset conns, delete game
+
+    let pl: Game.lobbyPayload = {
+      action: "lobby",
+      gameno: sk,
+      tipe: "gameover",
+    }
+    send(. Js.Json.stringifyAny(pl))
+
+    RescriptReactRouter.push("/lobby")
+  }
+
   <div>
     // playerName
-    <Scoreboard players previousWord showAnswers winner=game.winner />
+    <Scoreboard players previousWord showAnswers winner=game.winner onClick />
     {switch game.winner == "" {
     | false => React.null
     | true => <>
