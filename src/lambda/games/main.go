@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strconv"
 
 	"net/http"
 	"os"
@@ -167,6 +168,31 @@ func (players livePlayerList) addIndex() livePlayerList {
 	}
 
 	return players
+}
+
+func (players livePlayerList) getPointsAddIndex() livePlayerList {
+	dist := map[string]int{}
+
+	for _, v := range players {
+		dist[v.Answer]++
+	}
+
+	for i, p := range players {
+		p.Index = i
+		freq := dist[p.Answer]
+		if freq == 2 {
+			p.Answer = strconv.Itoa(3) + "_" + p.Answer
+		} else if freq > 2 {
+			p.Answer = strconv.Itoa(1) + "_" + p.Answer
+		} else {
+			p.Answer = strconv.Itoa(0) + "_" + p.Answer
+		}
+
+		players[i] = p
+	}
+
+	return players
+
 }
 
 func FromDynamoDBEventAVMap(m map[string]events.DynamoDBAttributeValue) (res map[string]types.AttributeValue, err error) {
@@ -465,12 +491,14 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 				fmt.Printf("%s%+v\n", "live gammmmme ", gameRecord)
 
-				pls := gameRecord.Players.addIndex()
+				pls := gameRecord.Players
 
 				if gameRecord.ShowAnswers {
 					pls.sortByAnswerThenName()
+					pls.getPointsAddIndex()
 				} else {
 					pls.sortByScoreThenName()
+					pls.addIndex()
 				}
 
 				gp := modifyLiveGamePayload{

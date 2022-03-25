@@ -26,7 +26,11 @@ let make = (
     <ul
       className="bg-yellow-300 opacity-80 border-2 border-solid border-yellow-400 p-3 w-11/12 max-w-lg my-0 mx-auto flex flex-col justify-around items-center">
       {players
-      ->Js.Array2.mapi((p, i) =>
+      ->Js.Array2.mapi((p, i) => {
+        let pts_ans = p.answer->Js.String2.split("_")
+
+        let (points, answer) = (pts_ans->Js.Array2.unsafe_get(0), pts_ans->Js.Array2.unsafe_get(1))
+
         <li
           className={"w-full flex flex-row h-7 py-0 px-2 justify-between items-center text-xl text-stone-100 " ++ if (
             winner != "" && i != 0
@@ -47,11 +51,11 @@ let make = (
             {React.string(p.name)}
           </p>
           {switch showAnswers {
-          | true => <p> {React.string(p.answer)} </p>
+          | true => <> <p> {React.string("+" ++ points)} </p> <p> {React.string(answer)} </p> </>
           | false => <p> {React.string(p.score)} </p>
           }}
         </li>
-      )
+      })
       ->React.array}
     </ul>
     {switch winner == "" {
