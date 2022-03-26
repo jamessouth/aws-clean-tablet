@@ -13,16 +13,25 @@ let make = (
   let noplrs = Js.Array2.length(players)
 
   <div className="w-full" style={ReactDOM.Style.make(~height=j`calc(82px + (28px * $noplrs))`, ())}>
-    <h2 className="text-center font-anon mb-5 text-stone-100">
-      {switch showAnswers {
-      | true => React.string("Last round: " ++ previousWord)
-      | false =>
-        switch winner == "" {
-        | false => React.string(winner ++ " wins!")
-        | true => React.string("Scores:")
-        }
-      }}
-    </h2>
+    {switch showAnswers {
+    | true => <>
+        <p className="font-anon font-bold text-stone-100 text-xl">
+          {React.string("Answers for:")}
+        </p>
+        <h2 className="text-center font-anon mb-5 text-stone-100">
+          {React.string(previousWord)}
+        </h2>
+      </>
+    | false => <>
+        <p className="h-7" />
+        <h2 className="text-center font-anon mb-5 text-stone-100">
+          {switch winner == "" {
+          | false => React.string(winner ++ " wins!")
+          | true => React.string("Scores:")
+          }}
+        </h2>
+      </>
+    }}
     <ul
       className="bg-yellow-300 opacity-80 border-2 border-solid border-yellow-400 p-3 w-11/12 max-w-lg my-0 mx-auto flex flex-col justify-around items-center">
       {players

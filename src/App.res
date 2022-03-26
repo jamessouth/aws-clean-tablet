@@ -115,18 +115,14 @@ let make = () => {
             userpool cognitoUser setCognitoUser cognitoError setCognitoError setShowName search
           />
         | _ =>
-          <div className="text-stone-100">
-            {React.string("unknown path, please try again")}
-          </div>
+          <div className="text-stone-100"> {React.string("unknown path, please try again")} </div>
         }
 
       | (list{"confirm"}, None) =>
         switch search {
         | "cd_un" | "pw_un" => <Confirm cognitoUser cognitoError setCognitoError search />
         | _ =>
-          <div className="text-stone-100">
-            {React.string("unknown path, please try again")}
-          </div>
+          <div className="text-stone-100"> {React.string("unknown path, please try again")} </div>
         }
 
       | (list{"lobby"}, None) | (list{"game"}, None) => {
@@ -146,10 +142,10 @@ let make = () => {
       | (list{"lobby"}, Some(_)) =>
         switch wsConnected {
         | false => <>
-          <p className="text-center text-stone-100 font-anon text-lg">
-            {React.string("loading games...")}
-          </p>
-          <Loading />
+            <p className="text-center text-stone-100 font-anon text-lg">
+              {React.string("loading games...")}
+            </p>
+            <Loading />
           </>
         | true => <Lobby playerGame leader games send wsError close />
         }
@@ -160,10 +156,10 @@ let make = () => {
           switch gameno == game.sk {
           | true => <Play game playerColor send leader />
           | false => <>
-            <p className="text-center text-stone-100 font-anon text-lg">
-              {React.string("loading game...")}
-            </p>
-            <Loading />
+              <p className="text-center text-stone-100 font-anon text-lg">
+                {React.string("loading game...")}
+              </p>
+              <Loading />
             </>
           }
 
