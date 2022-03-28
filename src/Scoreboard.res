@@ -60,7 +60,7 @@ let make = (
             {React.string(p.name)}
           </p>
           {switch showAnswers {
-          | true => <> <p> {React.string("+" ++ points)} </p> <p> {React.string(answer)} </p> </>
+          | true => <> <p className="animate-pulse font-luck"> {React.string("+" ++ points)} </p> <p> {React.string(answer)} </p> </>
           | false => <p> {React.string(p.score)} </p>
           }}
         </li>
