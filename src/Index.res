@@ -37,7 +37,7 @@ module Promise = {
       } else {
         JsError(unsafeToJsExn(err))
       }
-      callback(v)
+      callback(. v)
     })
   }
 }
@@ -52,44 +52,47 @@ module Prefetch = {
     @as("type") _type: string,
     url: string,
   }
-  // type response = {"response": Js.Nullable.t<resp>, "error": Js.Nullable.t<string>}
 
   @send external blob: resp => Promise.t<blob> = "blob"
 
   @val external fetch: string => Promise.t<Js.Nullable.t<resp>> = "fetch"
 }
 
-let getPic = () => {
-  open Promise
-  open Prefetch
-  Js.log("load ev")
-  fetch("../../assets/chmob2x.webp")
-  ->then(res => {
-    Js.log2("res: ", res)
-    switch Js.Nullable.isNullable(res) {
-    | true => Error("uh oh")
-    | false =>
-      switch res.ok {
-      // | true => Ok(res->blob)
-      | false => Error(`Fetch error: ${res.status} - ${res.statusText}`)
+let getPic = () =>
+  {
+    open Promise
+    open Prefetch
+    Js.log("load ev")
+    fetch("../../assets/chmob2x.webp")
+    ->then(res => {
+      Js.log2("res: ", res)
+      switch Js.Nullable.toOption(res) {
+      | None => Error("uh oh")
+      | Some(r) =>
+        switch r.ok {
+        | true => Ok(r->blob)
+        | false => {
+          let stat = r.status
+          Error(j`Fetch error: $stat - ${r.statusText}`)
+        }
+        }
+      }->resolve
+    })
+    ->thenResolve(res => {
+      Js.log2("res2", res)
+    })
+    ->catch((. e) => {
+      let msg = switch e {
+      | JsError(err) =>
+        switch Js.Exn.message(err) {
+        | Some(msg) => msg
+        | None => ""
+        }
+      | _ => "Unexpected error occurred"
       }
-    }
-  })
-  ->thenResolve(res => {
-    Js.log2("res2", res)
-  })
-  ->catch(e => {
-    let msg = switch e {
-    | JsError(err) =>
-      switch Js.Exn.message(err) {
-      | Some(msg) => msg
-      | None => ""
-      }
-    | _ => "Unexpected error occurred"
-    }
-    Error(msg)->resolve
-  })
-}
+      Error(msg)->ignore->resolve
+    })
+  }->ignore
 addWindowEventListener("load", getPic)
 
 // Js.Global.setTimeout(() => {
