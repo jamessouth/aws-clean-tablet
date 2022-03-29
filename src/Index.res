@@ -6,30 +6,29 @@ external addWindowEventListener: (string, unit => unit) => unit = "addEventListe
 @scope("window") @val
 external removeWindowEventListener: (string, unit => unit) => unit = "removeEventListener"
 
+type mediaQueryList = {
+  matches: bool,
+  media: string,
+}
+
+
+@scope("window") @val
+external matchMedia: string => mediaQueryList = "matchMedia"
+
+
 switch ReactDOM.querySelector("#root") {
 | Some(root) => ReactDOM.render(<App />, root)
 | None => ()
 }
 
-// module Response = {
-//   type t<'data>
-// }
-
 module Promise = {
   type t<+'a> = Js.Promise.t<'a>
-
   exception JsError(Js.Exn.t)
   external unsafeToJsExn: exn => Js.Exn.t = "%identity"
-
   @val @scope("Promise")
   external resolve: 'a => t<'a> = "resolve"
-
   @send external then: (t<'a>, @uncurry ('a => t<'b>)) => t<'b> = "then"
-
-  @send external thenResolve: (t<'a>, @uncurry ('a => 'b)) => t<'b> = "then"
-
   @send external _catch: (t<'a>, @uncurry (exn => t<'a>)) => t<'a> = "catch"
-
   let catch = (promise, callback) => {
     _catch(promise, err => {
       let v = if Js.Exn.isCamlExceptionOrOpenVariant(err) {
@@ -52,18 +51,12 @@ module Prefetch = {
     @as("type") _type: string,
     url: string,
   }
-
   @send external blob: resp => Promise.t<blob> = "blob"
-
   @val external fetch: string => Promise.t<Js.Nullable.t<resp>> = "fetch"
-}
-
-let getPic = () =>
-  {
+  let getPic = (asset) => {
     open Promise
-    open Prefetch
     Js.log("load ev")
-    fetch("../../assets/chmob2x.webp")
+    fetch(asset)
     ->then(res => {
       Js.log2("res: ", res)
       switch Js.Nullable.toOption(res) {
@@ -72,14 +65,11 @@ let getPic = () =>
         switch r.ok {
         | true => Ok(r->blob)
         | false => {
-          let stat = r.status
-          Error(j`Fetch error: $stat - ${r.statusText}`)
-        }
+            let stat = r.status
+            Error(j`Fetch error: $stat - ${r.statusText}`)
+          }
         }
       }->resolve
-    })
-    ->thenResolve(res => {
-      Js.log2("res2", res)
     })
     ->catch((. e) => {
       let msg = switch e {
@@ -90,10 +80,44 @@ let getPic = () =>
         }
       | _ => "Unexpected error occurred"
       }
-      Error(msg)->ignore->resolve
+      Error(msg)->resolve
     })
   }->ignore
-addWindowEventListener("load", getPic)
+}
+
+let handler = (asset, _e) => Prefetch.getPic(asset)
+
+let bghand = handler("../../assets/chmob2x.webp")
+
+
+addWindowEventListener("load", bghand)
+
+
+
+
+
+let mob = matchMedia("(max-width: 767.9px)")
+let tab = matchMedia("(min-width: 768px) and (max-width: 1439.9px)")
+let big = matchMedia("(min-width: 1440px)")
+
+// let getMedia = e => switch e.matches {
+// | true => Js.log2("match", e)
+// | false => Js.log2("no match", e)
+// }
+// @scope("mob") @val
+// external addMobEventListener: (string, mediaQueryList => unit) => unit = "addEventListener"
+// @scope("tab") @val
+// external addTabEventListener: (string, mediaQueryList => unit) => unit = "addEventListener"
+// @scope("big") @val
+// external addBigEventListener: (string, mediaQueryList => unit) => unit = "addEventListener"
+
+
+// addMobEventListener("change", getMedia)
+// addTabEventListener("change", getMedia)
+// addBigEventListener("change", getMedia)
+Js.log2("mobb", mob.matches)
+Js.log2("tabb", tab.matches)
+Js.log2("bigg", big.matches)
 
 // Js.Global.setTimeout(() => {
 //     Js.log("7")
