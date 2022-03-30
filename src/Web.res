@@ -21,3 +21,13 @@ type closeEventHandler = closeEvent => unit
 @get external body: Dom.document => Dom.htmlBodyElement = "body"
 @set external setClassName: (Dom.htmlBodyElement, string) => unit = "className"
 @send external blur: Dom.element => unit = "blur"
+@scope("window") @val
+external addWindowEventListener: (string, unit => unit) => unit = "addEventListener"
+@scope("window") @val
+external removeWindowEventListener: (string, unit => unit) => unit = "removeEventListener"
+type mediaQueryList = {
+  matches: bool,
+  media: string,
+}
+@scope("window") @val
+external matchMedia: string => mediaQueryList = "matchMedia"
