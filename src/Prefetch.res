@@ -13,37 +13,38 @@ let getPics = assets =>
   {
     open Promise
     let (asset1, asset2, asset3) = assets
-    all3((fetch(asset1), fetch(asset2), fetch(asset3)))
-    ->then(((res1, res2, res3)) => {
-      // switch Js.Nullable.toOption(res) {
-      // | None => Error("uh oh")
-      // | Some(r) => {
-      //     Js.log2("Asset " ++ r.url ++ " fetched ok: ", r.ok)
-      //     switch r.ok {
-      //     | true => Ok(r->blob)
-      //     | false => {
-      //         let stat = r.status
-      //         Error(j`Fetch error: $stat - ${r.statusText}`)
-      //       }
-      //     }
-      //   }
-      // }
-      Js.log4("rezz", res1, res2, res3)
-      Ok((res1, res2, res3))
-      ->resolve
+    allSettled3((fetch(asset1), fetch(asset2), fetch(asset3)))
+    ->then(((res1, res2, res3)) =>
+      Ok(
+        [res1, res2, res3]->Js.Array2.map(x =>
+          switch Js.Nullable.toOption(x) {
+          | None => Error("null result")
+          | Some(r) => {
+              Js.log2("Asset " ++ r.url ++ " fetched ok: ", r.ok)
+              switch r.ok {
+              | true => Ok(r->blob)
+              | false => {
+                  let stat = r.status
+                  Error(j`Fetch error: $stat - ${r.statusText}`)
+                }
+              }
+            }
+          }
+        ),
+      )->resolve
+    )
+    ->catch((. e) => {
+      let msg = switch e {
+      | JsError(err) =>
+        switch Js.Exn.message(err) {
+        | Some(msg) => msg
+        | None => ""
+        }
+      | _ => "Unexpected error occurred"
+      }
+      Js.log2("Fetch error: ", msg)
+      Error(msg)->resolve
     })
-    // ->catch((. e) => {
-    //   let msg = switch e {
-    //   | JsError(err) =>
-    //     switch Js.Exn.message(err) {
-    //     | Some(msg) => msg
-    //     | None => ""
-    //     }
-    //   | _ => "Unexpected error occurred"
-    //   }
-    //   Js.log2("Fetch error: ", msg)
-    //   Error(msg)->resolve
-    // })
   }->ignore
 
 let handler = (assets, _e) => getPics(assets)
