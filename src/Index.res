@@ -13,7 +13,7 @@ let retinaMQ = switch matchMedia("(resolution: 2x)").media != "not all" {
 
 let retina = matchMedia(retinaMQ)
 
-let asset = switch mob.matches {
+let chalkbg = switch mob.matches {
 | true =>
   switch retina.matches {
   | true => "../../assets/chmob2x.webp"
@@ -34,7 +34,14 @@ let asset = switch mob.matches {
   }
 }
 
-let bghand = Prefetch.handler(asset)
+let newgamebg = switch retina.matches {
+| true => "../../assets/ekko2x.webp"
+| false => "../../assets/ekko1x.webp"
+}
+
+let signout = "../../assets/signout.png"
+
+let bghand = Prefetch.handler((chalkbg, newgamebg, signout))
 
 addWindowEventListener("load", bghand)
 

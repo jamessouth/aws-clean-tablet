@@ -60,7 +60,7 @@ let make = () => {
   ) = WsHook.useWs(token, setToken, cognitoUser, setCognitoUser, setPlayerName, initialState)
 
   <>
-    <header className="mb-10">
+    <header className="mb-10 newgmimg:mb-12">
       <p className="font-flow text-stone-100 text-4xl h-10 font-bold text-center">
         {React.string(playerName)}
       </p>

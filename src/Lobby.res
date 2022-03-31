@@ -32,7 +32,7 @@ let make = (~playerGame, ~leader, ~games, ~send, ~wsError, ~close) => {
       textFalse=""
       onClick=signOut
       className="absolute top-1 right-1 bg-transparent cursor-pointer"
-      img={<img className="block" src="../assets/signout.png" />}
+      img={<img className="block" src="../../assets/signout.png" />}
     />
     {switch wsError !== "" {
     | true =>
@@ -51,7 +51,7 @@ let make = (~playerGame, ~leader, ~games, ~send, ~wsError, ~close) => {
         <div className="flex flex-col items-center">
           <div className="relative m-auto <newgmimg:w-11/12 w-max">
             <img
-              srcSet="../../assets/ekko2x.webp 2x"
+              srcSet="../../assets/ekko1x.webp, ../../assets/ekko2x.webp 2x"
               src="../../assets/ekko1x.webp"
               alt=""
               className="block <newgmimg:max-w-full"
@@ -71,7 +71,7 @@ let make = (~playerGame, ~leader, ~games, ~send, ~wsError, ~close) => {
             </p>
           | false =>
             <ul
-              className="m-12 w-11/12 <md:(flex max-w-lg flex-col) md:(grid grid-cols-2 gap-8) lg:(gap-10 justify-items-center) xl:(grid-cols-3 gap-12 max-w-1688px)">
+              className="m-12 newgmimg:mt-14 w-11/12 <md:(flex max-w-lg flex-col) md:(grid grid-cols-2 gap-8) lg:(gap-10 justify-items-center) xl:(grid-cols-3 gap-12 max-w-1688px)">
               {gs
               ->Js.Array2.map((game: Reducer.listGame) => {
                 let class = "game" ++ Js.String2.sliceToEnd(game.no, ~from=18)
