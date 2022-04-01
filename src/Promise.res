@@ -10,7 +10,7 @@ type outcome<'value> =
   | Rejected(string)
 
 @val @scope("Promise") 
-external allSettled3: ((t<'a>, t<'b>, t<'c>)) => t<(outcome<'a>, outcome<'b>, outcome<'c>)> = "allSettled"
+external allSettled3: ((t<'a>, t<'b>, t<'c>)) => t<('a, 'b, 'c)> = "allSettled"
 
 
 
