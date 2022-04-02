@@ -41,7 +41,7 @@ let newgamebg = switch retina.matches {
 
 let signout = "../../assets/signout.png"
 
-let bghand = Prefetch.handler((chalkbg, newgamebg, signout))
+let bghand = Prefetch.handlerAllSettled((chalkbg, newgamebg, signout))
 
 addWindowEventListener("load", bghand)
 
