@@ -23,7 +23,12 @@ export default defineConfig({
           extend: {
             animation: {
               'change': 'change 35s linear forwards 1',
+              'fadein': 'fadein 5s ease-in forwards 1',
               'rotate': 'rotate 3s linear infinite',
+            },
+            backgroundImage: {
+              'lose': '-webkit-image-set(url("../../assets/lose1x.webp") 1x, url("../../assets/lose2x.webp") 2x)',
+              'win': '-webkit-image-set(url("../../assets/win1x.webp") 1x, url("../../assets/win2x.webp") 2x)',
             },
             fontFamily: {
               'anon': 'Anonymous Pro, monospace',
@@ -37,8 +42,11 @@ export default defineConfig({
               change: {
                 '100%': { 'stroke-dashoffset': '1000' },
               },
+              fadein: {
+                'to': { 'opacity': '0.4'}
+              },
               rotate: {
-                'to': { filter: 'hue-rotate(360deg)' },
+                'to': { 'filter': 'hue-rotate(360deg)' },
               },
             },
             lineHeight: {
@@ -53,13 +61,7 @@ export default defineConfig({
             },
           },
         },
-        // shortcuts: {
-        //   'pubbody': '',
-        //   'privbody': '',
-        // },
       },
-
-
     }),
   ],
   clearScreen: false,

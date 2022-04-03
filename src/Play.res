@@ -11,7 +11,7 @@ type scorePayload = {
 }
 
 @react.component
-let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~leader) => {
+let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~leader, ~playerName) => {
   let answer_max_length = 12
 
   let (answered, setAnswered) = React.Uncurried.useState(_ => false)
@@ -113,7 +113,7 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~leader) => {
 
   <div>
     // playerName
-    <Scoreboard players previousWord showAnswers winner=game.winner onClick />
+    <Scoreboard players previousWord showAnswers winner=game.winner onClick playerName/>
     {switch game.winner == "" {
     | false => React.null
     | true => <>

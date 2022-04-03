@@ -5,8 +5,14 @@ let make = (
   ~showAnswers,
   ~winner,
   ~onClick,
+  ~playerName,
 ) => {
   Js.log2("score", players)
+
+  let bgimg = switch winner == playerName {
+  | true => "bg-win"
+  | false => "bg-lose"
+  }
 
   let className = "mt-10 block cursor-pointer text-stone-800 font-perm m-auto px-8 py-2 text-2xl"
 
@@ -60,7 +66,10 @@ let make = (
             {React.string(p.name)}
           </p>
           {switch showAnswers {
-          | true => <> <p className="animate-pulse font-luck"> {React.string("+" ++ points)} </p> <p> {React.string(answer)} </p> </>
+          | true => <>
+              <p className="animate-pulse font-luck"> {React.string("+" ++ points)} </p>
+              <p> {React.string(answer)} </p>
+            </>
           | false => <p> {React.string(p.score)} </p>
           }}
         </li>
@@ -68,7 +77,12 @@ let make = (
       ->React.array}
     </ul>
     {switch winner == "" {
-    | false => <Button textTrue="Return to lobby" textFalse="Return to lobby" onClick className />
+    | false => <>
+        <div
+          className={`absolute w-64 h-96 bg-no-repeat opacity-0 left-1/2 transform -translate-x-2/4 animate-fadein ${bgimg}`}
+        />
+        <Button textTrue="Return to lobby" textFalse="Return to lobby" onClick className />
+      </>
     | true => React.null
     }}
   </div>

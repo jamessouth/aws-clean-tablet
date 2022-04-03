@@ -154,7 +154,7 @@ let make = () => {
         switch wsConnected {
         | true =>
           switch gameno == game.sk {
-          | true => <Play game playerColor send leader />
+          | true => <Play game playerColor send leader playerName/>
           | false => <>
               <p className="text-center text-stone-100 font-anon text-lg">
                 {React.string("loading game...")}
