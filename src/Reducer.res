@@ -8,9 +8,10 @@ type livePlayer = {
   name: string,
   color: string,
   score: string,
+  index: int,
   answer: string,
   hasAnswered: bool,
-  index: int,
+  pointsThisRound: string,
 }
 
 type listGame = {

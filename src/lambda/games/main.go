@@ -49,14 +49,15 @@ type backListGame struct {
 }
 
 type livePlayerList []struct {
-	PlayerID    string `json:"playerid"`
-	Name        string `json:"name"`
-	ConnID      string `json:"connid"`
-	Color       string `json:"color"`
-	Score       int    `json:"score"`
-	Index       int    `json:"index"`
-	Answer      string `json:"answer"`
-	HasAnswered bool   `json:"hasAnswered"`
+	PlayerID        string `json:"playerid"`
+	Name            string `json:"name"`
+	ConnID          string `json:"connid"`
+	Color           string `json:"color"`
+	Score           int    `json:"score"`
+	Index           int    `json:"index"`
+	Answer          string `json:"answer"`
+	HasAnswered     bool   `json:"hasAnswered"`
+	PointsThisRound string `json:"pointsThisRound"`
 }
 
 type liveGame struct {
@@ -161,15 +162,6 @@ func (players livePlayerList) sortByScoreThenName() {
 	})
 }
 
-func (players livePlayerList) addIndex() livePlayerList {
-	for i, p := range players {
-		p.Index = i
-		players[i] = p
-	}
-
-	return players
-}
-
 func (players livePlayerList) getPointsAddIndex() livePlayerList {
 	dist := map[string]int{}
 
@@ -179,20 +171,23 @@ func (players livePlayerList) getPointsAddIndex() livePlayerList {
 
 	for i, p := range players {
 		p.Index = i
-		freq := dist[p.Answer]
-		if freq == 2 {
-			p.Answer = strconv.Itoa(3) + "_" + p.Answer
-		} else if freq > 2 {
-			p.Answer = strconv.Itoa(1) + "_" + p.Answer
+		if len(p.Answer) > 1 {
+			freq := dist[p.Answer]
+			if freq == 2 {
+				p.PointsThisRound = strconv.Itoa(3)
+			} else if freq > 2 {
+				p.PointsThisRound = strconv.Itoa(1)
+			} else {
+				p.PointsThisRound = strconv.Itoa(0)
+			}
 		} else {
-			p.Answer = strconv.Itoa(0) + "_" + p.Answer
-		}
+			p.PointsThisRound = strconv.Itoa(0)
 
+		}
 		players[i] = p
 	}
 
 	return players
-
 }
 
 func FromDynamoDBEventAVMap(m map[string]events.DynamoDBAttributeValue) (res map[string]types.AttributeValue, err error) {
@@ -495,16 +490,14 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 				if gameRecord.ShowAnswers {
 					pls.sortByAnswerThenName()
-					pls.getPointsAddIndex()
 				} else {
 					pls.sortByScoreThenName()
-					pls.addIndex()
 				}
 
 				gp := modifyLiveGamePayload{
 					ModLiveGame: liveGame{
 						Sk:           gameRecord.Sk,
-						Players:      pls,
+						Players:      pls.getPointsAddIndex(),
 						CurrentWord:  gameRecord.CurrentWord,
 						PreviousWord: gameRecord.PreviousWord,
 						AnswersCount: gameRecord.AnswersCount,

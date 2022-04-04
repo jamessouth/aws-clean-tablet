@@ -71,7 +71,7 @@ let make = (~answer_max_length, ~answered, ~inputText, ~onEnter, ~setInputText, 
         }}
       </p>
     }}
-    <label htmlFor="inputbox"> {React.string("Enter your answer:")} </label>
+    <label className="text-stone-100 font-anon" htmlFor="inputbox"> {React.string("Enter your answer:")} </label>
     <input
       className="h-7 w-3/5 text-xl pl-1 text-left bg-stone-100 border-none text-stone-800"
       id="inputbox"

@@ -21,7 +21,7 @@ let make = (
   <div className="w-full" style={ReactDOM.Style.make(~height=j`calc(82px + (28px * $noplrs))`, ())}>
     {switch showAnswers {
     | true => <>
-        <p className="font-anon font-bold text-stone-100 text-xl">
+        <p className="text-center font-anon font-bold text-stone-100 text-xl mb-2">
           {React.string("Answers for:")}
         </p>
         <h2 className="text-center font-anon mb-5 text-stone-100">
@@ -42,10 +42,6 @@ let make = (
       className="bg-yellow-300 opacity-80 border-2 border-solid border-yellow-400 p-3 w-11/12 max-w-lg my-0 mx-auto flex flex-col justify-around items-center">
       {players
       ->Js.Array2.mapi((p, i) => {
-        let pts_ans = p.answer->Js.String2.split("_")
-
-        let (points, answer) = (pts_ans->Js.Array2.unsafe_get(0), pts_ans->Js.Array2.unsafe_get(1))
-
         <li
           className={"w-full flex flex-row h-7 py-0 px-2 justify-between items-center text-xl text-stone-100 " ++ if (
             winner != "" && i != 0
@@ -67,8 +63,8 @@ let make = (
           </p>
           {switch showAnswers {
           | true => <>
-              <p className="animate-pulse font-luck"> {React.string("+" ++ points)} </p>
-              <p> {React.string(answer)} </p>
+              <p className="animate-pulse font-luck"> {React.string("+" ++ p.pointsThisRound)} </p>
+              <p> {React.string(p.answer)} </p>
             </>
           | false => <p> {React.string(p.score)} </p>
           }}

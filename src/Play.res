@@ -112,7 +112,6 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~leader, ~playerName) 
   }
 
   <div>
-    // playerName
     <Scoreboard players previousWord showAnswers winner=game.winner onClick playerName/>
     {switch game.winner == "" {
     | false => React.null
