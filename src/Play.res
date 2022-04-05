@@ -16,7 +16,7 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~leader, ~playerName) 
 
   let (answered, setAnswered) = React.Uncurried.useState(_ => false)
   let (inputText, setInputText) = React.Uncurried.useState(_ => "")
-  let {players, currentWord, previousWord, showAnswers, sk} = game
+  let {players, currentWord, previousWord, showAnswers, sk, winner} = game
 
   React.useEffect2(() => {
     Js.log("send start useeff")
@@ -38,7 +38,7 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~leader, ~playerName) 
   Js.log3("play", game, hasRendered)
 
   React.useEffect3(() => {
-    switch (leader, showAnswers, game.winner == "") {
+    switch (leader, showAnswers, winner == "") {
     | (true, true, _) => Js.Global.setTimeout(() => {
         let pl: scorePayload = {
           action: "score",
@@ -66,7 +66,7 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~leader, ~playerName) 
     | (false, true, _) | (_, false, false) => ()
     }
     None
-  }, (leader, showAnswers, game.winner))
+  }, (leader, showAnswers, winner))
 
   let sendAnswer = _ => {
     let index = switch players->Js.Array2.find(p => p.color == playerColor) {
@@ -112,13 +112,17 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~leader, ~playerName) 
   }
 
   <div>
-    <Scoreboard players previousWord showAnswers winner=game.winner onClick playerName/>
-    {switch game.winner == "" {
+    <Scoreboard players currentWord previousWord showAnswers winner onClick playerName />
+    {switch winner == "" {
     | false => React.null
-    | true => <>
-        <Word onAnimationEnd playerColor currentWord answered showTimer={currentWord != ""} />
-        <Answer answer_max_length answered inputText onEnter setInputText currentWord />
-      </>
+    | true =>
+      switch currentWord == "game over" {
+      | true => <Word onAnimationEnd playerColor currentWord answered showTimer=false />
+      | false => <>
+          <Word onAnimationEnd playerColor currentWord answered showTimer={currentWord != ""} />
+          <Answer answer_max_length answered inputText onEnter setInputText currentWord />
+        </>
+      }
     }}
 
     // <Prompt></Prompt>

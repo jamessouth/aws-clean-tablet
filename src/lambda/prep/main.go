@@ -160,7 +160,9 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	numberOfWords := slope*len(game.Players) + intercept
 
-	marshalledWordsList, err := attributevalue.Marshal(words.shuffleList(numberOfWords))
+	wordlist := append(words.shuffleList(numberOfWords), "game over")
+
+	marshalledWordsList, err := attributevalue.Marshal(wordlist)
 	if err != nil {
 		return callErr(err)
 	}
