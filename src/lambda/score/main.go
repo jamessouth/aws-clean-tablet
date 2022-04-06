@@ -43,7 +43,7 @@ const (
 	onePoint
 	twoPoints
 	threePoints
-	winThreshold int = 24
+	winThreshold int = 5
 )
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {

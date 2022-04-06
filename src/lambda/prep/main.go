@@ -76,8 +76,8 @@ func changeIDs(pl []livePlayer) []livePlayer {
 }
 
 const (
-	slope     int = -3
-	intercept int = 52
+	slope     int = 0
+	intercept int = 2
 )
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {

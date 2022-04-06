@@ -97,6 +97,7 @@
     url("../../assets/mob2x.webp") 2x);
 }
 .bodchmob{
+  background-position: top;
   background-image: -webkit-image-set(
     url("../../assets/chmob1x.webp") 1x,
     url("../../assets/chmob2x.webp") 2x);
@@ -114,6 +115,7 @@
       url("../../assets/tab2x.webp") 2x);
   }
   .bodchtab{
+    background-position: top;
     background-image: -webkit-image-set(
       url("../../assets/chtab1x.webp") 1x,
       url("../../assets/chtab2x.webp") 2x);
@@ -132,6 +134,7 @@
       url("../../assets/big2x.webp") 2x);
   }
   .bodchbig{
+    background-position: top;
     background-image: -webkit-image-set(
       url("../../assets/chbig1x.webp") 1x,
       url("../../assets/chbig2x.webp") 2x);

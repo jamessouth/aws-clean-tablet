@@ -15,7 +15,9 @@ let make = (
   | false => "bg-lose"
   }
 
-  let className = "mt-10 block cursor-pointer text-stone-800 font-perm m-auto px-8 py-2 text-2xl"
+  let hstyles = "text-center font-anon mb-5 text-stone-100 "
+
+  let className = "mt-1.5 mb-14 block cursor-pointer text-stone-800 font-perm m-auto px-8 py-2 text-2xl"
 
   let noplrs = Js.Array2.length(players)
 
@@ -25,13 +27,16 @@ let make = (
         <p className="text-center font-anon font-bold text-stone-100 text-xl mb-2">
           {React.string("Answers for:")}
         </p>
-        <h2 className="text-center font-anon mb-5 text-stone-100">
+        <h2 className=hstyles>
           {React.string(previousWord)}
         </h2>
       </>
     | false => <>
         <p className="h-7" />
-        <h2 className="text-center font-anon mb-5 text-stone-100">
+        <h2 className={switch winner == "" {
+        | true => hstyles
+        | false => hstyles ++ "animate-bounce"
+        }}>
           {switch winner == "" {
           | false => React.string(winner ++ " wins!")
           | true => React.string("Scores:")
@@ -76,7 +81,7 @@ let make = (
     {switch (winner == "", currentWord == "game over") {
     | (false, _) | (true, true) => <>
         <div
-          className={`absolute w-64 h-96 bg-no-repeat opacity-0 left-1/2 transform -translate-x-2/4 animate-fadein ${bgimg}`}
+          className={`w-64 h-96 bg-no-repeat opacity-0 m-auto animate-fadein ${bgimg}`}
         />
         <Button textTrue="Return to lobby" textFalse="Return to lobby" onClick className />
       </>
