@@ -49,12 +49,12 @@ type backListGame struct {
 }
 
 type livePlayerList []struct {
-	PlayerID        string `json:"playerid"`
-	Name            string `json:"name"`
-	ConnID          string `json:"connid"`
-	Color           string `json:"color"`
-	Score           int    `json:"score"`
-	Index           int    `json:"index"`
+	PlayerID string `json:"playerid"`
+	Name     string `json:"name"`
+	ConnID   string `json:"connid"`
+	Color    string `json:"color"`
+	Score    int    `json:"score"`
+	// Index           string `json:"index"`
 	Answer          string `json:"answer"`
 	HasAnswered     bool   `json:"hasAnswered"`
 	PointsThisRound string `json:"pointsThisRound"`
@@ -162,7 +162,7 @@ func (players livePlayerList) sortByScoreThenName() {
 	})
 }
 
-func (players livePlayerList) getPointsAddIndex() livePlayerList {
+func (players livePlayerList) getPoints() livePlayerList {
 	dist := map[string]int{}
 
 	for _, v := range players {
@@ -170,7 +170,6 @@ func (players livePlayerList) getPointsAddIndex() livePlayerList {
 	}
 
 	for i, p := range players {
-		p.Index = i
 		if len(p.Answer) > 1 {
 			freq := dist[p.Answer]
 			if freq == 2 {
@@ -330,8 +329,8 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 		if recType == "CONNECT" {
 
 			var connRecord struct {
-				Pk, Sk, Game, Color, GSI1PK, GSI1SK string
-				Playing, Leader, Returning          bool
+				Pk, Sk, Game, Color, Index, GSI1PK, GSI1SK string
+				Playing, Leader, Returning                 bool
 			}
 			err = attributevalue.UnmarshalMap(item, &connRecord)
 			if err != nil {
@@ -378,10 +377,12 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				payload, err = json.Marshal(struct {
 					ModConnGm string `json:"modConn"`
 					Color     string `json:"color"`
+					Index     string `json:"index"`
 					Leader    bool   `json:"leader"`
 				}{
 					ModConnGm: connRecord.Game,
 					Color:     connRecord.Color,
+					Index:     connRecord.Index,
 					Leader:    connRecord.Leader,
 				})
 				if err != nil {
@@ -497,7 +498,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				gp := modifyLiveGamePayload{
 					ModLiveGame: liveGame{
 						Sk:           gameRecord.Sk,
-						Players:      pls.getPointsAddIndex(),
+						Players:      pls.getPoints(),
 						CurrentWord:  gameRecord.CurrentWord,
 						PreviousWord: gameRecord.PreviousWord,
 						AnswersCount: gameRecord.AnswersCount,

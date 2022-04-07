@@ -1,5 +1,5 @@
 type listGamesData = {listGms: array<Reducer.listGame>, returning: bool}
-type modConnData = {modConn: string, color: string, leader: bool}
+type modConnData = {modConn: string, color: string, index: string,leader: bool}
 type addGameData = {addGame: Reducer.listGame}
 type modListGameData = {mdLstGm: Reducer.listGame}
 type modLiveGameData = {mdLveGm: Reducer.liveGame}

@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -31,6 +32,7 @@ type livePlayer struct {
 	ConnID   string `json:"connid"`
 	Color    string `json:"color"`
 	Score    int    `json:"score"`
+	Index    string `json:"index"`
 	Answer   string `json:"answer"`
 }
 
@@ -47,7 +49,7 @@ func (list stringSlice) shuffleList(length int) stringSlice {
 	return list[:length]
 }
 
-func getSliceAndAssignColors(pm map[string]struct{ Name, ConnID string }) (res []livePlayer) {
+func getSliceAssignColorAndIndex(pm map[string]struct{ Name, ConnID string }) (res []livePlayer) {
 	count := 0
 	clrs := colors.shuffleList(len(colors))
 
@@ -58,6 +60,7 @@ func getSliceAndAssignColors(pm map[string]struct{ Name, ConnID string }) (res [
 			ConnID:   v.ConnID,
 			Color:    clrs[count],
 			Score:    0,
+			Index:    strconv.Itoa(count),
 			Answer:   "",
 		})
 		count++
@@ -129,7 +132,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		return callErr(err)
 	}
 
-	playersList := getSliceAndAssignColors(game.Players)
+	playersList := getSliceAssignColorAndIndex(game.Players)
 
 	sfnInput, err := json.Marshal(struct {
 		Players []livePlayer `json:"players"`

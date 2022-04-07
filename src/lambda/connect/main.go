@@ -43,6 +43,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			"playing": &types.AttributeValueMemberBOOL{Value: false},
 			"leader":  &types.AttributeValueMemberBOOL{Value: false},
 			"color":   &types.AttributeValueMemberS{Value: "transparent"},
+			"index":   &types.AttributeValueMemberS{Value: ""},
 			"GSI1PK":  &types.AttributeValueMemberS{Value: "CONNECT"},
 			"GSI1SK":  &types.AttributeValueMemberS{Value: req.RequestContext.ConnectionID},
 		},

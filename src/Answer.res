@@ -64,7 +64,7 @@ let make = (~answer_max_length, ~answered, ~inputText, ~onEnter, ~setInputText, 
     {switch isValidInput {
     | true => React.null
     | false =>
-      <p className="absolute text-stone-100 bg-red-800 font-bold w-11/12 max-w-xl">
+      <p className="absolute text-stone-100 bg-red-600 font-bold w-11/12 max-w-xl">
         {switch badChar {
         | Some(bc) => React.string(bc ++ " is not allowed")
         | None => React.string("That input is not allowed")

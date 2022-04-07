@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -33,12 +32,12 @@ type livePlayer struct {
 }
 
 func clearHasAnswered(pl []livePlayer) []livePlayer {
-	fmt.Printf("%s: %+v\n", "ansplrs1", pl)
+	// fmt.Printf("%s: %+v\n", "ansplrs1", pl)
 	for i, p := range pl {
 		p.HasAnswered = false
 		pl[i] = p
 	}
-	fmt.Printf("%s: %+v\n", "ansplrs2", pl)
+	// fmt.Printf("%s: %+v\n", "ansplrs2", pl)
 	return pl
 }
 
@@ -59,8 +58,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		tableName = os.Getenv("tableName")
 		ddbsvc    = dynamodb.NewFromConfig(cfg)
 		body      struct {
-			Gameno, Answer string
-			Index          int
+			Gameno, Answer, Index string
 		}
 	)
 
@@ -80,7 +78,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		return callErr(err)
 	}
 
-	index := strconv.Itoa(body.Index)
+	index := body.Index
 
 	ui, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 		Key:       gameItemKey,

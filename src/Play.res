@@ -2,7 +2,7 @@ type answerPayload = {
   action: string,
   gameno: string,
   answer: string,
-  index: int,
+  index: string,
 }
 
 type scorePayload = {
@@ -11,7 +11,7 @@ type scorePayload = {
 }
 
 @react.component
-let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~leader, ~playerName) => {
+let make = (~game: Reducer.liveGame, ~playerColor, ~playerIndex, ~send, ~leader, ~playerName) => {
   let answer_max_length = 12
 
   let (answered, setAnswered) = React.Uncurried.useState(_ => false)
@@ -69,15 +69,13 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~send, ~leader, ~playerName) 
   }, (leader, showAnswers, winner))
 
   let sendAnswer = _ => {
-    let index = switch players->Js.Array2.find(p => p.color == playerColor) {
-    | Some(v) => v.index
-    | None => -1
-    }
+ 
+ 
     let pl = {
       action: "answer",
       gameno: sk,
       answer: inputText->Js.String2.slice(~from=0, ~to_=answer_max_length),
-      index: index,
+      index: playerIndex,
     }
     send(. Js.Json.stringifyAny(pl))
     setAnswered(._ => true)

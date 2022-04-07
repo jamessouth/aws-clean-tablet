@@ -9,6 +9,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName, initia
   let (ws, setWs) = React.Uncurried.useState(_ => Js.Nullable.null)
   let (playerGame, setPlayerGame) = React.Uncurried.useState(_ => "")
   let (playerColor, setPlayerColor) = React.Uncurried.useState(_ => "transparent")
+  let (playerIndex, setPlayerIndex) = React.Uncurried.useState(_ => "")
   let (wsConnected, setWsConnected) = React.Uncurried.useState(_ => false)
   let (wsError, setWsError) = React.Uncurried.useState(_ => "")
   let (leader, setLeader) = React.Uncurried.useState(_ => false)
@@ -21,6 +22,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName, initia
   let resetConnState = _ => {
     dispatch(. ResetPlayerState(initialState))
     setPlayerColor(._ => "transparent")
+    setPlayerIndex(._ => "")
     setPlayerGame(._ => "")
     setLeader(._ => false)
   }
@@ -70,10 +72,12 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName, initia
             dispatch(. ListGames(Js.Nullable.return(listGms)))
           }
         | ModifyConn => {
-            let {modConn, color, leader} = parseModConn(data)
-            Js.log4("parsedmodconn", modConn, color, leader)
+            let {modConn, color, leader, index} = parseModConn(data)
+            Js.log2("parsedmodconn", modConn)
+            Js.log3(color, leader, index)
             setPlayerGame(._ => modConn)
             setPlayerColor(._ => color)
+            setPlayerIndex(._ => index)
             setLeader(._ => leader)
           }
         | InsertGame => {
@@ -139,5 +143,5 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName, initia
 
   let close = (. code, reason) => ws->closeCodeReason(code, reason)
 
-  (playerGame, playerColor, wsConnected, state.game, state.gamesList, leader, send, close, wsError)
+  (playerGame, playerColor, playerIndex, wsConnected, state.game, state.gamesList, leader, send, close, wsError)
 }
