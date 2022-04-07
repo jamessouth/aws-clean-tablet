@@ -32,7 +32,7 @@ let make = (
         </h2>
       </>
     | false => <>
-        <p className="h-7" />
+        <p className="h-7 mb-2" />
         <h2 className={switch winner == "" {
         | true => hstyles
         | false => hstyles ++ "animate-bounce"

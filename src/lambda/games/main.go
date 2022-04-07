@@ -49,12 +49,12 @@ type backListGame struct {
 }
 
 type livePlayerList []struct {
-	PlayerID string `json:"playerid"`
-	Name     string `json:"name"`
-	ConnID   string `json:"connid"`
-	Color    string `json:"color"`
-	Score    int    `json:"score"`
-	// Index           string `json:"index"`
+	PlayerID        string `json:"playerid"`
+	Name            string `json:"name"`
+	ConnID          string `json:"connid"`
+	Color           string `json:"color"`
+	Score           int    `json:"score"`
+	Index           string `json:"index"`
 	Answer          string `json:"answer"`
 	HasAnswered     bool   `json:"hasAnswered"`
 	PointsThisRound string `json:"pointsThisRound"`

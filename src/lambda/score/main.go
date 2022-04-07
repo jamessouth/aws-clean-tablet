@@ -27,6 +27,7 @@ type livePlayer struct {
 	Name     string `json:"name"`
 	ConnID   string `json:"connid"`
 	Color    string `json:"color"`
+	Index    string `json:"index"`
 	Score    int    `json:"score"`
 	Answer   string `json:"answer"`
 }
@@ -176,12 +177,22 @@ func sortByScore(players []livePlayer) []livePlayer {
 	return players
 }
 
+func sortByIndex(players []livePlayer) []livePlayer {
+	sort.Slice(players, func(i, j int) bool {
+		return players[i].Index < players[j].Index
+	})
+
+	return players
+}
+
 func (data game) getWinner() game {
 	sortedScores := sortByScore(data.Players)
 
 	if sortedScores[0].Score != sortedScores[1].Score && sortedScores[0].Score > winThreshold {
 		data.Winner = sortedScores[0].Name
 	}
+
+	sortByIndex(data.Players)
 
 	return data
 }

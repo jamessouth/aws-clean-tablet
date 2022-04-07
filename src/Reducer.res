@@ -8,7 +8,7 @@ type livePlayer = {
   name: string,
   color: string,
   score: string,
-  // index: string,
+  index: string,
   answer: string,
   hasAnswered: bool,
   pointsThisRound: string,

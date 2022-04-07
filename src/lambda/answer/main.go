@@ -26,6 +26,7 @@ type livePlayer struct {
 	Name        string `dynamodbav:"name"`
 	ConnID      string `dynamodbav:"connid"`
 	Color       string `dynamodbav:"color"`
+	Index       string `dynamodbav:"index"`
 	Score       int    `dynamodbav:"score"`
 	Answer      string
 	HasAnswered bool `dynamodbav:"hasAnswered"`
