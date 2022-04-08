@@ -22,9 +22,10 @@ export default defineConfig({
         theme: {
           extend: {
             animation: {
+              'blink': 'blink 1s infinite',
               'change': 'change 35s linear forwards 1',
-              'fadein': 'fadein 5s ease-in forwards 1',
-              'rotate': 'rotate 3s linear infinite',
+              'fadein': 'fadein 4.5s ease-in forwards 1',
+              'rotate': 'rotate 2.5s linear infinite',
             },
             backgroundImage: {
               'lose': '-webkit-image-set(url("../../assets/lose1x.webp") 1x, url("../../assets/lose2x.webp") 2x)',
@@ -39,11 +40,17 @@ export default defineConfig({
               'perm': 'Permanent Marker, cursive',
             },
             keyframes: {
+              blink: {
+                '0%, 100%': { 'transform': 'translateY(-25%)'},
+                '30%': { 'opacity': '0.4' },
+                '50%': {'transform': 'translateY(0)', 'opacity': '1'},
+                '79%': { 'opacity': '0.5'},
+              },
               change: {
                 '100%': { 'stroke-dashoffset': '1000' },
               },
               fadein: {
-                'to': { 'opacity': '0.4'}
+                'to': { 'opacity': '0.4' }
               },
               rotate: {
                 'to': { 'filter': 'hue-rotate(360deg)' },
@@ -57,7 +64,7 @@ export default defineConfig({
               // 'desk': '1440px',
             },
             textShadow: {
-              '2xl': '1px 0px 4px #f5f5f4bb',
+              'win': '0px 0px 3px #f5f5f4ff',
             },
           },
         },

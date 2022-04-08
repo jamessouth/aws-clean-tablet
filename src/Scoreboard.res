@@ -27,18 +27,20 @@ let make = (
         <p className="text-center font-anon font-bold text-stone-100 text-xl mb-2">
           {React.string("Answers for:")}
         </p>
-        <h2 className=hstyles>
-          {React.string(previousWord)}
-        </h2>
+        <h2 className=hstyles> {React.string(previousWord)} </h2>
       </>
     | false => <>
         <p className="h-7 mb-2" />
-        <h2 className={switch winner == "" {
-        | true => hstyles
-        | false => hstyles ++ "animate-bounce"
-        }}>
+        <h2
+          className={switch winner == "" {
+          | true => hstyles
+          | false => hstyles ++ "animate-blink"
+          }}>
           {switch winner == "" {
-          | false => React.string(winner ++ " wins!")
+          | false => {
+              let hiScore = players->Js.Array2.unsafe_get(0)
+              React.string(winner ++ " wins with " ++ hiScore.score ++ " points!")
+            }
           | true => React.string("Scores:")
           }}
         </h2>
@@ -52,7 +54,7 @@ let make = (
           className={"w-full flex flex-row h-7 py-0 px-2 justify-between items-center text-xl text-stone-100 " ++ if (
             winner != "" && i != 0
           ) {
-            "filter brightness-25"
+            "filter brightness-30 contrast-60"
           } else if (winner != "" || currentWord == "game over") && i == 0 {
             "animate-rotate"
           } else {
@@ -63,7 +65,11 @@ let make = (
           <p
             className={switch p.hasAnswered {
             | true => "after:content-['\\22C5'] after:text-yellow-200 after:text-5xl after:absolute after:leading-25px"
-            | false => ""
+            | false =>
+              switch (winner != "", i == 0) {
+              | (true, true) => "text-shadow-win"
+              | _ => ""
+              }
             }}>
             {React.string(p.name)}
           </p>
@@ -72,7 +78,14 @@ let make = (
               <p className="animate-pulse font-luck"> {React.string("+" ++ p.pointsThisRound)} </p>
               <p> {React.string(p.answer)} </p>
             </>
-          | false => <p> {React.string(p.score)} </p>
+          | false =>
+            <p
+              className={switch (winner != "", i == 0) {
+              | (true, true) => "text-shadow-win"
+              | _ => ""
+              }}>
+              {React.string(p.score)}
+            </p>
           }}
         </li>
       })
@@ -80,9 +93,7 @@ let make = (
     </ul>
     {switch (winner == "", currentWord == "game over") {
     | (false, _) | (true, true) => <>
-        <div
-          className={`w-64 h-96 bg-no-repeat opacity-0 m-auto animate-fadein ${bgimg}`}
-        />
+        <div className={`w-64 h-96 bg-no-repeat opacity-0 m-auto animate-fadein ${bgimg}`} />
         <Button textTrue="Return to lobby" textFalse="Return to lobby" onClick className />
       </>
     | (true, false) => React.null

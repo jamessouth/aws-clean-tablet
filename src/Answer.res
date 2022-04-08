@@ -71,12 +71,13 @@ let make = (~answer_max_length, ~answered, ~inputText, ~onEnter, ~setInputText, 
         }}
       </p>
     }}
-    <label className="text-stone-100 font-anon" htmlFor="inputbox"> {React.string("Enter your answer:")} </label>
+    <label className="text-stone-100 font-anon" htmlFor="inputbox">
+      {React.string("Enter your answer:")}
+    </label>
     <input
-      className="h-7 w-3/5 text-xl pl-1 text-left bg-stone-100 border-none text-stone-800"
+      className="h-7 w-3/5 text-xl pl-1 text-left bg-stone-100 border-none text-stone-800 max-w-xs"
       id="inputbox"
       autoComplete="off"
-      // autoFocus
       ref={ReactDOM.Ref.domRef(inputBox)}
       value={inputText}
       spellCheck=false
@@ -89,10 +90,6 @@ let make = (~answer_max_length, ~answered, ~inputText, ~onEnter, ~setInputText, 
       | false => false
       }}
     />
-    <Button
-      onClick={_ => onEnter(. ignore())}
-      disabled=disableSubmit
-      className
-    />
+    <Button onClick={_ => onEnter(. ignore())} disabled=disableSubmit className />
   </section>
 }
