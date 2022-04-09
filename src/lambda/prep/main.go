@@ -69,13 +69,18 @@ func getSliceAssignColorAndIndex(pm map[string]struct{ Name, ConnID string }) (r
 	return
 }
 
-func changeIDs(pl []livePlayer) []livePlayer {
+func changeIDs(pl []livePlayer) ([]livePlayer, map[string]string) {
+	ids := map[string]string{}
+
 	for i, p := range pl {
-		p.PlayerID = p.ConnID + p.Color + p.Name
+		uuid := p.PlayerID
+		pid := p.ConnID + p.Color + p.Name
+		p.PlayerID = pid
 		pl[i] = p
+		ids[pid] = "CONNECT#" + uuid
 	}
 
-	return pl
+	return pl, ids
 }
 
 const (
@@ -170,7 +175,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		return callErr(err)
 	}
 
-	marshalledPlayersList, err := attributevalue.Marshal(changeIDs(playersList))
+	players, ids := changeIDs(playersList)
+
+	marshalledPlayersList, err := attributevalue.Marshal(players)
+	if err != nil {
+		return callErr(err)
+	}
+
+	marshalledIDsMap, err := attributevalue.Marshal(ids)
 	if err != nil {
 		return callErr(err)
 	}
@@ -182,6 +194,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			"answersCount": &types.AttributeValueMemberN{Value: "0"},
 			"currentWord":  &types.AttributeValueMemberS{Value: ""},
 			"previousWord": &types.AttributeValueMemberS{Value: ""},
+			"ids":          marshalledIDsMap,
 			"players":      marshalledPlayersList,
 			"wordList":     marshalledWordsList,
 		},
