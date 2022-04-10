@@ -17,6 +17,13 @@ import (
 	"github.com/aws/smithy-go"
 )
 
+// type statItem struct {
+// 	Pk     string `dynamodbav:"pk"`     //'STAT#' + uuid
+// 	Sk     string `dynamodbav:"sk"`     //name
+// 	GSI1PK string `dynamodbav:"GSI1PK"` //'STAT'
+// 	GSI1SK string `dynamodbav:"GSI1SK"` //wins
+// }
+
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
 	reg := strings.Split(req.RequestContext.DomainName, ".")[2]
@@ -48,6 +55,30 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			"GSI1SK":  &types.AttributeValueMemberS{Value: req.RequestContext.ConnectionID},
 		},
 		TableName: aws.String(tableName),
+	})
+
+	if err != nil {
+		return callErr(err)
+	}
+
+	_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+
+		Key: map[string]types.AttributeValue{
+			"pk": &types.AttributeValueMemberS{Value: "STAT#" + id},
+			"sk": &types.AttributeValueMemberS{Value: name},
+		},
+
+		TableName: aws.String(tableName),
+		ExpressionAttributeNames: map[string]string{
+			"#P": "GSI1PK",
+			"#S": "GSI1SK",
+		},
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":p": &types.AttributeValueMemberS{Value: "STAT"},
+			":s": &types.AttributeValueMemberN{Value: "0"},
+		},
+		UpdateExpression: aws.String("SET #P = :p ADD #S :s"),
+		// ReturnValues:     types.ReturnValueAllNew,
 	})
 
 	if err != nil {
