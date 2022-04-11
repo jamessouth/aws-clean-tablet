@@ -66,6 +66,10 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			"#I": id,
 			"#R": "ready",
 		}
+		connKey = map[string]types.AttributeValue{
+			"pk": &types.AttributeValueMemberS{Value: "CONNECT"},
+			"sk": &types.AttributeValueMemberS{Value: id},
+		}
 	)
 
 	err = json.Unmarshal([]byte(req.Body), &body)
@@ -128,10 +132,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		}
 
 		updateConnInput := types.Update{
-			Key: map[string]types.AttributeValue{
-				"pk": &types.AttributeValueMemberS{Value: "CONNECT#" + id},
-				"sk": &types.AttributeValueMemberS{Value: name},
-			},
+			Key:                 connKey,
 			TableName:           aws.String(tableName),
 			ConditionExpression: aws.String("size (#G) = :z"),
 			ExpressionAttributeNames: map[string]string{
@@ -197,10 +198,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	} else if body.Tipe == "leave" {
 
 		_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-			Key: map[string]types.AttributeValue{
-				"pk": &types.AttributeValueMemberS{Value: "CONNECT#" + id},
-				"sk": &types.AttributeValueMemberS{Value: name},
-			},
+			Key:       connKey,
 			TableName: aws.String(tableName),
 			ExpressionAttributeNames: map[string]string{
 				"#G": "game",
@@ -222,10 +220,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	} else if body.Tipe == "gameover" {
 
 		_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-			Key: map[string]types.AttributeValue{
-				"pk": &types.AttributeValueMemberS{Value: "CONNECT#" + id},
-				"sk": &types.AttributeValueMemberS{Value: name},
-			},
+			Key:       connKey,
 			TableName: aws.String(tableName),
 			ExpressionAttributeNames: map[string]string{
 				"#G": "game",
@@ -287,10 +282,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		}
 
 		_, err = svc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
-			Key: map[string]types.AttributeValue{
-				"pk": &types.AttributeValueMemberS{Value: "CONNECT#" + id},
-				"sk": &types.AttributeValueMemberS{Value: name},
-			},
+			Key:       connKey,
 			TableName: aws.String(tableName),
 		})
 		callErr(err)
@@ -342,8 +334,8 @@ func callFunction(rv, gik map[string]types.AttributeValue, tn string, ctx contex
 
 				_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 					Key: map[string]types.AttributeValue{
-						"pk": &types.AttributeValueMemberS{Value: "CONNECT#" + k},
-						"sk": &types.AttributeValueMemberS{Value: v.Name},
+						"pk": &types.AttributeValueMemberS{Value: "CONNECT"},
+						"sk": &types.AttributeValueMemberS{Value: k},
 					},
 					TableName: aws.String(tn),
 					ExpressionAttributeNames: map[string]string{

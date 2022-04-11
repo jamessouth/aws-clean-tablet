@@ -17,13 +17,6 @@ import (
 	"github.com/aws/smithy-go"
 )
 
-// type statItem struct {
-// 	Pk     string `dynamodbav:"pk"`     //'STAT#' + uuid
-// 	Sk     string `dynamodbav:"sk"`     //name
-// 	GSI1PK string `dynamodbav:"GSI1PK"` //'STAT'
-// 	GSI1SK string `dynamodbav:"GSI1SK"` //wins
-// }
-
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
 	reg := strings.Split(req.RequestContext.DomainName, ".")[2]
@@ -44,15 +37,15 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	_, err = ddbsvc.PutItem(ctx, &dynamodb.PutItemInput{
 		Item: map[string]types.AttributeValue{
-			"pk":      &types.AttributeValueMemberS{Value: "CONNECT#" + id},
-			"sk":      &types.AttributeValueMemberS{Value: name},
+			"pk":      &types.AttributeValueMemberS{Value: "CONNECT"},
+			"sk":      &types.AttributeValueMemberS{Value: id},
 			"game":    &types.AttributeValueMemberS{Value: ""},
+			"name":    &types.AttributeValueMemberS{Value: name},
 			"playing": &types.AttributeValueMemberBOOL{Value: false},
 			"leader":  &types.AttributeValueMemberBOOL{Value: false},
 			"color":   &types.AttributeValueMemberS{Value: "transparent"},
 			"index":   &types.AttributeValueMemberS{Value: ""},
-			"GSI1PK":  &types.AttributeValueMemberS{Value: "CONNECT"},
-			"GSI1SK":  &types.AttributeValueMemberS{Value: req.RequestContext.ConnectionID},
+			"connID":  &types.AttributeValueMemberS{Value: req.RequestContext.ConnectionID},
 		},
 		TableName: aws.String(tableName),
 	})
@@ -64,20 +57,22 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 
 		Key: map[string]types.AttributeValue{
-			"pk": &types.AttributeValueMemberS{Value: "STAT#" + id},
-			"sk": &types.AttributeValueMemberS{Value: name},
+			"pk": &types.AttributeValueMemberS{Value: "STAT"},
+			"sk": &types.AttributeValueMemberS{Value: id},
 		},
 
 		TableName: aws.String(tableName),
 		ExpressionAttributeNames: map[string]string{
-			"#P": "GSI1PK",
-			"#S": "GSI1SK",
+
+			"#G": "games",
+			"#N": "name",
+			"#W": "wins",
 		},
 		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":p": &types.AttributeValueMemberS{Value: "STAT"},
-			":s": &types.AttributeValueMemberN{Value: "0"},
+			":n": &types.AttributeValueMemberS{Value: name},
+			":z": &types.AttributeValueMemberN{Value: "0"},
 		},
-		UpdateExpression: aws.String("SET #P = :p ADD #S :s"),
+		UpdateExpression: aws.String("SET #N = :n ADD #W :z, #G :z"),
 		// ReturnValues:     types.ReturnValueAllNew,
 	})
 

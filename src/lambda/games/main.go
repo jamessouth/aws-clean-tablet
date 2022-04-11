@@ -323,14 +323,14 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 		var (
 			apigwsvc = apigatewaymanagementapi.NewFromConfig(apigwcfg)
 			ddbsvc   = dynamodb.NewFromConfig(ddbcfg)
-			recType  = item["pk"].(*types.AttributeValueMemberS).Value[:7]
+			recType  = item["pk"].(*types.AttributeValueMemberS).Value
 		)
 
 		if recType == "CONNECT" {
 
 			var connRecord struct {
-				Pk, Sk, Game, Color, Index, GSI1PK, GSI1SK string
-				Playing, Leader, Returning                 bool
+				Pk, Sk, Game, Name, Color, Index, ConnID string
+				Playing, Leader, Returning               bool
 			}
 			err = attributevalue.UnmarshalMap(item, &connRecord)
 			if err != nil {
@@ -395,7 +395,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				continue
 			}
 
-			conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(connRecord.GSI1SK), Data: payload}
+			conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(connRecord.ConnID), Data: payload}
 
 			_, err = apigwsvc.PostToConnection(ctx, &conn)
 			if err != nil {
@@ -438,8 +438,8 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			connResults, err := ddbsvc.Query(ctx, &dynamodb.QueryInput{
 				TableName:              aws.String(tableName),
-				IndexName:              aws.String("GSI1"),
-				KeyConditionExpression: aws.String("GSI1PK = :c"),
+				ScanIndexForward:       aws.Bool(true),
+				KeyConditionExpression: aws.String("pk = :c"),
 				FilterExpression:       aws.String("#P = :f"),
 				ExpressionAttributeValues: map[string]types.AttributeValue{
 					":c": &types.AttributeValueMemberS{Value: "CONNECT"},
@@ -453,7 +453,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				return callErr(err)
 			}
 
-			var conns []struct{ GSI1SK string }
+			var conns []struct{ ConnID string }
 			err = attributevalue.UnmarshalListOfMaps(connResults.Items, &conns)
 			if err != nil {
 				return callErr(err)
@@ -461,7 +461,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			for _, v := range conns {
 
-				conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.GSI1SK), Data: payload}
+				conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.ConnID), Data: payload}
 
 				_, err := apigwsvc.PostToConnection(ctx, &conn)
 				if err != nil {

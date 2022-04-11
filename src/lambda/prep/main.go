@@ -77,7 +77,7 @@ func changeIDs(pl []livePlayer) ([]livePlayer, map[string]string) {
 		pid := p.ConnID + p.Color + p.Name
 		p.PlayerID = pid
 		pl[i] = p
-		ids[pid] = "CONNECT#" + uuid
+		ids[pid] = uuid
 	}
 
 	return pl, ids
