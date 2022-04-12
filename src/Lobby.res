@@ -41,12 +41,7 @@ let make = (~playerGame, ~leader, ~games, ~send, ~wsError, ~close) => {
       </p>
     | false =>
       switch Js.Nullable.toOption(games) {
-      | None => <>
-          <p className="text-center text-stone-100 font-anon text-lg">
-            {React.string("loading games...")}
-          </p>
-          <Loading />
-        </>
+      | None => <Loading label="gamessss..." />
       | Some(gs) =>
         <div className="flex flex-col items-center">
           <div className="relative m-auto <newgmimg:w-11/12 w-max">

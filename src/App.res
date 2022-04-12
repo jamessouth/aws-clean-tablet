@@ -23,11 +23,9 @@ let make = () => {
     Js.Nullable.null
   )
   let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
-  
+
   let (token, setToken) = React.Uncurried.useState(_ => None)
   let (showName, setShowName) = React.Uncurried.useState(_ => "")
-
-
 
   let initialState: Reducer.state = {
     gamesList: Js.Nullable.null,
@@ -98,9 +96,7 @@ let make = () => {
         </nav>
 
       | (list{"signin"}, None) =>
-        <Signin
-          userpool setCognitoUser setToken cognitoUser cognitoError setCognitoError
-        />
+        <Signin userpool setCognitoUser setToken cognitoUser cognitoError setCognitoError />
 
       | (list{"signup"}, None) => <Signup userpool setCognitoUser cognitoError setCognitoError />
 
@@ -137,12 +133,7 @@ let make = () => {
 
       | (list{"lobby"}, Some(_)) =>
         switch wsConnected {
-        | false => <>
-            <p className="text-center text-stone-100 font-anon text-lg">
-              {React.string("loading games...")}
-            </p>
-            <Loading />
-          </>
+        | false => <Loading label="games..." />
         | true => <Lobby playerGame leader games send wsError close />
         }
 
@@ -150,13 +141,8 @@ let make = () => {
         switch wsConnected {
         | true =>
           switch gameno == game.sk {
-          | true => <Play game playerColor playerIndex send leader playerName/>
-          | false => <>
-              <p className="text-center text-stone-100 font-anon text-lg">
-                {React.string("loading game...")}
-              </p>
-              <Loading />
-            </>
+          | true => <Play game playerColor playerIndex send leader playerName />
+          | false => <Loading label="game..." />
           }
 
         | false =>
