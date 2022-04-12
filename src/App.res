@@ -23,17 +23,11 @@ let make = () => {
     Js.Nullable.null
   )
   let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
-  let (playerName, setPlayerName) = React.Uncurried.useState(_ => "")
+  
   let (token, setToken) = React.Uncurried.useState(_ => None)
   let (showName, setShowName) = React.Uncurried.useState(_ => "")
 
-  React.useEffect1(() => {
-    switch Js.Nullable.toOption(cognitoUser) {
-    | None => setPlayerName(._ => "")
-    | Some(user) => setPlayerName(._ => user.username)
-    }
-    None
-  }, [cognitoUser])
+
 
   let initialState: Reducer.state = {
     gamesList: Js.Nullable.null,
@@ -49,6 +43,7 @@ let make = () => {
 
   let (
     playerGame,
+    playerName,
     playerColor,
     playerIndex,
     wsConnected,
@@ -58,7 +53,7 @@ let make = () => {
     send,
     close,
     wsError,
-  ) = WsHook.useWs(token, setToken, cognitoUser, setCognitoUser, setPlayerName, initialState)
+  ) = WsHook.useWs(token, setToken, cognitoUser, setCognitoUser, initialState)
 
   <>
     <header className="mb-10 newgmimg:mb-12">
@@ -104,7 +99,7 @@ let make = () => {
 
       | (list{"signin"}, None) =>
         <Signin
-          userpool setCognitoUser setToken cognitoUser cognitoError setCognitoError playerName
+          userpool setCognitoUser setToken cognitoUser cognitoError setCognitoError
         />
 
       | (list{"signup"}, None) => <Signup userpool setCognitoUser cognitoError setCognitoError />

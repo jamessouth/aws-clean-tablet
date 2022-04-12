@@ -5,9 +5,10 @@ external region: string = "VITE_REGION"
 @val @scope(("import", "meta", "env"))
 external stage: string = "VITE_STAGE"
 
-let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName, initialState) => {
+let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
   let (ws, setWs) = React.Uncurried.useState(_ => Js.Nullable.null)
   let (playerGame, setPlayerGame) = React.Uncurried.useState(_ => "")
+  let (playerName, setPlayerName) = React.Uncurried.useState(_ => "")
   let (playerColor, setPlayerColor) = React.Uncurried.useState(_ => "transparent")
   let (playerIndex, setPlayerIndex) = React.Uncurried.useState(_ => "")
   let (wsConnected, setWsConnected) = React.Uncurried.useState(_ => false)
@@ -63,8 +64,9 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName, initia
 
         switch getMsgType(data) {
         | InsertConn => {
-            let {listGms, returning} = parseListGames(data)
-            Js.log3("parsedlistgames", listGms, returning)
+            let {listGms, name, returning} = parseListGames(data)
+            Js.log4("parsedlistgames", listGms, name, returning)
+            setPlayerName(._ => name)
             switch returning {
             | true => resetConnState()
             | false => ()
@@ -143,5 +145,5 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, setPlayerName, initia
 
   let close = (. code, reason) => ws->closeCodeReason(code, reason)
 
-  (playerGame, playerColor, playerIndex, wsConnected, state.game, state.gamesList, leader, send, close, wsError)
+  (playerGame, playerName, playerColor, playerIndex, wsConnected, state.game, state.gamesList, leader, send, close, wsError)
 }
