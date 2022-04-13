@@ -5,6 +5,12 @@ type answerPayload = {
   index: string,
 }
 
+type endPayload = {
+  action: string,
+  gameno: string,
+  leader: bool,
+}
+
 type scorePayload = {
   action: string,
   game: Reducer.liveGame,
@@ -99,10 +105,10 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~playerIndex, ~send, ~leader,
   let onClick = _ => {
     // reset conns, delete game
 
-    let pl: Game.lobbyPayload = {
-      action: "lobby",
+    let pl: endPayload = {
+      action: "end",
       gameno: sk,
-      tipe: "gameover",
+      leader: game.winner == playerName
     }
     send(. Js.Json.stringifyAny(pl))
 
