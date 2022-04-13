@@ -41,7 +41,7 @@ let make = (~playerGame, ~leader, ~games, ~send, ~wsError, ~close) => {
       </p>
     | false =>
       switch Js.Nullable.toOption(games) {
-      | None => <Loading label="gamessss..." />
+      | None => <Loading label="games..." />
       | Some(gs) =>
         <div className="flex flex-col items-center">
           <div className="relative m-auto <newgmimg:w-11/12 w-max">

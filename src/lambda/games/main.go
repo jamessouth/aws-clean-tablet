@@ -422,23 +422,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				Tag: "mdLstGm",
 			}
 
-			switch rec.EventName {
-			case dynamodbstreams.OperationTypeInsert:
-				gp.Tag = "addGame"
-			case dynamodbstreams.OperationTypeModify:
-				gp.Game.Ready = listGameRecord.Ready
-			default:
-				fmt.Printf("%s: %+v\n", "remove list game oi", rec.Change.OldImage)
-				gp.Game.Players = nil
-				gp.Tag = "rmvGame"
-			}
-
-			payload, err := json.Marshal(gp)
-			if err != nil {
-				return callErr(err)
-			}
-
-			connResults, err := ddbsvc.Query(ctx, &dynamodb.QueryInput{
+			queryParams := dynamodb.QueryInput{
 				TableName:              aws.String(tableName),
 				ScanIndexForward:       aws.Bool(true),
 				KeyConditionExpression: aws.String("pk = :c"),
@@ -450,7 +434,28 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				ExpressionAttributeNames: map[string]string{
 					"#P": "playing",
 				},
-			})
+			}
+
+			switch rec.EventName {
+			case dynamodbstreams.OperationTypeInsert:
+				gp.Tag = "addGame"
+			case dynamodbstreams.OperationTypeModify:
+				gp.Game.Ready = listGameRecord.Ready
+			default:
+				fmt.Printf("%s: %+v\n", "remove list game oi", rec.Change.OldImage)
+				gp.Game.Players = nil
+				gp.Tag = "rmvGame"
+				queryParams.FilterExpression = nil
+				queryParams.ExpressionAttributeNames = nil
+				delete(queryParams.ExpressionAttributeValues, ":f")
+			}
+
+			payload, err := json.Marshal(gp)
+			if err != nil {
+				return callErr(err)
+			}
+
+			connResults, err := ddbsvc.Query(ctx, &queryParams)
 			if err != nil {
 				return callErr(err)
 			}
@@ -522,18 +527,16 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 					if err != nil {
 						return callErr(err)
 					}
-
 				}
-
 			} else {
 				oi := rec.Change.OldImage
 				fmt.Printf("%s: %+v\n", "remove live game oi", oi)
 			}
-
+		} else if recType == "STAT" {
+			fmt.Printf("%s: %+v\n", "stat item", item)
 		} else {
-			fmt.Println("other record type", item)
+			fmt.Printf("%s: %+v\n", "other record type", item)
 		}
-
 	}
 
 	return getReturnValue(http.StatusOK), nil

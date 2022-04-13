@@ -10,14 +10,8 @@ type startPayload = {
 }
 
 @react.component
-let make = (
-  ~game: Reducer.listGame,
-  ~leader,
-  ~inThisGame,
-  ~inAGame,
-  ~send,
-  ~class,
-) => {
+let make = (~game: Reducer.listGame, ~leader, ~inThisGame, ~inAGame, ~send, ~class) => {
+  let liStyle = `<md:mb-16 grid grid-cols-2 grid-rows-6 relative text-xl bg-bottom bg-no-repeat h-200px text-center font-bold text-dark-800 font-anon pb-8 ${class} lg:(max-w-lg w-full)`
   let btnStyle = " cursor-pointer text-base font-bold text-stone-100 font-anon w-1/2 bottom-0 h-8 absolute bg-stone-700 bg-opacity-70 filter disabled:cursor-not-allowed disabled:contrast-[0.25]"
   let (ready, setReady) = React.Uncurried.useState(_ => true)
   let (count, setCount) = React.Uncurried.useState(_ => 5)
@@ -116,7 +110,10 @@ let make = (
   }, (inThisGame, count, game.no, leader))
 
   <li
-    className={`<md:mb-16 grid grid-cols-2 grid-rows-6 relative text-xl bg-bottom bg-no-repeat h-200px text-center font-bold text-dark-800 font-anon pb-8 ${class} lg:(max-w-lg w-full)`}>
+    className={switch inThisGame {
+    | true => "shadow-lg shadow-stone-100 " ++ liStyle
+    | false => liStyle
+    }}>
     <p className="absolute text-stone-100 text-xs left-1/2 transform -translate-x-2/4 -top-3.5">
       {React.string(game.no)}
     </p>
@@ -144,20 +141,18 @@ let make = (
       switch (game.ready, inThisGame) {
       | (true, false) =>
         <p
-          className="absolute text-3xl animate-pulse font-bold left-1/2 top-1/4 transform -translate-x-2/4">
-          {React.string("Starting...")}
+          className="absolute text-2xl animate-pulse font-perm left-1/2 top-2/3 transform -translate-x-2/4">
+          {React.string("Starting soon...")}
         </p>
-
       | (true, true) =>
         switch count > 0 {
         | true =>
           <p
-            className="absolute text-3xl animate-ping font-bold left-1/2 top-1/4 transform -translate-x-2/4">
+            className="absolute text-4xl animate-ping1 font-perm left-1/2 top-1/4 transform -translate-x-2/4">
             {React.string(Js.Int.toString(count))}
           </p>
         | false => React.null
         }
-
       | (false, _) => React.null
       }
     }

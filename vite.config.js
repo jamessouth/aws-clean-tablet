@@ -25,6 +25,7 @@ export default defineConfig({
               'blink': 'blink 1s infinite',
               'change': 'change 35s linear forwards 1',
               'fadein': 'fadein 4.5s ease-in forwards 1',
+              'ping1': 'ping1 1s cubic-bezier(0, 0, 0.2, 1) infinite',
               'rotate': 'rotate 2.5s linear infinite',
             },
             backgroundImage: {
@@ -41,16 +42,27 @@ export default defineConfig({
             },
             keyframes: {
               blink: {
-                '0%, 100%': { 'transform': 'translateY(-25%)'},
+                '0%, 100%': { 'transform': 'translateY(-25%)' },
                 '30%': { 'opacity': '0.4' },
-                '50%': {'transform': 'translateY(0)', 'opacity': '1'},
-                '79%': { 'opacity': '0.5'},
+                '50%': { 'transform': 'translateY(0)', 'opacity': '1' },
+                '79%': { 'opacity': '0.5' },
               },
               change: {
                 '100%': { 'stroke-dashoffset': '1000' },
               },
               fadein: {
                 'to': { 'opacity': '0.4' }
+              },
+              ping1: {
+                '0%': {
+                  'opacity': '0'
+                },
+                '15%, 30%': {
+                  'opacity': '1'
+                },
+                '85%, 100%': {
+                  'opacity': '0'
+                },
               },
               rotate: {
                 'to': { 'filter': 'hue-rotate(360deg)' },
