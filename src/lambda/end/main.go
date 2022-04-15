@@ -18,6 +18,15 @@ import (
 	"github.com/aws/smithy-go"
 )
 
+type livePlayerList []struct {
+	PlayerID string `dynamodbav:"playerid"`
+	Name     string `dynamodbav:"name"`
+	ConnID   string `dynamodbav:"connid"`
+	Color    string `dynamodbav:"color"`
+	Score    int    `dynamodbav:"score"`
+	Index    string `dynamodbav:"index"`
+}
+
 func getReturnValue(status int) events.APIGatewayProxyResponse {
 	return events.APIGatewayProxyResponse{
 		StatusCode:        status,
@@ -41,7 +50,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	var (
 		tableName = os.Getenv("tableName")
-		svc       = dynamodb.NewFromConfig(cfg)
+		ddbsvc    = dynamodb.NewFromConfig(cfg)
 		auth      = req.RequestContext.Authorizer.(map[string]interface{})
 		id, name  = auth["principalId"].(string), auth["username"].(string)
 		body      struct {
@@ -55,7 +64,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		fmt.Println("unmarshal err")
 	}
 
-	_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+	_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 		Key: map[string]types.AttributeValue{
 			"pk": &types.AttributeValueMemberS{Value: "CONNECT"},
 			"sk": &types.AttributeValueMemberS{Value: id},
@@ -92,28 +101,26 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		callErr(err)
 
 		// var game struct {
-		// 	Sk      string
-		// 	Players map[string]struct {
-		// 		Name, ConnID string
-		// 	}
+		// 	Players livePlayerList
+		// 	Ids map[string]string
 		// }
 		// err = attributevalue.UnmarshalMap(di.Attributes, &game)
 		// if err != nil {
 		// 	return callErr(err)
 		// }
 
-		ui2, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-			Key:                      gameItemKey,
-			TableName:                aws.String(tableName),
-			ExpressionAttributeNames: exAttrNms,
-			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":t": &types.AttributeValueMemberBOOL{Value: true},
-			},
-			UpdateExpression: aws.String("SET #P.#I.#R = :t"),
-			ReturnValues:     types.ReturnValueAllNew,
-		})
+		// ui2, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		// 	Key:                      gameItemKey,
+		// 	TableName:                aws.String(tableName),
+		// 	ExpressionAttributeNames: exAttrNms,
+		// 	ExpressionAttributeValues: map[string]types.AttributeValue{
+		// 		":t": &types.AttributeValueMemberBOOL{Value: true},
+		// 	},
+		// 	UpdateExpression: aws.String("SET #P.#I.#R = :t"),
+		// 	ReturnValues:     types.ReturnValueAllNew,
+		// })
 
-		callErr(err)
+		// callErr(err)
 
 	}
 

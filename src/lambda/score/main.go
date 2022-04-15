@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -90,7 +91,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		return callErr(err)
 	}
 
-	_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+	scoreInput := dynamodb.UpdateItemInput{
 		Key: map[string]types.AttributeValue{
 			"pk": &types.AttributeValueMemberS{Value: "LIVEGME"},
 			"sk": &types.AttributeValueMemberS{Value: body.Game.Sk},
@@ -107,7 +108,62 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			":f": &types.AttributeValueMemberBOOL{Value: false},
 		},
 		UpdateExpression: aws.String("SET #P = :p, #W = :w, #S = :f"),
-	})
+	}
+
+	if updatedScoreData.Winner != "" {
+		scoreInput.ReturnValues = types.ReturnValueAllOld
+		ui, err := ddbsvc.UpdateItem(ctx, &scoreInput)
+
+		if err != nil {
+			return callErr(err)
+		}
+
+		var gameIDs struct {
+			Ids map[string]string
+		}
+
+		err = attributevalue.UnmarshalMap(ui.Attributes, &gameIDs)
+		if err != nil {
+			return callErr(err)
+		}
+
+		for _, p := range updatedScoreData.Players {
+
+			won := ":z"
+
+			if p.Name == updatedScoreData.Winner {
+				won = ":o"
+			}
+
+			ue := fmt.Sprintf("ADD #W %s, #G :o, #T :t", won)
+
+			_, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+				Key: map[string]types.AttributeValue{
+					"pk": &types.AttributeValueMemberS{Value: "STAT"},
+					"sk": &types.AttributeValueMemberS{Value: gameIDs.Ids[p.ConnID+p.Color+p.Name]},
+				},
+				TableName: aws.String(tableName),
+				ExpressionAttributeNames: map[string]string{
+					"#W": "wins",
+					"#G": "games",
+					"#T": "totalPoints",
+				},
+				ExpressionAttributeValues: map[string]types.AttributeValue{
+					":z": &types.AttributeValueMemberN{Value: "0"},
+					":o": &types.AttributeValueMemberN{Value: "1"},
+					":t": &types.AttributeValueMemberN{Value: strconv.Itoa(p.Score)},
+				},
+				UpdateExpression: aws.String(ue),
+			})
+			if err != nil {
+				return callErr(err)
+			}
+
+		}
+
+	}
+
+	_, err = ddbsvc.UpdateItem(ctx, &scoreInput)
 
 	if err != nil {
 		return callErr(err)

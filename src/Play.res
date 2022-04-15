@@ -95,6 +95,18 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~playerIndex, ~send, ~leader,
     Js.log("onanimend")
   }
 
+  let onAnimationStart = _ => {
+   
+   
+    Js.log("onanimstart score")
+    let pl: endPayload = {
+      action: "end",
+      gameno: sk,
+      leader: winner == playerName
+    }
+    send(. Js.Json.stringifyAny(pl))
+  }
+
   let onEnter = (. _) => {
     if !answered {
       sendAnswer()
@@ -105,18 +117,12 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~playerIndex, ~send, ~leader,
   let onClick = _ => {
     // reset conns, delete game
 
-    let pl: endPayload = {
-      action: "end",
-      gameno: sk,
-      leader: game.winner == playerName
-    }
-    send(. Js.Json.stringifyAny(pl))
 
     RescriptReactRouter.push("/lobby")
   }
 
   <div>
-    <Scoreboard players currentWord previousWord showAnswers winner onClick playerName />
+    <Scoreboard players currentWord previousWord showAnswers winner onClick playerName onAnimationStart/>
     {switch winner == "" {
     | false => React.null
     | true =>

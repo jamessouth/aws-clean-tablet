@@ -55,24 +55,22 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-
 		Key: map[string]types.AttributeValue{
 			"pk": &types.AttributeValueMemberS{Value: "STAT"},
 			"sk": &types.AttributeValueMemberS{Value: id},
 		},
-
 		TableName: aws.String(tableName),
 		ExpressionAttributeNames: map[string]string{
-
 			"#G": "games",
 			"#N": "name",
 			"#W": "wins",
+			"#T": "totalPoints",
 		},
 		ExpressionAttributeValues: map[string]types.AttributeValue{
 			":n": &types.AttributeValueMemberS{Value: name},
 			":z": &types.AttributeValueMemberN{Value: "0"},
 		},
-		UpdateExpression: aws.String("SET #N = :n ADD #W :z, #G :z"),
+		UpdateExpression: aws.String("SET #N = :n ADD #W :z, #G :z, #T :z"),
 		// ReturnValues:     types.ReturnValueAllNew,
 	})
 

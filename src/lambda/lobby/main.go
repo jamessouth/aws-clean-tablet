@@ -54,7 +54,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	var (
 		tableName = os.Getenv("tableName")
-		svc       = dynamodb.NewFromConfig(cfg)
+		ddbsvc    = dynamodb.NewFromConfig(cfg)
 		auth      = req.RequestContext.Authorizer.(map[string]interface{})
 		id, name  = auth["principalId"].(string), auth["username"].(string)
 		body      struct {
@@ -147,7 +147,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			UpdateExpression: aws.String("SET #G = :g, #R = :f"),
 		}
 
-		_, err = svc.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{
+		_, err = ddbsvc.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{
 			TransactItems: []types.TransactWriteItem{
 				{
 					Update: &types.Update{
@@ -170,7 +170,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		})
 		callErr(err)
 
-		_, err = svc.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{
+		_, err = ddbsvc.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{
 			TransactItems: []types.TransactWriteItem{
 				{
 					Update: &types.Update{
@@ -197,7 +197,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	} else if body.Tipe == "leave" {
 
-		_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 			Key:       connKey,
 			TableName: aws.String(tableName),
 			ExpressionAttributeNames: map[string]string{
@@ -212,14 +212,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		})
 		callErr(err)
 
-		ui2, err := svc.UpdateItem(ctx, &removePlayerInput)
+		ui2, err := ddbsvc.UpdateItem(ctx, &removePlayerInput)
 		callErr(err)
 
-		callFunction(ui2.Attributes, gameItemKey, tableName, ctx, svc)
+		callFunction(ui2.Attributes, gameItemKey, tableName, ctx, ddbsvc)
 
 	} else if body.Tipe == "gameover" {
 
-		_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 			Key:       connKey,
 			TableName: aws.String(tableName),
 			ExpressionAttributeNames: map[string]string{
@@ -242,7 +242,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	} else if body.Tipe == "ready" {
 
-		ui2, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		ui2, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 			Key:                      gameItemKey,
 			TableName:                aws.String(tableName),
 			ExpressionAttributeNames: exAttrNms,
@@ -255,11 +255,11 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		callErr(err)
 
-		callFunction(ui2.Attributes, gameItemKey, tableName, ctx, svc)
+		callFunction(ui2.Attributes, gameItemKey, tableName, ctx, ddbsvc)
 
 	} else if body.Tipe == "unready" {
 
-		_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 			Key:                      gameItemKey,
 			TableName:                aws.String(tableName),
 			ExpressionAttributeNames: exAttrNms,
@@ -273,15 +273,15 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	} else if body.Tipe == "disconnect" {
 		if gameno != "dc" {
 
-			ui2, err := svc.UpdateItem(ctx, &removePlayerInput)
+			ui2, err := ddbsvc.UpdateItem(ctx, &removePlayerInput)
 
 			callErr(err)
 
-			callFunction(ui2.Attributes, gameItemKey, tableName, ctx, svc)
+			callFunction(ui2.Attributes, gameItemKey, tableName, ctx, ddbsvc)
 
 		}
 
-		_, err = svc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
+		_, err = ddbsvc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
 			Key:       connKey,
 			TableName: aws.String(tableName),
 		})
@@ -298,7 +298,7 @@ func main() {
 	lambda.Start(handler)
 }
 
-func callFunction(rv, gik map[string]types.AttributeValue, tn string, ctx context.Context, svc *dynamodb.Client) {
+func callFunction(rv, gik map[string]types.AttributeValue, tn string, ctx context.Context, ddbsvc *dynamodb.Client) {
 	var gm struct {
 		Pk, Sk  string
 		Ready   bool
@@ -319,7 +319,7 @@ func callFunction(rv, gik map[string]types.AttributeValue, tn string, ctx contex
 			readyCount++
 			if readyCount == len(gm.Players) {
 				time.Sleep(1000 * time.Millisecond)
-				_, err := svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+				_, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 					Key:       gik,
 					TableName: aws.String(tn),
 					ExpressionAttributeNames: map[string]string{
@@ -332,7 +332,7 @@ func callFunction(rv, gik map[string]types.AttributeValue, tn string, ctx contex
 				})
 				callErr(err)
 
-				_, err = svc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+				_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 					Key: map[string]types.AttributeValue{
 						"pk": &types.AttributeValueMemberS{Value: "CONNECT"},
 						"sk": &types.AttributeValueMemberS{Value: k},
