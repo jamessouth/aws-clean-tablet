@@ -72,7 +72,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		Pk string `dynamodbav:"pk"`
 		Sk string `dynamodbav:"sk"`
 	}{
-		Pk: "LIVEGME",
+		Pk: "LIVEGAME",
 		Sk: body.Gameno,
 	})
 	if err != nil {

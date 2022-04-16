@@ -25,9 +25,8 @@ import (
 )
 
 type listPlayer struct {
-	Name string `json:"name" dynamodbav:"name"`
-	// ConnID string `json:"connid" dynamodbav:"connid"`
-	Ready bool `json:"ready" dynamodbav:"ready"`
+	Name  string `json:"name" dynamodbav:"name"`
+	Ready bool   `json:"ready" dynamodbav:"ready"`
 }
 
 type frontListGame struct {
@@ -42,7 +41,7 @@ type listGamePayload struct {
 }
 
 type backListGame struct {
-	Pk      string                `dynamodbav:"pk"` //'LISTGME'
+	Pk      string                `dynamodbav:"pk"` //'LISTGAME'
 	Sk      string                `dynamodbav:"sk"` //no
 	Ready   bool                  `dynamodbav:"ready"`
 	Players map[string]listPlayer `dynamodbav:"players"`
@@ -348,7 +347,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 					ScanIndexForward:       aws.Bool(false),
 					KeyConditionExpression: aws.String("pk = :g"),
 					ExpressionAttributeValues: map[string]types.AttributeValue{
-						":g": &types.AttributeValueMemberS{Value: "LISTGME"},
+						":g": &types.AttributeValueMemberS{Value: "LISTGAME"},
 					},
 				})
 				if err != nil {
@@ -404,7 +403,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				return callErr(err)
 			}
 
-		} else if recType == "LISTGME" {
+		} else if recType == "LISTGAME" {
 
 			var listGameRecord backListGame
 			err = attributevalue.UnmarshalMap(item, &listGameRecord)
@@ -477,7 +476,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			}
 
-		} else if recType == "LIVEGME" {
+		} else if recType == "LIVEGAME" {
 
 			if rec.EventName == dynamodbstreams.OperationTypeInsert || rec.EventName == dynamodbstreams.OperationTypeModify {
 

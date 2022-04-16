@@ -92,35 +92,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		di, err := ddbsvc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
 			Key: map[string]types.AttributeValue{
-				"pk": &types.AttributeValueMemberS{Value: "LIVEGME"},
+				"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
 				"sk": &types.AttributeValueMemberS{Value: body.Gameno},
 			},
 			TableName:    aws.String(tableName),
 			ReturnValues: types.ReturnValueAllOld,
 		})
 		callErr(err)
-
-		// var game struct {
-		// 	Players livePlayerList
-		// 	Ids map[string]string
-		// }
-		// err = attributevalue.UnmarshalMap(di.Attributes, &game)
-		// if err != nil {
-		// 	return callErr(err)
-		// }
-
-		// ui2, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-		// 	Key:                      gameItemKey,
-		// 	TableName:                aws.String(tableName),
-		// 	ExpressionAttributeNames: exAttrNms,
-		// 	ExpressionAttributeValues: map[string]types.AttributeValue{
-		// 		":t": &types.AttributeValueMemberBOOL{Value: true},
-		// 	},
-		// 	UpdateExpression: aws.String("SET #P.#I.#R = :t"),
-		// 	ReturnValues:     types.ReturnValueAllNew,
-		// })
-
-		// callErr(err)
 
 	}
 

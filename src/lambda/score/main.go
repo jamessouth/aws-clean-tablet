@@ -93,7 +93,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	scoreInput := dynamodb.UpdateItemInput{
 		Key: map[string]types.AttributeValue{
-			"pk": &types.AttributeValueMemberS{Value: "LIVEGME"},
+			"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
 			"sk": &types.AttributeValueMemberS{Value: body.Game.Sk},
 		},
 		TableName: aws.String(tableName),
@@ -140,7 +140,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			_, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 				Key: map[string]types.AttributeValue{
 					"pk": &types.AttributeValueMemberS{Value: "STAT"},
-					"sk": &types.AttributeValueMemberS{Value: gameIDs.Ids[p.ConnID+p.Color+p.Name]},
+					"sk": &types.AttributeValueMemberS{Value: gameIDs.Ids[p.PlayerID]},
 				},
 				TableName: aws.String(tableName),
 				ExpressionAttributeNames: map[string]string{
@@ -161,12 +161,12 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		}
 
-	}
+	} else {
+		_, err = ddbsvc.UpdateItem(ctx, &scoreInput)
 
-	_, err = ddbsvc.UpdateItem(ctx, &scoreInput)
-
-	if err != nil {
-		return callErr(err)
+		if err != nil {
+			return callErr(err)
+		}
 	}
 
 	return events.APIGatewayProxyResponse{

@@ -118,7 +118,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	di, err := ddbsvc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
 		Key: map[string]types.AttributeValue{
-			"pk": &types.AttributeValueMemberS{Value: "LISTGME"},
+			"pk": &types.AttributeValueMemberS{Value: "LISTGAME"},
 			"sk": &types.AttributeValueMemberS{Value: gameno.Gameno},
 		},
 		TableName:    aws.String(tableName),
@@ -189,7 +189,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	_, err = ddbsvc.PutItem(ctx, &dynamodb.PutItemInput{
 		Item: map[string]types.AttributeValue{
-			"pk":           &types.AttributeValueMemberS{Value: "LIVEGME"},
+			"pk":           &types.AttributeValueMemberS{Value: "LIVEGAME"},
 			"sk":           &types.AttributeValueMemberS{Value: game.Sk},
 			"answersCount": &types.AttributeValueMemberN{Value: "0"},
 			"currentWord":  &types.AttributeValueMemberS{Value: ""},

@@ -93,7 +93,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		Pk string `dynamodbav:"pk"`
 		Sk string `dynamodbav:"sk"`
 	}{
-		Pk: "LISTGME",
+		Pk: "LISTGAME",
 		Sk: gameno,
 	})
 	if err != nil {
@@ -216,29 +216,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		callErr(err)
 
 		callFunction(ui2.Attributes, gameItemKey, tableName, ctx, ddbsvc)
-
-	} else if body.Tipe == "gameover" {
-
-		_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-			Key:       connKey,
-			TableName: aws.String(tableName),
-			ExpressionAttributeNames: map[string]string{
-				"#G": "game",
-				"#L": "leader",
-				"#P": "playing",
-				"#C": "color",
-				"#I": "index",
-				"#R": "returning",
-			},
-			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":g": &types.AttributeValueMemberS{Value: ""},
-				":f": &types.AttributeValueMemberBOOL{Value: false},
-				":c": &types.AttributeValueMemberS{Value: "transparent"},
-				":t": &types.AttributeValueMemberBOOL{Value: true},
-			},
-			UpdateExpression: aws.String("SET #G = :g, #L = :f, #P = :f, #C = :c, #I = :g, #R = :t"),
-		})
-		callErr(err)
 
 	} else if body.Tipe == "ready" {
 
