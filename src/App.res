@@ -78,9 +78,9 @@ let make = () => {
             className={linkBase2 ++ "decay-mask text-3xl p-2 max-w-80 font-fred"}
             content="SIGN UP"
           />
-          <Link url="/getinfo?cd_un" className={linkBase ++ "mt-8"} content="verification code?" />
-          <Link url="/getinfo?pw_un" className={linkBase ++ "mt-4"} content="forgot password?" />
-          <Link url="/getinfo?un_em" className={linkBase ++ "mt-4"} content="forgot username?" />
+          <Link url="/getinfo?cd_un" className={linkBase ++ "mt-10"} content="verification code?" />
+          <Link url="/getinfo?pw_un" className={linkBase ++ "mt-6"} content="forgot password?" />
+          <Link url="/getinfo?un_em" className={linkBase ++ "mt-6"} content="forgot username?" />
           {switch showName == "" {
           | true => React.null
           | false =>
