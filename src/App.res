@@ -81,11 +81,6 @@ let make = () => {
           <Link url="/getinfo?cd_un" className={linkBase ++ "mt-8"} content="verification code?" />
           <Link url="/getinfo?pw_un" className={linkBase ++ "mt-4"} content="forgot password?" />
           <Link url="/getinfo?un_em" className={linkBase ++ "mt-4"} content="forgot username?" />
-          <Link
-            url="/leaderboards"
-            className={linkBase2 ++ "font-anon text-xl mt-20 max-w-80"}
-            content="Leaderboards"
-          />
           {switch showName == "" {
           | true => React.null
           | false =>
@@ -117,7 +112,7 @@ let make = () => {
           <div className="text-stone-100"> {React.string("unknown path, please try again")} </div>
         }
 
-      | (list{"lobby"}, None) | (list{"game"}, None) => {
+      | (list{"lobby"}, None) | (list{"game"}, None) | (list{"leaderboards"}, None) => {
           RescriptReactRouter.replace("/")
           React.null
         }
@@ -151,7 +146,7 @@ let make = () => {
           </p>
         }
 
-      | (list{"leaderboards"}, _) => <div> {React.string("leaderboard")} </div>
+      | (list{"leaderboards"}, Some(_)) => <div className="text-stone-100"> {React.string("leaderboard coming soon!")} </div>
 
       | (_, _) => <div> {React.string("other")} </div> // <PageNotFound/>
       }}

@@ -27,6 +27,11 @@ let make = (~playerGame, ~leader, ~games, ~send, ~wsError, ~close) => {
   }
 
   <>
+    <Link
+      url="/leaderboards"
+      className={"absolute top-1 left-1 text-stone-100 font-anon text-xl"}
+      content="Leaderboards"
+    />
     <Button
       textTrue=""
       textFalse=""

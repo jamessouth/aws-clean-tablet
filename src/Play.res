@@ -75,8 +75,6 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~playerIndex, ~send, ~leader,
   }, (leader, showAnswers, winner))
 
   let sendAnswer = _ => {
- 
- 
     let pl = {
       action: "answer",
       gameno: sk,
@@ -95,17 +93,15 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~playerIndex, ~send, ~leader,
     Js.log("onanimend")
   }
 
-  let onAnimationStart = _ => {
-   
-   
-    Js.log("onanimstart score")
-    let pl: endPayload = {
-      action: "end",
-      gameno: sk,
-      leader: winner == playerName
-    }
-    send(. Js.Json.stringifyAny(pl))
-  }
+  // let onAnimationStart = _ => {
+  //   Js.log("onanimstart score")
+  //   let pl: endPayload = {
+  //     action: "end",
+  //     gameno: sk,
+  //     leader: winner == playerName
+  //   }
+  //   send(. Js.Json.stringifyAny(pl))
+  // }
 
   let onEnter = (. _) => {
     if !answered {
@@ -122,7 +118,7 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~playerIndex, ~send, ~leader,
   }
 
   <div>
-    <Scoreboard players currentWord previousWord showAnswers winner onClick playerName onAnimationStart/>
+    <Scoreboard players currentWord previousWord showAnswers winner onClick playerName />
     {switch winner == "" {
     | false => React.null
     | true =>
