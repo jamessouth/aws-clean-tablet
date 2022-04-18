@@ -49,13 +49,12 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	var (
-		tableName = os.Getenv("tableName")
+		tableName = aws.String(os.Getenv("tableName"))
 		ddbsvc    = dynamodb.NewFromConfig(cfg)
 		auth      = req.RequestContext.Authorizer.(map[string]interface{})
-		id, name  = auth["principalId"].(string), auth["username"].(string)
+		id        = auth["principalId"].(string)
 		body      struct {
 			Action, Gameno string
-			Leader         bool
 		}
 	)
 
@@ -69,7 +68,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			"pk": &types.AttributeValueMemberS{Value: "CONNECT"},
 			"sk": &types.AttributeValueMemberS{Value: id},
 		},
-		TableName: aws.String(tableName),
+		TableName: tableName,
 		ExpressionAttributeNames: map[string]string{
 			"#G": "game",
 			"#L": "leader",
@@ -88,19 +87,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	})
 	callErr(err)
 
-	if body.Leader {
-
-		di, err := ddbsvc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
-			Key: map[string]types.AttributeValue{
-				"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
-				"sk": &types.AttributeValueMemberS{Value: body.Gameno},
-			},
-			TableName:    aws.String(tableName),
-			ReturnValues: types.ReturnValueAllOld,
-		})
-		callErr(err)
-
-	}
+	_, err = ddbsvc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
+		Key: map[string]types.AttributeValue{
+			"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
+			"sk": &types.AttributeValueMemberS{Value: body.Gameno},
+		},
+		TableName: tableName,
+	})
+	callErr(err)
 
 	return getReturnValue(http.StatusOK), nil
 }

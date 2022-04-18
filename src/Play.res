@@ -8,7 +8,6 @@ type answerPayload = {
 type endPayload = {
   action: string,
   gameno: string,
-  leader: bool,
 }
 
 type scorePayload = {
@@ -93,16 +92,6 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~playerIndex, ~send, ~leader,
     Js.log("onanimend")
   }
 
-  // let onAnimationStart = _ => {
-  //   Js.log("onanimstart score")
-  //   let pl: endPayload = {
-  //     action: "end",
-  //     gameno: sk,
-  //     leader: winner == playerName
-  //   }
-  //   send(. Js.Json.stringifyAny(pl))
-  // }
-
   let onEnter = (. _) => {
     if !answered {
       sendAnswer()
@@ -112,7 +101,11 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~playerIndex, ~send, ~leader,
 
   let onClick = _ => {
     // reset conns, delete game
-
+    let pl: endPayload = {
+      action: "end",
+      gameno: sk,
+    }
+    send(. Js.Json.stringifyAny(pl))
 
     RescriptReactRouter.push("/lobby")
   }
