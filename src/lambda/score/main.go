@@ -62,7 +62,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	var (
-		tableName = os.Getenv("tableName")
+		tableName = aws.String(os.Getenv("tableName"))
 		ddbsvc    = dynamodb.NewFromConfig(cfg)
 		body      struct {
 			Game struct {
@@ -96,7 +96,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
 			"sk": &types.AttributeValueMemberS{Value: body.Game.Sk},
 		},
-		TableName: aws.String(tableName),
+		TableName: tableName,
 		ExpressionAttributeNames: map[string]string{
 			"#P": "players",
 			"#W": "winner",
@@ -130,9 +130,18 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		for _, p := range updatedScoreData.Players {
 
 			won := ":z"
+			eav := map[string]types.AttributeValue{
+				":z": &types.AttributeValueMemberN{Value: "0"},
+				":o": &types.AttributeValueMemberN{Value: "1"},
+				":t": &types.AttributeValueMemberN{Value: strconv.Itoa(p.Score)},
+			}
 
 			if p.Name == updatedScoreData.Winner {
 				won = ":o"
+				eav = map[string]types.AttributeValue{
+					":o": &types.AttributeValueMemberN{Value: "1"},
+					":t": &types.AttributeValueMemberN{Value: strconv.Itoa(p.Score)},
+				}
 			}
 
 			ue := fmt.Sprintf("ADD #W %s, #G :o, #T :t", won)
@@ -142,18 +151,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 					"pk": &types.AttributeValueMemberS{Value: "STAT"},
 					"sk": &types.AttributeValueMemberS{Value: gameIDs.Ids[p.PlayerID]},
 				},
-				TableName: aws.String(tableName),
+				TableName: tableName,
 				ExpressionAttributeNames: map[string]string{
 					"#W": "wins",
 					"#G": "games",
 					"#T": "totalPoints",
 				},
-				ExpressionAttributeValues: map[string]types.AttributeValue{
-					":z": &types.AttributeValueMemberN{Value: "0"},
-					":o": &types.AttributeValueMemberN{Value: "1"},
-					":t": &types.AttributeValueMemberN{Value: strconv.Itoa(p.Score)},
-				},
-				UpdateExpression: aws.String(ue),
+				ExpressionAttributeValues: eav,
+				UpdateExpression:          aws.String(ue),
 			})
 			if err != nil {
 				return callErr(err)

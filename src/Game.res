@@ -10,7 +10,7 @@ type startPayload = {
 }
 
 @react.component
-let make = (~game: Reducer.listGame, ~leader, ~inThisGame, ~inAGame, ~send, ~class) => {
+let make = (~game: Reducer.listGame, ~leader, ~inThisGame, ~inAGame, ~send, ~class, ~onlyGame) => {
   let liStyle = `<md:mb-16 grid grid-cols-2 grid-rows-6 relative text-xl bg-bottom bg-no-repeat h-200px text-center font-bold text-dark-800 font-anon pb-8 ${class} lg:(max-w-lg w-full)`
   let btnStyle = " cursor-pointer text-base font-bold text-stone-100 font-anon w-1/2 bottom-0 h-8 absolute bg-stone-700 bg-opacity-70 filter disabled:cursor-not-allowed disabled:contrast-[0.25]"
   let (ready, setReady) = React.Uncurried.useState(_ => true)
@@ -110,9 +110,9 @@ let make = (~game: Reducer.listGame, ~leader, ~inThisGame, ~inAGame, ~send, ~cla
   }, (inThisGame, count, game.no, leader))
 
   <li
-    className={switch inThisGame {
-    | true => "shadow-lg shadow-stone-100 " ++ liStyle
-    | false => liStyle
+    className={switch (inThisGame, onlyGame) {
+    | (true, false) => "shadow-lg shadow-stone-100 " ++ liStyle
+    | (false, _) | (_, true) => liStyle
     }}>
     <p className="absolute text-stone-100 text-xs left-1/2 transform -translate-x-2/4 -top-3.5">
       {React.string(game.no)}

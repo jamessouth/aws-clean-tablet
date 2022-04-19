@@ -83,6 +83,7 @@ let make = (~playerGame, ~leader, ~games, ~send, ~wsError, ~close) => {
                   inAGame={playerGame != ""}
                   send
                   class
+                  onlyGame={Js.Array2.length(gs) == 1}
                 />
               })
               ->React.array}
