@@ -29,7 +29,10 @@ export default defineConfig({
               'rotate': 'rotate 2.5s linear infinite',
             },
             backgroundImage: {
-              'lose': '-webkit-image-set(url("../../assets/lose1x.webp") 1x, url("../../assets/lose2x.webp") 2x)',
+              'lose1': '-webkit-image-set(url("../../assets/lose11x.webp") 1x, url("../../assets/lose12x.webp") 2x)',
+              'lose2': '-webkit-image-set(url("../../assets/lose21x.webp") 1x, url("../../assets/lose22x.webp") 2x)',
+              'lose3': '-webkit-image-set(url("../../assets/lose31x.webp") 1x, url("../../assets/lose32x.webp") 2x)',
+              'lose4': '-webkit-image-set(url("../../assets/lose41x.webp") 1x, url("../../assets/lose42x.webp") 2x)',
               'win': '-webkit-image-set(url("../../assets/win1x.webp") 1x, url("../../assets/win2x.webp") 2x)',
             },
             fontFamily: {

@@ -7,13 +7,21 @@ let make = (
   ~winner,
   ~onClick,
   ~playerName,
-  // ~onAnimationStart,
 ) => {
   Js.log2("score", players)
 
-  let bgimg = switch winner == playerName {
-  | true => "bg-win"
-  | false => "bg-lose"
+  let isWinner = winner != ""
+
+  let bgimg = switch isWinner {
+  | true =>
+    switch winner == playerName {
+    | true => "bg-win"
+    | false => {
+        let rand = Js.Math.unsafe_trunc(Js.Math.random() *. 4.) + 1
+        j`bg-lose$rand`
+      }
+    }
+  | false => ""
   }
 
   let hstyles = "text-center font-anon mb-5 text-stone-100 "
@@ -33,11 +41,11 @@ let make = (
     | false => <>
         <p className="h-7 mb-2" />
         <h2
-          className={switch winner == "" {
+          className={switch !isWinner {
           | true => hstyles
           | false => hstyles ++ "animate-blink"
           }}>
-          {switch winner == "" {
+          {switch !isWinner {
           | false => {
               let hiScore = players->Js.Array2.unsafe_get(0)
               React.string(winner ++ " wins with " ++ hiScore.score ++ " points!")
@@ -53,10 +61,10 @@ let make = (
       ->Js.Array2.mapi((p, i) => {
         <li
           className={"w-full flex flex-row h-7 py-0 px-2 justify-between items-center text-xl text-stone-100 " ++ if (
-            winner != "" && i != 0
+            isWinner && i != 0
           ) {
             "filter brightness-30 contrast-60"
-          } else if (winner != "" || currentWord == "game over") && i == 0 {
+          } else if (isWinner || currentWord == "game over") && i == 0 {
             "animate-rotate"
           } else {
             ""
@@ -67,7 +75,7 @@ let make = (
             className={switch p.hasAnswered {
             | true => "after:content-['\\22C5'] after:text-yellow-200 after:text-5xl after:absolute after:leading-25px"
             | false =>
-              switch (winner != "", i == 0) {
+              switch (isWinner, i == 0) {
               | (true, true) => "text-shadow-win"
               | _ => ""
               }
@@ -81,7 +89,7 @@ let make = (
             </>
           | false =>
             <p
-              className={switch (winner != "", i == 0) {
+              className={switch (isWinner, i == 0) {
               | (true, true) => "text-shadow-win"
               | _ => ""
               }}>
@@ -92,7 +100,7 @@ let make = (
       })
       ->React.array}
     </ul>
-    {switch (winner == "", currentWord == "game over") {
+    {switch (!isWinner, currentWord == "game over") {
     | (false, _) | (true, true) => <>
         <div className={`w-64 h-96 bg-no-repeat opacity-0 m-auto animate-fadein ${bgimg}`} />
         <Button textTrue="Return to lobby" textFalse="Return to lobby" onClick className />
