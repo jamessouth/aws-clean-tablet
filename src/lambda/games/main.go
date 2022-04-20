@@ -423,7 +423,6 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			queryParams := dynamodb.QueryInput{
 				TableName:              aws.String(tableName),
-				ScanIndexForward:       aws.Bool(true),
 				KeyConditionExpression: aws.String("pk = :c"),
 				FilterExpression:       aws.String("#P = :f"),
 				ExpressionAttributeValues: map[string]types.AttributeValue{

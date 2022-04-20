@@ -5,11 +5,6 @@ type answerPayload = {
   index: string,
 }
 
-type endPayload = {
-  action: string,
-  gameno: string,
-}
-
 type scorePayload = {
   action: string,
   game: Reducer.liveGame,
@@ -100,8 +95,7 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~playerIndex, ~send, ~leader,
   }
 
   let onClick = _ => {
-    // reset conns, delete game
-    let pl: endPayload = {
+    let pl: Game.startPayload = {
       action: "end",
       gameno: sk,
     }

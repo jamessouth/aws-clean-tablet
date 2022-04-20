@@ -146,7 +146,7 @@ let make = () => {
           </p>
         }
 
-      | (list{"leaderboards"}, Some(_)) => <div className="text-stone-100"> {React.string("leaderboard coming soon!")} </div>
+      | (list{"leaderboards"}, Some(_)) => <Leaders send/>
 
       | (_, _) => <div> {React.string("other")} </div> // <PageNotFound/>
       }}
