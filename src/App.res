@@ -48,6 +48,7 @@ let make = () => {
     game,
     games,
     leader,
+    rawLeaders,
     send,
     close,
     wsError,
@@ -146,7 +147,7 @@ let make = () => {
           </p>
         }
 
-      | (list{"leaderboards"}, Some(_)) => <Leaders send/>
+      | (list{"leaderboards"}, Some(_)) => <Leaders send rawLeaders/>
 
       | (_, _) => <div> {React.string("other")} </div> // <PageNotFound/>
       }}

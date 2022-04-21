@@ -4,12 +4,54 @@ type leaderPayload = {
 }
 
 @react.component
-let make = (~send) => {
-  let pl = {
-    action: "leaders",
-    info: "hello",
-  }
-  send(. Js.Json.stringifyAny(pl))
+let make = (~send, ~rawLeaders) => {
 
-  <div className="text-stone-100"> {React.string("leaderboard coming soon!")} </div>
+  React.useEffect0(() => {
+    let pl = {
+      action: "leaders",
+      info: "hello",
+    }
+    send(. Js.Json.stringifyAny(pl))
+    None
+  })
+
+
+  <div className="">
+    <h2 className="text-stone-100">{React.string("leaderboard coming soon!")}</h2>
+  
+  <ul
+      className="">
+      {rawLeaders
+      ->Js.Array2.mapi((s, i) => {
+        <li
+          className="flex flex-row"
+          key={j`${s.name}$i`}>
+          <p
+            className="">
+            {React.string(s.name)}
+          </p>
+          <p
+            className="">
+            {React.string(s.name)}
+          </p>
+          <p
+            className="">
+            {React.string(s.name)}
+          </p>
+          <p
+            className="">
+            {React.string(s.name)}
+          </p>
+          
+        </li>
+      })
+      ->React.array}
+    </ul>
+  
+  
+  
+  
+  </div>
+
+  
 }

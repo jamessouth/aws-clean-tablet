@@ -14,6 +14,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
   let (wsConnected, setWsConnected) = React.Uncurried.useState(_ => false)
   let (wsError, setWsError) = React.Uncurried.useState(_ => "")
   let (leader, setLeader) = React.Uncurried.useState(_ => false)
+  let (rawLeaders, setRawLeaders) = React.Uncurried.useState(_ => [])
   let (state, dispatch) = React.Uncurried.useReducerWithMapState(
     Reducer.reducer,
     initialState,
@@ -26,6 +27,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
     setPlayerIndex(._ => "")
     setPlayerGame(._ => "")
     setLeader(._ => false)
+    setRawLeaders(._ => [])
   }
 
   open Web
@@ -102,6 +104,11 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
             Js.log2("parsedremgame", rmvGame)
             dispatch(. RemoveGame(rmvGame))
           }
+        | Leaders => {
+            let {leaders} = parseLeaders(data)
+            Js.log2("parsedleaders", leaders)
+            setRawLeaders(._ => leaders)
+          }
         | Other => Js.log2("unknown json data", data)
         }
       })
@@ -145,5 +152,5 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
 
   let close = (. code, reason) => ws->closeCodeReason(code, reason)
 
-  (playerGame, playerName, playerColor, playerIndex, wsConnected, state.game, state.gamesList, leader, send, close, wsError)
+  (playerGame, playerName, playerColor, playerIndex, wsConnected, state.game, state.gamesList, leader, rawLeaders, send, close, wsError)
 }

@@ -1,3 +1,10 @@
+type stat = {
+  name: string,
+  wins: int,
+  totalPoints: int,
+  games: int,
+}
+
 type listPlayer = {
   name: string,
   ready: bool,

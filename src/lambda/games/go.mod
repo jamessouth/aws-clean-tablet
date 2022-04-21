@@ -3,11 +3,11 @@ module games
 go 1.18
 
 require (
-	github.com/aws/aws-lambda-go v1.29.0
-	github.com/aws/aws-sdk-go v1.43.36
+	github.com/aws/aws-lambda-go v1.30.0
+	github.com/aws/aws-sdk-go v1.43.43
 	github.com/aws/aws-sdk-go-v2 v1.16.2
 	github.com/aws/aws-sdk-go-v2/config v1.15.3
-	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.8.4
+	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.9.0
 	github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi v1.10.3
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.15.3
 	github.com/aws/smithy-go v1.11.2

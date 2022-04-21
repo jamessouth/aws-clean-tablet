@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
 
 	"net/http"
 	"os"
@@ -15,10 +16,29 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
+	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/smithy-go"
 )
+
+type stat struct {
+	Name                     string
+	Wins, TotalPoints, Games int
+}
+
+func sortByWinsThenName(stats []stat) []stat {
+	sort.Slice(stats, func(i, j int) bool {
+		switch {
+		case stats[i].Wins != stats[j].Wins:
+			return stats[i].Wins > stats[j].Wins
+		default:
+			return stats[i].Name < stats[j].Name
+		}
+	})
+
+	return stats
+}
 
 func getReturnValue(status int) events.APIGatewayProxyResponse {
 	return events.APIGatewayProxyResponse{
@@ -33,21 +53,51 @@ func getReturnValue(status int) events.APIGatewayProxyResponse {
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 	reg := strings.Split(req.RequestContext.DomainName, ".")[2]
 
-	cfg, err := config.LoadDefaultConfig(ctx,
-		config.WithRegion(reg),
-	)
-	if err != nil {
-		fmt.Println("cfg err")
-	}
-
 	var (
+		connID    = req.RequestContext.ConnectionID
+		apiid     = os.Getenv("CT_APIID")
+		stage     = os.Getenv("CT_STAGE")
+		endpoint  = "https://" + apiid + ".execute-api." + reg + ".amazonaws.com/" + stage
 		tableName = aws.String(os.Getenv("tableName"))
-		ddbsvc    = dynamodb.NewFromConfig(cfg)
+
 		// auth      = req.RequestContext.Authorizer.(map[string]interface{})
 		// id, name  = auth["principalId"].(string), auth["username"].(string)
 		body struct {
 			Action, Info string
 		}
+	)
+
+	customResolver := aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
+		if service == apigatewaymanagementapi.ServiceID && region == reg {
+			ep := aws.Endpoint{
+				PartitionID:   "aws",
+				URL:           endpoint,
+				SigningRegion: reg,
+			}
+
+			return ep, nil
+		}
+		return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested")
+	})
+
+	apigwcfg, err := config.LoadDefaultConfig(ctx,
+		config.WithRegion(reg),
+		config.WithEndpointResolver(customResolver),
+	)
+	if err != nil {
+		return callErr(err)
+	}
+
+	ddbcfg, err := config.LoadDefaultConfig(ctx,
+		config.WithRegion(reg),
+	)
+	if err != nil {
+		return callErr(err)
+	}
+
+	var (
+		apigwsvc = apigatewaymanagementapi.NewFromConfig(apigwcfg)
+		ddbsvc   = dynamodb.NewFromConfig(ddbcfg)
 	)
 
 	err = json.Unmarshal([]byte(req.Body), &body)
@@ -67,13 +117,28 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		return callErr(err)
 	}
 
-	var leaders []struct {
-		Pk, Sk, Name             string
-		Wins, TotalPoints, Games int
-	}
+	var leaders []stat
 	err = attributevalue.UnmarshalListOfMaps(leadersResults.Items, &leaders)
-	callErr(err)
+	if err != nil {
+		return callErr(err)
+	}
 	fmt.Printf("%s%+v\n", "res ", leaders)
+
+	payload, err := json.Marshal(struct {
+		Leaders []stat `json:"leaders"`
+	}{
+		Leaders: sortByWinsThenName(leaders),
+	})
+	if err != nil {
+		return callErr(err)
+	}
+
+	conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(connID), Data: payload}
+
+	_, err = apigwsvc.PostToConnection(ctx, &conn)
+	if err != nil {
+		return callErr(err)
+	}
 
 	return getReturnValue(http.StatusOK), nil
 }
