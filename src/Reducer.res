@@ -14,7 +14,7 @@ type livePlayer = {
   playerid: string,
   name: string,
   color: string,
-  score: string,
+  score: string,//sent as int
   index: string,
   answer: string,
   hasAnswered: bool,
