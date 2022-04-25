@@ -147,7 +147,7 @@ let make = () => {
   //         <div className="text-stone-100"> {React.string("unknown path, please try again")} </div>
   //       }
 
-  //     | (list{"lobby"}, None) | (list{"game"}, None) | (list{"leaderboards"}, None) => {
+  //     | (list{"lobby"}, None) | (list{"game"}, None) | (list{"leaderboard"}, None) => {
   //         RescriptReactRouter.replace("/")
   //         React.null
   //       }
@@ -181,7 +181,7 @@ let make = () => {
   //         </p>
   //       }
 
-  //     | (list{"leaderboards"}, Some(_)) => <Leaders send leaderData/>
+  //     | (list{"leaderboard"}, Some(_)) => <Leaders send leaderData/>
 
   //     | (_, _) => <div> {React.string("other")} </div> // <PageNotFound/>
   //     }}

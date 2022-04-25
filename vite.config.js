@@ -35,6 +35,9 @@ export default defineConfig({
               'lose4': '-webkit-image-set(url("../../assets/lose41x.webp") 1x, url("../../assets/lose42x.webp") 2x)',
               'win': '-webkit-image-set(url("../../assets/win1x.webp") 1x, url("../../assets/win2x.webp") 2x)',
             },
+            boxShadow: {
+              'lead': '0px 0px 1px #f5f5f4',
+            },
             fontFamily: {
               'anon': 'Anonymous Pro, monospace',
               'arch': 'Architects Daughter, cursive',
@@ -79,7 +82,7 @@ export default defineConfig({
               // 'desk': '1440px',
             },
             textShadow: {
-              'win': '0px 0px 3px #f5f5f4ff',
+              'win': '0px 0px 3px #f5f5f4',
             },
           },
         },
