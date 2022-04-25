@@ -59,35 +59,13 @@ let make = () => {
     {name: "test2", wins: 0, totalPoints: 9, games: 33},
   ]
 
-  let (dt, setDt) = React.Uncurried.useState(_ => zzz)
+  
 
-  let numSortWins = (dir: Leaders.sortDirection, n1: Reducer.stat, n2: Reducer.stat) =>
-    switch dir {
-    | Up => n2.wins - n1.wins
-    | Down => n1.wins - n2.wins
-    }
-  let numSortPoints = (dir: Leaders.sortDirection, n1: Reducer.stat, n2: Reducer.stat) =>
-    switch dir {
-    | Up => n2.totalPoints - n1.totalPoints
-    | Down => n1.totalPoints - n2.totalPoints
-    }
 
-  let sortData = (input, dir) => {
-        let arr = Js.Array2.copy(dt)
-    switch input {
-    | "wins" => {
-        Js.Array.sortInPlaceWith(numSortWins(dir), arr)->ignore
-        setDt(._ => arr)
-      }
-    | "points" => {
-        Js.Array.sortInPlaceWith(numSortPoints(dir), arr)->ignore
-        setDt(._ => arr)
-      }
-    | _ => ()
-    }
-  }
 
-  <Leaders leaderData=dt sortData />
+
+
+  <Leaders leaderData=zzz  />
   // <>
   //   <header className="mb-10 newgmimg:mb-12">
   //     <p className="font-flow text-stone-100 text-4xl h-10 font-bold text-center">

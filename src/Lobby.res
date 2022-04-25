@@ -28,7 +28,7 @@ let make = (~playerGame, ~leader, ~games, ~send, ~wsError, ~close) => {
 
   <>
     <Link
-      url="/leaderboards"
+      url="/leaderboard"
       className={"absolute top-1 left-1"}
       image={<img className="block" src="../../assets/leader.png" />}
     />

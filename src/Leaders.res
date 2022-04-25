@@ -11,13 +11,26 @@ type sortDirection =
 let make = (
   // ~send,
   ~leaderData: array<Reducer.stat>,
-  ~sortData,
+  
 ) => {
   let (winDir, setWinDir) = React.Uncurried.useState(_ => Down)
   let (ptsDir, setPtsDir) = React.Uncurried.useState(_ => Down)
 
   let (sortedField, setSortedField) = React.Uncurried.useState(_ => "")
   let (arrow, setArrow) = React.Uncurried.useState(_ => "")
+
+  let (dt, setDt) = React.Uncurried.useState(_ => leaderData)
+
+    let numSortWins = (dir: sortDirection, n1: Reducer.stat, n2: Reducer.stat) =>
+    switch dir {
+    | Up => n2.wins - n1.wins
+    | Down => n1.wins - n2.wins
+    }
+  let numSortPoints = (dir: sortDirection, n1: Reducer.stat, n2: Reducer.stat) =>
+    switch dir {
+    | Up => n2.totalPoints - n1.totalPoints
+    | Down => n1.totalPoints - n2.totalPoints
+    }
 
   // React.useEffect0(() => {
   //   let pl = {
@@ -29,6 +42,21 @@ let make = (
   // })
   // let zzz:array<Reducer.stat> = [{name:"test",wins:2,totalPoints:15,games:3},{name:"test3",wins:1,totalPoints:12,games:3},{name:"test2",wins:0,totalPoints:9,games:3}]
   Js.log(leaderData)
+
+    let sortData = (input, dir) => {
+        let arr = Js.Array2.copy(dt)
+    switch input {
+    | "wins" => {
+        Js.Array.sortInPlaceWith(numSortWins(dir), arr)->ignore
+        setDt(._ => arr)
+      }
+    | "points" => {
+        Js.Array.sortInPlaceWith(numSortPoints(dir), arr)->ignore
+        setDt(._ => arr)
+      }
+    | _ => ()
+    }
+  }
 
   let onClick = (field, dir, func, _e) => {
     switch dir {
@@ -110,7 +138,7 @@ let make = (
         </tr>
       </thead>
       <tbody>
-        {leaderData
+        {dt
         ->Js.Array2.mapi(({name, wins, totalPoints, games}, i) => {
           <tr className="text-center odd:bg-stone-400/18 h-8" key={j`${name}$i`}>
             <th className=""> {React.string(name)} </th>
