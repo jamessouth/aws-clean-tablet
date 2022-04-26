@@ -8,13 +8,33 @@
   -webkit-mask-image: url('../../assets/decaying.webp');
   mask-image: url('../../assets/decaying.webp');
 }
+
+.leaderbg{
+  
+  
+
+
+
+  width: 100vw;
+height: 100vh;
+
+background: image-set( url("/assets/leaderbg1x.webp") 1x, url("/assets/leaderbg2x.webp") 2x);
+  
+background-size: cover;
+mask-size: cover;
+mask-image: image-set( url("/assets/leaderbgmask1x.webp") 1x, url("/assets/leaderbgmask2x.webp") 2x);
+}
+
+
+
+
 .game0{
   background-image: -webkit-image-set(
-    url("../../assets/soria1x.webp") 1x,
-    url("../../assets/soria2x.webp") 2x);
+    url("../../assets/troldslottet1x.webp") 1x,
+    url("../../assets/troldslottet2x.webp") 2x);
   background-image: image-set(
-    url("../../assets/soria1x.webp") 1x,
-    url("../../assets/soria2x.webp") 2x);
+    url("../../assets/troldslottet1x.webp") 1x,
+    url("../../assets/troldslottet2x.webp") 2x);
 }
 .game1{
   background-image: -webkit-image-set(

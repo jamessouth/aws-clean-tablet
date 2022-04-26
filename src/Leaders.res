@@ -76,26 +76,26 @@ let make = (
 
   let arrowClass = ` relative after:-top-8px after:content-${arrow} after:text-stone-300 after:text-2xl after:absolute`
 
-  <div className="text-stone-100">
-    <table className="mx-auto shadow-lead w-4/5 border-collapse">
-      <caption className="mb-8 text-4xl font-fred"> {React.string("Leaderboard")} </caption>
+  <div className="text-stone-800 leaderbg overflow-y-scroll">
+    <table className="w-full shadow-lead border-collapse">
+      // <caption className="mb-8 text-4xl font-fred"> {React.string("Leaderboard")} </caption>
       <colgroup>
         <col />
         <col
           className={switch sortedField == "wins" {
-          | true => "bg-stone-400/18"
+          | true => "bg-stone-800/14"
           | false => ""
           }}
         />
         <col
           className={switch sortedField == "points" {
-          | true => "bg-stone-400/18"
+          | true => "bg-stone-800/14"
           | false => ""
           }}
         />
         <col />
       </colgroup>
-      <thead>
+      <thead className="sticky top-0">
         <tr>
           <th>
             <p> {React.string("name")} </p>
@@ -140,7 +140,7 @@ let make = (
       <tbody>
         {dt
         ->Js.Array2.mapi(({name, wins, totalPoints, games}, i) => {
-          <tr className="text-center odd:bg-stone-400/18 h-8" key={j`${name}$i`}>
+          <tr className="text-center odd:bg-stone-800/14 h-8" key={j`${name}$i`}>
             <th className=""> {React.string(name)} </th>
             <td className=""> {React.string(j`$wins`)} </td>
             <td className=""> {React.string(j`$totalPoints`)} </td>
@@ -148,6 +148,42 @@ let make = (
           </tr>
         })
         ->React.array}
+        <tr className="text-center h-8" key={"900"}>
+            <th className=""> {React.string("")} </th>
+            <td className=""> {React.string("")} </td>
+            <td className=""> {React.string("")} </td>
+            <td className=""> {React.string("")} </td>
+          </tr>
+        <tr className="text-center h-8" key={"901"}>
+            <th className=""> {React.string("")} </th>
+            <td className=""> {React.string("")} </td>
+            <td className=""> {React.string("")} </td>
+            <td className=""> {React.string("")} </td>
+          </tr>
+        <tr className="text-center h-8" key={"902"}>
+            <th className=""> {React.string("")} </th>
+            <td className=""> {React.string("")} </td>
+            <td className=""> {React.string("")} </td>
+            <td className=""> {React.string("")} </td>
+          </tr>
+        <tr className="text-center h-8" key={"903"}>
+            <th className=""> {React.string("")} </th>
+            <td className=""> {React.string("")} </td>
+            <td className=""> {React.string("")} </td>
+            <td className=""> {React.string("")} </td>
+          </tr>
+        <tr className="text-center h-8" key={"904"}>
+            <th className=""> {React.string("")} </th>
+            <td className=""> {React.string("")} </td>
+            <td className=""> {React.string("")} </td>
+            <td className=""> {React.string("")} </td>
+          </tr>
+        <tr className="text-center h-8" key={"905"}>
+            <th className=""> {React.string("")} </th>
+            <td className=""> {React.string("")} </td>
+            <td className=""> {React.string("")} </td>
+            <td className=""> {React.string("")} </td>
+          </tr>
       </tbody>
     </table>
   </div>
