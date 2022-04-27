@@ -35,15 +35,16 @@ export default defineConfig({
               'lose4': '-webkit-image-set(url("../../assets/lose41x.webp") 1x, url("../../assets/lose42x.webp") 2x)',
               'win': '-webkit-image-set(url("../../assets/win1x.webp") 1x, url("../../assets/win2x.webp") 2x)',
             },
-            boxShadow: {
-              'lead': '0px 0px 1px #f5f5f4',
-            },
+            // boxShadow: {
+            //   'lead': '0px 0px 1px #f5f5f4',
+            // },
             fontFamily: {
               'anon': 'Anonymous Pro, monospace',
               'arch': 'Architects Daughter, cursive',
               'flow': 'Indie Flower, cursive',
               'fred': 'Fredericka the Great, cursive',
               'luck': 'Luckiest Guy, cursive',
+              'over': 'Overpass, sans-serif',
               'perm': 'Permanent Marker, cursive',
             },
             keyframes: {
@@ -82,6 +83,7 @@ export default defineConfig({
               // 'desk': '1440px',
             },
             textShadow: {
+              'lead': '0px 2px 2px #abc4d0',
               'win': '0px 0px 3px #f5f5f4',
             },
           },

@@ -55,8 +55,16 @@ let make = () => {
   // ) = WsHook.useWs(token, setToken, cognitoUser, setCognitoUser, initialState)
   let zzz: array<Reducer.stat> = [
     {name: "test", wins: 2, totalPoints: 1, games: 13},
-    {name: "test3", wins: 21, totalPoints: 12, games: 3},
-    {name: "test2", wins: 0, totalPoints: 9, games: 33},
+    {name: "carl", wins: 21, totalPoints: 12, games: 23},
+    {name: "bill", wins: 10, totalPoints: 9, games: 323},
+    {name: "wes", wins: 22, totalPoints: 11, games: 213},
+    {name: "stu", wins: 121, totalPoints: 121, games: 32},
+    {name: "marcy", wins: 30, totalPoints: 91, games: 332},
+    {name: "stacie", wins: 32, totalPoints: 17, games: 313},
+    {name: "harold", wins: 40, totalPoints: 97, games: 333},
+    {name: "abner", wins: 42, totalPoints: 18, games: 173},
+    {name: "mmmmmmmmmm", wins: 241, totalPoints: 5152, games: 83},
+    {name: "liz", wins: 50, totalPoints: 59, games: 363},
   ]
 
   
