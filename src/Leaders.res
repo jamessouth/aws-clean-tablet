@@ -13,12 +13,12 @@ let make = (
   ~leaderData: array<Reducer.stat>,
 ) => {
   let (nameDir, setNameDir) = React.Uncurried.useState(_ => Down)
-  let (winDir, setWinDir) = React.Uncurried.useState(_ => Up)
+  let (winDir, setWinDir) = React.Uncurried.useState(_ => Down)
   let (ptsDir, setPtsDir) = React.Uncurried.useState(_ => Up)
   let (gamesDir, setGamesDir) = React.Uncurried.useState(_ => Up)
 
-  let (sortedField, setSortedField) = React.Uncurried.useState(_ => "")
-  let (arrow, setArrow) = React.Uncurried.useState(_ => "")
+  let (sortedField, setSortedField) = React.Uncurried.useState(_ => "wins")
+  let (arrow, setArrow) = React.Uncurried.useState(_ => "['\\2193']")
 
   let (dt, setDt) = React.Uncurried.useState(_ => leaderData)
 
@@ -89,12 +89,12 @@ let make = (
     sortData(field, dir)
   }
 
-  let buttonBase = "bg-transparent text-dark-600 text-base font-anon font-bold"
+  let buttonBase = "bg-transparent text-dark-600 text-base font-anon font-bold w-full h-8"
 
   let arrowClass = ` relative after:content-${arrow} after:text-2xl after:font-over after:absolute`
 
   <div className="leaderbg overflow-y-scroll">
-    <table className="w-full border-collapse text-dark-600 font-anon">
+    <table className="w-full border-collapse text-dark-600 font-anon table-fixed">
       <caption className="my-4 text-4xl font-fred font-bold text-shadow-lead">
         {React.string("Leaderboard")}
       </caption>
@@ -126,7 +126,7 @@ let make = (
       </colgroup>
       <thead className="sticky top-0 h-8 bg-amber-200">
         <tr>
-          <th>
+          <th className="first:w-25vw first:min-w-104px">
             <Button
               textTrue="name"
               textFalse="name"
