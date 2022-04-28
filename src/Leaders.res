@@ -3,53 +3,23 @@ type leaderPayload = {
   info: string,
 }
 
-type sortDirection =
-  | Up
-  | Down
-
 @react.component
 let make = (
   // ~send,
   ~leaderData: array<Reducer.stat>,
 ) => {
+  open Sorting
   let (nameDir, setNameDir) = React.Uncurried.useState(_ => Down)
   let (winDir, setWinDir) = React.Uncurried.useState(_ => Down)
   let (ptsDir, setPtsDir) = React.Uncurried.useState(_ => Up)
   let (gamesDir, setGamesDir) = React.Uncurried.useState(_ => Up)
+  let (winPctDir, setWinPctDir) = React.Uncurried.useState(_ => Up)
+  let (ppgDir, setPPGDir) = React.Uncurried.useState(_ => Up)
 
   let (sortedField, setSortedField) = React.Uncurried.useState(_ => "wins")
   let (arrow, setArrow) = React.Uncurried.useState(_ => "['\\2193']")
 
-  let (dt, setDt) = React.Uncurried.useState(_ => leaderData)
-
-  let strSortName = (dir: sortDirection, n1: Reducer.stat, n2: Reducer.stat) =>
-    switch dir {
-    | Up =>
-      switch n2.name > n1.name {
-      | true => 1
-      | false => -1
-      }
-    | Down =>
-      switch n2.name <= n1.name {
-      | true => 1
-      | false => -1
-      }
-    }
-  let numSortWins = (dir: sortDirection, n1: Reducer.stat, n2: Reducer.stat) =>
-    switch dir {
-    | Up => n2.wins - n1.wins
-    | Down => n1.wins - n2.wins
-    }
-  let numSortPoints = (dir: sortDirection, n1: Reducer.stat, n2: Reducer.stat) =>
-    switch dir {
-    | Up => n2.totalPoints - n1.totalPoints
-    | Down => n1.totalPoints - n2.totalPoints
-    }
-  let numSortGames = (dir: sortDirection, n1: Reducer.stat, n2: Reducer.stat) =>
-    switch dir {
-    | Up => n2.games - n1.games
-    | Down => n1.games - n2.games
-    }
+  let (data, setData) = React.Uncurried.useState(_ => leaderData)
 
   // React.useEffect0(() => {
   //   let pl = {
@@ -61,18 +31,6 @@ let make = (
   // })
 
   Js.log(leaderData)
-
-  let sortData = (input, dir) => {
-    let arr = Js.Array2.copy(dt)
-    switch input {
-    | "name" => arr->Js.Array2.sortInPlaceWith(strSortName(dir))
-    | "wins" => arr->Js.Array2.sortInPlaceWith(numSortWins(dir))
-    | "points" => arr->Js.Array2.sortInPlaceWith(numSortPoints(dir))
-    | "games" => arr->Js.Array2.sortInPlaceWith(numSortGames(dir))
-    | _ => []
-    }->ignore
-    setDt(._ => arr)
-  }
 
   let onClick = (field, dir, func, _e) => {
     switch dir {
@@ -86,7 +44,7 @@ let make = (
       }
     }
     setSortedField(._ => field)
-    sortData(field, dir)
+    sortData(field, dir, data, setData)
   }
 
   let buttonBase = "bg-transparent text-dark-600 text-base font-anon font-bold w-full h-8"
@@ -123,10 +81,22 @@ let make = (
           | false => ""
           }}
         />
+        <col
+          className={switch sortedField == "win %" {
+          | true => "bg-stone-100/12"
+          | false => ""
+          }}
+        />
+        <col
+          className={switch sortedField == "pts/gm" {
+          | true => "bg-stone-100/12"
+          | false => ""
+          }}
+        />
       </colgroup>
       <thead className="sticky top-0 h-8 bg-amber-200">
         <tr>
-          <th className="first:w-25vw first:min-w-104px">
+          <th className="first:w-16.7vw first:min-w-104px">
             <Button
               textTrue="name"
               textFalse="name"
@@ -170,16 +140,40 @@ let make = (
               }}
             />
           </th>
+          <th>
+            <Button
+              textTrue="win %"
+              textFalse="win %"
+              onClick={onClick("win %", winPctDir, setWinPctDir)}
+              className={switch sortedField == "win %" {
+              | true => buttonBase ++ arrowClass
+              | false => buttonBase
+              }}
+            />
+          </th>
+          <th>
+            <Button
+              textTrue="pts/gm"
+              textFalse="pts/gm"
+              onClick={onClick("pts/gm", ppgDir, setPPGDir)}
+              className={switch sortedField == "pts/gm" {
+              | true => buttonBase ++ arrowClass
+              | false => buttonBase
+              }}
+            />
+          </th>
         </tr>
       </thead>
       <tbody>
-        {dt
-        ->Js.Array2.mapi(({name, wins, totalPoints, games}, i) => {
+        {data
+        ->Js.Array2.mapi(({name, wins, totalPoints, games, winPct, ppg}, i) => {
           <tr className="text-center odd:bg-stone-100/16 h-8" key={j`${name}$i`}>
             <th className=""> {React.string(name)} </th>
             <td className=""> {React.string(j`$wins`)} </td>
             <td className=""> {React.string(j`$totalPoints`)} </td>
             <td className=""> {React.string(j`$games`)} </td>
+            <td className=""> {React.string(j`$winPct`)} </td>
+            <td className=""> {React.string(j`$ppg`)} </td>
           </tr>
         })
         ->React.array}

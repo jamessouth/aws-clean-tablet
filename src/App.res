@@ -54,17 +54,17 @@ let make = () => {
   //   wsError,
   // ) = WsHook.useWs(token, setToken, cognitoUser, setCognitoUser, initialState)
   let zzz: array<Reducer.stat> = [
-    {name: "mmmmmmmmmm", wins: 241, totalPoints: 5152, games: 83},
-    {name: "stu", wins: 121, totalPoints: 121, games: 32},
-    {name: "liz", wins: 50, totalPoints: 59, games: 363},
-    {name: "abner", wins: 42, totalPoints: 18, games: 173},
-    {name: "harold", wins: 40, totalPoints: 97, games: 333},
-    {name: "stacie", wins: 32, totalPoints: 17, games: 313},
-    {name: "marcy", wins: 30, totalPoints: 91, games: 332},
-    {name: "wes", wins: 22, totalPoints: 11, games: 213},
-    {name: "carl", wins: 21, totalPoints: 12, games: 23},
-    {name: "bill", wins: 10, totalPoints: 9, games: 323},
-    {name: "test", wins: 2, totalPoints: 1, games: 13},
+    {name: "mmmmmmmmmm", wins: 241, totalPoints: 5152, games: 83, winPct: 0.12, ppg: 11.0},
+    {name: "stu", wins: 121, totalPoints: 121, games: 32, winPct: 0.22, ppg: 11.1},
+    {name: "liz", wins: 50, totalPoints: 59, games: 363, winPct: 0.32, ppg: 11.2},
+    {name: "abner", wins: 42, totalPoints: 18, games: 173, winPct: 0.42, ppg: 11.3},
+    {name: "harold", wins: 40, totalPoints: 97, games: 333, winPct: 0.52, ppg: 11.4},
+    {name: "stacie", wins: 32, totalPoints: 17, games: 313, winPct: 0.62, ppg: 11.5},
+    {name: "marcy", wins: 30, totalPoints: 91, games: 332, winPct: 0.72, ppg: 11.6},
+    {name: "wes", wins: 22, totalPoints: 11, games: 213, winPct: 0.82, ppg: 11.7},
+    {name: "carl", wins: 21, totalPoints: 12, games: 23, winPct: 0.92, ppg: 11.8},
+    {name: "bill", wins: 10, totalPoints: 9, games: 323, winPct: 0.02, ppg: 11.9},
+    {name: "test", wins: 2, totalPoints: 1, games: 13, winPct: 0.17, ppg: 12.8},
   ]
 
   

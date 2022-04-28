@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"sort"
 
 	"net/http"
@@ -25,9 +26,12 @@ import (
 type stat struct {
 	Name                     string
 	Wins, TotalPoints, Games int
+	WinPct, PPG              float64
 }
 
-func sortByWinsThenName(stats []stat) []stat {
+type stats []stat
+
+func (stats stats) sortByWinsThenName() stats {
 	sort.Slice(stats, func(i, j int) bool {
 		switch {
 		case stats[i].Wins != stats[j].Wins:
@@ -36,6 +40,19 @@ func sortByWinsThenName(stats []stat) []stat {
 			return stats[i].Name < stats[j].Name
 		}
 	})
+
+	return stats
+}
+
+func (stats stats) calcStats() stats {
+	for i, s := range stats {
+		w := float64(s.Wins)
+		g := float64(s.Games)
+		p := float64(s.TotalPoints)
+		s.WinPct = math.Round((w/g)*100) / 100
+		s.PPG = math.Round((p/g)*100) / 100
+		stats[i] = s
+	}
 
 	return stats
 }
@@ -117,17 +134,18 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		return callErr(err)
 	}
 
-	var leaders []stat
+	var leaders stats
 	err = attributevalue.UnmarshalListOfMaps(leadersResults.Items, &leaders)
 	if err != nil {
 		return callErr(err)
 	}
+
 	fmt.Printf("%s%+v\n", "res ", leaders)
 
 	payload, err := json.Marshal(struct {
 		Leaders []stat `json:"leaders"`
 	}{
-		Leaders: sortByWinsThenName(leaders),
+		Leaders: leaders.sortByWinsThenName().calcStats(),
 	})
 	if err != nil {
 		return callErr(err)

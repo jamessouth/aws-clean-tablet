@@ -3,6 +3,8 @@ type stat = {
   wins: int,
   totalPoints: int,
   games: int,
+  winPct: float,
+  ppg: float,
 }
 
 type listPlayer = {
