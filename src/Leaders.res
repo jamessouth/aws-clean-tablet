@@ -2,13 +2,28 @@ type leaderPayload = {
   action: string,
   info: string,
 }
+type sortDirection = Up | Down
+let sortData = (field, dir, a: Reducer.stat, b: Reducer.stat) => {
+  let res = switch field {
+  | "name" => compare(a.name, b.name)
+  | "wins" => compare(a.wins, b.wins)
+  | "points" => compare(a.points, b.points)
+  | "games" => compare(a.games, b.games)
+  | "win %" => compare(a.winPct, b.winPct)
+  | _ => compare(a.ppg, b.ppg)
+  }
+
+  switch dir {
+  | Up => -res
+  | Down => res
+  }
+}
 
 @react.component
 let make = (
   // ~send,
   ~leaderData: array<Reducer.stat>,
 ) => {
-  open Sorting
   let (nameDir, setNameDir) = React.Uncurried.useState(_ => Down)
   let (winDir, setWinDir) = React.Uncurried.useState(_ => Down)
   let (ptsDir, setPtsDir) = React.Uncurried.useState(_ => Up)
@@ -19,7 +34,7 @@ let make = (
   let (sortedField, setSortedField) = React.Uncurried.useState(_ => "wins")
   let (arrow, setArrow) = React.Uncurried.useState(_ => "['\\2193']")
 
-  let (data, setData) = React.Uncurried.useState(_ => leaderData)
+  let (data, setData) = React.Uncurried.useState(_ => leaderData->Js.Array2.copy)
 
   // React.useEffect0(() => {
   //   let pl = {
@@ -33,6 +48,7 @@ let make = (
   Js.log(leaderData)
 
   let onClick = (field, dir, func, _e) => {
+    setSortedField(._ => field)
     switch dir {
     | Up => {
         setArrow(._ => "['\\2193']")
@@ -43,8 +59,8 @@ let make = (
         func(._ => Up)
       }
     }
-    setSortedField(._ => field)
-    sortData(field, dir, data, setData)
+
+    setData(._ => data->Js.Array2.sortInPlaceWith(sortData(field, dir)))
   }
 
   let buttonBase = "bg-transparent text-dark-600 text-base font-anon font-bold w-full h-8"
