@@ -52,8 +52,8 @@ let make = (
   let arrowClass = ` relative after:content-${arrow} after:text-2xl after:font-over after:absolute`
 
   <div className="leaderbg overflow-y-scroll">
-    <table className="w-full border-collapse text-dark-600 font-anon table-fixed">
-      <caption className="my-4 text-4xl font-fred font-bold text-shadow-lead">
+    <table className="w-max border-collapse text-dark-600 font-anon table-fixed">
+      <caption className="my-6 text-4xl font-fred font-bold text-shadow-lead">
         {React.string("Leaderboard")}
       </caption>
       <colgroup>
@@ -94,9 +94,9 @@ let make = (
           }}
         />
       </colgroup>
-      <thead className="sticky top-0 h-8 bg-amber-200">
+      <thead className="">
         <tr>
-          <th className="first:w-16.7vw first:min-w-104px">
+          <th className="sticky left-0 top-0 z-10 h-8 bg-amber-300 w-16.667vw min-w-104px">
             <Button
               textTrue="name"
               textFalse="name"
@@ -107,7 +107,7 @@ let make = (
               }}
             />
           </th>
-          <th>
+          <th className="sticky top-0 h-8 bg-amber-300 w-16.667vw min-w-72px">
             <Button
               textTrue="wins"
               textFalse="wins"
@@ -118,7 +118,7 @@ let make = (
               }}
             />
           </th>
-          <th>
+          <th className="sticky top-0 h-8 bg-amber-300 w-16.667vw min-w-72px">
             <Button
               textTrue="points"
               textFalse="points"
@@ -129,7 +129,7 @@ let make = (
               }}
             />
           </th>
-          <th>
+          <th className="sticky top-0 h-8 bg-amber-300 w-16.667vw min-w-72px">
             <Button
               textTrue="games"
               textFalse="games"
@@ -140,7 +140,7 @@ let make = (
               }}
             />
           </th>
-          <th>
+          <th className="sticky top-0 h-8 bg-amber-300 w-16.667vw min-w-72px">
             <Button
               textTrue="win %"
               textFalse="win %"
@@ -151,7 +151,7 @@ let make = (
               }}
             />
           </th>
-          <th>
+          <th className="sticky top-0 h-8 bg-amber-300 w-16.667vw min-w-72px">
             <Button
               textTrue="pts/gm"
               textFalse="pts/gm"
@@ -166,11 +166,11 @@ let make = (
       </thead>
       <tbody>
         {data
-        ->Js.Array2.mapi(({name, wins, totalPoints, games, winPct, ppg}, i) => {
+        ->Js.Array2.mapi(({name, wins, points, games, winPct, ppg}, i) => {
           <tr className="text-center odd:bg-stone-100/16 h-8" key={j`${name}$i`}>
-            <th className=""> {React.string(name)} </th>
+            <th className="sticky left-0 bg-amber-200"> {React.string(name)} </th>
             <td className=""> {React.string(j`$wins`)} </td>
-            <td className=""> {React.string(j`$totalPoints`)} </td>
+            <td className=""> {React.string(j`$points`)} </td>
             <td className=""> {React.string(j`$games`)} </td>
             <td className=""> {React.string(j`$winPct`)} </td>
             <td className=""> {React.string(j`$ppg`)} </td>

@@ -1,7 +1,7 @@
 type stat = {
   name: string,
   wins: int,
-  totalPoints: int,
+  points: int,
   games: int,
   winPct: float,
   ppg: float,

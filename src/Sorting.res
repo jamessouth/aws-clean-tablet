@@ -21,8 +21,8 @@ let intSortWins = (dir: sortDirection, n1: Reducer.stat, n2: Reducer.stat) =>
   }
 let intSortPoints = (dir: sortDirection, n1: Reducer.stat, n2: Reducer.stat) =>
   switch dir {
-  | Up => n2.totalPoints - n1.totalPoints
-  | Down => n1.totalPoints - n2.totalPoints
+  | Up => n2.points - n1.points
+  | Down => n1.points - n2.points
   }
 let intSortGames = (dir: sortDirection, n1: Reducer.stat, n2: Reducer.stat) =>
   switch dir {
