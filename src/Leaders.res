@@ -21,7 +21,7 @@ let sortData = (field, dir, a: Reducer.stat, b: Reducer.stat) => {
 
 @react.component
 let make = (
-  // ~send,
+  ~send,
   ~leaderData: array<Reducer.stat>,
 ) => {
   let (nameDir, setNameDir) = React.Uncurried.useState(_ => Down)
@@ -36,14 +36,14 @@ let make = (
 
   let (data, setData) = React.Uncurried.useState(_ => leaderData->Js.Array2.copy)
 
-  // React.useEffect0(() => {
-  //   let pl = {
-  //     action: "leaders",
-  //     info: "hello",
-  //   }
-  //   send(. Js.Json.stringifyAny(pl))
-  //   None
-  // })
+  React.useEffect0(() => {
+    let pl = {
+      action: "leaders",
+      info: "hello",
+    }
+    send(. Js.Json.stringifyAny(pl))
+    None
+  })
 
   Js.log(leaderData)
 
@@ -67,9 +67,9 @@ let make = (
 
   let arrowClass = ` relative after:content-${arrow} after:text-2xl after:font-over after:absolute`
 
-  <div className="leaderbg overflow-y-scroll">
+  <div className="leadermobbg leadertabbg leaderbigbg w-100vw h-100vh overflow-y-scroll leader">
     <table className="w-max border-collapse text-dark-600 font-anon table-fixed">
-      <caption className="my-6 text-4xl font-fred font-bold text-shadow-lead">
+      <caption className="my-6 text-4xl md:my-12 md:text-5xl desk:my-18 desk:text-6xl font-fred font-bold text-shadow-lead">
         {React.string("Leaderboard")}
       </caption>
       <colgroup>
@@ -198,3 +198,19 @@ let make = (
     </table>
   </div>
 }
+
+
+
+  // let zzz: array<Reducer.stat> = [
+  //   {name: "mmmmmmmmmm", wins: 241, points: 5152, games: 83, winPct: 0.12, ppg: 11.0},
+  //   {name: "stu", wins: 121, points: 121, games: 32, winPct: 0.22, ppg: 11.1},
+  //   {name: "liz", wins: 50, points: 59, games: 363, winPct: 0.32, ppg: 11.2},
+  //   {name: "abner", wins: 42, points: 18, games: 173, winPct: 0.42, ppg: 11.3},
+  //   {name: "harold", wins: 40, points: 97, games: 333, winPct: 0.52, ppg: 11.4},
+  //   {name: "stacie", wins: 32, points: 17, games: 313, winPct: 0.62, ppg: 11.5},
+  //   {name: "marcy", wins: 30, points: 91, games: 332, winPct: 0.72, ppg: 11.6},
+  //   {name: "wes", wins: 22, points: 11, games: 213, winPct: 0.82, ppg: 11.7},
+  //   {name: "carl", wins: 21, points: 12, games: 23, winPct: 0.92, ppg: 11.8},
+  //   {name: "bill", wins: 10, points: 9, games: 323, winPct: 0.02, ppg: 11.9},
+  //   {name: "test", wins: 2, points: 1, games: 13, winPct: 0.17, ppg: 12.8},
+  // ]

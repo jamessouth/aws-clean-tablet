@@ -80,7 +80,7 @@ export default defineConfig({
             },
             screens: {
               'newgmimg': '459px',//11/12*459=421
-              // 'desk': '1440px',
+              'desk': '1440px',
             },
             textShadow: {
               'lead': '0px 2px 2px #abc4d0',

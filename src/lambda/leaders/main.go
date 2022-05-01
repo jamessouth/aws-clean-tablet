@@ -24,9 +24,12 @@ import (
 )
 
 type stat struct {
-	Name                     string
-	Wins, TotalPoints, Games int
-	WinPct, PPG              float64
+	Name   string  `json:"name"`
+	Wins   int     `json:"wins"`
+	Points int     `json:"points"`
+	Games  int     `json:"games"`
+	WinPct float64 `json:"winPct"`
+	PPG    float64 `json:"ppg"`
 }
 
 type stats []stat
@@ -48,7 +51,7 @@ func (stats stats) calcStats() stats {
 	for i, s := range stats {
 		w := float64(s.Wins)
 		g := float64(s.Games)
-		p := float64(s.TotalPoints)
+		p := float64(s.Points)
 		s.WinPct = math.Round((w/g)*100) / 100
 		s.PPG = math.Round((p/g)*100) / 100
 		stats[i] = s
