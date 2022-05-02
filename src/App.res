@@ -54,43 +54,57 @@ let make = () => {
     wsError,
   ) = WsHook.useWs(token, setToken, cognitoUser, setCognitoUser, initialState)
 
+  open Web
   <>
-    <header className="mb-10 newgmimg:mb-12">
-      <p className="font-flow text-stone-100 text-4xl h-10 font-bold text-center">
-        {React.string(playerName)}
-      </p>
-      <h1
-        style={ReactDOM.Style.make(~backgroundColor={playerColor}, ())}
-        className="text-6xl mt-11 mx-auto px-6 text-center font-arch decay-mask text-stone-100">
-        {React.string("CLEAN TABLET")}
-      </h1>
-    </header>
-    <main className="mb-8">
+    {switch path {
+    | list{"leaderboard"} => React.null
+    | _ =>
+      <header className="mb-10 newgmimg:mb-12">
+        <p className="font-flow text-stone-100 text-4xl h-10 font-bold text-center">
+          {React.string(playerName)}
+        </p>
+        <h1
+          style={ReactDOM.Style.make(~backgroundColor={playerColor}, ())}
+          className="text-6xl mt-11 mx-auto px-6 text-center font-arch decay-mask text-stone-100">
+          {React.string("CLEAN TABLET")}
+        </h1>
+      </header>
+    }}
+    <main
+      className={switch path {
+      | list{"leaderboard"} => ""
+      | _ => "mb-8"
+      }}>
       {switch (path, token) {
-      | (list{}, None) =>
-        <nav className="flex flex-col items-center relative">
-          <Link
-            url="/signin"
-            className={linkBase2 ++ "decay-mask text-3xl p-2 max-w-80 font-fred mb-8 sm:mb-16"}
-            content="SIGN IN"
-          />
-          <Link
-            url="/signup"
-            className={linkBase2 ++ "decay-mask text-3xl p-2 max-w-80 font-fred"}
-            content="SIGN UP"
-          />
-          <Link url="/getinfo?cd_un" className={linkBase ++ "mt-10"} content="verification code?" />
-          <Link url="/getinfo?pw_un" className={linkBase ++ "mt-6"} content="forgot password?" />
-          <Link url="/getinfo?un_em" className={linkBase ++ "mt-6"} content="forgot username?" />
-          {switch showName == "" {
-          | true => React.null
-          | false =>
-            <p className="text-stone-100 absolute -top-20 w-4/5 bg-blue-gray-800 p-2 font-anon">
-              {React.string("The username associated with the email you submitted is:" ++ showName)}
-            </p>
-          }}
-        </nav>
-
+      | (list{}, None) => {
+          body(document)->setClassName("bodmob bodtab bodbig")
+          <nav className="flex flex-col items-center relative">
+            <Link
+              url="/signin"
+              className={linkBase2 ++ "decay-mask text-3xl p-2 max-w-80 font-fred mb-8 sm:mb-16"}
+              content="SIGN IN"
+            />
+            <Link
+              url="/signup"
+              className={linkBase2 ++ "decay-mask text-3xl p-2 max-w-80 font-fred"}
+              content="SIGN UP"
+            />
+            <Link
+              url="/getinfo?cd_un" className={linkBase ++ "mt-10"} content="verification code?"
+            />
+            <Link url="/getinfo?pw_un" className={linkBase ++ "mt-6"} content="forgot password?" />
+            <Link url="/getinfo?un_em" className={linkBase ++ "mt-6"} content="forgot username?" />
+            {switch showName == "" {
+            | true => React.null
+            | false =>
+              <p className="text-stone-100 absolute -top-20 w-4/5 bg-blue-gray-800 p-2 font-anon">
+                {React.string(
+                  "The username associated with the email you submitted is:" ++ showName,
+                )}
+              </p>
+            }}
+          </nav>
+        }
       | (list{"signin"}, None) =>
         <Signin userpool setCognitoUser setToken cognitoUser cognitoError setCognitoError />
 
@@ -129,8 +143,14 @@ let make = () => {
 
       | (list{"lobby"}, Some(_)) =>
         switch wsConnected {
-        | false => <Loading label="games..." />
-        | true => <Lobby playerGame leader games send wsError close />
+        | false => {
+            body(document)->setClassName("bodchmob bodchtab bodchbig")
+            <Loading label="games..." />
+          }
+        | true => {
+            body(document)->classList->removeClassList3("bodleadmob", "bodleadtab", "bodleadbig")
+            <Lobby playerGame leader games send wsError close />
+          }
         }
 
       | (list{"game", gameno}, Some(_)) =>
@@ -147,7 +167,10 @@ let make = () => {
           </p>
         }
 
-      | (list{"leaderboard"}, Some(_)) => <Leaders send leaderData />
+      | (list{"leaderboard"}, Some(_)) => {
+          body(document)->classList->addClassList3("bodleadmob", "bodleadtab", "bodleadbig")
+          <Leaders send leaderData />
+        }
 
       | (_, _) => <div> {React.string("other")} </div> // <PageNotFound/>
       }}

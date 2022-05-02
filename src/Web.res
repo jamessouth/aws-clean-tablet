@@ -20,6 +20,9 @@ type closeEventHandler = closeEvent => unit
 @val external document: Dom.document = "document"
 @get external body: Dom.document => Dom.htmlBodyElement = "body"
 @set external setClassName: (Dom.htmlBodyElement, string) => unit = "className"
+@get external classList: Dom.htmlBodyElement => Dom.domTokenList = "classList"
+@send external addClassList3: (Dom.domTokenList, string, string, string) => unit = "add"
+@send external removeClassList3: (Dom.domTokenList, string, string, string) => unit = "remove"
 @send external blur: Dom.element => unit = "blur"
 @scope("window") @val
 external addWindowEventListener: (string, unit => unit) => unit = "addEventListener"

@@ -54,6 +54,14 @@ func (stats stats) calcStats() stats {
 		p := float64(s.Points)
 		s.WinPct = math.Round((w/g)*100) / 100
 		s.PPG = math.Round((p/g)*100) / 100
+
+		if math.IsNaN(s.WinPct) || math.IsInf(s.WinPct, 1) {
+			s.WinPct = 0
+		}
+		if math.IsNaN(s.PPG) || math.IsInf(s.PPG, 1) {
+			s.PPG = 0
+		}
+
 		stats[i] = s
 	}
 

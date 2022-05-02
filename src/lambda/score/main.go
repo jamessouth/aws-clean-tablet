@@ -155,7 +155,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 				ExpressionAttributeNames: map[string]string{
 					"#W": "wins",
 					"#G": "games",
-					"#T": "totalPoints",
+					"#T": "points",
 				},
 				ExpressionAttributeValues: eav,
 				UpdateExpression:          aws.String(ue),

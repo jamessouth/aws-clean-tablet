@@ -10,26 +10,6 @@
   mask-image: url('../../assets/decaying.webp');
 }
 
-.leader {
-  -webkit-mask-size: cover;
-  mask-size: cover;
-  -webkit-mask-position: center;
-  mask-position: center;
-}
-
-.leadermobbg {
-  background: -webkit-image-set(url("/assets/leadermobbg1x.webp") 1x, url("/assets/leadermobbg2x.webp") 2x) center/cover;
-  background: image-set(url("/assets/leadermobbg1x.webp") 1x, url("/assets/leadermobbg2x.webp") 2x) center/cover;
-  -webkit-mask-image: -webkit-image-set(url("/assets/leadermobbgmask1x.webp") 1x, url("/assets/leadermobbgmask2x.webp") 2x);
-  mask-image: -webkit-image-set(url("/assets/leadermobbgmask1x.webp") 1x, url("/assets/leadermobbgmask2x.webp") 2x);
-  -webkit-mask-image: image-set(url("/assets/leadermobbgmask1x.webp") 1x, url("/assets/leadermobbgmask2x.webp") 2x);
-  mask-image: image-set(url("/assets/leadermobbgmask1x.webp") 1x, url("/assets/leadermobbgmask2x.webp") 2x);
-}
-
-
-
-
-
 .game0 {
   background-image: -webkit-image-set(url("../../assets/troldslottet1x.webp") 1x, url("../../assets/troldslottet2x.webp") 2x);
   background-image: image-set(url("../../assets/troldslottet1x.webp") 1x,
@@ -99,40 +79,66 @@
       url("../../assets/bear2x.webp") 2x);
 }
 
+.leader {
+  -webkit-mask-size: cover;
+  mask-size: cover;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+.leadermobbg {
+  background: -webkit-image-set(url("/assets/leadermobbg1x.webp") 1x, url("/assets/leadermobbg2x.webp") 2x) no-repeat center/cover;
+  background: image-set(url("/assets/leadermobbg1x.webp") 1x, url("/assets/leadermobbg2x.webp") 2x) no-repeat center/cover;
+  -webkit-mask-image: -webkit-image-set(url("/assets/leadermobbgmask1x.webp") 1x, url("/assets/leadermobbgmask2x.webp") 2x);
+  mask-image: -webkit-image-set(url("/assets/leadermobbgmask1x.webp") 1x, url("/assets/leadermobbgmask2x.webp") 2x);
+  -webkit-mask-image: image-set(url("/assets/leadermobbgmask1x.webp") 1x, url("/assets/leadermobbgmask2x.webp") 2x);
+  mask-image: image-set(url("/assets/leadermobbgmask1x.webp") 1x, url("/assets/leadermobbgmask2x.webp") 2x);
+}
+
 .bodmob {
-  background-image: -webkit-image-set(url("../../assets/mob1x.webp") 1x,
-      url("../../assets/mob2x.webp") 2x);
-  background-image: image-set(url("../../assets/mob1x.webp") 1x,
-      url("../../assets/mob2x.webp") 2x);
+  background: -webkit-image-set(url("../../assets/mob1x.webp") 1x,
+      url("../../assets/mob2x.webp") 2x) no-repeat center/cover;
+  background: image-set(url("../../assets/mob1x.webp") 1x,
+      url("../../assets/mob2x.webp") 2x) no-repeat center/cover;
 }
 
 .bodchmob {
-  background-position: top;
-  background-image: -webkit-image-set(url("../../assets/chmob1x.webp") 1x,
-      url("../../assets/chmob2x.webp") 2x);
-  background-image: image-set(url("../../assets/chmob1x.webp") 1x,
-      url("../../assets/chmob2x.webp") 2x);
+  background: -webkit-image-set(url("../../assets/chmob1x.webp") 1x,
+      url("../../assets/chmob2x.webp") 2x) no-repeat top/cover;
+  background: image-set(url("../../assets/chmob1x.webp") 1x,
+      url("../../assets/chmob2x.webp") 2x) no-repeat top/cover;
+}
+
+.bodleadmob {
+  background: -webkit-image-set(url("/assets/leadermobbg1x.webp") 1x, url("/assets/leadermobbg2x.webp") 2x) no-repeat center/cover;
+  background: image-set(url("/assets/leadermobbg1x.webp") 1x, url("/assets/leadermobbg2x.webp") 2x) no-repeat center/cover;
 }
 
 @media screen and (min-width: 768px) {
   .bodtab {
-    background-image: -webkit-image-set(url("../../assets/tab1x.webp") 1x,
-        url("../../assets/tab2x.webp") 2x);
-    background-image: image-set(url("../../assets/tab1x.webp") 1x,
-        url("../../assets/tab2x.webp") 2x);
+    background: -webkit-image-set(url("../../assets/tab1x.webp") 1x,
+        url("../../assets/tab2x.webp") 2x) no-repeat center/cover;
+    background: image-set(url("../../assets/tab1x.webp") 1x,
+        url("../../assets/tab2x.webp") 2x) no-repeat center/cover;
   }
 
   .bodchtab {
-    background-position: top;
-    background-image: -webkit-image-set(url("../../assets/chtab1x.webp") 1x,
-        url("../../assets/chtab2x.webp") 2x);
-    background-image: image-set(url("../../assets/chtab1x.webp") 1x,
-        url("../../assets/chtab2x.webp") 2x);
+    background: -webkit-image-set(url("../../assets/chtab1x.webp") 1x,
+        url("../../assets/chtab2x.webp") 2x) no-repeat top/cover;
+    background: image-set(url("../../assets/chtab1x.webp") 1x,
+        url("../../assets/chtab2x.webp") 2x) no-repeat top/cover;
+  }
+
+  .bodleadtab {
+    background: -webkit-image-set(url("/assets/leadertabbg1x.webp") 1x, url("/assets/leadertabbg2x.webp") 2x) no-repeat center/cover;
+    background: image-set(url("/assets/leadertabbg1x.webp") 1x, url("/assets/leadertabbg2x.webp") 2x) no-repeat center/cover;
   }
 
   .leadertabbg {
-    background: -webkit-image-set(url("/assets/leadertabbg1x.webp") 1x, url("/assets/leadertabbg2x.webp") 2x) center/cover;
-    background: image-set(url("/assets/leadertabbg1x.webp") 1x, url("/assets/leadertabbg2x.webp") 2x) center/cover;
+    background: -webkit-image-set(url("/assets/leadertabbg1x.webp") 1x, url("/assets/leadertabbg2x.webp") 2x) no-repeat center/cover;
+    background: image-set(url("/assets/leadertabbg1x.webp") 1x, url("/assets/leadertabbg2x.webp") 2x) no-repeat center/cover;
     -webkit-mask-image: -webkit-image-set(url("/assets/leadertabbgmask1x.webp") 1x, url("/assets/leadertabbgmask2x.webp") 2x);
     mask-image: -webkit-image-set(url("/assets/leadertabbgmask1x.webp") 1x, url("/assets/leadertabbgmask2x.webp") 2x);
     -webkit-mask-image: image-set(url("/assets/leadertabbgmask1x.webp") 1x, url("/assets/leadertabbgmask2x.webp") 2x);
@@ -142,23 +148,27 @@
 
 @media screen and (min-width: 1440px) {
   .bodbig {
-    background-image: -webkit-image-set(url("../../assets/big1x.webp") 1x,
-        url("../../assets/big2x.webp") 2x);
-    background-image: image-set(url("../../assets/big1x.webp") 1x,
-        url("../../assets/big2x.webp") 2x);
+    background: -webkit-image-set(url("../../assets/big1x.webp") 1x,
+        url("../../assets/big2x.webp") 2x) no-repeat center/cover;
+    background: image-set(url("../../assets/big1x.webp") 1x,
+        url("../../assets/big2x.webp") 2x) no-repeat center/cover;
   }
 
   .bodchbig {
-    background-position: top;
-    background-image: -webkit-image-set(url("../../assets/chbig1x.webp") 1x,
-        url("../../assets/chbig2x.webp") 2x);
-    background-image: image-set(url("../../assets/chbig1x.webp") 1x,
-        url("../../assets/chbig2x.webp") 2x);
+    background: -webkit-image-set(url("../../assets/chbig1x.webp") 1x,
+        url("../../assets/chbig2x.webp") 2x) no-repeat top/cover;
+    background: image-set(url("../../assets/chbig1x.webp") 1x,
+        url("../../assets/chbig2x.webp") 2x) no-repeat top/cover;
+  }
+
+  .bodleadbig {
+    background: -webkit-image-set(url("/assets/leaderbigbg1x.webp") 1x, url("/assets/leaderbigbg2x.webp") 2x) no-repeat center/cover;
+    background: image-set(url("/assets/leaderbigbg1x.webp") 1x, url("/assets/leaderbigbg2x.webp") 2x) no-repeat center/cover;
   }
 
   .leaderbigbg {
-    background: -webkit-image-set(url("/assets/leaderbigbg1x.webp") 1x, url("/assets/leaderbigbg2x.webp") 2x) center/cover;
-    background: image-set(url("/assets/leaderbigbg1x.webp") 1x, url("/assets/leaderbigbg2x.webp") 2x) center/cover;
+    background: -webkit-image-set(url("/assets/leaderbigbg1x.webp") 1x, url("/assets/leaderbigbg2x.webp") 2x) no-repeat center/cover;
+    background: image-set(url("/assets/leaderbigbg1x.webp") 1x, url("/assets/leaderbigbg2x.webp") 2x) no-repeat center/cover;
     -webkit-mask-image: -webkit-image-set(url("/assets/leaderbigbgmask1x.webp") 1x, url("/assets/leaderbigbgmask2x.webp") 2x);
     mask-image: -webkit-image-set(url("/assets/leaderbigbgmask1x.webp") 1x, url("/assets/leaderbigbgmask2x.webp") 2x);
     -webkit-mask-image: image-set(url("/assets/leaderbigbgmask1x.webp") 1x, url("/assets/leaderbigbgmask2x.webp") 2x);

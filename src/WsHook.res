@@ -53,7 +53,6 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
       ws->onOpen(e => {
         setWsConnected(._ => true)
         Js.log2("open", e)
-        body(document)->setClassName("bodchmob bodchtab bodchbig")
       })
       ws->onError(e => {
         Js.log2("errrr", e)
@@ -129,7 +128,6 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
         setPlayerName(._ => "")
 
         resetConnState()
-        body(document)->setClassName("bg-no-repeat bg-center bg-cover bodmob bodtab bodbig")
       })
     }
 

@@ -64,7 +64,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			"#G": "games",
 			"#N": "name",
 			"#W": "wins",
-			"#T": "totalPoints",
+			"#T": "points",
 		},
 		ExpressionAttributeValues: map[string]types.AttributeValue{
 			":n": &types.AttributeValueMemberS{Value: name},
