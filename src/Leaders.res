@@ -20,7 +20,7 @@ let sortData = (field, dir, a: Reducer.stat, b: Reducer.stat) => {
 }
 
 @react.component
-let make = (~send, ~leaderData: array<Reducer.stat>) => {
+let make = (~send, ~leaderData: array<Reducer.stat>, ~playerName) => {
   let (nameDir, setNameDir) = React.Uncurried.useState(_ => Down)
   let (winDir, setWinDir) = React.Uncurried.useState(_ => Down)
   let (ptsDir, setPtsDir) = React.Uncurried.useState(_ => Up)
@@ -43,10 +43,10 @@ let make = (~send, ~leaderData: array<Reducer.stat>) => {
     None
   })
 
-  // React.useEffect1(() => {
-  //   setData(._ => leaderData->Js.Array2.copy)
-  //   None
-  // }, [leaderData])
+  React.useEffect1(() => {
+    setData(._ => leaderData->Js.Array2.copy)
+    None
+  }, [leaderData])
 
   Js.log(leaderData)
   Js.log(data)
@@ -72,138 +72,144 @@ let make = (~send, ~leaderData: array<Reducer.stat>) => {
   let arrowClass = ` relative after:content-${arrow} after:text-2xl after:font-over after:absolute`
 
   <div className="leadermobbg leadertabbg leaderbigbg w-100vw h-100vh overflow-y-scroll leader">
-    <table className="w-max border-collapse text-dark-600 font-anon table-fixed">
-      <caption
-        className="my-6 text-4xl md:my-12 md:text-5xl desk:my-18 desk:text-6xl font-fred font-bold text-shadow-lead">
-        {React.string("Leaderboard")}
-      </caption>
-      <colgroup>
-        <col
-          className={switch sortedField == "name" {
-          | true => "bg-stone-100/12"
-          | false => ""
-          }}
-        />
-        <col
-          className={switch sortedField == "wins" {
-          | true => "bg-stone-100/12"
-          | false => ""
-          }}
-        />
-        <col
-          className={switch sortedField == "points" {
-          | true => "bg-stone-100/12"
-          | false => ""
-          }}
-        />
-        <col
-          className={switch sortedField == "games" {
-          | true => "bg-stone-100/12"
-          | false => ""
-          }}
-        />
-        <col
-          className={switch sortedField == "win %" {
-          | true => "bg-stone-100/12"
-          | false => ""
-          }}
-        />
-        <col
-          className={switch sortedField == "pts/gm" {
-          | true => "bg-stone-100/12"
-          | false => ""
-          }}
-        />
-      </colgroup>
-      <thead className="">
-        <tr>
-          <th className="sticky left-0 top-0 z-10 h-8 bg-amber-300 w-16.667vw min-w-104px">
-            <Button
-              textTrue="name"
-              textFalse="name"
-              onClick={onClick("name", nameDir, setNameDir)}
-              className={switch sortedField == "name" {
-              | true => buttonBase ++ arrowClass
-              | false => buttonBase
-              }}
-            />
-          </th>
-          <th className="sticky top-0 h-8 bg-amber-300 w-16.667vw min-w-72px">
-            <Button
-              textTrue="wins"
-              textFalse="wins"
-              onClick={onClick("wins", winDir, setWinDir)}
-              className={switch sortedField == "wins" {
-              | true => buttonBase ++ arrowClass
-              | false => buttonBase
-              }}
-            />
-          </th>
-          <th className="sticky top-0 h-8 bg-amber-300 w-16.667vw min-w-72px">
-            <Button
-              textTrue="points"
-              textFalse="points"
-              onClick={onClick("points", ptsDir, setPtsDir)}
-              className={switch sortedField == "points" {
-              | true => buttonBase ++ arrowClass
-              | false => buttonBase
-              }}
-            />
-          </th>
-          <th className="sticky top-0 h-8 bg-amber-300 w-16.667vw min-w-72px">
-            <Button
-              textTrue="games"
-              textFalse="games"
-              onClick={onClick("games", gamesDir, setGamesDir)}
-              className={switch sortedField == "games" {
-              | true => buttonBase ++ arrowClass
-              | false => buttonBase
-              }}
-            />
-          </th>
-          <th className="sticky top-0 h-8 bg-amber-300 w-16.667vw min-w-72px">
-            <Button
-              textTrue="win %"
-              textFalse="win %"
-              onClick={onClick("win %", winPctDir, setWinPctDir)}
-              className={switch sortedField == "win %" {
-              | true => buttonBase ++ arrowClass
-              | false => buttonBase
-              }}
-            />
-          </th>
-          <th className="sticky top-0 h-8 bg-amber-300 w-16.667vw min-w-72px">
-            <Button
-              textTrue="pts/gm"
-              textFalse="pts/gm"
-              onClick={onClick("pts/gm", ppgDir, setPPGDir)}
-              className={switch sortedField == "pts/gm" {
-              | true => buttonBase ++ arrowClass
-              | false => buttonBase
-              }}
-            />
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {data
-        ->Js.Array2.mapi(({name, wins, points, games, winPct, ppg}, i) => {
-          <tr className="text-center odd:bg-stone-100/16 h-8" key={j`${name}$i`}>
-            <th className="sticky left-0 bg-amber-200"> {React.string(name)} </th>
-            <td className=""> {React.string(j`$wins`)} </td>
-            <td className=""> {React.string(j`$points`)} </td>
-            <td className=""> {React.string(j`$games`)} </td>
-            <td className=""> {React.string(j`$winPct`)} </td>
-            <td className=""> {React.string(j`$ppg`)} </td>
-          </tr>
-        })
-        ->React.array}
-        <tr className="h-50vh" />
-      </tbody>
-    </table>
     {switch data->Js.Array2.length == 0 {
-    | true => <Loading label="data..." />
-    | false => React.null
+    | true => <> <div className="h-42vh" /> <Loading label="data..." /> </>
+    | false =>
+      <table
+        className="border-collapse text-dark-600 font-anon table-fixed tablewidth:mx-8 lg:mx-16 desk:mx-32">
+        <caption
+          className="my-6 text-4xl md:my-12 md:text-5xl desk:my-18 desk:text-6xl font-fred font-bold text-shadow-lead">
+          {React.string("Leaderboard")}
+        </caption>
+        <colgroup>
+          <col
+            className={switch sortedField == "name" {
+            | true => "bg-stone-100/12"
+            | false => ""
+            }}
+          />
+          <col
+            className={switch sortedField == "wins" {
+            | true => "bg-stone-100/12"
+            | false => ""
+            }}
+          />
+          <col
+            className={switch sortedField == "points" {
+            | true => "bg-stone-100/12"
+            | false => ""
+            }}
+          />
+          <col
+            className={switch sortedField == "games" {
+            | true => "bg-stone-100/12"
+            | false => ""
+            }}
+          />
+          <col
+            className={switch sortedField == "win %" {
+            | true => "bg-stone-100/12"
+            | false => ""
+            }}
+          />
+          <col
+            className={switch sortedField == "pts/gm" {
+            | true => "bg-stone-100/12"
+            | false => ""
+            }}
+          />
+        </colgroup>
+        <thead className="">
+          <tr>
+            <th className="sticky left-0 top-0 z-10 h-8 bg-amber-300 w-16.667vw min-w-104px">
+              <Button
+                textTrue="name"
+                textFalse="name"
+                onClick={onClick("name", nameDir, setNameDir)}
+                className={switch sortedField == "name" {
+                | true => buttonBase ++ arrowClass
+                | false => buttonBase
+                }}
+              />
+            </th>
+            <th className="sticky top-0 h-8 bg-amber-300 w-16.667vw min-w-64px">
+              <Button
+                textTrue="wins"
+                textFalse="wins"
+                onClick={onClick("wins", winDir, setWinDir)}
+                className={switch sortedField == "wins" {
+                | true => buttonBase ++ arrowClass
+                | false => buttonBase
+                }}
+              />
+            </th>
+            <th className="sticky top-0 h-8 bg-amber-300 w-16.667vw min-w-80px">
+              <Button
+                textTrue="points"
+                textFalse="points"
+                onClick={onClick("points", ptsDir, setPtsDir)}
+                className={switch sortedField == "points" {
+                | true => buttonBase ++ arrowClass
+                | false => buttonBase
+                }}
+              />
+            </th>
+            <th className="sticky top-0 h-8 bg-amber-300 w-16.667vw min-w-72px">
+              <Button
+                textTrue="games"
+                textFalse="games"
+                onClick={onClick("games", gamesDir, setGamesDir)}
+                className={switch sortedField == "games" {
+                | true => buttonBase ++ arrowClass
+                | false => buttonBase
+                }}
+              />
+            </th>
+            <th className="sticky top-0 h-8 bg-amber-300 w-16.667vw min-w-72px">
+              <Button
+                textTrue="win %"
+                textFalse="win %"
+                onClick={onClick("win %", winPctDir, setWinPctDir)}
+                className={switch sortedField == "win %" {
+                | true => buttonBase ++ arrowClass
+                | false => buttonBase
+                }}
+              />
+            </th>
+            <th className="sticky top-0 h-8 bg-amber-300 w-16.667vw min-w-80px">
+              <Button
+                textTrue="pts/gm"
+                textFalse="pts/gm"
+                onClick={onClick("pts/gm", ppgDir, setPPGDir)}
+                className={switch sortedField == "pts/gm" {
+                | true => buttonBase ++ arrowClass
+                | false => buttonBase
+                }}
+              />
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {data
+          ->Js.Array2.mapi(({name, wins, points, games, winPct, ppg}, i) => {
+            <tr
+              className={switch name == playerName {
+              | true => "text-center bg-blue-200/66 h-8 uppercase italic"
+              | false => "text-center odd:bg-stone-100/16 h-8"
+              }}
+              key={j`${name}$i`}>
+              <th className="sticky left-0 bg-amber-200"> {React.string(name)} </th>
+              <td className=""> {React.string(j`$wins`)} </td>
+              <td className=""> {React.string(j`$points`)} </td>
+              <td className=""> {React.string(j`$games`)} </td>
+              <td className=""> {React.string(j`$winPct`)} </td>
+              <td className=""> {React.string(j`$ppg`)} </td>
+            </tr>
+          })
+          ->React.array}
+          <tr className="h-50vh" />
+        </tbody>
+      </table>
     }}
   </div>
 }

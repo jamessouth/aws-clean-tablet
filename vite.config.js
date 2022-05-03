@@ -80,6 +80,7 @@ export default defineConfig({
             },
             screens: {
               'newgmimg': '459px',//11/12*459=421
+              'tablewidth': '550px',
               'desk': '1440px',
             },
             textShadow: {

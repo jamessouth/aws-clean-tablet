@@ -169,7 +169,7 @@ let make = () => {
 
       | (list{"leaderboard"}, Some(_)) => {
           body(document)->classList->addClassList3("bodleadmob", "bodleadtab", "bodleadbig")
-          <Leaders send leaderData />
+          <Leaders send leaderData playerName/>
         }
 
       | (_, _) => <div> {React.string("other")} </div> // <PageNotFound/>
