@@ -3,9 +3,9 @@ let sectionClass = "relative flex flex-col justify-between items-center h-40 tex
 let className = "font-anon text-xl text-true-gray-700 bg-true-gray-100 h-7 w-2/3 max-w-250px cursor-pointer border-none filter disabled:cursor-not-allowed disabled:contrast-[0.25]"
 
 @react.component
-let make = (~answer_max_length, ~answered, ~inputText, ~onEnter, ~setInputText, ~currentWord) => {
+let make = (~max_answer_length, ~answered, ~inputText, ~onEnter, ~setInputText, ~currentWord) => {
   let inputBox = React.useRef(Js.Nullable.null)
-  let input_min_length = 2
+  let min_answer_length = 2
 
   let (disableSubmit, setDisableSubmit) = React.Uncurried.useState(_ => true)
   let (isValidInput, setIsValidInput) = React.Uncurried.useState(_ => true)
@@ -46,15 +46,15 @@ let make = (~answer_max_length, ~answered, ~inputText, ~onEnter, ~setInputText, 
     None
   }, (answered, inputBox.current))
 
-  React.useEffect4(() => {
+  React.useEffect3(() => {
     setDisableSubmit(._ =>
-      Js.String2.length(Js.String2.trim(inputText)) < input_min_length ||
-      Js.String2.length(Js.String2.trim(inputText)) > answer_max_length ||
+      Js.String2.length(Js.String2.trim(inputText)) < min_answer_length ||
+      Js.String2.length(Js.String2.trim(inputText)) > max_answer_length ||
       answered ||
       !isValidInput
     )
     None
-  }, (inputText, answer_max_length, answered, isValidInput))
+  }, (inputText, answered, isValidInput))
 
   <section
     className={switch currentWord == "" {
@@ -84,7 +84,8 @@ let make = (~answer_max_length, ~answered, ~inputText, ~onEnter, ~setInputText, 
       onKeyPress
       onChange
       type_="text"
-      placeholder={`2 - ${answer_max_length->Js.Int.toString} letters`}
+      // placeholder={`2 - ${max_answer_length->Js.Int.toString} letters`}
+      placeholder={j`2 - $max_answer_length letters`}
       readOnly={switch answered {
       | true => true
       | false => false

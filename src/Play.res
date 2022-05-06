@@ -12,7 +12,7 @@ type scorePayload = {
 
 @react.component
 let make = (~game: Reducer.liveGame, ~playerColor, ~playerIndex, ~send, ~leader, ~playerName) => {
-  let answer_max_length = 12
+  let max_answer_length = 12
 
   let (answered, setAnswered) = React.Uncurried.useState(_ => false)
   let (inputText, setInputText) = React.Uncurried.useState(_ => "")
@@ -72,7 +72,7 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~playerIndex, ~send, ~leader,
     let pl = {
       action: "answer",
       gameno: sk,
-      answer: inputText->Js.String2.slice(~from=0, ~to_=answer_max_length),
+      answer: inputText->Js.String2.slice(~from=0, ~to_=max_answer_length),
       index: playerIndex,
     }
     send(. Js.Json.stringifyAny(pl))
@@ -113,7 +113,7 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~playerIndex, ~send, ~leader,
       | true => <Word onAnimationEnd playerColor currentWord answered showTimer=false />
       | false => <>
           <Word onAnimationEnd playerColor currentWord answered showTimer={currentWord != ""} />
-          <Answer answer_max_length answered inputText onEnter setInputText currentWord />
+          <Answer max_answer_length answered inputText onEnter setInputText currentWord />
         </>
       }
     }}

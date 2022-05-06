@@ -1,13 +1,17 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"math/rand"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -17,6 +21,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 
 	"github.com/aws/smithy-go"
 )
@@ -32,13 +37,40 @@ type livePlayer struct {
 	HasAnswered bool `dynamodbav:"hasAnswered"`
 }
 
+const (
+	newline   byte = 10
+	byteRange int  = 25
+	highByte  int  = 1520398
+)
+
+func getRandomByte() string {
+	t := time.Now().UnixNano()
+	rand.Seed(t)
+
+	randobyte := rand.Intn(highByte)
+
+	return fmt.Sprintf("bytes=%d-%d", randobyte, randobyte+byteRange)
+}
+
+func getWord(b io.ReadCloser) string {
+	defer b.Close()
+
+	rawBytes, err := io.ReadAll(b)
+	if err != nil {
+		return ""
+	}
+
+	words := bytes.Split(rawBytes, []byte{newline})
+
+	return string(words[1])
+}
+
 func clearHasAnswered(pl []livePlayer) []livePlayer {
-	// fmt.Printf("%s: %+v\n", "ansplrs1", pl)
 	for i, p := range pl {
 		p.HasAnswered = false
 		pl[i] = p
 	}
-	// fmt.Printf("%s: %+v\n", "ansplrs2", pl)
+
 	return pl
 }
 
@@ -57,15 +89,49 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	var (
 		tableName = os.Getenv("tableName")
+		bucket    = os.Getenv("bucket")
+		words     = os.Getenv("words")
+		wordsETag = os.Getenv("wordsETag")
 		ddbsvc    = dynamodb.NewFromConfig(cfg)
+		s3svc     = s3.NewFromConfig(cfg)
 		body      struct {
 			Gameno, Answer, Index string
 		}
+		ans string
 	)
 
 	err = json.Unmarshal([]byte(req.Body), &body)
 	if err != nil {
 		return callErr(err)
+	}
+
+	if body.Answer == "" {
+
+		obj, err := s3svc.GetObject(ctx, &s3.GetObjectInput{
+			Bucket:  aws.String(bucket),
+			Key:     aws.String(words),
+			IfMatch: aws.String(wordsETag),
+			Range:   aws.String(getRandomByte()),
+		})
+
+		if err != nil {
+			return callErr(err)
+		}
+
+		objOutput := *obj
+		fmt.Printf("\n%s, %+v\n", "getObj op", objOutput)
+
+		eTag := *objOutput.ETag
+		if eTag != wordsETag {
+			fmt.Println("eTags do not match", eTag, wordsETag)
+			ans = ""
+		} else {
+
+			ans = getWord(objOutput.Body)
+		}
+
+	} else {
+		ans = body.Answer
 	}
 
 	gameItemKey, err := attributevalue.MarshalMap(struct {
@@ -91,7 +157,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			"#H": "hasAnswered",
 		},
 		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":a": &types.AttributeValueMemberS{Value: body.Answer},
+			":a": &types.AttributeValueMemberS{Value: ans},
 			":o": &types.AttributeValueMemberN{Value: "1"},
 			":t": &types.AttributeValueMemberBOOL{Value: true},
 		},
