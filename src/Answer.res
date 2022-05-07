@@ -3,9 +3,10 @@ let sectionClass = "relative flex flex-col justify-between items-center h-40 tex
 let className = "font-anon text-xl text-true-gray-700 bg-true-gray-100 h-7 w-2/3 max-w-250px cursor-pointer border-none filter disabled:cursor-not-allowed disabled:contrast-[0.25]"
 
 @react.component
-let make = (~max_answer_length, ~answered, ~inputText, ~onEnter, ~setInputText, ~currentWord) => {
+let make = (~answered, ~inputText, ~onEnter, ~setInputText, ~currentWord) => {
   let inputBox = React.useRef(Js.Nullable.null)
   let min_answer_length = 2
+  let max_answer_length = 12
 
   let (disableSubmit, setDisableSubmit) = React.Uncurried.useState(_ => true)
   let (isValidInput, setIsValidInput) = React.Uncurried.useState(_ => true)
@@ -20,8 +21,7 @@ let make = (~max_answer_length, ~answered, ~inputText, ~onEnter, ~setInputText, 
   }
 
   let onChange = evt => {
-    let value = ReactEvent.Form.currentTarget(evt)["value"]
-    setInputText(._ => value)
+    setInputText(._ => ReactEvent.Form.currentTarget(evt)["value"]->Js.String2.slice(~from=0, ~to_=max_answer_length))
   }
 
   React.useEffect1(() => {
