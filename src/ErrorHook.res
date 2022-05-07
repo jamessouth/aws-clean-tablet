@@ -1,7 +1,7 @@
 let checkLength = (. min, max, str) =>
   switch Js.String2.length(str) < min || Js.String2.length(str) > max {
   | false => ""
-  | true => j`$min-$max characters; `
+  | true => j`$min-$max length; `
   }
 let checkInclusion = (. re, msg, str) =>
   switch Js.String2.match_(str, re) {
@@ -45,6 +45,12 @@ let getFuncs = input =>
           s,
         ),
     ]
+  | "ANSWER" => [
+    (. s) => checkLength(. 2, 12, s),
+    (. s) => checkInclusion(. %re("/[a-z ]/i"), "letters and spaces only; ", s),
+    (. s) => checkExclusion(. %re("/\d/"), "no numbers; ", s),
+    (. s) => checkExclusion(. %re("/[!-/:-@\[-`{-~]/"), "no symbols; ", s),
+  ]
   | _ => []
   }
 

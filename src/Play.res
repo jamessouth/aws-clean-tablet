@@ -13,10 +13,20 @@ type scorePayload = {
 @react.component
 let make = (~game: Reducer.liveGame, ~playerColor, ~playerIndex, ~send, ~leader, ~playerName) => {
   
-
+let (submitClicked, _setSubmitClicked) = React.Uncurried.useState(_ => false)
   let (answered, setAnswered) = React.Uncurried.useState(_ => false)
-  let (inputText, setInputText) = React.Uncurried.useState(_ => "")
+  let (answer, setAnswer) = React.Uncurried.useState(_ => "")
+  let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(
+    "ANSWER: 2-12 length; ",
+  ))
   let {players, currentWord, previousWord, showAnswers, sk, winner} = game
+
+  React.useEffect1(() => {
+    ErrorHook.useError(answer, "ANSWER", setValidationError)
+    None
+  }, [answer])
+
+
 
   React.useEffect2(() => {
     Js.log("send start useeff")
@@ -72,12 +82,12 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~playerIndex, ~send, ~leader,
     let pl = {
       action: "answer",
       gameno: sk,
-      answer: Js.String2.trim(inputText),
+      answer: Js.String2.trim(answer),
       index: playerIndex,
     }
     send(. Js.Json.stringifyAny(pl))
     setAnswered(._ => true)
-    setInputText(._ => "")
+    setAnswer(._ => "")
   }
 
   let onAnimationEnd = _ => {
@@ -113,7 +123,13 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~playerIndex, ~send, ~leader,
       | true => <Word onAnimationEnd playerColor currentWord answered showTimer=false />
       | false => <>
           <Word onAnimationEnd playerColor currentWord answered showTimer={currentWord != ""} />
-          <Answer answered inputText onEnter setInputText currentWord />
+          // <Answer answered answer onEnter setAnswer currentWord />
+
+
+          <Form onClick={_ => onEnter(. ignore())} leg="Answer" submitClicked validationError cognitoError=None>
+    <Input value=answer propName="answer" setFunc=setAnswer />
+
+  </Form>
         </>
       }
     }}

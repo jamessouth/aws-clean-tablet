@@ -2,7 +2,7 @@
 let make = (~cognitoUser, ~cognitoError, ~setCognitoError, ~search) => {
   let valErrInit = switch search {
   | "cd_un" => "CODE: 6-digit number only; "
-  | _ => "CODE: 6-digit number only; PASSWORD: 8-98 characters; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; "
+  | _ => "CODE: 6-digit number only; PASSWORD: 8-98 length; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; "
   }
   Js.log3("user", cognitoUser, search)
 

@@ -5,7 +5,7 @@ let make = (~userpool, ~setCognitoUser, ~cognitoError, ~setCognitoError) => {
   let (email, setEmail) = React.Uncurried.useState(_ => "")
   
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(
-    "USERNAME: 3-10 characters; PASSWORD: 8-98 characters; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; EMAIL: 5-99 characters; enter a valid email address.",
+    "USERNAME: 3-10 length; PASSWORD: 8-98 length; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; EMAIL: 5-99 length; enter a valid email address.",
   ))
   let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
 

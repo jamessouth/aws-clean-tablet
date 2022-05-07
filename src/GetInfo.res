@@ -11,8 +11,8 @@ let make = (
   let dummyPassword = "lllLLL!!!111"
   let dummyUsername = "letmein"
   let valErrInit = switch search {
-  | "un_em" => "EMAIL: 5-99 characters; enter a valid email address."
-  | _ => "USERNAME: 3-10 characters; "
+  | "un_em" => "EMAIL: 5-99 length; enter a valid email address."
+  | _ => "USERNAME: 3-10 length; "
   }
   let (username, setUsername) = React.Uncurried.useState(_ => "")
   let (email, setEmail) = React.Uncurried.useState(_ => "")
