@@ -106,9 +106,9 @@
 
 .bodchmob {
   background: -webkit-image-set(url("../../assets/chmob1x.webp") 1x,
-      url("../../assets/chmob2x.webp") 2x) no-repeat top/cover;
+      url("../../assets/chmob2x.webp") 2x) top/cover;
   background: image-set(url("../../assets/chmob1x.webp") 1x,
-      url("../../assets/chmob2x.webp") 2x) no-repeat top/cover;
+      url("../../assets/chmob2x.webp") 2x) top/cover;
 }
 
 .bodleadmob {
@@ -126,9 +126,9 @@
 
   .bodchtab {
     background: -webkit-image-set(url("../../assets/chtab1x.webp") 1x,
-        url("../../assets/chtab2x.webp") 2x) no-repeat top/cover;
+        url("../../assets/chtab2x.webp") 2x) top/cover;
     background: image-set(url("../../assets/chtab1x.webp") 1x,
-        url("../../assets/chtab2x.webp") 2x) no-repeat top/cover;
+        url("../../assets/chtab2x.webp") 2x) top/cover;
   }
 
   .bodleadtab {
@@ -156,9 +156,9 @@
 
   .bodchbig {
     background: -webkit-image-set(url("../../assets/chbig1x.webp") 1x,
-        url("../../assets/chbig2x.webp") 2x) no-repeat top/cover;
+        url("../../assets/chbig2x.webp") 2x) top/cover;
     background: image-set(url("../../assets/chbig1x.webp") 1x,
-        url("../../assets/chbig2x.webp") 2x) no-repeat top/cover;
+        url("../../assets/chbig2x.webp") 2x) top/cover;
   }
 
   .bodleadbig {

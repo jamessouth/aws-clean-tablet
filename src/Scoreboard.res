@@ -24,6 +24,8 @@ let make = (
   | false => ""
   }
 
+  Js.log2("bgimg", bgimg)
+
   let hstyles = "text-center font-anon mb-5 text-stone-100 "
 
   let className = "mt-1.5 mb-14 block cursor-pointer text-stone-800 font-perm m-auto px-8 py-2 text-2xl"

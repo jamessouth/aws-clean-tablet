@@ -12,12 +12,11 @@ type scorePayload = {
 
 @react.component
 let make = (~game: Reducer.liveGame, ~playerColor, ~playerIndex, ~send, ~leader, ~playerName) => {
-  
-let (submitClicked, _setSubmitClicked) = React.Uncurried.useState(_ => false)
+  let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
   let (answered, setAnswered) = React.Uncurried.useState(_ => false)
   let (answer, setAnswer) = React.Uncurried.useState(_ => "")
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(
-    "ANSWER: 2-12 length; ",
+    "ANSWER: 2-12 length; letters and spaces only; ",
   ))
   let {players, currentWord, previousWord, showAnswers, sk, winner} = game
 
@@ -25,8 +24,6 @@ let (submitClicked, _setSubmitClicked) = React.Uncurried.useState(_ => false)
     ErrorHook.useError(answer, "ANSWER", setValidationError)
     None
   }, [answer])
-
-
 
   React.useEffect2(() => {
     Js.log("send start useeff")
@@ -88,6 +85,7 @@ let (submitClicked, _setSubmitClicked) = React.Uncurried.useState(_ => false)
     send(. Js.Json.stringifyAny(pl))
     setAnswered(._ => true)
     setAnswer(._ => "")
+    setSubmitClicked(._ => false)
   }
 
   let onAnimationEnd = _ => {
@@ -123,13 +121,16 @@ let (submitClicked, _setSubmitClicked) = React.Uncurried.useState(_ => false)
       | true => <Word onAnimationEnd playerColor currentWord answered showTimer=false />
       | false => <>
           <Word onAnimationEnd playerColor currentWord answered showTimer={currentWord != ""} />
-          // <Answer answered answer onEnter setAnswer currentWord />
-
-
-          <Form onClick={_ => onEnter(. ignore())} leg="Answer" submitClicked validationError cognitoError=None>
-    <Input value=answer propName="answer" setFunc=setAnswer />
-
-  </Form>
+          <Answer
+            answered
+            answer
+            onEnter
+            setAnswer
+            currentWord
+            submitClicked
+            setSubmitClicked
+            validationError
+          />
         </>
       }
     }}
