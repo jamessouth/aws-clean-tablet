@@ -1,5 +1,3 @@
-let className = "text-gray-700 mt-14 bg-stone-100 block max-w-xs lg:max-w-sm font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7"
-
 @react.component
 let make = (
   ~ht="h-72",
@@ -29,6 +27,6 @@ let make = (
       }}
       {children}
     </fieldset>
-    <Button onClick className />
+    <Button onClick />
   </form>
 }

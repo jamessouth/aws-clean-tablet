@@ -7,7 +7,6 @@ let make = (
   ~cognitoError,
   ~setCognitoError,
 ) => {
-  
   let (username, setUsername) = React.Uncurried.useState(_ => "")
   let (password, setPassword) = React.Uncurried.useState(_ => "")
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(
@@ -69,9 +68,16 @@ let make = (
     | Some(_) => ()
     }
   }
-
-  <Form onClick leg="Sign in" submitClicked validationError cognitoError>
-    <Input value=username propName="username" setFunc=setUsername />
-    <Input value=password propName="password" autoComplete="current-password" setFunc=setPassword />
-  </Form>
+  {
+    switch submitClicked {
+    | true => <Loading label="lobby..." />
+    | false =>
+      <Form onClick leg="Sign in" submitClicked validationError cognitoError>
+        <Input value=username propName="username" setFunc=setUsername />
+        <Input
+          value=password propName="password" autoComplete="current-password" setFunc=setPassword
+        />
+      </Form>
+    }
+  }
 }

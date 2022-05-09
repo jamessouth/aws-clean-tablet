@@ -1,6 +1,6 @@
 let sectionClass = "relative flex flex-col justify-between items-center h-40 text-xl mb-12 "
 
-let className = "font-anon text-xl text-true-gray-700 bg-true-gray-100 h-7 w-2/3 max-w-250px cursor-pointer border-none filter disabled:cursor-not-allowed disabled:contrast-[0.25]"
+// let className = "text-gray-700 mt-14 bg-stone-100 block max-w-xs lg:max-w-sm font-flow text-2xl mx-auto cursor-pointer w-3/5 h-7"
 
 @react.component
 let make = (
@@ -13,7 +13,7 @@ let make = (
   ~setSubmitClicked,
   ~validationError,
 ) => {
-  let inputBox = React.useRef(Js.Nullable.null)
+  // let inputBox = React.useRef(Js.Nullable.null)
 
   // let (disableSubmit, setDisableSubmit) = React.Uncurried.useState(_ => true)
   // let (isValidInput, setIsValidInput) = React.Uncurried.useState(_ => true)
@@ -28,7 +28,7 @@ let make = (
   //   }
   // }
 
-    let onClick = _ => {
+  let onClick = _ => {
     setSubmitClicked(._ => true)
     switch validationError {
     | None => onEnter(. ignore())
@@ -43,8 +43,6 @@ let make = (
     | _ => ()
     }
   }
-
-
 
   let onChange = e => setAnswer(._ => ReactEvent.Form.target(e)["value"])
 
@@ -62,13 +60,13 @@ let make = (
   //   None
   // }, [inputText])
 
-  React.useEffect2(() => {
-    switch (answered, Js.Nullable.toOption(inputBox.current)) {
-    | (true, Some(inp)) => Web.blur(inp)
-    | (true, None) | (false, _) => ()
-    }
-    None
-  }, (answered, inputBox.current))
+  // React.useEffect2(() => {
+  //   switch (answered, Js.Nullable.toOption(inputBox.current)) {
+  //   | (true, Some(inp)) => Web.blur(inp)
+  //   | (true, None) | (false, _) => ()
+  //   }
+  //   None
+  // }, (answered, inputBox.current))
 
   // React.useEffect3(() => {
   //   setDisableSubmit(._ =>
@@ -110,25 +108,26 @@ let make = (
         }
       }
     }
-    <label className="text-stone-100 font-anon" htmlFor="inputbox">
-      {React.string("Enter your answer:")}
-    </label>
-    <input
-      className="h-7 w-3/5 text-xl pl-1 text-left bg-stone-100 border-none text-stone-800 max-w-xs"
-      id="inputbox"
-      autoComplete="off"
-      ref={ReactDOM.Ref.domRef(inputBox)}
-      value={answer}
-      spellCheck=false
-      onKeyPress
-      onChange
-      type_="text"
-      readOnly={switch answered {
-      | true => true
-      | false => false
-      }}
-    />
-    // disabled=disableSubmit
-    <Button onClick className />
+    {switch answered {
+    | true => React.null
+    | false => <>
+        <label className="text-stone-100 font-anon" htmlFor="inputbox">
+          {React.string("Enter your answer:")}
+        </label>
+        <input
+          className="h-7 w-3/5 text-xl pl-1 text-left bg-stone-100 border-none text-stone-800 max-w-xs"
+          id="inputbox"
+          autoComplete="off"
+          // ref={ReactDOM.Ref.domRef(inputBox)}
+          value={answer}
+          spellCheck=false
+          onKeyPress
+          onChange
+          type_="text"
+        />
+        // disabled=disableSubmit className
+        <Button onClick  />
+      </>
+    }}
   </section>
 }

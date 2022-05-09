@@ -16,19 +16,18 @@ let make = (
   | true =>
     switch winner == playerName {
     | true => "bg-win"
-    | false => {
-        let rand = Js.Math.unsafe_trunc(Js.Math.random() *. 4.) + 1
-        j`bg-lose$rand`
+    | false =>
+      switch Js.Math.unsafe_trunc(Js.Math.random() *. 4.) + 1 {
+      | 1 => "bg-lose1"
+      | 2 => "bg-lose2"
+      | 3 => "bg-lose3"
+      | _ => "bg-lose4"
       }
     }
   | false => ""
   }
 
-  Js.log2("bgimg", bgimg)
-
   let hstyles = "text-center font-anon mb-5 text-stone-100 "
-
-  let className = "mt-1.5 mb-14 block cursor-pointer text-stone-800 font-perm m-auto px-8 py-2 text-2xl"
 
   let noplrs = Js.Array2.length(players)
 
@@ -105,7 +104,12 @@ let make = (
     {switch (!isWinner, currentWord == "game over") {
     | (false, _) | (true, true) => <>
         <div className={`w-64 h-96 bg-no-repeat opacity-0 m-auto animate-fadein ${bgimg}`} />
-        <Button textTrue="Return to lobby" textFalse="Return to lobby" onClick className />
+        <Button
+          textTrue="Return to lobby"
+          textFalse="Return to lobby"
+          onClick
+          className="mt-1.5 mb-14 block cursor-pointer text-stone-800 font-perm mx-auto px-8 py-2 text-2xl"
+        />
       </>
     | (true, false) => React.null
     }}

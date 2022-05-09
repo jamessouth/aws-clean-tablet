@@ -79,7 +79,7 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~playerIndex, ~send, ~leader,
     let pl = {
       action: "answer",
       gameno: sk,
-      answer: Js.String2.trim(answer),
+      answer: Js.String2.trim(answer)->Js.String2.replaceByRe(%re("/\d/g"), "")->Js.String2.replaceByRe(%re("/[!-/:-@\[-`{-~]/g"), ""),
       index: playerIndex,
     }
     send(. Js.Json.stringifyAny(pl))

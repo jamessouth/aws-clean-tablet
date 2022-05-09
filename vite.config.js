@@ -58,7 +58,7 @@ export default defineConfig({
                 '100%': { 'stroke-dashoffset': '1000' },
               },
               fadein: {
-                'to': { 'opacity': '0.4' }
+                'to': { 'opacity': '0.55' }
               },
               ping1: {
                 '0%': {

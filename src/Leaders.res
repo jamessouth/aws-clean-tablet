@@ -202,7 +202,12 @@ let make = (~send, ~leaderData: array<Reducer.stat>, ~playerName) => {
               <td className=""> {React.string(j`$wins`)} </td>
               <td className=""> {React.string(j`$points`)} </td>
               <td className=""> {React.string(j`$games`)} </td>
-              <td className=""> {React.string(j`$winPct`)} </td>
+              <td className="">
+                {switch winPct == 0. || winPct == 1. {
+                | true => React.string(j`$winPct.00`)
+                | false => React.string(j`$winPct`)
+                }}
+              </td>
               <td className=""> {React.string(j`$ppg`)} </td>
             </tr>
           })

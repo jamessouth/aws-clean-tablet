@@ -1,5 +1,3 @@
-let className = "h-full right-0 top-0 w-1/2 bg-transparent text-stone-100 text-2xl font-flow cursor-pointer absolute border-l-2 border-gray-500/50"
-
 @react.component
 let make = (~playerGame, ~leader, ~games, ~send, ~wsError, ~close) => {
   let onClick = _ => {
@@ -60,7 +58,7 @@ let make = (~playerGame, ~leader, ~games, ~send, ~wsError, ~close) => {
             />
             {switch playerGame == "" {
             | true =>
-              <Button textTrue="start a new game" textFalse="start a new game" onClick className />
+              <Button textTrue="start a new game" textFalse="start a new game" onClick className="h-full right-0 top-0 w-1/2 bg-transparent text-stone-100 text-2xl font-flow cursor-pointer absolute border-l-2 border-gray-500/50" />
             | false => React.null
             }}
           </div>
