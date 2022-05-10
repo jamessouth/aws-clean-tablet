@@ -30,3 +30,53 @@ var bunchOfTests = []struct {
 		description: "small words",
 	},
 }
+
+var bunchOfTests2 = []struct {
+	input, expected, description string
+}{
+	{
+		input:       "j",
+		expected:    "",
+		description: "too short",
+	},
+	{
+		input:       "jjjjjjjjjjjjj",
+		expected:    "",
+		description: "too long",
+	},
+	{
+		input:       "bgt5gb",
+		expected:    "",
+		description: "number",
+	},
+	{
+		input:       "\nbhbhvg",
+		expected:    "",
+		description: "newline",
+	},
+	{
+		input:       "bhbhvg\t",
+		expected:    "",
+		description: "tab",
+	},
+	{
+		input:       "m*.kjns",
+		expected:    "",
+		description: "symbols",
+	},
+	{
+		input:       "  j",
+		expected:    "",
+		description: "begins with spaces",
+	},
+	{
+		input:       "mkjns  ",
+		expected:    "",
+		description: "ends with spaces",
+	},
+	{
+		input:       "bhb hv g",
+		expected:    "bhb hv g",
+		description: "ok",
+	},
+}

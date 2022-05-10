@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -74,6 +75,21 @@ func clearHasAnswered(pl []livePlayer) []livePlayer {
 	return pl
 }
 
+func sanitize(s string) string {
+	re := regexp.MustCompile(`(?i)^[a-z ]{2,12}$`)
+	re2 := regexp.MustCompile(`^\s+|\s+$`)
+
+	if re.MatchString(s) {
+		if !re2.MatchString(s) {
+			return s
+		} else {
+			return ""
+		}
+	}
+
+	return ""
+}
+
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
 	fmt.Println("answer", req.Body)
@@ -105,7 +121,9 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		return callErr(err)
 	}
 
-	if body.Answer == "" {
+	sanitizedAnswer := sanitize(body.Answer)
+
+	if sanitizedAnswer == "" {
 
 		obj, err := s3svc.GetObject(ctx, &s3.GetObjectInput{
 			Bucket:  aws.String(bucket),
@@ -131,7 +149,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		}
 
 	} else {
-		ans = body.Answer
+		ans = sanitizedAnswer
 	}
 
 	gameItemKey, err := attributevalue.MarshalMap(struct {
