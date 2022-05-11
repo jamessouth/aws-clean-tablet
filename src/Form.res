@@ -10,9 +10,13 @@ let make = (
 ) => {
   <form className="w-4/5 m-auto relative">
     <fieldset className={`flex flex-col items-center justify-around ${ht}`}>
-      <legend className="text-stone-100 m-auto mb-6 text-3xl font-fred">
-        {React.string(leg)}
-      </legend>
+      {switch Js.String2.length(leg) > 0 {
+      | true =>
+        <legend className="text-stone-100 m-auto mb-6 text-3xl font-fred">
+          {React.string(leg)}
+        </legend>
+      | false => React.null
+      }}
       {switch submitClicked {
       | false => React.null
       | true =>

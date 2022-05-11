@@ -137,14 +137,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		}
 
 		objOutput := *obj
-		fmt.Printf("\n%s, %+v\n", "getObj op", objOutput)
+		// fmt.Printf("\n%s, %+v\n", "getObj op", objOutput)
 
 		eTag := *objOutput.ETag
 		if eTag != wordsETag {
 			fmt.Println("eTags do not match", eTag, wordsETag)
 			ans = ""
 		} else {
-
 			ans = getWord(objOutput.Body)
 		}
 

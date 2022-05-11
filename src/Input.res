@@ -1,7 +1,14 @@
 let className = "font-arch bg-transparent text-stone-100 text-2xl absolute right-0 top-0 cursor-pointer"
 
 @react.component
-let make = (~value, ~propName, ~autoComplete=propName, ~inputMode="text", ~setFunc) => {
+let make = (
+  ~value,
+  ~propName,
+  ~autoComplete=propName,
+  ~inputMode="text",
+  ~onKeyPress=_e => (),
+  ~setFunc,
+) => {
   let (showPassword, setShowPassword) = React.Uncurried.useState(_ => false)
 
   let onChange = e => setFunc(._ => ReactEvent.Form.target(e)["value"])
@@ -21,8 +28,9 @@ let make = (~value, ~propName, ~autoComplete=propName, ~inputMode="text", ~setFu
       inputMode
       name=propName
       onChange
+      onKeyPress
       spellCheck=false
-      type_={switch propName == "username" || showPassword {
+      type_={switch propName == "username" || propName == "answer" || showPassword {
       | true => "text"
       | false => propName
       }}

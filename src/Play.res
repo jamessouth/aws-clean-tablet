@@ -79,7 +79,10 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~playerIndex, ~send, ~leader,
     let pl = {
       action: "answer",
       gameno: sk,
-      answer: answer->Js.String2.replaceByRe(%re("/\d/g"), "")->Js.String2.replaceByRe(%re("/[!-/:-@\[-`{-~]/g"), "")->Js.String2.trim(_),
+      answer: answer
+      ->Js.String2.replaceByRe(%re("/\d/g"), "")
+      ->Js.String2.replaceByRe(%re("/[!-/:-@\[-`{-~]/g"), "")
+      ->Js.String2.trim(_),
       index: playerIndex,
     }
     send(. Js.Json.stringifyAny(pl))
@@ -112,6 +115,22 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~playerIndex, ~send, ~leader,
     RescriptReactRouter.push("/lobby")
   }
 
+  let onClick2 = _ => {
+    setSubmitClicked(._ => true)
+    switch validationError {
+    | None => onEnter(. ignore())
+    | Some(_) => ()
+    }
+  }
+
+  let onKeyPress = e => {
+    let key = ReactEvent.Keyboard.key(e)
+    switch key {
+    | "Enter" => onClick2()
+    | _ => ()
+    }
+  }
+
   <div>
     <Scoreboard players currentWord previousWord showAnswers winner onClick playerName />
     {switch winner == "" {
@@ -121,16 +140,26 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~playerIndex, ~send, ~leader,
       | true => <Word onAnimationEnd playerColor currentWord answered showTimer=false />
       | false => <>
           <Word onAnimationEnd playerColor currentWord answered showTimer={currentWord != ""} />
-          <Answer
-            answered
-            answer
-            onEnter
-            setAnswer
-            currentWord
-            submitClicked
-            setSubmitClicked
-            validationError
-          />
+   
+          {switch currentWord == "" {
+          | true => React.null
+          | false =>
+            switch answered {
+            | true => React.null
+            | false =>
+              <Form
+                ht="h-24" onClick=onClick2 leg="" submitClicked validationError cognitoError=None>
+                <Input
+                  value=answer
+                  propName="answer"
+                  autoComplete="off"
+                  inputMode="text"
+                  onKeyPress
+                  setFunc=setAnswer
+                />
+              </Form>
+            }
+          }}
         </>
       }
     }}
