@@ -19,6 +19,9 @@ let make = (
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(valErrInit))
   let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
   Js.log("getinfo")
+  let name_starts_index = 41
+  let username_max_length = 10
+  let email_max_length = 99
 
   React.useEffect2(() => {
     switch search {
@@ -42,7 +45,7 @@ let make = (
               | true => RescriptReactRouter.push(`/confirm?${search}`)
               | false => {
                   RescriptReactRouter.push("/")
-                  setShowName(._ => Js.String2.sliceToEnd(msg, ~from=41))
+                  setShowName(._ => Js.String2.sliceToEnd(msg, ~from=name_starts_index))
                 }
               }
             }
@@ -73,7 +76,9 @@ let make = (
       switch validationError {
       | None => {
           let userdata: userDataInput = {
-            username: username,
+            username: username
+            ->Js.String2.slice(~from=0, ~to_=username_max_length)
+            ->Js.String2.replaceByRe(%re("/\W/g"), ""),
             pool: userpool,
           }
           setCognitoUser(._ => Js.Nullable.return(userConstructor(userdata)))
@@ -84,7 +89,9 @@ let make = (
       switch validationError {
       | None =>
         userpool->signUp(
-          username,
+          username
+          ->Js.String2.slice(~from=0, ~to_=username_max_length)
+          ->Js.String2.replaceByRe(%re("/\W/g"), ""),
           dummyPassword,
           Js.Nullable.null,
           Js.Nullable.null,
@@ -98,7 +105,7 @@ let make = (
       | None => {
           let emailData: attributeDataInput = {
             name: "email",
-            value: email,
+            value: email->Js.String2.slice(~from=0, ~to_=email_max_length),
           }
           let emailAttr = userAttributeConstructor(emailData)
           userpool->signUp(

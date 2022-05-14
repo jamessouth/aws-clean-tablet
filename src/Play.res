@@ -19,6 +19,7 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~playerIndex, ~send, ~leader,
     "ANSWER: 2-12 length; letters and spaces only; ",
   ))
   let {players, currentWord, previousWord, showAnswers, sk, winner} = game
+  let answer_max_length = 12
 
   React.useEffect1(() => {
     ErrorHook.useError(answer, "ANSWER", setValidationError)
@@ -80,6 +81,7 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~playerIndex, ~send, ~leader,
       action: "answer",
       gameno: sk,
       answer: answer
+      ->Js.String2.slice(~from=0, ~to_=answer_max_length)
       ->Js.String2.replaceByRe(%re("/\d/g"), "")
       ->Js.String2.replaceByRe(%re("/[!-/:-@\[-`{-~]/g"), "")
       ->Js.String2.trim(_),
@@ -140,7 +142,6 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~playerIndex, ~send, ~leader,
       | true => <Word onAnimationEnd playerColor currentWord answered showTimer=false />
       | false => <>
           <Word onAnimationEnd playerColor currentWord answered showTimer={currentWord != ""} />
-   
           {switch currentWord == "" {
           | true => React.null
           | false =>

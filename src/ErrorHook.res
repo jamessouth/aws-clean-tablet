@@ -46,12 +46,12 @@ let getFuncs = input =>
         ),
     ]
   | "ANSWER" => [
-    (. s) => checkLength(. 2, 12, s),
-    (. s) => checkInclusion(. %re("/[a-z ]/i"), "letters and spaces only; ", s),
-    (. s) => checkExclusion(. %re("/\d/"), "no numbers; ", s),
-    (. s) => checkExclusion(. %re("/[!-/:-@\[-`{-~]/"), "no symbols; ", s),
-    (. s) => checkExclusion(. %re("/^\s+|\s+$/"), "must begin and end with letters; ", s),
-  ]
+      (. s) => checkLength(. 2, 12, s),
+      (. s) => checkInclusion(. %re("/[a-z ]/i"), "letters and spaces only; ", s),
+      (. s) => checkExclusion(. %re("/\d/"), "no numbers; ", s),
+      (. s) => checkExclusion(. %re("/[!-/:-@\[-`{-~]/"), "no symbols; ", s),
+      (. s) => checkExclusion(. %re("/^\s|\s$/"), "must begin and end with letters; ", s),
+    ]
   | _ => []
   }
 

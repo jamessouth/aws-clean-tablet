@@ -10,6 +10,8 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError, ~search) => {
   let (password, setPassword) = React.Uncurried.useState(_ => "")
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(valErrInit))
   let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
+  let code_max_length = 6
+  let password_max_length = 98
 
   React.useEffect3(() => {
     switch search {
@@ -61,13 +63,24 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError, ~search) => {
         switch search {
         | "cd_un" =>
           cognitoUser->confirmRegistration(
-            code,
+            code
+            ->Js.String2.slice(~from=0, ~to_=code_max_length)
+            ->Js.String2.replaceByRe(%re("/\D/g"), ""),
             false,
             confirmregistrationCallback,
             Js.Nullable.null,
           )
         | "pw_un" =>
-          cognitoUser->confirmPassword(code, password, confirmpasswordCallback, Js.Nullable.null)
+          cognitoUser->confirmPassword(
+            code
+            ->Js.String2.slice(~from=0, ~to_=code_max_length)
+            ->Js.String2.replaceByRe(%re("/\D/g"), ""),
+            password
+            ->Js.String2.slice(~from=0, ~to_=password_max_length)
+            ->Js.String2.replaceByRe(%re("/\s/g"), ""),
+            confirmpasswordCallback,
+            Js.Nullable.null,
+          )
         | _ => setCognitoError(._ => Some("unknown method - not submitting"))
         }
       | true => setCognitoError(._ => Some("null user - not submitting"))

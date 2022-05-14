@@ -40,8 +40,8 @@ type livePlayer struct {
 
 const (
 	newline   byte = 10
-	byteRange int  = 25
-	highByte  int  = 1520398
+	byteRange int  = 25      //get 26 bytes, enough for a 12-letter word no matter what comes before or after
+	highByte  int  = 1519766 //file size - 26
 )
 
 func getRandomByte() string {
@@ -77,7 +77,7 @@ func clearHasAnswered(pl []livePlayer) []livePlayer {
 
 func sanitize(s string) string {
 	re := regexp.MustCompile(`(?i)^[a-z ]{2,12}$`)
-	re2 := regexp.MustCompile(`^\s+|\s+$`)
+	re2 := regexp.MustCompile(`^\s|\s$`)
 
 	if re.MatchString(s) {
 		if !re2.MatchString(s) {

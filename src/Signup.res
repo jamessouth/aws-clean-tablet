@@ -3,11 +3,14 @@ let make = (~userpool, ~setCognitoUser, ~cognitoError, ~setCognitoError) => {
   let (username, setUsername) = React.Uncurried.useState(_ => "")
   let (password, setPassword) = React.Uncurried.useState(_ => "")
   let (email, setEmail) = React.Uncurried.useState(_ => "")
-  
+
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(
     "USERNAME: 3-10 length; PASSWORD: 8-98 length; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; EMAIL: 5-99 length; enter a valid email address.",
   ))
   let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
+  let email_max_length = 99
+  let username_max_length = 10
+  let password_max_length = 98
 
   React.useEffect3(() => {
     ErrorHook.useMultiError(
@@ -44,12 +47,16 @@ let make = (~userpool, ~setCognitoUser, ~cognitoError, ~setCognitoError) => {
     | None => {
         let emailData = {
           name: "email",
-          value: email,
+          value: email->Js.String2.slice(~from=0, ~to_=email_max_length),
         }
         let emailAttr = userAttributeConstructor(emailData)
         userpool->signUp(
-          username,
-          password,
+          username
+          ->Js.String2.slice(~from=0, ~to_=username_max_length)
+          ->Js.String2.replaceByRe(%re("/\W/g"), ""),
+          password
+          ->Js.String2.slice(~from=0, ~to_=password_max_length)
+          ->Js.String2.replaceByRe(%re("/\s/g"), ""),
           Js.Nullable.return([emailAttr]),
           Js.Nullable.null,
           signupCallback,

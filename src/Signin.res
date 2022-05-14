@@ -13,6 +13,8 @@ let make = (
     "USERNAME: 3-10 length; PASSWORD: 8-98 length; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; ",
   ))
   let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
+  let username_max_length = 10
+  let password_max_length = 98
 
   React.useEffect2(() => {
     ErrorHook.useMultiError([(username, "USERNAME"), (password, "PASSWORD")], setValidationError)
@@ -44,8 +46,12 @@ let make = (
           customChallenge: Js.Nullable.null,
         }
         let authnData = {
-          username: username,
-          password: password,
+          username: username
+          ->Js.String2.slice(~from=0, ~to_=username_max_length)
+          ->Js.String2.replaceByRe(%re("/\W/g"), ""),
+          password: password
+          ->Js.String2.slice(~from=0, ~to_=password_max_length)
+          ->Js.String2.replaceByRe(%re("/\s/g"), ""),
           validationData: Js.Nullable.null,
           authParameters: Js.Nullable.null,
           clientMetadata: Js.Nullable.null,
@@ -55,7 +61,9 @@ let make = (
         switch Js.Nullable.isNullable(cognitoUser) {
         | true => {
             let userdata = {
-              username: username,
+              username: username
+              ->Js.String2.slice(~from=0, ~to_=username_max_length)
+              ->Js.String2.replaceByRe(%re("/\W/g"), ""),
               pool: userpool,
             }
             let user = Js.Nullable.return(userConstructor(userdata))
@@ -68,6 +76,7 @@ let make = (
     | Some(_) => ()
     }
   }
+
   {
     switch submitClicked {
     | true => <Loading label="lobby..." />
