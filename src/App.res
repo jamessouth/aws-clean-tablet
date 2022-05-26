@@ -27,6 +27,11 @@ let make = () => {
   let (token, setToken) = React.Uncurried.useState(_ => None)
   let (showName, setShowName) = React.Uncurried.useState(_ => "")
 
+  React.useEffect0(() => {
+    let tok = RescriptReactRouter.watchUrl(r => Js.log2("waa", r))
+    Some(() => {RescriptReactRouter.unwatchUrl(tok)})
+  })
+
   let initialState: Reducer.state = {
     gamesList: Js.Nullable.null,
     game: {
@@ -149,7 +154,9 @@ let make = () => {
           }
         | true => {
             body(document)->classList->removeClassList3("bodleadmob", "bodleadtab", "bodleadbig")
-            <Lobby playerGame leader games send wsError close />
+            <Lobby
+              playerGame leader games send wsError close returnToGame={playerColor != "transparent"}
+            />
           }
         }
 
@@ -169,7 +176,7 @@ let make = () => {
 
       | (list{"leaderboard"}, Some(_)) => {
           body(document)->classList->addClassList3("bodleadmob", "bodleadtab", "bodleadbig")
-          <Leaders send leaderData playerName/>
+          <Leaders send leaderData playerName />
         }
 
       | (_, _) => <div> {React.string("other")} </div> // <PageNotFound/>

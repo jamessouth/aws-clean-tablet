@@ -1,4 +1,5 @@
 type t
+// type w
 type openEventHandler = unit => unit
 type errorEventHandler = Dom.errorEvent => unit
 type messageEvent = {data: string}
@@ -24,12 +25,22 @@ type closeEventHandler = closeEvent => unit
 @send external addClassList3: (Dom.domTokenList, string, string, string) => unit = "add"
 @send external removeClassList3: (Dom.domTokenList, string, string, string) => unit = "remove"
 @scope("window") @val
-external addWindowEventListener: (string, unit => unit) => unit = "addEventListener"
+external addWindowEventListener: (string, Dom.event => unit) => unit = "addEventListener"
 @scope("window") @val
-external removeWindowEventListener: (string, unit => unit) => unit = "removeEventListener"
+external removeWindowEventListener: (string, Dom.event => unit) => unit = "removeEventListener"
 type mediaQueryList = {
   matches: bool,
   media: string,
 }
 @scope("window") @val
 external matchMedia: string => mediaQueryList = "matchMedia"
+
+@scope("document") @val
+external addDocumentEventListener: (string, Dom.event => unit) => unit = "addEventListener"
+// @get external visibilityState: Dom.document => string = "visibilityState"
+// @send external preventDefault: unit => unit = "preventDefault"
+// @get external eventPhase: Dom.event => int = "eventPhase"
+// // @send external confirm: (w, string) => bool = "confirm"
+
+// @scope("window") @val
+// external confirm: string => bool = "confirm"

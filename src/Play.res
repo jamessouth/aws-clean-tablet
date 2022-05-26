@@ -132,6 +132,16 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~playerIndex, ~send, ~leader,
     | _ => ()
     }
   }
+// open Web
+//   // addDocumentEventListener("popstate", e => Js.log2("vis", e))
+
+//   addWindowEventListener("popstate", e => {
+
+//     // preventDefault(e)
+//     // let c = confirm("you can't leave now!!!")
+//     Js.log2("bfu", e)
+    
+// })
 
   <div>
     <Scoreboard players currentWord previousWord showAnswers winner onClick playerName />
@@ -143,10 +153,10 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~playerIndex, ~send, ~leader,
       | false => <>
           <Word onAnimationEnd playerColor currentWord answered showTimer={currentWord != ""} />
           {switch currentWord == "" {
-          | true => React.null
+          | true => <div className="bg-transparent h-45 w-full"></div>
           | false =>
             switch answered {
-            | true => React.null
+            | true => <div className="bg-transparent h-45 w-full"></div>
             | false =>
               <Form
                 ht="h-24" onClick=onClick2 leg="" submitClicked validationError cognitoError=None>
