@@ -13,7 +13,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
   let (playerIndex, setPlayerIndex) = React.Uncurried.useState(_ => "")
   let (wsConnected, setWsConnected) = React.Uncurried.useState(_ => false)
   let (wsError, setWsError) = React.Uncurried.useState(_ => "")
-  let (leader, setLeader) = React.Uncurried.useState(_ => false)
+  // let (leader, setLeader) = React.Uncurried.useState(_ => false)
   let (leaderData, setLeaderData) = React.Uncurried.useState(_ => [])
   let (state, dispatch) = React.Uncurried.useReducerWithMapState(
     Reducer.reducer,
@@ -26,7 +26,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
     setPlayerColor(._ => "transparent")
     setPlayerIndex(._ => "")
     setPlayerGame(._ => "")
-    setLeader(._ => false)
+    // setLeader(._ => false)
     setLeaderData(._ => [])
   }
 
@@ -75,13 +75,12 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
             dispatch(. ListGames(Js.Nullable.return(listGms)))
           }
         | ModifyConn => {
-            let {modConn, color, leader, index} = parseModConn(data)
+            let {modConn, color, index} = parseModConn(data)
             Js.log2("parsedmodconn", modConn)
-            Js.log3(color, leader, index)
+            Js.log2(color, index)
             setPlayerGame(._ => modConn)
             setPlayerColor(._ => color)
             setPlayerIndex(._ => index)
-            setLeader(._ => leader)
           }
         | InsertGame => {
             let {addGame} = parseAddGame(data)
@@ -150,5 +149,5 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
 
   let close = (. code, reason) => ws->closeCodeReason(code, reason)
 
-  (playerGame, playerName, playerColor, playerIndex, wsConnected, state.game, state.gamesList, leader, leaderData, send, close, wsError)
+  (playerGame, playerName, playerColor, playerIndex, wsConnected, state.game, state.gamesList, leaderData, send, close, wsError)
 }

@@ -202,13 +202,11 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			TableName: aws.String(tableName),
 			ExpressionAttributeNames: map[string]string{
 				"#G": "game",
-				"#L": "leader",
 			},
 			ExpressionAttributeValues: map[string]types.AttributeValue{
 				":g": &types.AttributeValueMemberS{Value: ""},
-				":f": &types.AttributeValueMemberBOOL{Value: false},
 			},
-			UpdateExpression: aws.String("SET #G = :g, #L = :f"),
+			UpdateExpression: aws.String("SET #G = :g"),
 		})
 		callErr(err)
 
@@ -291,7 +289,7 @@ func callFunction(rv, gik map[string]types.AttributeValue, tn string, ctx contex
 	}
 
 	readyCount := 0
-	for k, v := range gm.Players {
+	for _, v := range gm.Players {
 		if v.Ready {
 			readyCount++
 			if readyCount == len(gm.Players) {
@@ -309,21 +307,6 @@ func callFunction(rv, gik map[string]types.AttributeValue, tn string, ctx contex
 				})
 				callErr(err)
 
-				_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-					Key: map[string]types.AttributeValue{
-						"pk": &types.AttributeValueMemberS{Value: "CONNECT"},
-						"sk": &types.AttributeValueMemberS{Value: k},
-					},
-					TableName: aws.String(tn),
-					ExpressionAttributeNames: map[string]string{
-						"#L": "leader",
-					},
-					ExpressionAttributeValues: map[string]types.AttributeValue{
-						":t": &types.AttributeValueMemberBOOL{Value: true},
-					},
-					UpdateExpression: aws.String("SET #L = :t"),
-				})
-				callErr(err)
 			}
 		} else {
 			return

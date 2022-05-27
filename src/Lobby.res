@@ -1,5 +1,5 @@
 @react.component
-let make = (~playerGame, ~leader, ~games, ~send, ~wsError, ~close, ~returnToGame=false) => {
+let make = (~playerGame, ~games, ~send, ~wsError, ~close, ~returnToGame=false) => {
   let onClick = _ => {
     let pl: Game.lobbyPayload = {
       action: "lobby",
@@ -87,7 +87,6 @@ let make = (~playerGame, ~leader, ~games, ~send, ~wsError, ~close, ~returnToGame
                     <Game
                       key=game.no
                       game
-                      leader
                       inThisGame={playerGame == game.no}
                       inAGame={playerGame != ""}
                       send

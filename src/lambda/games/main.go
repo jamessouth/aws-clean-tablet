@@ -329,7 +329,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			var connRecord struct {
 				Pk, Sk, Game, Name, Color, Index, ConnID string
-				Playing, Leader, Returning               bool
+				Playing, Returning                       bool
 			}
 			err = attributevalue.UnmarshalMap(item, &connRecord)
 			if err != nil {
@@ -379,12 +379,10 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 					ModConnGm string `json:"modConn"`
 					Color     string `json:"color"`
 					Index     string `json:"index"`
-					Leader    bool   `json:"leader"`
 				}{
 					ModConnGm: connRecord.Game,
 					Color:     connRecord.Color,
 					Index:     connRecord.Index,
-					Leader:    connRecord.Leader,
 				})
 				if err != nil {
 					return callErr(err)

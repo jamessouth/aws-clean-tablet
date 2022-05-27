@@ -71,7 +71,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		TableName: tableName,
 		ExpressionAttributeNames: map[string]string{
 			"#G": "game",
-			"#L": "leader",
 			"#P": "playing",
 			"#C": "color",
 			"#I": "index",
@@ -83,7 +82,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			":c": &types.AttributeValueMemberS{Value: "transparent"},
 			":t": &types.AttributeValueMemberBOOL{Value: true},
 		},
-		UpdateExpression: aws.String("SET #G = :g, #L = :f, #P = :f, #C = :c, #I = :g, #R = :t"),
+		UpdateExpression: aws.String("SET #G = :g, #P = :f, #C = :c, #I = :g, #R = :t"),
 	})
 	callErr(err)
 

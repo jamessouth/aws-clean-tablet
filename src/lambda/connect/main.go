@@ -42,7 +42,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			"game":    &types.AttributeValueMemberS{Value: ""},
 			"name":    &types.AttributeValueMemberS{Value: name},
 			"playing": &types.AttributeValueMemberBOOL{Value: false},
-			"leader":  &types.AttributeValueMemberBOOL{Value: false},
 			"color":   &types.AttributeValueMemberS{Value: "transparent"},
 			"index":   &types.AttributeValueMemberS{Value: ""},
 			"connID":  &types.AttributeValueMemberS{Value: req.RequestContext.ConnectionID},

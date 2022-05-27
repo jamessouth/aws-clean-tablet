@@ -52,7 +52,6 @@ let make = () => {
     wsConnected,
     game,
     games,
-    leader,
     leaderData,
     send,
     close,
@@ -155,7 +154,7 @@ let make = () => {
         | true => {
             body(document)->classList->removeClassList3("bodleadmob", "bodleadtab", "bodleadbig")
             <Lobby
-              playerGame leader games send wsError close returnToGame={playerColor != "transparent"}
+              playerGame games send wsError close returnToGame={playerColor != "transparent"}
             />
           }
         }
@@ -164,7 +163,7 @@ let make = () => {
         switch wsConnected {
         | true =>
           switch gameno == game.sk {
-          | true => <Play game playerColor playerIndex send leader playerName />
+          | true => <Play game playerColor playerIndex send playerName />
           | false => <Loading label="game..." />
           }
 
