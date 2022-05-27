@@ -163,7 +163,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	index := body.Index
-
+	//condition on player name??
 	ui, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 		Key:       gameItemKey,
 		TableName: aws.String(tableName),
