@@ -48,6 +48,7 @@ let make = () => {
     playerGame,
     playerName,
     playerColor,
+    count,
     playerIndex,
     wsConnected,
     game,
@@ -154,7 +155,7 @@ let make = () => {
         | true => {
             body(document)->classList->removeClassList3("bodleadmob", "bodleadtab", "bodleadbig")
             <Lobby
-              playerGame games send wsError close returnToGame={playerColor != "transparent"}
+              playerGame games send wsError close count returnToGame={playerColor != "transparent"}
             />
           }
         }

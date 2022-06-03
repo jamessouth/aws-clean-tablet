@@ -30,9 +30,9 @@ type listPlayer struct {
 }
 
 type frontListGame struct {
-	No      string       `json:"no"`
-	Ready   bool         `json:"ready"`
-	Players []listPlayer `json:"players"`
+	No        string       `json:"no"`
+	TimerCxld bool         `json:"timerCxld"`
+	Players   []listPlayer `json:"players"`
 }
 
 type listGamePayload struct {
@@ -41,10 +41,10 @@ type listGamePayload struct {
 }
 
 type backListGame struct {
-	Pk      string                `dynamodbav:"pk"` //'LISTGAME'
-	Sk      string                `dynamodbav:"sk"` //no
-	Ready   bool                  `dynamodbav:"ready"`
-	Players map[string]listPlayer `dynamodbav:"players"`
+	Pk        string                `dynamodbav:"pk"` //'LISTGAME'
+	Sk        string                `dynamodbav:"sk"` //no
+	TimerCxld bool                  `dynamodbav:"timerCxld"`
+	Players   map[string]listPlayer `dynamodbav:"players"`
 }
 
 type livePlayerList []struct {
@@ -89,9 +89,9 @@ func getFrontListGames(gl []backListGame) (res []frontListGame) {
 	for _, g := range gl {
 		pls := sortByName(getListPlayersSlice(g.Players))
 		res = append(res, frontListGame{
-			No:      g.Sk,
-			Ready:   g.Ready,
-			Players: pls,
+			No:        g.Sk,
+			TimerCxld: g.TimerCxld,
+			Players:   pls,
 		})
 	}
 
@@ -261,11 +261,22 @@ func getReturnValue(status int) events.APIGatewayProxyResponse {
 	}
 }
 
+// {
+//     "eventName": ["INSERT", "MODIFY"],
+//     "dynamodb": {
+//         "Keys": {
+//             "pk": {
+//                 "S": ["CONNECT", "LISTGAME"]
+//             }
+//         }
+//     }
+// }
+
 func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayProxyResponse, error) {
-	// fmt.Println("reqqqq", req)
-	for i, rec := range req.Records {
-		// fmt.Println("rekkkk", req.Records, len(req.Records))
-		fmt.Println("reccc: ", i, rec, len(req.Records))
+
+	for _, rec := range req.Records {
+
+		fmt.Println("reccc: ", rec)
 
 		tableName := strings.Split(rec.EventSourceArn, "/")[1]
 
@@ -436,7 +447,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			case dynamodbstreams.OperationTypeInsert:
 				gp.Tag = "addGame"
 			case dynamodbstreams.OperationTypeModify:
-				gp.Game.Ready = listGameRecord.Ready
+				gp.Game.TimerCxld = listGameRecord.TimerCxld
 			default:
 				fmt.Printf("%s: %+v\n", "remove list game oi", rec.Change.OldImage)
 				gp.Game.Players = nil

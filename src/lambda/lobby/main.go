@@ -325,6 +325,29 @@ func main() {
 	lambda.Start(handler)
 }
 
+func getTimer(gik map[string]types.AttributeValue, tn string, ctx context.Context, ddbsvc *dynamodb.Client, reqTime int64) bool {
+	gi, err := ddbsvc.GetItem(ctx, &dynamodb.GetItemInput{
+		Key:                  gik,
+		TableName:            aws.String(tn),
+		ProjectionExpression: aws.String("timerCxld, timerID"),
+	})
+	if err != nil {
+		callErr(err)
+	}
+
+	var timerData struct {
+		TimerID   int64
+		TimerCxld bool
+	}
+	err = attributevalue.UnmarshalMap(gi.Item, &timerData)
+	if err != nil {
+		callErr(err)
+	}
+
+	return reqTime == timerData.TimerID && !timerData.TimerCxld
+
+}
+
 func callFunction(rv, gik map[string]types.AttributeValue, tn string, ctx context.Context, ddbsvc *dynamodb.Client, apigwsvc *apigatewaymanagementapi.Client, reqTime int64) {
 	var gm struct {
 		// Pk, Sk  string
@@ -356,7 +379,7 @@ func callFunction(rv, gik map[string]types.AttributeValue, tn string, ctx contex
 					},
 					ExpressionAttributeValues: map[string]types.AttributeValue{
 
-						":r": &types.AttributeValueMemberN{Value: strconv.Itoa(int(reqTime))},
+						":r": &types.AttributeValueMemberN{Value: strconv.FormatInt(reqTime, 10)},
 						":f": &types.AttributeValueMemberBOOL{Value: false},
 					},
 					UpdateExpression: aws.String("SET #T = :f, #I = :r"),
@@ -375,68 +398,18 @@ func callFunction(rv, gik map[string]types.AttributeValue, tn string, ctx contex
 				for {
 					select {
 					case <-done:
-
-						gi, err := ddbsvc.GetItem(ctx, &dynamodb.GetItemInput{
-							Key:       gik,
-							TableName: aws.String(tn),
-
-							// ConsistentRead:           new(bool),
-							// ExpressionAttributeNames: map[string]string{},
-							ProjectionExpression: aws.String("timerCxld, timerID"),
-						})
-						if err != nil {
-							callErr(err)
-						}
-
-						var timerData struct {
-							timerID   string
-							timerCxld bool
-						}
-						err = attributevalue.UnmarshalMap(gi.Item, &timerData)
-						if err != nil {
-							callErr(err)
-						}
-
-						fmt.Printf("%s%t %d %s\n", "done cxld: ", timerData.timerCxld, reqTime, timerData.timerID)
-
-						if !timerData.timerCxld {
-
+						if getTimer(gik, tn, ctx, ddbsvc, reqTime) {
 							//kick off game
 							fmt.Println("starting game...", reqTime)
-
-						} else {
-
 						}
-
 						return
-					case t := <-ticker.C:
-
-						gi, err := ddbsvc.GetItem(ctx, &dynamodb.GetItemInput{
-							Key:       gik,
-							TableName: aws.String(tn),
-
-							// ConsistentRead:           new(bool),
-							// ExpressionAttributeNames: map[string]string{},
-							ProjectionExpression: aws.String("timerCxld"),
-						})
-						if err != nil {
-							callErr(err)
-						}
-
-						var cxld bool
-						err = attributevalue.Unmarshal(gi.Item["timerCxld"], &cxld)
-						if err != nil {
-							callErr(err)
-						}
-						fmt.Printf("%s%t %d\n", "timer cxld: ", cxld, reqTime)
-
-						if !cxld {
+					case <-ticker.C:
+						if getTimer(gik, tn, ctx, ddbsvc, reqTime) {
 							count -= 1
-							fmt.Println(t.Second(), count)
 
 							for _, p := range gm.Players {
 
-								conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(p.ConnID), Data: []byte{count}}
+								conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(p.ConnID), Data: []byte{123, 34, 99, 110, 116, 100, 111, 119, 110, 34, 58, count, 125}} //{"cntdown": 4}
 
 								_, err := apigwsvc.PostToConnection(ctx, &conn)
 								if err != nil {

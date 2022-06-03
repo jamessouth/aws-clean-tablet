@@ -10,6 +10,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
   let (playerGame, setPlayerGame) = React.Uncurried.useState(_ => "")
   let (playerName, setPlayerName) = React.Uncurried.useState(_ => "")
   let (playerColor, setPlayerColor) = React.Uncurried.useState(_ => "transparent")
+  let (count, setCount) = React.Uncurried.useState(_ => "")
   let (playerIndex, setPlayerIndex) = React.Uncurried.useState(_ => "")
   let (wsConnected, setWsConnected) = React.Uncurried.useState(_ => false)
   let (wsError, setWsError) = React.Uncurried.useState(_ => "")
@@ -82,6 +83,17 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
             setPlayerColor(._ => color)
             setPlayerIndex(._ => index)
           }
+
+
+        | Countdown => {
+            let {cntdown} = parseCountdown(data)
+            Js.log2("parsedCountdown", cntdown)
+            setCount(._ => cntdown)
+          }
+
+
+
+
         | InsertGame => {
             let {addGame} = parseAddGame(data)
             Js.log2("parsedaddgame", addGame)
@@ -125,6 +137,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
         setCognitoUser(._ => Js.Nullable.null)
         setWs(._ => Js.Nullable.null)
         setPlayerName(._ => "")
+        setCount(._ => "")
 
         resetConnState()
       })
@@ -149,5 +162,5 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
 
   let close = (. code, reason) => ws->closeCodeReason(code, reason)
 
-  (playerGame, playerName, playerColor, playerIndex, wsConnected, state.game, state.gamesList, leaderData, send, close, wsError)
+  (playerGame, playerName, playerColor, count, playerIndex, wsConnected, state.game, state.gamesList, leaderData, send, close, wsError)
 }

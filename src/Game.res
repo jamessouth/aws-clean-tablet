@@ -10,11 +10,10 @@ type startPayload = {
 }
 
 @react.component
-let make = (~game: Reducer.listGame, ~inThisGame, ~inAGame, ~send, ~class, ~onlyGame) => {
+let make = (~game: Reducer.listGame, ~inThisGame, ~inAGame, ~count, ~send, ~class, ~onlyGame) => {
   let liStyle = `<md:mb-16 grid grid-cols-2 grid-rows-6 relative text-xl bg-bottom bg-no-repeat h-200px text-center font-bold text-dark-800 font-anon pb-8 ${class} lg:(max-w-lg w-full)`
   let btnStyle = " cursor-pointer text-base font-bold text-stone-100 font-anon w-1/2 bottom-0 h-8 absolute bg-stone-700 bg-opacity-70 filter disabled:cursor-not-allowed disabled:contrast-[0.25]"
   let (ready, setReady) = React.Uncurried.useState(_ => true)
-  let (count, setCount) = React.Uncurried.useState(_ => 5)
   let (disabledJoin, setDisabledJoin) = React.Uncurried.useState(_ => false)
   let (disabledReady, setDisabledReady) = React.Uncurried.useState(_ => true)
 
@@ -77,21 +76,8 @@ let make = (~game: Reducer.listGame, ~inThisGame, ~inAGame, ~send, ~class, ~only
     None
   }, (inThisGame, inAGame, game.players))
 
-  React.useEffect2(() => {
-    let id = if game.ready && inThisGame {
-      Js.Global.setInterval(() => {
-        setCount(.c => c - 1)
-      }, 1000)
-    } else {
-      Js.Global.setInterval(() => (), 3600000)
-    }
-    Some(
-      () => {
-        setCount(._ => 5)
-        Js.Global.clearInterval(id)
-      },
-    )
-  }, (inThisGame, game.ready))
+
+
 
   React.useEffect3(() => {
     switch inThisGame && count == 0 {
@@ -129,21 +115,24 @@ let make = (~game: Reducer.listGame, ~inThisGame, ~inAGame, ~send, ~class, ~only
       </p>
     })
     ->React.array}
+
+
+{
+  switch count == "" {
+  | true => expression
+  | false => expression
+  }
+}
+
+
     {
-      // <p key="2"> {React.string("z1")} </p>
-      // <p key="23"> {React.string("z11")} </p>
-      // <p key="24"> {React.string("z111")} </p>
-      // <p key="25"> {React.string("z1111")} </p>
-      // <p key="26"> {React.string("z11111")} </p>
-      // <p key="27"> {React.string("z111111")} </p>
-      // <p key="28"> {React.string("z1111111")} </p>
-      switch (game.ready, inThisGame) {
-      | (true, false) =>
+      switch (game.timerCxld, inThisGame) {
+      | (false, false) =>
         <p
           className="absolute text-2xl animate-pulse font-perm left-1/2 top-2/3 transform -translate-x-2/4">
           {React.string("Starting soon...")}
         </p>
-      | (true, true) =>
+      | (false, true) =>
         switch count > 0 {
         | true =>
           <p
@@ -152,9 +141,12 @@ let make = (~game: Reducer.listGame, ~inThisGame, ~inAGame, ~send, ~class, ~only
           </p>
         | false => React.null
         }
-      | (false, _) => React.null
+      | (true, _) => React.null
       }
     }
+
+
+
     <Button
       textTrue="leave"
       textFalse="join"

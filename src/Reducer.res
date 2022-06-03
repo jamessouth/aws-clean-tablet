@@ -25,7 +25,7 @@ type livePlayer = {
 
 type listGame = {
   no: string,
-  ready: bool,
+  timerCxld: bool,
   players: array<listPlayer>,
 }
 
