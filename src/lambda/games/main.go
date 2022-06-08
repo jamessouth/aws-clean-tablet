@@ -262,7 +262,6 @@ func getReturnValue(status int) events.APIGatewayProxyResponse {
 }
 
 // {
-//     "eventName": ["INSERT", "MODIFY"],
 //     "dynamodb": {
 //         "Keys": {
 //             "pk": {
@@ -276,20 +275,19 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 	for _, rec := range req.Records {
 
-		fmt.Println("reccc: ", rec)
+		fmt.Printf("%s: %+v\n", "reccc", rec)
 
 		tableName := strings.Split(rec.EventSourceArn, "/")[1]
 
-		var ni map[string]events.DynamoDBAttributeValue
+		var rawItem map[string]events.DynamoDBAttributeValue
 
 		if rec.EventName == dynamodbstreams.OperationTypeRemove {
-			ni = rec.Change.OldImage
+			rawItem = rec.Change.OldImage
 		} else {
-			ni = rec.Change.NewImage
+			rawItem = rec.Change.NewImage
 		}
-		fmt.Printf("%s: %+v\n", "new db ni", ni)
 
-		item, err := FromDynamoDBEventAVMap(ni)
+		item, err := FromDynamoDBEventAVMap(rawItem)
 		if err != nil {
 			return callErr(err)
 		}
@@ -424,8 +422,9 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			gp := listGamePayload{
 				Game: frontListGame{
-					No:      listGameRecord.Sk,
-					Players: sortByName(getListPlayersSlice(listGameRecord.Players)),
+					No:        listGameRecord.Sk,
+					TimerCxld: listGameRecord.TimerCxld,
+					Players:   sortByName(getListPlayersSlice(listGameRecord.Players)),
 				},
 				Tag: "mdLstGm",
 			}
@@ -447,7 +446,6 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			case dynamodbstreams.OperationTypeInsert:
 				gp.Tag = "addGame"
 			case dynamodbstreams.OperationTypeModify:
-				gp.Game.TimerCxld = listGameRecord.TimerCxld
 			default:
 				fmt.Printf("%s: %+v\n", "remove list game oi", rec.Change.OldImage)
 				gp.Game.Players = nil
@@ -484,65 +482,65 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			}
 
-		} else if recType == "LIVEGAME" {
+			// } else if recType == "LIVEGAME" {
 
-			if rec.EventName == dynamodbstreams.OperationTypeInsert || rec.EventName == dynamodbstreams.OperationTypeModify {
+			// 	if rec.EventName == dynamodbstreams.OperationTypeInsert || rec.EventName == dynamodbstreams.OperationTypeModify {
 
-				var gameRecord struct {
-					Sk, CurrentWord, PreviousWord, Winner string
-					Players                               livePlayerList
-					AnswersCount                          int
-					ShowAnswers                           bool
-				}
-				err = attributevalue.UnmarshalMap(item, &gameRecord)
-				if err != nil {
-					return callErr(err)
-				}
+			// 		var gameRecord struct {
+			// 			Sk, CurrentWord, PreviousWord, Winner string
+			// 			Players                               livePlayerList
+			// 			AnswersCount                          int
+			// 			ShowAnswers                           bool
+			// 		}
+			// 		err = attributevalue.UnmarshalMap(item, &gameRecord)
+			// 		if err != nil {
+			// 			return callErr(err)
+			// 		}
 
-				fmt.Printf("%s%+v\n", "live gammmmme ", gameRecord)
+			// 		fmt.Printf("%s%+v\n", "live gammmmme ", gameRecord)
 
-				pls := gameRecord.Players
+			// 		pls := gameRecord.Players
 
-				if gameRecord.ShowAnswers {
-					pls.sortByAnswerThenName()
-				} else {
-					pls.sortByScoreThenName()
-				}
+			// 		if gameRecord.ShowAnswers {
+			// 			pls.sortByAnswerThenName()
+			// 		} else {
+			// 			pls.sortByScoreThenName()
+			// 		}
 
-				gp := modifyLiveGamePayload{
-					ModLiveGame: liveGame{
-						Sk:           gameRecord.Sk,
-						Players:      pls.getPoints(),
-						CurrentWord:  gameRecord.CurrentWord,
-						PreviousWord: gameRecord.PreviousWord,
-						AnswersCount: gameRecord.AnswersCount,
-						ShowAnswers:  gameRecord.ShowAnswers,
-						Winner:       gameRecord.Winner,
-					},
-				}
+			// 		gp := modifyLiveGamePayload{
+			// 			ModLiveGame: liveGame{
+			// 				Sk:           gameRecord.Sk,
+			// 				Players:      pls.getPoints(),
+			// 				CurrentWord:  gameRecord.CurrentWord,
+			// 				PreviousWord: gameRecord.PreviousWord,
+			// 				AnswersCount: gameRecord.AnswersCount,
+			// 				ShowAnswers:  gameRecord.ShowAnswers,
+			// 				Winner:       gameRecord.Winner,
+			// 			},
+			// 		}
 
-				payload, err := json.Marshal(gp)
-				if err != nil {
-					return callErr(err)
-				}
+			// 		payload, err := json.Marshal(gp)
+			// 		if err != nil {
+			// 			return callErr(err)
+			// 		}
 
-				for _, v := range pls {
+			// 		for _, v := range pls {
 
-					conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.ConnID), Data: payload}
+			// 			conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.ConnID), Data: payload}
 
-					_, err = apigwsvc.PostToConnection(ctx, &conn)
-					if err != nil {
-						return callErr(err)
-					}
-				}
-			} else {
-				oi := rec.Change.OldImage
-				fmt.Printf("%s: %+v\n", "remove live game oi", oi)
-			}
-		} else if recType == "STAT" {
-			fmt.Printf("%s: %+v\n", "stat item", item)
+			// 			_, err = apigwsvc.PostToConnection(ctx, &conn)
+			// 			if err != nil {
+			// 				return callErr(err)
+			// 			}
+			// 		}
+			// 	} else {
+			// 		oi := rec.Change.OldImage
+			// 		fmt.Printf("%s: %+v\n", "remove live game oi", oi)
+			// 	}
+			// } else if recType == "STAT" {
+			// 	fmt.Printf("%s: %+v\n", "stat item", item)
 		} else {
-			fmt.Printf("%s: %+v\n", "other record type", item)
+			fmt.Printf("%s: %+v\n", "other record type", rec)
 		}
 	}
 

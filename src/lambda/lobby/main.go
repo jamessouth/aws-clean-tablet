@@ -335,6 +335,11 @@ func getTimer(gik map[string]types.AttributeValue, tn string, ctx context.Contex
 		callErr(err)
 	}
 
+	fmt.Printf("%s: %+v\n", "gi", gi)
+	if len(gi.Item) == 0 {
+		return false
+	}
+
 	var timerData struct {
 		TimerID   int64
 		TimerCxld bool
@@ -401,6 +406,18 @@ func callFunction(rv, gik map[string]types.AttributeValue, tn string, ctx contex
 						if getTimer(gik, tn, ctx, ddbsvc, reqTime) {
 							//kick off game
 							fmt.Println("starting game...", reqTime)
+
+							for _, p := range gm.Players {
+
+								conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(p.ConnID), Data: []byte{123, 34, 99, 110, 116, 100, 111, 119, 110, 34, 58, 34, 115, 116, 97, 114, 116, 34, 125}} //{"cntdown": "start"}
+
+								_, err := apigwsvc.PostToConnection(ctx, &conn)
+								if err != nil {
+									callErr(err)
+								}
+
+							}
+
 						}
 						return
 					case <-ticker.C:
@@ -419,6 +436,16 @@ func callFunction(rv, gik map[string]types.AttributeValue, tn string, ctx contex
 							}
 						} else {
 							ticker.Stop()
+							for _, p := range gm.Players {
+
+								conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(p.ConnID), Data: []byte{123, 34, 99, 110, 116, 100, 111, 119, 110, 34, 58, 34, 34, 125}} //{"cntdown": ""}
+
+								_, err := apigwsvc.PostToConnection(ctx, &conn)
+								if err != nil {
+									callErr(err)
+								}
+
+							}
 						}
 
 					}

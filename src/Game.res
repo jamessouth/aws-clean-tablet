@@ -80,15 +80,8 @@ let make = (~game: Reducer.listGame, ~inThisGame, ~inAGame, ~count, ~send, ~clas
 
 
   React.useEffect3(() => {
-    switch inThisGame && count == 0 {
-    | true => {
-        RescriptReactRouter.push(`/game/${game.no}`)
-        let pl = {
-          action: "prep",
-          gameno: game.no,
-        }
-        send(. Js.Json.stringifyAny(pl))
-      }
+    switch inThisGame && count == "start" {
+    | true => RescriptReactRouter.push(`/game/${game.no}`)
     | false => ()
     }
     None
@@ -115,38 +108,25 @@ let make = (~game: Reducer.listGame, ~inThisGame, ~inAGame, ~count, ~send, ~clas
       </p>
     })
     ->React.array}
-
-
-{
-  switch count == "" {
-  | true => expression
-  | false => expression
-  }
-}
-
-
     {
       switch (game.timerCxld, inThisGame) {
       | (false, false) =>
         <p
-          className="absolute text-2xl animate-pulse font-perm left-1/2 top-2/3 transform -translate-x-2/4">
+          className="absolute text-2xl animate-pulse font-perm left-1/2 top-2/3 transform -translate-x-2/4 w-full">
           {React.string("Starting soon...")}
         </p>
       | (false, true) =>
-        switch count > 0 {
+        switch count != "" {
         | true =>
           <p
             className="absolute text-4xl animate-ping1 font-perm left-1/2 top-1/4 transform -translate-x-2/4">
-            {React.string(Js.Int.toString(count))}
+            {React.string(count)}
           </p>
         | false => React.null
         }
       | (true, _) => React.null
       }
     }
-
-
-
     <Button
       textTrue="leave"
       textFalse="join"
