@@ -19,6 +19,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
+	ebtypes "github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
 	"github.com/aws/smithy-go"
 )
 
@@ -72,6 +74,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			"pk": &types.AttributeValueMemberS{Value: "CONNECT"},
 			"sk": &types.AttributeValueMemberS{Value: id},
 		}
+		ebsvc = eventbridge.NewFromConfig(cfg)
 	)
 
 	customResolver := aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
@@ -255,7 +258,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		ui2, err := ddbsvc.UpdateItem(ctx, &removePlayerInput)
 		callErr(err)
 
-		callFunction(ui2.Attributes, gameItemKey, tableName, ctx, ddbsvc, apigwsvc, req.RequestContext.RequestTimeEpoch)
+		callFunction(ui2.Attributes, gameItemKey, tableName, ctx, ddbsvc, apigwsvc, req.RequestContext.RequestTimeEpoch, ebsvc)
 
 	} else if body.Tipe == "ready" {
 
@@ -276,7 +279,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		callErr(err)
 
-		callFunction(ui2.Attributes, gameItemKey, tableName, ctx, ddbsvc, apigwsvc, req.RequestContext.RequestTimeEpoch)
+		callFunction(ui2.Attributes, gameItemKey, tableName, ctx, ddbsvc, apigwsvc, req.RequestContext.RequestTimeEpoch, ebsvc)
 
 	} else if body.Tipe == "unready" {
 
@@ -304,7 +307,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 			callErr(err)
 
-			callFunction(ui2.Attributes, gameItemKey, tableName, ctx, ddbsvc, apigwsvc, req.RequestContext.RequestTimeEpoch)
+			callFunction(ui2.Attributes, gameItemKey, tableName, ctx, ddbsvc, apigwsvc, req.RequestContext.RequestTimeEpoch, ebsvc)
 
 		}
 
@@ -353,10 +356,9 @@ func getTimer(gik map[string]types.AttributeValue, tn string, ctx context.Contex
 
 }
 
-func callFunction(rv, gik map[string]types.AttributeValue, tn string, ctx context.Context, ddbsvc *dynamodb.Client, apigwsvc *apigatewaymanagementapi.Client, reqTime int64) {
+func callFunction(rv, gik map[string]types.AttributeValue, tn string, ctx context.Context, ddbsvc *dynamodb.Client, apigwsvc *apigatewaymanagementapi.Client, reqTime int64, ebsvc *eventbridge.Client) {
 	var gm struct {
-		// Pk, Sk  string
-
+		Sk      string
 		Players map[string]listPlayer
 	}
 	err := attributevalue.UnmarshalMap(rv, &gm)
@@ -378,12 +380,10 @@ func callFunction(rv, gik map[string]types.AttributeValue, tn string, ctx contex
 					Key:       gik,
 					TableName: aws.String(tn),
 					ExpressionAttributeNames: map[string]string{
-
 						"#I": "timerID",
 						"#T": "timerCxld",
 					},
 					ExpressionAttributeValues: map[string]types.AttributeValue{
-
 						":r": &types.AttributeValueMemberN{Value: strconv.FormatInt(reqTime, 10)},
 						":f": &types.AttributeValueMemberBOOL{Value: false},
 					},
@@ -407,15 +407,41 @@ func callFunction(rv, gik map[string]types.AttributeValue, tn string, ctx contex
 							//kick off game
 							fmt.Println("starting game...", reqTime)
 
-							for _, p := range gm.Players {
+							// for _, p := range gm.Players {
+							// 	conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(p.ConnID), Data: []byte{123, 34, 99, 110, 116, 100, 111, 119, 110, 34, 58, 34, 115, 116, 97, 114, 116, 34, 125}} //{"cntdown": "start"}
 
-								conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(p.ConnID), Data: []byte{123, 34, 99, 110, 116, 100, 111, 119, 110, 34, 58, 34, 115, 116, 97, 114, 116, 34, 125}} //{"cntdown": "start"}
+							// 	_, err := apigwsvc.PostToConnection(ctx, &conn)
 
-								_, err := apigwsvc.PostToConnection(ctx, &conn)
-								if err != nil {
-									callErr(err)
-								}
+							// 	callErr(err)
 
+							// }
+
+							details, err := json.Marshal(struct {
+								Gameno string `json:"gameno"`
+							}{Gameno: gm.Sk})
+							if err != nil {
+								callErr(err)
+							}
+
+							po, err := ebsvc.PutEvents(ctx, &eventbridge.PutEventsInput{
+								Entries: []ebtypes.PutEventsRequestEntry{
+									{
+										Detail:     aws.String(string(details)),
+										DetailType: aws.String("initialize game start"),
+										Source:     aws.String("lambda.ct-lobby"),
+									},
+								},
+							})
+							callErr(err)
+
+							putResults := *po
+
+							ev := putResults.Entries[0]
+
+							if putResults.FailedEntryCount > 0 {
+								fmt.Printf("put event failed with msg %s, error code: %s.", *ev.ErrorMessage, *ev.ErrorCode)
+							} else {
+								fmt.Printf("put event ID %s succeeded!", *ev.EventId)
 							}
 
 						}
