@@ -407,26 +407,19 @@ func callFunction(rv, gik map[string]types.AttributeValue, tn string, ctx contex
 							//kick off game
 							fmt.Println("starting game...", reqTime)
 
-							// for _, p := range gm.Players {
-							// 	conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(p.ConnID), Data: []byte{123, 34, 99, 110, 116, 100, 111, 119, 110, 34, 58, 34, 115, 116, 97, 114, 116, 34, 125}} //{"cntdown": "start"}
+							for _, p := range gm.Players {
+								conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(p.ConnID), Data: []byte{123, 34, 99, 110, 116, 100, 111, 119, 110, 34, 58, 34, 115, 116, 97, 114, 116, 34, 125}} //{"cntdown": "start"}
 
-							// 	_, err := apigwsvc.PostToConnection(ctx, &conn)
+								_, err := apigwsvc.PostToConnection(ctx, &conn)
 
-							// 	callErr(err)
-
-							// }
-
-							details, err := json.Marshal(struct {
-								Gameno string `json:"gameno"`
-							}{Gameno: gm.Sk})
-							if err != nil {
 								callErr(err)
+
 							}
 
 							po, err := ebsvc.PutEvents(ctx, &eventbridge.PutEventsInput{
 								Entries: []ebtypes.PutEventsRequestEntry{
 									{
-										Detail:     aws.String(string(details)),
+										Detail:     aws.String("{\"gameno\":" + "\"" + gm.Sk + "\"" + "}"),
 										DetailType: aws.String("initialize game start"),
 										Source:     aws.String("lambda.ct-lobby"),
 									},

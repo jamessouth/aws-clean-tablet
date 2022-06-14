@@ -2,28 +2,15 @@ package main
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"math/rand"
-	"net/http"
-	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
-
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/aws/aws-sdk-go-v2/service/sfn"
-	sfntypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
-
-	"github.com/aws/smithy-go"
 )
 
 type livePlayer struct {
@@ -88,185 +75,102 @@ const (
 	intercept int = 2
 )
 
-func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
+type sfnInput struct {
+	Gameno  string                        `json:"gameno"`
+	Players events.DynamoDBAttributeValue `json:"players"`
+}
 
-	fmt.Println("prep", req.Body)
+type sfnEvent struct {
+	Payload sfnInput `json:"payload"`
+}
 
-	reg := strings.Split(req.RequestContext.DomainName, ".")[2]
+type output struct {
+	Gameno      string            `json:"gameno"`
+	PlayersList []livePlayer      `json:"playersList"`
+	Players     []livePlayer      `json:"players"`
+	WordList    stringSlice       `json:"wordList"`
+	Ids         map[string]string `json:"ids"`
+}
 
-	cfg, err := config.LoadDefaultConfig(ctx,
-		config.WithRegion(reg),
-	)
+func FromDynamoDBEventAVMap(m map[string]events.DynamoDBAttributeValue) (res map[string]types.AttributeValue, err error) {
+	// fmt.Println("av map: ", m)
+	res = make(map[string]types.AttributeValue, len(m))
+
+	for k, v := range m {
+		res[k], err = FromDynamoDBEventAV(v)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return
+}
+
+func FromDynamoDBEventAV(av events.DynamoDBAttributeValue) (types.AttributeValue, error) {
+	// fmt.Println("av type: ", av, av.DataType())
+	switch av.DataType() {
+
+	case events.DataTypeBoolean: // 1
+		return &types.AttributeValueMemberBOOL{Value: av.Boolean()}, nil
+
+	case events.DataTypeMap: // 4
+		values, err := FromDynamoDBEventAVMap(av.Map())
+		if err != nil {
+			return nil, err
+		}
+		return &types.AttributeValueMemberM{Value: values}, nil
+
+	case events.DataTypeNull: // 7
+		return &types.AttributeValueMemberNULL{Value: av.IsNull()}, nil
+
+	case events.DataTypeString: // 8
+		return &types.AttributeValueMemberS{Value: av.String()}, nil
+
+	default:
+		return nil, fmt.Errorf("unknown AttributeValue union member, %T", av)
+	}
+}
+
+func handler(ctx context.Context, req sfnEvent) (output, error) {
+
+	fmt.Printf("%s%+v\n", "prep req ", req)
+
+	decodedPlayers, err := FromDynamoDBEventAV(req.Payload.Players)
 	if err != nil {
-		return callErr(err)
+		return output{}, err
 	}
 
-	var (
-		tableName = os.Getenv("tableName")
-		sfnarn    = os.Getenv("SFNARN")
-		ddbsvc    = dynamodb.NewFromConfig(cfg)
-		sfnsvc    = sfn.NewFromConfig(cfg)
-		body      struct {
-			Gameno string
-		}
-	)
-
-	err = json.Unmarshal([]byte(req.Body), &body)
+	var unmarshalledPlayers map[string]struct{ Name, ConnID string }
+	err = attributevalue.Unmarshal(decodedPlayers, &unmarshalledPlayers)
 	if err != nil {
-		return callErr(err)
+		return output{}, err
 	}
 
-	ui, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-		Key: map[string]types.AttributeValue{
-			"pk": &types.AttributeValueMemberS{Value: "LISTGAME"},
-			"sk": &types.AttributeValueMemberS{Value: body.Gameno},
-		},
-		TableName: aws.String(tableName),
-		ExpressionAttributeNames: map[string]string{
-			"#C": "prepCount",
-		},
-		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":o": &types.AttributeValueMemberN{Value: "1"},
-		},
-		UpdateExpression: aws.String("ADD #C :o"),
-		ReturnValues:     types.ReturnValueAllNew,
-	})
+	fmt.Printf("%s%+v\n", "unmarshalledPlayers ", unmarshalledPlayers)
 
-	if err != nil {
-		return callErr(err)
-	}
+	playersList := getSliceAssignColorAndIndex(unmarshalledPlayers)
 
-	var game struct {
-		Sk        string
-		PrepCount int
-		Players   map[string]struct {
-			Name, ConnID string
-		}
-	}
+	numberOfWords := slope*len(unmarshalledPlayers) + intercept
 
-	err = attributevalue.UnmarshalMap(ui.Attributes, &game)
-	if err != nil {
-		return callErr(err)
-	}
+	wordList := append(words.shuffleList(numberOfWords), "game over")
 
-	fmt.Printf("%s%+v\n", "prepzzzz ", game)
+	plCopy := make([]livePlayer, len(playersList))
+	copy(plCopy, playersList)
 
-	if len(game.Players) == game.PrepCount {
+	players, ids := changeIDs(plCopy)
 
-		_, err := ddbsvc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
-			Key: map[string]types.AttributeValue{
-				"pk": &types.AttributeValueMemberS{Value: "LISTGAME"},
-				"sk": &types.AttributeValueMemberS{Value: body.Gameno},
-			},
-			TableName: aws.String(tableName),
-		})
-		callErr(err)
-
-		playersList := getSliceAssignColorAndIndex(game.Players)
-
-		sfnInput, err := json.Marshal(struct {
-			Players []livePlayer `json:"players"`
-		}{
-			Players: playersList,
-		})
-		if err != nil {
-			return callErr(err)
-		}
-
-		ssei := sfn.StartSyncExecutionInput{
-			StateMachineArn: aws.String(sfnarn),
-			Input:           aws.String(string(sfnInput)),
-		}
-
-		sse, err := sfnsvc.StartSyncExecution(ctx, &ssei)
-		if err != nil {
-			return callErr(err)
-		}
-
-		sseo := *sse
-		fmt.Printf("\n%s, %+v\n", "sse op", sseo)
-
-		if sseo.Status == sfntypes.SyncExecutionStatusFailed || sseo.Status == sfntypes.SyncExecutionStatusTimedOut {
-			err := fmt.Errorf("step function %s, execution %s, failed with status %s. error code: %s. cause: %s. ", *sseo.StateMachineArn, *sseo.ExecutionArn, sseo.Status, *sseo.Error, *sseo.Cause)
-			return callErr(err)
-		}
-
-		numberOfWords := slope*len(game.Players) + intercept
-
-		wordlist := append(words.shuffleList(numberOfWords), "game over")
-
-		marshalledWordsList, err := attributevalue.Marshal(wordlist)
-		if err != nil {
-			return callErr(err)
-		}
-
-		players, ids := changeIDs(playersList)
-
-		marshalledPlayersList, err := attributevalue.Marshal(players)
-		if err != nil {
-			return callErr(err)
-		}
-
-		marshalledIDsMap, err := attributevalue.Marshal(ids)
-		if err != nil {
-			return callErr(err)
-		}
-
-		_, err = ddbsvc.PutItem(ctx, &dynamodb.PutItemInput{
-			Item: map[string]types.AttributeValue{
-				"pk":           &types.AttributeValueMemberS{Value: "LIVEGAME"},
-				"sk":           &types.AttributeValueMemberS{Value: game.Sk},
-				"answersCount": &types.AttributeValueMemberN{Value: "0"},
-				"currentWord":  &types.AttributeValueMemberS{Value: ""},
-				"previousWord": &types.AttributeValueMemberS{Value: ""},
-				"ids":          marshalledIDsMap,
-				"players":      marshalledPlayersList,
-				"wordList":     marshalledWordsList,
-			},
-			TableName: aws.String(tableName),
-		})
-		if err != nil {
-			return callErr(err)
-		}
-
-	}
-
-	return events.APIGatewayProxyResponse{
-		StatusCode:        http.StatusOK,
-		Headers:           map[string]string{"Content-Type": "application/json"},
-		MultiValueHeaders: map[string][]string{},
-		Body:              "",
-		IsBase64Encoded:   false,
+	return output{
+		Gameno:      req.Payload.Gameno,
+		PlayersList: playersList,
+		Players:     players,
+		WordList:    wordList,
+		Ids:         ids,
 	}, nil
+
 }
 
 func main() {
 	lambda.Start(handler)
-}
-
-func callErr(err error) (events.APIGatewayProxyResponse, error) {
-
-	var intServErr *types.InternalServerError
-	if errors.As(err, &intServErr) {
-		fmt.Printf("get item error, %v",
-			intServErr.ErrorMessage())
-	}
-
-	// To get any API error
-	var apiErr smithy.APIError
-	if errors.As(err, &apiErr) {
-		fmt.Printf("db error, Code: %v, Message: %v",
-			apiErr.ErrorCode(), apiErr.ErrorMessage())
-	}
-
-	return events.APIGatewayProxyResponse{
-		StatusCode:        http.StatusBadRequest,
-		Headers:           map[string]string{"Content-Type": "application/json"},
-		MultiValueHeaders: map[string][]string{},
-		Body:              "",
-		IsBase64Encoded:   false,
-	}, err
-
 }
 
 var colors = stringSlice{
