@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
@@ -32,6 +31,7 @@ type livePlayer struct {
 
 type output struct {
 	Players []connectUpdate `json:"players"`
+	Gameno  string          `json:"gameno"`
 }
 
 type stringSlice []string
@@ -86,49 +86,9 @@ const (
 	intercept int = 2
 )
 
-func FromDynamoDBEventAVMap(m map[string]events.DynamoDBAttributeValue) (res map[string]types.AttributeValue, err error) {
-	// fmt.Println("av map: ", m)
-	res = make(map[string]types.AttributeValue, len(m))
-
-	for k, v := range m {
-		res[k], err = FromDynamoDBEventAV(v)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return
-}
-
-func FromDynamoDBEventAV(av events.DynamoDBAttributeValue) (types.AttributeValue, error) {
-	// fmt.Println("av type: ", av, av.DataType())
-	switch av.DataType() {
-
-	case events.DataTypeBoolean: // 1
-		return &types.AttributeValueMemberBOOL{Value: av.Boolean()}, nil
-
-	case events.DataTypeMap: // 4
-		values, err := FromDynamoDBEventAVMap(av.Map())
-		if err != nil {
-			return nil, err
-		}
-		return &types.AttributeValueMemberM{Value: values}, nil
-
-	case events.DataTypeNull: // 7
-		return &types.AttributeValueMemberNULL{Value: av.IsNull()}, nil
-
-	case events.DataTypeString: // 8
-		return &types.AttributeValueMemberS{Value: av.String()}, nil
-
-	default:
-		return nil, fmt.Errorf("unknown AttributeValue union member, %T", av)
-	}
-}
-
 func handler(ctx context.Context, req struct {
 	Payload struct {
 		Region, TableName, Gameno string
-		Players                   events.DynamoDBAttributeValue
 	}
 }) (output, error) {
 
@@ -143,20 +103,30 @@ func handler(ctx context.Context, req struct {
 
 	var ddbsvc = dynamodb.NewFromConfig(cfg)
 
-	decodedPlayers, err := FromDynamoDBEventAV(req.Payload.Players)
+	di, err := ddbsvc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
+		Key: map[string]types.AttributeValue{
+			"pk": &types.AttributeValueMemberS{Value: "LISTGAME"},
+			"sk": &types.AttributeValueMemberS{Value: req.Payload.Gameno},
+		},
+		TableName:    aws.String(req.Payload.TableName),
+		ReturnValues: types.ReturnValueAllOld,
+	})
 	if err != nil {
 		return output{}, err
 	}
 
-	var unmarshalledPlayers map[string]struct{ Name, ConnID string }
-	err = attributevalue.Unmarshal(decodedPlayers, &unmarshalledPlayers)
+	var game struct {
+		Players map[string]struct {
+			Name, ConnID string
+		}
+	}
+	err = attributevalue.UnmarshalMap(di.Attributes, &game)
 	if err != nil {
 		return output{}, err
+
 	}
 
-	fmt.Printf("%s%+v\n", "unmarshalledPlayers ", unmarshalledPlayers)
-
-	playersList, players, ids := getSliceAssignColorAndIndex(unmarshalledPlayers)
+	playersList, players, ids := getSliceAssignColorAndIndex(game.Players)
 
 	marshalledPlayers, err := attributevalue.Marshal(players)
 	if err != nil {
@@ -168,7 +138,7 @@ func handler(ctx context.Context, req struct {
 		return output{}, err
 	}
 
-	wordList := append(words.shuffleList(slope*len(unmarshalledPlayers)+intercept), "game over")
+	wordList := append(words.shuffleList(slope*len(game.Players)+intercept), "game over")
 
 	marshalledWordList, err := attributevalue.Marshal(wordList)
 	if err != nil {
@@ -192,7 +162,7 @@ func handler(ctx context.Context, req struct {
 		return output{}, err
 	}
 
-	return output{Players: playersList}, nil
+	return output{Players: playersList, Gameno: req.Payload.Gameno}, nil
 
 }
 
