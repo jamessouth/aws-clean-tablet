@@ -104,10 +104,10 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
             Js.log2("parsedmodlistgame", mdLstGm)
             dispatch(. UpdateListGame(mdLstGm))
           }
-        | ModifyLiveGame => {
-            let {mdLveGm} = parseModLiveGame(data)
-            Js.log2("parsedmodlivegame", mdLveGm)
-            dispatch(. UpdateLiveGame(mdLveGm))
+        | ModifyPlayers => {
+            let {players} = parseModPlayers(data)
+            Js.log2("parsedmodplayers", players)
+            dispatch(. UpdatePlayers(players))
           }
         | RemoveGame => {
             let {rmvGame} = parseRmvGame(data)
@@ -162,5 +162,5 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
 
   let close = (. code, reason) => ws->closeCodeReason(code, reason)
 
-  (playerGame, playerName, playerColor, count, playerIndex, wsConnected, state.game, state.gamesList, leaderData, send, close, wsError)
+  (playerGame, playerName, playerColor, count, playerIndex, wsConnected, state.players, state.gamesList, leaderData, send, close, wsError)
 }

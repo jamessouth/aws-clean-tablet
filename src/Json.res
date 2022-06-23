@@ -3,7 +3,7 @@ type modConnData = {modConn: string, color: string, index: string}
 type countdownData = {cntdown: string}
 type addGameData = {addGame: Reducer.listGame}
 type modListGameData = {mdLstGm: Reducer.listGame}
-type modLiveGameData = {mdLveGm: Reducer.liveGame}
+type modPlayersData = {players: array<Reducer.livePlayer>}
 type rmvGameData = {rmvGame: Reducer.listGame}
 type leadersData = {leaders: array<Reducer.stat>}
 type msgType =
@@ -12,7 +12,7 @@ type msgType =
   | InsertGame
   | ModifyListGame
   | Countdown
-  | ModifyLiveGame
+  | ModifyPlayers
   | RemoveGame
   | Leaders
   | Other
@@ -27,7 +27,7 @@ external parseAddGame: string => addGameData = "parse"
 @scope("JSON") @val
 external parseModListGame: string => modListGameData = "parse"
 @scope("JSON") @val
-external parseModLiveGame: string => modLiveGameData = "parse"
+external parseModPlayers: string => modPlayersData = "parse"
 @scope("JSON") @val
 external parseRmvGame: string => rmvGameData = "parse"
 @scope("JSON") @val
@@ -39,7 +39,7 @@ let getMsgType = tag => {
   | "addGame" => InsertGame
   | "mdLstGm" => ModifyListGame
   | "cntdown" => Countdown
-  | "mdLveGm" => ModifyLiveGame
+  | "players" => ModifyPlayers
   | "rmvGame" => RemoveGame
   | "leaders" => Leaders
   | _ => Other

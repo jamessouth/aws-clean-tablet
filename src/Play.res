@@ -5,20 +5,20 @@ type answerPayload = {
   index: string,
 }
 
-type scorePayload = {
-  action: string,
-  game: Reducer.liveGame,
-}
+// type scorePayload = {
+//   action: string,
+//   game: Reducer.liveGame,
+// }
 
 @react.component
-let make = (~game: Reducer.liveGame, ~playerColor, ~playerIndex, ~send, ~playerName) => {
+let make = (~players: array<Reducer.livePlayer>, ~playerColor, ~playerIndex, ~send, ~playerName) => {
   let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
   let (answered, setAnswered) = React.Uncurried.useState(_ => false)
   let (answer, setAnswer) = React.Uncurried.useState(_ => "")
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(
     "ANSWER: 2-12 length; letters and spaces only; ",
   ))
-  let {players, currentWord, previousWord, showAnswers, sk, winner} = game
+  // let {players, currentWord, previousWord, showAnswers, sk, winner} = game
   let answer_max_length = 12
 
   React.useEffect1(() => {
@@ -43,7 +43,7 @@ let make = (~game: Reducer.liveGame, ~playerColor, ~playerIndex, ~send, ~playerN
   // }, (leader, playerColor))
 
   let hasRendered = React.useRef(false)
-  Js.log3("play", game, hasRendered)
+  Js.log3("play", players, hasRendered)
 
   // React.useEffect3(() => {
   //   switch (leader, showAnswers, winner == "") {
