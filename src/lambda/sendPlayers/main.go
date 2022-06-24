@@ -32,6 +32,7 @@ type livePlayer struct {
 
 type plrs struct {
 	Players livePlayerList `json:"players"`
+	Sk      string         `json:"sk"`
 }
 
 type livePlayerList []struct {
@@ -214,6 +215,7 @@ func handler(ctx context.Context, req struct {
 
 	payload, err := json.Marshal(plrs{
 		Players: gameRecord.Players.sortByScoreThenName().getPoints(),
+		Sk:      gameRecord.Sk,
 	})
 	if err != nil {
 		return err

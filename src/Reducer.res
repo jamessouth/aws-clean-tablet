@@ -32,7 +32,7 @@ type listGame = {
 
 
 // type liveGame = {
-//   sk: string, //game no
+//   sk: string, 
 //   currentWord: string,
 //   previousWord: string,
 //   players: array<livePlayer>,
@@ -43,6 +43,7 @@ type listGame = {
 type state = {
   gamesList: Js.Nullable.t<array<listGame>>,
   players: array<livePlayer>,
+  sk: string,//game no
 }
 
 type action =
@@ -50,12 +51,13 @@ type action =
   | AddGame(listGame)
   | RemoveGame(listGame)
   | UpdateListGame(listGame)
-  | UpdatePlayers(array<livePlayer>)
+  | UpdatePlayers(array<livePlayer>, string)
   | ResetPlayerState(state)
 
 let init = clean => {
   gamesList: clean.gamesList,
   players: clean.players,
+  sk: clean.sk,
 }
 
 let reducer = (state, action) =>
@@ -82,8 +84,9 @@ let reducer = (state, action) =>
         ),
       ),
     }
-  | (Some(_), UpdatePlayers(players)) => {
+  | (Some(_), UpdatePlayers(players, sk)) => {
       ...state,
       players: players,
+      sk: sk,
     }
   }

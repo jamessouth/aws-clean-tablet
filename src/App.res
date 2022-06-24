@@ -35,8 +35,8 @@ let make = () => {
   let initialState: Reducer.state = {
     gamesList: Js.Nullable.null,
     players: [],
+    sk: "",
     // game: {
-    //   sk: "",
     //   currentWord: "",
     //   previousWord: "",
     //   showAnswers: false,
@@ -52,6 +52,7 @@ let make = () => {
     playerIndex,
     wsConnected,
     players,
+    sk,
     games,
     leaderData,
     send,
@@ -163,8 +164,8 @@ let make = () => {
       | (list{"game", gameno}, Some(_)) =>
         switch wsConnected {
         | true =>
-          switch Js.Array2.length(players) > 0 {
-          | true => <Play players playerColor playerIndex send playerName />
+          switch Js.Array2.length(players) > 0 && gameno == sk {
+          | true => <Play players sk playerColor playerIndex send playerName />
           | false => <Loading label="game..." />
           }
 

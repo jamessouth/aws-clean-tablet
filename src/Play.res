@@ -11,7 +11,7 @@ type answerPayload = {
 // }
 
 @react.component
-let make = (~players: array<Reducer.livePlayer>, ~playerColor, ~playerIndex, ~send, ~playerName) => {
+let make = (~players: array<Reducer.livePlayer>, ~sk, ~playerColor, ~playerIndex, ~send, ~playerName) => {
   let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
   let (answered, setAnswered) = React.Uncurried.useState(_ => false)
   let (answer, setAnswer) = React.Uncurried.useState(_ => "")
@@ -20,6 +20,8 @@ let make = (~players: array<Reducer.livePlayer>, ~playerColor, ~playerIndex, ~se
   ))
   // let {players, currentWord, previousWord, showAnswers, sk, winner} = game
   let answer_max_length = 12
+  let winner = ""
+  let currentWord = ""
 
   React.useEffect1(() => {
     ErrorHook.useError(answer, "ANSWER", setValidationError)
@@ -144,7 +146,7 @@ let make = (~players: array<Reducer.livePlayer>, ~playerColor, ~playerIndex, ~se
 // })
 
   <div>
-    <Scoreboard players currentWord previousWord showAnswers winner onClick playerName />
+    <Scoreboard players currentWord previousWord="" showAnswers=false winner onClick playerName />
     {switch winner == "" {
     | false => React.null
     | true =>
