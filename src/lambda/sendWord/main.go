@@ -41,19 +41,19 @@ type livePlayerList []struct {
 }
 
 func handler(ctx context.Context, req struct {
-	Payload struct {
-		Region, Endpoint, Gameno, TableName string
-	}
+	Token, Gameno, TableName, Endpoint, Region string
 }) error {
 
 	fmt.Printf("%s%+v\n", "sent req ", req)
 
+	reg := req.Region
+
 	customResolver := aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
-		if service == apigatewaymanagementapi.ServiceID && region == req.Payload.Region {
+		if service == apigatewaymanagementapi.ServiceID && region == reg {
 			ep := aws.Endpoint{
 				PartitionID:   "aws",
-				URL:           req.Payload.Endpoint,
-				SigningRegion: req.Payload.Region,
+				URL:           req.Endpoint,
+				SigningRegion: reg,
 			}
 
 			return ep, nil
@@ -62,7 +62,7 @@ func handler(ctx context.Context, req struct {
 	})
 
 	apigwcfg, err := config.LoadDefaultConfig(ctx,
-		config.WithRegion(req.Payload.Region),
+		config.WithRegion(reg),
 		// config.WithLogger(logger),
 		config.WithEndpointResolver(customResolver),
 	)
@@ -73,7 +73,7 @@ func handler(ctx context.Context, req struct {
 	apigwsvc := apigatewaymanagementapi.NewFromConfig(apigwcfg)
 
 	cfg, err := config.LoadDefaultConfig(ctx,
-		config.WithRegion(req.Payload.Region),
+		config.WithRegion(reg),
 	)
 	if err != nil {
 		return err
@@ -84,10 +84,16 @@ func handler(ctx context.Context, req struct {
 	ui, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 		Key: map[string]types.AttributeValue{
 			"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
-			"sk": &types.AttributeValueMemberS{Value: req.Payload.Gameno},
+			"sk": &types.AttributeValueMemberS{Value: req.Gameno},
 		},
-		TableName:        aws.String(req.Payload.TableName),
-		UpdateExpression: aws.String("remove wordList[0]"),
+		TableName: aws.String(req.TableName),
+		ExpressionAttributeNames: map[string]string{
+			"#T": "token",
+		},
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":t": &types.AttributeValueMemberS{Value: req.Token},
+		},
+		UpdateExpression: aws.String("set #T = :t remove wordList[0]"),
 		ReturnValues:     types.ReturnValueAllOld,
 	})
 	if err != nil {
@@ -107,7 +113,7 @@ func handler(ctx context.Context, req struct {
 	fmt.Printf("%s%+v\n", "words ", words)
 
 	payload, err := json.Marshal(struct {
-		Word string `json:"word"`
+		Word string `json:"newword"`
 	}{
 		Word: words.WordList[0],
 	})

@@ -11,7 +11,7 @@ type answerPayload = {
 // }
 
 @react.component
-let make = (~players: array<Reducer.livePlayer>, ~sk, ~playerColor, ~playerIndex, ~send, ~playerName) => {
+let make = (~players: array<Reducer.livePlayer>, ~sk, ~word, ~playerColor, ~playerIndex, ~send, ~playerName) => {
   let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
   let (answered, setAnswered) = React.Uncurried.useState(_ => false)
   let (answer, setAnswer) = React.Uncurried.useState(_ => "")
@@ -21,7 +21,7 @@ let make = (~players: array<Reducer.livePlayer>, ~sk, ~playerColor, ~playerIndex
   // let {players, currentWord, previousWord, showAnswers, sk, winner} = game
   let answer_max_length = 12
   let winner = ""
-  let currentWord = ""
+  
 
   React.useEffect1(() => {
     ErrorHook.useError(answer, "ANSWER", setValidationError)
@@ -146,15 +146,15 @@ let make = (~players: array<Reducer.livePlayer>, ~sk, ~playerColor, ~playerIndex
 // })
 
   <div>
-    <Scoreboard players currentWord previousWord="" showAnswers=false winner onClick playerName />
+    <Scoreboard players word previousWord="" showAnswers=false winner onClick playerName />
     {switch winner == "" {
     | false => React.null
     | true =>
-      switch currentWord == "game over" {
-      | true => <Word onAnimationEnd playerColor currentWord answered showTimer=false />
+      switch word == "game over" {
+      | true => <Word onAnimationEnd playerColor word answered showTimer=false />
       | false => <>
-          <Word onAnimationEnd playerColor currentWord answered showTimer={currentWord != ""} />
-          {switch currentWord == "" {
+          <Word onAnimationEnd playerColor word answered showTimer={word != ""} />
+          {switch word == "" {
           | true => <div className="bg-transparent h-45 w-full"></div>
           | false =>
             switch answered {

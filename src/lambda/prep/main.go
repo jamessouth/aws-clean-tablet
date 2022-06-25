@@ -30,8 +30,7 @@ type livePlayer struct {
 }
 
 type output struct {
-	Players []connectUpdate `json:"players"`
-	Gameno  string          `json:"gameno"`
+	Gameno string `json:"gameno"`
 }
 
 type stringSlice []string
@@ -145,6 +144,34 @@ func handler(ctx context.Context, req struct {
 		return output{}, err
 	}
 
+	for _, p := range playersList {
+
+		_, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+			Key: map[string]types.AttributeValue{
+				"pk": &types.AttributeValueMemberS{Value: "CONNECT"},
+				"sk": &types.AttributeValueMemberS{Value: p.PlayerID},
+			},
+			TableName: aws.String(req.Payload.TableName),
+
+			ExpressionAttributeNames: map[string]string{
+				"#P": "playing",
+				"#C": "color",
+				"#I": "index",
+			},
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":p": &types.AttributeValueMemberBOOL{Value: true},
+				":c": &types.AttributeValueMemberS{Value: p.Color},
+				":i": &types.AttributeValueMemberS{Value: p.Index},
+			},
+
+			UpdateExpression: aws.String("set #P = :p, #C = :c, #I = :i"),
+		})
+		if err != nil {
+			return output{}, err
+		}
+
+	}
+
 	_, err = ddbsvc.PutItem(ctx, &dynamodb.PutItemInput{
 		Item: map[string]types.AttributeValue{
 			"pk":           &types.AttributeValueMemberS{Value: "LIVEGAME"},
@@ -162,7 +189,7 @@ func handler(ctx context.Context, req struct {
 		return output{}, err
 	}
 
-	return output{Players: playersList, Gameno: req.Payload.Gameno}, nil
+	return output{Gameno: req.Payload.Gameno}, nil
 
 }
 

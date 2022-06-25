@@ -135,11 +135,15 @@ func (players livePlayerList) sortByScoreThenName() livePlayerList {
 	return players
 }
 
+type output struct {
+	Gameno string `json:"gameno"`
+}
+
 func handler(ctx context.Context, req struct {
 	Payload struct {
 		Region, Endpoint, Gameno, TableName string
 	}
-}) error {
+}) (output, error) {
 
 	fmt.Printf("%s%+v\n", "sent req ", req)
 
@@ -162,7 +166,7 @@ func handler(ctx context.Context, req struct {
 		config.WithEndpointResolver(customResolver),
 	)
 	if err != nil {
-		return err
+		return output{}, err
 	}
 
 	apigwsvc := apigatewaymanagementapi.NewFromConfig(apigwcfg)
@@ -171,7 +175,7 @@ func handler(ctx context.Context, req struct {
 		config.WithRegion(req.Payload.Region),
 	)
 	if err != nil {
-		return err
+		return output{}, err
 	}
 
 	var ddbsvc = dynamodb.NewFromConfig(cfg)
@@ -184,41 +188,23 @@ func handler(ctx context.Context, req struct {
 		TableName: aws.String(req.Payload.TableName),
 	})
 	if err != nil {
-		return err
+		return output{}, err
 	}
 
 	var gameRecord plrs
 	err = attributevalue.UnmarshalMap(gi.Item, &gameRecord)
 	if err != nil {
-		return err
+		return output{}, err
 	}
 
 	fmt.Printf("%s%+v\n", "unmarshalledGame ", gameRecord)
-
-	// if gameRecord.ShowAnswers {
-	// 	pls.sortByAnswerThenName()
-	// } else {
-	// pls
-	// }
-
-	// gp := modifyLiveGamePayload{
-	// 	ModLiveGame: liveGame{
-	// 		Sk:           gameRecord.Sk,
-	// 		Players:       ,
-	// 		CurrentWord:  gameRecord.CurrentWord,
-	// 		PreviousWord: gameRecord.PreviousWord,
-	// 		// AnswersCount: gameRecord.AnswersCount,
-	// 		// ShowAnswers:  gameRecord.ShowAnswers,
-	// 		Winner: gameRecord.Winner,
-	// 	},
-	// }
 
 	payload, err := json.Marshal(plrs{
 		Players: gameRecord.Players.sortByScoreThenName().getPoints(),
 		Sk:      gameRecord.Sk,
 	})
 	if err != nil {
-		return err
+		return output{}, err
 	}
 
 	for _, v := range gameRecord.Players {
@@ -227,11 +213,11 @@ func handler(ctx context.Context, req struct {
 
 		_, err = apigwsvc.PostToConnection(ctx, &conn)
 		if err != nil {
-			return err
+			return output{}, err
 		}
 	}
 
-	return nil
+	return output{Gameno: req.Payload.Gameno}, nil
 
 }
 

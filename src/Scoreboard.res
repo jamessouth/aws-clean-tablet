@@ -1,7 +1,7 @@
 @react.component
 let make = (
   ~players: array<Reducer.livePlayer>,
-  ~currentWord,
+  ~word,
   ~previousWord,
   ~showAnswers,
   ~winner,
@@ -65,7 +65,7 @@ let make = (
             isWinner && i != 0
           ) {
             "filter brightness-30 contrast-60"
-          } else if (isWinner || currentWord == "game over") && i == 0 {
+          } else if (isWinner || word == "game over") && i == 0 {
             "animate-rotate"
           } else {
             ""
@@ -101,7 +101,7 @@ let make = (
       })
       ->React.array}
     </ul>
-    {switch (!isWinner, currentWord == "game over") {
+    {switch (!isWinner, word == "game over") {
     | (false, _) | (true, true) => <>
         <div className={`w-64 h-96 bg-no-repeat opacity-0 m-auto animate-fadein ${bgimg}`} />
         <Button

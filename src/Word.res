@@ -1,9 +1,9 @@
 @react.component
-let make = (~onAnimationEnd, ~playerColor, ~currentWord, ~answered, ~showTimer) => {
+let make = (~onAnimationEnd, ~playerColor, ~word, ~answered, ~showTimer) => {
   // let circ = Js.String2.fromCharCode(8635)
   let (alpha, setAlpha) = React.Uncurried.useState(_ => "")
 
-  let blankPos = switch currentWord->Js.String2.startsWith("_") {
+  let blankPos = switch word->Js.String2.startsWith("_") {
   | true => "a blank then a word"
   | false => "a word then a blank"
   }
@@ -21,7 +21,7 @@ let make = (~onAnimationEnd, ~playerColor, ~currentWord, ~answered, ~showTimer) 
 
   <div
     className="mt-20 mb-10 mx-auto bg-stone-100 relative w-80 h-36 flex flex-col items-center justify-center">
-    {switch (playerColor == "transparent", currentWord == "") {
+    {switch (playerColor == "transparent", word == "") {
     | (true, true) => <Loading fillColor="fill-stone-800" />
     | _ => React.null
     }}
@@ -43,11 +43,11 @@ let make = (~onAnimationEnd, ~playerColor, ~currentWord, ~answered, ~showTimer) 
     <p
       ariaLabel={blankPos}
       role="alert"
-      className={switch Js.String2.length(currentWord) > 12 {
+      className={switch Js.String2.length(word) > 12 {
       | true => "text-3xl" ++ pStyle
       | false => "text-4xl" ++ pStyle
       }}>
-      {React.string(currentWord)}
+      {React.string(word)}
     </p>
   </div>
 }
