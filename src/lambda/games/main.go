@@ -262,14 +262,53 @@ func getReturnValue(status int) events.APIGatewayProxyResponse {
 }
 
 // {
-//     "dynamodb": {
-//         "Keys": {
-//             "pk": {
-//                 "S": ["CONNECT", "LISTGAME"]
-//             }
-//         }
-//     }
-// }
+// 	"dynamodb": {
+// 	  "Keys": {
+// 		"pk": {
+// 		  "S": [
+// 			"CONNECT",
+// 			"LISTGAME"
+// 		  ]
+// 		}
+// 	  }
+// 	}
+//   },
+//   {
+// 	"eventName": "MODIFY",
+// 	"dynamodb": {
+// 	  "NewImage": {
+// 		"pk": {
+// 		  "S": [
+// 			"LIVEGAME"
+// 		  ]
+// 		},
+// 		"answersCount": {
+// 		  "N": [
+// 			{
+// 			  "numeric": [
+// 				">",
+// 				0,
+// 				"<",
+// 				9
+// 			  ]
+// 			}
+// 		  ]
+// 		}
+// 	  }
+// 	}
+//   },
+//   {
+// 	"eventName": "INSERT",
+// 	"dynamodb": {
+// 	  "Keys": {
+// 		"pk": {
+// 		  "S": [
+// 			"LIVEGAME"
+// 		  ]
+// 		}
+// 	  }
+// 	}
+//   }
 
 func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayProxyResponse, error) {
 
@@ -482,61 +521,78 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			}
 
-			// } else if recType == "LIVEGAME" {
+		} else if recType == "LIVEGAME" {
 
-			// 	if rec.EventName == dynamodbstreams.OperationTypeInsert || rec.EventName == dynamodbstreams.OperationTypeModify {
+			var gameRecord struct {
+				Sk, CurrentWord, PreviousWord, Winner string
+				Players                               livePlayerList
+				AnswersCount                          int
+				ShowAnswers                           bool
+			}
+			err = attributevalue.UnmarshalMap(item, &gameRecord)
+			if err != nil {
+				return callErr(err)
+			}
 
-			// 		var gameRecord struct {
-			// 			Sk, CurrentWord, PreviousWord, Winner string
-			// 			Players                               livePlayerList
-			// 			AnswersCount                          int
-			// 			ShowAnswers                           bool
-			// 		}
-			// 		err = attributevalue.UnmarshalMap(item, &gameRecord)
-			// 		if err != nil {
-			// 			return callErr(err)
-			// 		}
+			fmt.Printf("%s%+v\n", "live gammmmme ", gameRecord)
 
-			// 		fmt.Printf("%s%+v\n", "live gammmmme ", gameRecord)
+			pls := gameRecord.Players
+			var payload []byte
 
-			// 		pls := gameRecord.Players
+			if rec.EventName == dynamodbstreams.OperationTypeInsert {
 
-			// 		if gameRecord.ShowAnswers {
-			// 			pls.sortByAnswerThenName()
-			// 		} else {
-			// 			pls.sortByScoreThenName()
-			// 		}
+				pls.sortByScoreThenName()
 
-			// 		gp := modifyLiveGamePayload{
-			// 			ModLiveGame: liveGame{
-			// 				Sk:           gameRecord.Sk,
-			// 				Players:      pls.getPoints(),
-			// 				CurrentWord:  gameRecord.CurrentWord,
-			// 				PreviousWord: gameRecord.PreviousWord,
-			// 				AnswersCount: gameRecord.AnswersCount,
-			// 				ShowAnswers:  gameRecord.ShowAnswers,
-			// 				Winner:       gameRecord.Winner,
-			// 			},
-			// 		}
+				payload, err = json.Marshal(struct {
+					Players livePlayerList `json:"players"`
+					Sk      string         `json:"sk"`
+				}{
+					Players: pls,
+					Sk:      gameRecord.Sk,
+				})
+				if err != nil {
+					return callErr(err)
+				}
 
-			// 		payload, err := json.Marshal(gp)
-			// 		if err != nil {
-			// 			return callErr(err)
-			// 		}
+			} else if rec.EventName == dynamodbstreams.OperationTypeModify {
 
-			// 		for _, v := range pls {
+				if gameRecord.AnswersCount == len(pls) {
 
-			// 			conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.ConnID), Data: payload}
+					pls.sortByAnswerThenName()
 
-			// 			_, err = apigwsvc.PostToConnection(ctx, &conn)
-			// 			if err != nil {
-			// 				return callErr(err)
-			// 			}
-			// 		}
-			// 	} else {
-			// 		oi := rec.Change.OldImage
-			// 		fmt.Printf("%s: %+v\n", "remove live game oi", oi)
-			// 	}
+				} else {
+
+					pls.sortByScoreThenName()
+
+				}
+
+				gp := modifyLiveGamePayload{
+					ModLiveGame: liveGame{
+						Sk:           gameRecord.Sk,
+						Players:      pls.getPoints(),
+						CurrentWord:  gameRecord.CurrentWord,
+						PreviousWord: gameRecord.PreviousWord,
+						AnswersCount: gameRecord.AnswersCount,
+						ShowAnswers:  gameRecord.ShowAnswers,
+						Winner:       gameRecord.Winner,
+					},
+				}
+
+				payload, err := json.Marshal(gp)
+				if err != nil {
+					return callErr(err)
+				}
+
+			}
+			for _, v := range pls {
+
+				conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.ConnID), Data: payload}
+
+				_, err = apigwsvc.PostToConnection(ctx, &conn)
+				if err != nil {
+					return callErr(err)
+				}
+			}
 			// } else if recType == "STAT" {
 			// 	fmt.Printf("%s: %+v\n", "stat item", item)
 		} else {
