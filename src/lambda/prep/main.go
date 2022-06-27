@@ -71,7 +71,6 @@ func getSliceAssignColorAndIndex(pm map[string]struct{ Name, ConnID string }) (p
 		}
 		p.PlayerID = pid
 		p.Color = c
-		p.Index = i
 
 		plrs = append(plrs, p)
 		ids[pid] = k
@@ -709,4 +708,14 @@ var words = stringSlice{
 	"____ control",
 	"____ table",
 	"____ seat",
+}
+
+type livePlayerList []struct {
+	Name            string `json:"name"`
+	ConnID          string `json:"connid"`
+	Color           string `json:"color"`
+	Score           int    `json:"score,omitempty"`
+	Answer          string `json:"answer,omitempty"`
+	HasAnswered     bool   `json:"hasAnswered,omitempty"`
+	PointsThisRound string `json:"pointsThisRound,omitempty"`
 }

@@ -48,15 +48,13 @@ type backListGame struct {
 }
 
 type livePlayerList []struct {
-	PlayerID        string `json:"playerid"`
 	Name            string `json:"name"`
 	ConnID          string `json:"connid"`
 	Color           string `json:"color"`
-	Score           int    `json:"score"`
-	Index           string `json:"index"`
-	Answer          string `json:"answer"`
-	HasAnswered     bool   `json:"hasAnswered"`
-	PointsThisRound string `json:"pointsThisRound"`
+	Score           *int   `json:"score,omitempty"`
+	Answer          string `json:"answer,omitempty"`
+	HasAnswered     bool   `json:"hasAnswered,omitempty"`
+	PointsThisRound string `json:"pointsThisRound,omitempty"`
 }
 
 type liveGame struct {
@@ -69,9 +67,9 @@ type liveGame struct {
 	Winner       string         `json:"winner"`
 }
 
-type modifyLiveGamePayload struct {
-	ModLiveGame liveGame
-}
+// type modifyLiveGamePayload struct {
+// 	ModLiveGame liveGame
+// }
 
 func getListPlayersSlice(pm map[string]listPlayer) (res []listPlayer) {
 	res = []listPlayer{}
@@ -109,26 +107,46 @@ func (p listGamePayload) MarshalJSON() ([]byte, error) {
 }
 
 // https://go.dev/play/p/CvniMWPoLKG
-func (p modifyLiveGamePayload) MarshalJSON() ([]byte, error) {
-	if p.ModLiveGame.AnswersCount == len(p.ModLiveGame.Players) {
-		return []byte(`null`), nil
+// func (p modifyLiveGamePayload) MarshalJSON() ([]byte, error) {
+// 	if p.ModLiveGame.AnswersCount == len(p.ModLiveGame.Players) {
+// 		return []byte(`null`), nil
+// 	}
+
+// 	if p.ModLiveGame.AnswersCount > 0 {
+// 		for i, pl := range p.ModLiveGame.Players {
+// 			if pl.HasAnswered {
+// 				pl.Answer = ""
+// 				p.ModLiveGame.Players[i] = pl
+// 			}
+// 		}
+// 	}
+
+// 	m, err := json.Marshal(p.ModLiveGame)
+// 	if err != nil {
+// 		return m, err
+// 	}
+
+// 	return []byte(fmt.Sprintf("{%q:%s}", "mdLveGm", m)), nil
+// }
+
+func (players livePlayerList) whileAnswering() livePlayerList {
+	for i, pl := range players {
+		pl.Answer = ""
+		players[i] = pl
 	}
 
-	if p.ModLiveGame.AnswersCount > 0 {
-		for i, pl := range p.ModLiveGame.Players {
-			if pl.HasAnswered {
-				pl.Answer = ""
-				p.ModLiveGame.Players[i] = pl
-			}
+	return players
+}
+
+func (players livePlayerList) showAnswers() livePlayerList {
+	for i, pl := range players {
+		if pl.HasAnswered {
+			pl.Answer = ""
+			players[i] = pl
 		}
 	}
 
-	m, err := json.Marshal(p.ModLiveGame)
-	if err != nil {
-		return m, err
-	}
-
-	return []byte(fmt.Sprintf("{%q:%s}", "mdLveGm", m)), nil
+	return players
 }
 
 func sortByName(players []listPlayer) []listPlayer {
@@ -524,10 +542,9 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 		} else if recType == "LIVEGAME" {
 
 			var gameRecord struct {
-				Sk, CurrentWord, PreviousWord, Winner string
-				Players                               livePlayerList
-				AnswersCount                          int
-				ShowAnswers                           bool
+				Sk           string
+				Players      livePlayerList
+				AnswersCount int
 			}
 			err = attributevalue.UnmarshalMap(item, &gameRecord)
 			if err != nil {
@@ -559,28 +576,30 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				if gameRecord.AnswersCount == len(pls) {
 
 					pls.sortByAnswerThenName()
+					payload, err = json.Marshal(struct {
+						Players livePlayerList `json:"players"`
+						Sk      string         `json:"sk"`
+					}{
+						Players: pls,
+						Sk:      gameRecord.Sk,
+					})
+					if err != nil {
+						return callErr(err)
+					}
 
 				} else {
 
 					pls.sortByScoreThenName()
-
-				}
-
-				gp := modifyLiveGamePayload{
-					ModLiveGame: liveGame{
-						Sk:           gameRecord.Sk,
-						Players:      pls.getPoints(),
-						CurrentWord:  gameRecord.CurrentWord,
-						PreviousWord: gameRecord.PreviousWord,
-						AnswersCount: gameRecord.AnswersCount,
-						ShowAnswers:  gameRecord.ShowAnswers,
-						Winner:       gameRecord.Winner,
-					},
-				}
-
-				payload, err := json.Marshal(gp)
-				if err != nil {
-					return callErr(err)
+					payload, err = json.Marshal(struct {
+						Players livePlayerList `json:"players"`
+						Sk      string         `json:"sk"`
+					}{
+						Players: pls.whileAnswering(),
+						Sk:      gameRecord.Sk,
+					})
+					if err != nil {
+						return callErr(err)
+					}
 				}
 
 			}
