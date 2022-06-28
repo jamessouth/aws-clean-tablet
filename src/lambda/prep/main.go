@@ -709,13 +709,3 @@ var words = stringSlice{
 	"____ table",
 	"____ seat",
 }
-
-type livePlayerList []struct {
-	Name            string `json:"name"`
-	ConnID          string `json:"connid"`
-	Color           string `json:"color"`
-	Score           int    `json:"score,omitempty"`
-	Answer          string `json:"answer,omitempty"`
-	HasAnswered     bool   `json:"hasAnswered,omitempty"`
-	PointsThisRound string `json:"pointsThisRound,omitempty"`
-}

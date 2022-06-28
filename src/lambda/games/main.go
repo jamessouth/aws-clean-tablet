@@ -57,19 +57,20 @@ type livePlayerList []struct {
 	PointsThisRound string `json:"pointsThisRound,omitempty"`
 }
 
-type liveGame struct {
-	Sk           string         `json:"sk"`
-	Players      livePlayerList `json:"players"`
-	CurrentWord  string         `json:"currentWord"`
-	PreviousWord string         `json:"previousWord"`
-	AnswersCount int            `json:"answersCount"`
-	ShowAnswers  bool           `json:"showAnswers"`
-	Winner       string         `json:"winner"`
-}
-
-// type modifyLiveGamePayload struct {
-// 	ModLiveGame liveGame
+// type liveGame struct {
+// 	Sk           string         `json:"sk"`
+// 	Players      livePlayerList `json:"players"`
+// 	CurrentWord  string         `json:"currentWord"`
+// 	PreviousWord string         `json:"previousWord"`
+// 	AnswersCount int            `json:"answersCount"`
+// 	ShowAnswers  bool           `json:"showAnswers"`
+// 	Winner       string         `json:"winner"`
 // }
+
+type players struct {
+	Players livePlayerList `json:"players"`
+	Sk      string         `json:"sk"`
+}
 
 func getListPlayersSlice(pm map[string]listPlayer) (res []listPlayer) {
 	res = []listPlayer{}
@@ -138,12 +139,29 @@ func (players livePlayerList) whileAnswering() livePlayerList {
 	return players
 }
 
-func (players livePlayerList) showAnswers() livePlayerList {
-	for i, pl := range players {
-		if pl.HasAnswered {
-			pl.Answer = ""
-			players[i] = pl
+func (players livePlayerList) getPointsShowAnswers() livePlayerList {
+	dist := map[string]int{}
+
+	for _, v := range players {
+		dist[v.Answer]++
+	}
+
+	for i, p := range players {
+		if len(p.Answer) > 1 {
+			freq := dist[p.Answer]
+			if freq == 2 {
+				p.PointsThisRound = strconv.Itoa(3)
+			} else if freq > 2 {
+				p.PointsThisRound = strconv.Itoa(1)
+			} else {
+				p.PointsThisRound = strconv.Itoa(0)
+			}
+		} else {
+			p.PointsThisRound = strconv.Itoa(0)
 		}
+		p.Score = nil
+		p.HasAnswered = false
+		players[i] = p
 	}
 
 	return players
@@ -171,39 +189,12 @@ func (players livePlayerList) sortByAnswerThenName() {
 func (players livePlayerList) sortByScoreThenName() {
 	sort.Slice(players, func(i, j int) bool {
 		switch {
-		case players[i].Score != players[j].Score:
-			return players[i].Score > players[j].Score
+		case *players[i].Score != *players[j].Score:
+			return *players[i].Score > *players[j].Score
 		default:
 			return players[i].Name < players[j].Name
 		}
 	})
-}
-
-func (players livePlayerList) getPoints() livePlayerList {
-	dist := map[string]int{}
-
-	for _, v := range players {
-		dist[v.Answer]++
-	}
-
-	for i, p := range players {
-		if len(p.Answer) > 1 {
-			freq := dist[p.Answer]
-			if freq == 2 {
-				p.PointsThisRound = strconv.Itoa(3)
-			} else if freq > 2 {
-				p.PointsThisRound = strconv.Itoa(1)
-			} else {
-				p.PointsThisRound = strconv.Itoa(0)
-			}
-		} else {
-			p.PointsThisRound = strconv.Itoa(0)
-
-		}
-		players[i] = p
-	}
-
-	return players
 }
 
 func FromDynamoDBEventAVMap(m map[string]events.DynamoDBAttributeValue) (res map[string]types.AttributeValue, err error) {
@@ -279,54 +270,57 @@ func getReturnValue(status int) events.APIGatewayProxyResponse {
 	}
 }
 
-// {
-// 	"dynamodb": {
-// 	  "Keys": {
-// 		"pk": {
-// 		  "S": [
-// 			"CONNECT",
-// 			"LISTGAME"
-// 		  ]
-// 		}
-// 	  }
-// 	}
-//   },
-//   {
-// 	"eventName": "MODIFY",
-// 	"dynamodb": {
-// 	  "NewImage": {
-// 		"pk": {
-// 		  "S": [
-// 			"LIVEGAME"
-// 		  ]
-// 		},
-// 		"answersCount": {
-// 		  "N": [
-// 			{
-// 			  "numeric": [
-// 				">",
-// 				0,
-// 				"<",
-// 				9
-// 			  ]
-// 			}
-// 		  ]
-// 		}
-// 	  }
-// 	}
-//   },
-//   {
-// 	"eventName": "INSERT",
-// 	"dynamodb": {
-// 	  "Keys": {
-// 		"pk": {
-// 		  "S": [
-// 			"LIVEGAME"
-// 		  ]
-// 		}
-// 	  }
-// 	}
-//   }
+// [
+//     {
+//       "dynamodb": {
+//         "Keys": {
+//           "pk": {
+//             "S": [
+//               "CONNECT",
+//               "LISTGAME"
+//             ]
+//           }
+//         }
+//       }
+//     },
+//     {
+//       "eventName": [
+//         "MODIFY"
+//       ],
+//       "dynamodb": {
+//         "NewImage": {
+//           "pk": {
+//             "S": [
+//               "LIVEGAME"
+//             ]
+//           },
+//           "answersCount": {
+//             "N": [
+//               {
+//                 "anything-but": [
+//                   "0"
+//                 ]
+//               }
+//             ]
+//           }
+//         }
+//       }
+//     },
+//     {
+//       "eventName": [
+//         "INSERT"
+//       ],
+//       "dynamodb": {
+//         "Keys": {
+//           "pk": {
+//             "S": [
+//               "LIVEGAME"
+//             ]
+//           }
+//         }
+//       }
+//     }
+//   ]
 
 func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayProxyResponse, error) {
 
@@ -560,10 +554,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 				pls.sortByScoreThenName()
 
-				payload, err = json.Marshal(struct {
-					Players livePlayerList `json:"players"`
-					Sk      string         `json:"sk"`
-				}{
+				payload, err = json.Marshal(players{
 					Players: pls,
 					Sk:      gameRecord.Sk,
 				})
@@ -576,11 +567,8 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				if gameRecord.AnswersCount == len(pls) {
 
 					pls.sortByAnswerThenName()
-					payload, err = json.Marshal(struct {
-						Players livePlayerList `json:"players"`
-						Sk      string         `json:"sk"`
-					}{
-						Players: pls,
+					payload, err = json.Marshal(players{
+						Players: pls.getPointsShowAnswers(),
 						Sk:      gameRecord.Sk,
 					})
 					if err != nil {
@@ -590,10 +578,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				} else {
 
 					pls.sortByScoreThenName()
-					payload, err = json.Marshal(struct {
-						Players livePlayerList `json:"players"`
-						Sk      string         `json:"sk"`
-					}{
+					payload, err = json.Marshal(players{
 						Players: pls.whileAnswering(),
 						Sk:      gameRecord.Sk,
 					})
