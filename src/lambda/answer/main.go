@@ -186,51 +186,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		return callErr(err)
 	}
 
-	var gm struct {
-		Players      []livePlayer
-		CurrentWord  string
-		AnswersCount int
-	}
-	err = attributevalue.UnmarshalMap(ui.Attributes, &gm)
-	if err != nil {
-		return callErr(err)
-	}
-
-	fmt.Printf("%s%+v\n", "anzzzz ", gm)
-
-	if len(gm.Players) == gm.AnswersCount {
-
-		marshalledPlayersList, err := attributevalue.Marshal(clearHasAnswered(gm.Players))
-		if err != nil {
-			return callErr(err)
-		}
-
-		_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-			Key:       gameItemKey,
-			TableName: aws.String(tableName),
-			ExpressionAttributeNames: map[string]string{
-				"#P": "previousWord",
-				"#C": "currentWord",
-				"#A": "answersCount",
-				"#Y": "players",
-				"#S": "showAnswers",
-			},
-			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":c": &types.AttributeValueMemberS{Value: gm.CurrentWord},
-				":b": &types.AttributeValueMemberS{Value: ""},
-				":z": &types.AttributeValueMemberN{Value: "0"},
-				":l": marshalledPlayersList,
-				":t": &types.AttributeValueMemberBOOL{Value: true},
-			},
-			UpdateExpression: aws.String("SET #P = :c, #C = :b, #A = :z, #Y = :l, #S = :t"),
-		})
-
-		if err != nil {
-			return callErr(err)
-		}
-
-	}
-
 	return events.APIGatewayProxyResponse{
 		StatusCode:        http.StatusOK,
 		Headers:           map[string]string{"Content-Type": "application/json"},

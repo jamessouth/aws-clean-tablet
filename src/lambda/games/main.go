@@ -139,7 +139,7 @@ func (players livePlayerList) whileAnswering() livePlayerList {
 	return players
 }
 
-func (players livePlayerList) getPointsShowAnswers() livePlayerList {
+func (players livePlayerList) prep() livePlayerList {
 	dist := map[string]int{}
 
 	for _, v := range players {
@@ -159,8 +159,28 @@ func (players livePlayerList) getPointsShowAnswers() livePlayerList {
 		} else {
 			p.PointsThisRound = strconv.Itoa(0)
 		}
-		p.Score = nil
 		p.HasAnswered = false
+		players[i] = p
+	}
+
+	return players
+}
+
+func (players livePlayerList) showAnswers() livePlayerList {
+	pls := make(livePlayerList, len(players))
+
+	for i, p := range players {
+		p.Score = nil
+		pls[i] = p
+	}
+
+	return pls
+}
+
+func (players livePlayerList) updateDB() livePlayerList {
+
+	for i, p := range players {
+		p.Answer = ""
 		players[i] = p
 	}
 
@@ -565,12 +585,47 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			} else if rec.EventName == dynamodbstreams.OperationTypeModify {
 
 				if gameRecord.AnswersCount == len(pls) {
+					pls = pls.prep()
 
-					pls.sortByAnswerThenName()
+					plsFE := pls.showAnswers()
+					plsFE.sortByAnswerThenName()
+
 					payload, err = json.Marshal(players{
-						Players: pls.getPointsShowAnswers(),
+						Players: plsFE,
 						Sk:      gameRecord.Sk,
 					})
+					if err != nil {
+						return callErr(err)
+					}
+
+					marshalledPlayersList, err := attributevalue.Marshal(pls.updateDB())
+					if err != nil {
+						return callErr(err)
+					}
+
+					_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+						Key: map[string]types.AttributeValue{
+							"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
+							"sk": &types.AttributeValueMemberS{Value: gameRecord.Sk},
+						},
+						TableName: aws.String(tableName),
+						ExpressionAttributeNames: map[string]string{
+							// "#P": "previousWord",
+							// "#C": "currentWord",
+							"#A": "answersCount",
+							"#P": "players",
+							// "#S": "showAnswers",
+						},
+						ExpressionAttributeValues: map[string]types.AttributeValue{
+							// ":c": &types.AttributeValueMemberS{Value: gm.CurrentWord},
+							// ":b": &types.AttributeValueMemberS{Value: ""},
+							":z": &types.AttributeValueMemberN{Value: "0"},
+							":l": marshalledPlayersList,
+							":t": &types.AttributeValueMemberBOOL{Value: true},
+						},
+						UpdateExpression: aws.String("SET #A = :z, #P = :l"),
+					})
+
 					if err != nil {
 						return callErr(err)
 					}
