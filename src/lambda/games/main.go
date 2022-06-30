@@ -130,15 +130,6 @@ func (p listGamePayload) MarshalJSON() ([]byte, error) {
 // 	return []byte(fmt.Sprintf("{%q:%s}", "mdLveGm", m)), nil
 // }
 
-func (players livePlayerList) whileAnswering() livePlayerList {
-	for i, pl := range players {
-		pl.Answer = ""
-		players[i] = pl
-	}
-
-	return players
-}
-
 func (players livePlayerList) prep() livePlayerList {
 	dist := map[string]int{}
 
@@ -177,8 +168,7 @@ func (players livePlayerList) showAnswers() livePlayerList {
 	return pls
 }
 
-func (players livePlayerList) updateDB() livePlayerList {
-
+func (players livePlayerList) clearAnswers() livePlayerList {
 	for i, p := range players {
 		p.Answer = ""
 		players[i] = p
@@ -598,7 +588,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 						return callErr(err)
 					}
 
-					marshalledPlayersList, err := attributevalue.Marshal(pls.updateDB())
+					marshalledPlayersList, err := attributevalue.Marshal(pls.clearAnswers())
 					if err != nil {
 						return callErr(err)
 					}
@@ -621,7 +611,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 							// ":b": &types.AttributeValueMemberS{Value: ""},
 							":z": &types.AttributeValueMemberN{Value: "0"},
 							":l": marshalledPlayersList,
-							":t": &types.AttributeValueMemberBOOL{Value: true},
+							// ":t": &types.AttributeValueMemberBOOL{Value: true},
 						},
 						UpdateExpression: aws.String("SET #A = :z, #P = :l"),
 					})
@@ -634,7 +624,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 					pls.sortByScoreThenName()
 					payload, err = json.Marshal(players{
-						Players: pls.whileAnswering(),
+						Players: pls.clearAnswers(),
 						Sk:      gameRecord.Sk,
 					})
 					if err != nil {

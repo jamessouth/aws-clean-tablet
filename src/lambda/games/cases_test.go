@@ -65,3 +65,90 @@ var listGamePayload_MarshalJSON_Tests = []struct {
 		description: "remove game",
 	},
 }
+
+var prep = []struct {
+	input, expected livePlayerList
+	description     string
+}{
+	{
+		input: livePlayerList{
+			{Name: "will", ConnID: "333", Color: "yellow", Score: &seven, Answer: "heart", HasAnswered: true},
+			{Name: "earl", ConnID: "111", Color: "red", Score: &ten, Answer: "heart", HasAnswered: true},
+			{Name: "carl", ConnID: "222", Color: "green", Score: &twenty, Answer: "verb", HasAnswered: true},
+			{Name: "darlene", ConnID: "333", Color: "yellow", Score: &ten, Answer: "meal", HasAnswered: true},
+			{Name: "dean", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: true},
+			{Name: "william", ConnID: "333", Color: "yellow", Score: &twenty, Answer: "meal", HasAnswered: true},
+			{Name: "beulah", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: true},
+		},
+
+		expected: livePlayerList{
+			{Name: "will", ConnID: "333", Color: "yellow", Score: &seven, Answer: "heart", HasAnswered: false, PointsThisRound: "3"},
+			{Name: "earl", ConnID: "111", Color: "red", Score: &ten, Answer: "heart", HasAnswered: false, PointsThisRound: "3"},
+			{Name: "carl", ConnID: "222", Color: "green", Score: &twenty, Answer: "verb", HasAnswered: false, PointsThisRound: "0"},
+			{Name: "darlene", ConnID: "333", Color: "yellow", Score: &ten, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
+			{Name: "dean", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
+			{Name: "william", ConnID: "333", Color: "yellow", Score: &twenty, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
+			{Name: "beulah", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
+		},
+
+		description: "prep live players",
+	},
+}
+
+var showAnswers = []struct {
+	input, expected livePlayerList
+	description     string
+}{
+	{
+		input: livePlayerList{
+			{Name: "will", ConnID: "333", Color: "yellow", Score: &seven, Answer: "heart", HasAnswered: false, PointsThisRound: "3"},
+			{Name: "earl", ConnID: "111", Color: "red", Score: &ten, Answer: "heart", HasAnswered: false, PointsThisRound: "3"},
+			{Name: "carl", ConnID: "222", Color: "green", Score: &twenty, Answer: "verb", HasAnswered: false, PointsThisRound: "0"},
+			{Name: "darlene", ConnID: "333", Color: "yellow", Score: &ten, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
+			{Name: "dean", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
+			{Name: "william", ConnID: "333", Color: "yellow", Score: &twenty, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
+			{Name: "beulah", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
+		},
+
+		expected: livePlayerList{
+			{Name: "will", ConnID: "333", Color: "yellow", Score: nil, Answer: "heart", HasAnswered: false, PointsThisRound: "3"},
+			{Name: "earl", ConnID: "111", Color: "red", Score: nil, Answer: "heart", HasAnswered: false, PointsThisRound: "3"},
+			{Name: "carl", ConnID: "222", Color: "green", Score: nil, Answer: "verb", HasAnswered: false, PointsThisRound: "0"},
+			{Name: "darlene", ConnID: "333", Color: "yellow", Score: nil, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
+			{Name: "dean", ConnID: "333", Color: "yellow", Score: nil, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
+			{Name: "william", ConnID: "333", Color: "yellow", Score: nil, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
+			{Name: "beulah", ConnID: "333", Color: "yellow", Score: nil, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
+		},
+
+		description: "nilificate scores",
+	},
+}
+
+var clearAnswers = []struct {
+	input, expected livePlayerList
+	description     string
+}{
+	{
+		input: livePlayerList{
+			{Name: "will", ConnID: "333", Color: "yellow", Score: nil, Answer: "heart", HasAnswered: false, PointsThisRound: "3"},
+			{Name: "earl", ConnID: "111", Color: "red", Score: nil, Answer: "heart", HasAnswered: false, PointsThisRound: "3"},
+			{Name: "carl", ConnID: "222", Color: "green", Score: nil, Answer: "verb", HasAnswered: false, PointsThisRound: "0"},
+			{Name: "darlene", ConnID: "333", Color: "yellow", Score: nil, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
+			{Name: "dean", ConnID: "333", Color: "yellow", Score: nil, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
+			{Name: "william", ConnID: "333", Color: "yellow", Score: nil, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
+			{Name: "beulah", ConnID: "333", Color: "yellow", Score: nil, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
+		},
+
+		expected: livePlayerList{
+			{Name: "will", ConnID: "333", Color: "yellow", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: "3"},
+			{Name: "earl", ConnID: "111", Color: "red", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: "3"},
+			{Name: "carl", ConnID: "222", Color: "green", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: "0"},
+			{Name: "darlene", ConnID: "333", Color: "yellow", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: "1"},
+			{Name: "dean", ConnID: "333", Color: "yellow", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: "1"},
+			{Name: "william", ConnID: "333", Color: "yellow", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: "1"},
+			{Name: "beulah", ConnID: "333", Color: "yellow", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: "1"},
+		},
+
+		description: "delete answers",
+	},
+}
