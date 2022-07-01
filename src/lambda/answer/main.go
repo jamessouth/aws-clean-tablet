@@ -18,7 +18,6 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
@@ -26,17 +25,6 @@ import (
 
 	"github.com/aws/smithy-go"
 )
-
-type livePlayer struct {
-	PlayerID    string `dynamodbav:"playerid"`
-	Name        string `dynamodbav:"name"`
-	ConnID      string `dynamodbav:"connid"`
-	Color       string `dynamodbav:"color"`
-	Index       string `dynamodbav:"index"`
-	Score       int    `dynamodbav:"score"`
-	Answer      string
-	HasAnswered bool `dynamodbav:"hasAnswered"`
-}
 
 const (
 	newline   byte = 10
@@ -64,15 +52,6 @@ func getWord(b io.ReadCloser) string {
 	words := bytes.Split(rawBytes, []byte{newline})
 
 	return string(words[1])
-}
-
-func clearHasAnswered(pl []livePlayer) []livePlayer {
-	for i, p := range pl {
-		p.HasAnswered = false
-		pl[i] = p
-	}
-
-	return pl
 }
 
 func sanitize(s string) string {
@@ -151,21 +130,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		ans = sanitizedAnswer
 	}
 
-	gameItemKey, err := attributevalue.MarshalMap(struct {
-		Pk string `dynamodbav:"pk"`
-		Sk string `dynamodbav:"sk"`
-	}{
-		Pk: "LIVEGAME",
-		Sk: body.Gameno,
-	})
-	if err != nil {
-		return callErr(err)
-	}
-
 	index := body.Index
 	//condition on player name??
-	ui, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-		Key:       gameItemKey,
+	_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		Key: map[string]types.AttributeValue{
+			"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
+			"sk": &types.AttributeValueMemberS{Value: body.Gameno},
+		},
 		TableName: aws.String(tableName),
 		ExpressionAttributeNames: map[string]string{
 			"#P": "players",
@@ -179,7 +150,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			":t": &types.AttributeValueMemberBOOL{Value: true},
 		},
 		UpdateExpression: aws.String("SET #P[" + index + "].#A = :a, #P[" + index + "].#H = :t ADD #C :o"),
-		ReturnValues:     types.ReturnValueAllNew,
 	})
 
 	if err != nil {
