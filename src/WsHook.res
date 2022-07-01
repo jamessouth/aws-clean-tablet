@@ -106,9 +106,9 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
           }
 
         | ModifyPlayers => {
-            let {players, sk} = parseModPlayers(data)
-            Js.log3("parsedmodplayers", players, sk)
-            dispatch(. UpdatePlayers(players, sk))
+            let {players, sk, showAnswers} = parseModPlayers(data)
+            Js.log4("parsedmodplayers", players, sk, showAnswers)
+            dispatch(. UpdatePlayers(players, sk, showAnswers))
           }
         | Word => {
             let {newword} = parseWord(data)
@@ -173,5 +173,5 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
 
   let close = (. code, reason) => ws->closeCodeReason(code, reason)
 
-  (playerGame, playerName, playerColor, count, playerIndex, wsConnected, state.players, state.sk, state.word, state.gamesList, leaderData, send, close, wsError)
+  (playerGame, playerName, playerColor, count, playerIndex, wsConnected, state.players, state.sk, state.showAnswers, state.word, state.gamesList, leaderData, send, close, wsError)
 }

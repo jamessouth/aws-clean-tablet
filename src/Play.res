@@ -11,7 +11,7 @@ type answerPayload = {
 // }
 
 @react.component
-let make = (~players: array<Reducer.livePlayer>, ~sk, ~word, ~playerColor, ~playerIndex, ~send, ~playerName) => {
+let make = (~players: array<Reducer.livePlayer>, ~sk, ~showAnswers, ~word, ~playerColor, ~playerIndex, ~send, ~playerName) => {
   let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
   let (answered, setAnswered) = React.Uncurried.useState(_ => false)
   let (answer, setAnswer) = React.Uncurried.useState(_ => "")
@@ -146,7 +146,7 @@ let make = (~players: array<Reducer.livePlayer>, ~sk, ~word, ~playerColor, ~play
 // })
 
   <div>
-    <Scoreboard players word previousWord="" showAnswers=false winner onClick playerName />
+    <Scoreboard players word previousWord="" showAnswers winner onClick playerName />
     {switch winner == "" {
     | false => React.null
     | true =>
@@ -177,6 +177,5 @@ let make = (~players: array<Reducer.livePlayer>, ~sk, ~word, ~playerColor, ~play
       }
     }}
 
-    // <Prompt></Prompt>
   </div>
 }

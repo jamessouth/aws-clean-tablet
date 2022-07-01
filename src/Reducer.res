@@ -13,12 +13,11 @@ type listPlayer = {
 }
 
 type livePlayer = {
-  playerid: string,
+  // playerid: string,
   name: string,
   color: string,
-  score: string,//sent as int
   index: string,
-  answer: string,
+  data: string,//score or answer
   hasAnswered: bool,
   pointsThisRound: string,
 }
@@ -45,6 +44,7 @@ type state = {
   players: array<livePlayer>,
   sk: string,//game no
   word: string,
+  showAnswers: bool,
 }
 
 type action =
@@ -52,7 +52,7 @@ type action =
   | AddGame(listGame)
   | RemoveGame(listGame)
   | UpdateListGame(listGame)
-  | UpdatePlayers(array<livePlayer>, string)
+  | UpdatePlayers(array<livePlayer>, string, bool)
   | UpdateWord(string)
   | ResetPlayerState(state)
 
@@ -61,6 +61,7 @@ let init = clean => {
   players: clean.players,
   sk: clean.sk,
   word: clean.word,
+  showAnswers: clean.showAnswers,
 }
 
 let reducer = (state, action) =>
@@ -91,6 +92,7 @@ let reducer = (state, action) =>
       ...state,
       players: players,
       sk: sk,
+      showAnswers: showAnswers,
     }
 
   | (Some(_), UpdateWord(word)) => {

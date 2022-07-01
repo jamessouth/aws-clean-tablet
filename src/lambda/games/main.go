@@ -68,8 +68,9 @@ type livePlayerList []struct {
 // }
 
 type players struct {
-	Players livePlayerList `json:"players"`
-	Sk      string         `json:"sk"`
+	Players     livePlayerList `json:"players"`
+	Sk          string         `json:"sk"`
+	ShowAnswers bool           `json:"showAnswers"`
 }
 
 func getListPlayersSlice(pm map[string]listPlayer) (res []listPlayer) {
@@ -565,8 +566,9 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				pls.sortByScoreThenName()
 
 				payload, err = json.Marshal(players{
-					Players: pls,
-					Sk:      gameRecord.Sk,
+					Players:     pls,
+					Sk:          gameRecord.Sk,
+					ShowAnswers: false,
 				})
 				if err != nil {
 					return callErr(err)
@@ -581,8 +583,9 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 					plsFE.sortByAnswerThenName()
 
 					payload, err = json.Marshal(players{
-						Players: plsFE,
-						Sk:      gameRecord.Sk,
+						Players:     plsFE,
+						Sk:          gameRecord.Sk,
+						ShowAnswers: true,
 					})
 					if err != nil {
 						return callErr(err)
@@ -624,8 +627,9 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 					pls.sortByScoreThenName()
 					payload, err = json.Marshal(players{
-						Players: pls.clearAnswers(),
-						Sk:      gameRecord.Sk,
+						Players:     pls.clearAnswers(),
+						Sk:          gameRecord.Sk,
+						ShowAnswers: false,
 					})
 					if err != nil {
 						return callErr(err)
