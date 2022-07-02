@@ -20,6 +20,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/aws-sdk-go-v2/service/sfn"
 	"github.com/aws/aws-sdk-go/service/dynamodbstreams"
 	"github.com/aws/smithy-go"
 )
@@ -208,6 +209,20 @@ func (players livePlayerList) sortByScoreThenName() {
 	})
 }
 
+func send(ctx context.Context, apigwsvc *apigatewaymanagementapi.Client, payload []byte, pls livePlayerList) error {
+	for _, v := range pls {
+
+		conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.ConnID), Data: payload}
+
+		_, err := apigwsvc.PostToConnection(ctx, &conn)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func FromDynamoDBEventAVMap(m map[string]events.DynamoDBAttributeValue) (res map[string]types.AttributeValue, err error) {
 	// fmt.Println("av map: ", m)
 	res = make(map[string]types.AttributeValue, len(m))
@@ -382,7 +397,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			return callErr(err)
 		}
 
-		ddbcfg, err := config.LoadDefaultConfig(ctx,
+		cfg, err := config.LoadDefaultConfig(ctx,
 			config.WithRegion(rec.AWSRegion),
 			// config.WithLogger(logger),
 		)
@@ -392,7 +407,8 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 		var (
 			apigwsvc = apigatewaymanagementapi.NewFromConfig(apigwcfg)
-			ddbsvc   = dynamodb.NewFromConfig(ddbcfg)
+			ddbsvc   = dynamodb.NewFromConfig(cfg)
+			sfnsvc   = sfn.NewFromConfig(cfg)
 			recType  = item["pk"].(*types.AttributeValueMemberS).Value
 		)
 
@@ -574,6 +590,11 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 					return callErr(err)
 				}
 
+				err = send(ctx, apigwsvc, payload, pls)
+				if err != nil {
+					return callErr(err)
+				}
+
 			} else if rec.EventName == dynamodbstreams.OperationTypeModify {
 
 				if gameRecord.AnswersCount == len(pls) {
@@ -591,34 +612,54 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 						return callErr(err)
 					}
 
+					err = send(ctx, apigwsvc, payload, pls)
+					if err != nil {
+						return callErr(err)
+					}
+
 					marshalledPlayersList, err := attributevalue.Marshal(pls.clearAnswers())
 					if err != nil {
 						return callErr(err)
 					}
 
-					_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+					ui, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 						Key: map[string]types.AttributeValue{
 							"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
 							"sk": &types.AttributeValueMemberS{Value: gameRecord.Sk},
 						},
 						TableName: aws.String(tableName),
 						ExpressionAttributeNames: map[string]string{
-							// "#P": "previousWord",
-							// "#C": "currentWord",
 							"#A": "answersCount",
 							"#P": "players",
-							// "#S": "showAnswers",
 						},
 						ExpressionAttributeValues: map[string]types.AttributeValue{
-							// ":c": &types.AttributeValueMemberS{Value: gm.CurrentWord},
-							// ":b": &types.AttributeValueMemberS{Value: ""},
 							":z": &types.AttributeValueMemberN{Value: "0"},
 							":l": marshalledPlayersList,
-							// ":t": &types.AttributeValueMemberBOOL{Value: true},
 						},
 						UpdateExpression: aws.String("SET #A = :z, #P = :l"),
+						ReturnValues:     types.ReturnValueAllOld,
 					})
 
+					if err != nil {
+						return callErr(err)
+					}
+
+					var gm struct {
+						Token string
+					}
+					err = attributevalue.UnmarshalMap(ui.Attributes, &gm)
+					if err != nil {
+						return callErr(err)
+					}
+
+					fmt.Printf("%s%+v\n", "token ", gm)
+
+					stsi := sfn.SendTaskSuccessInput{
+						Output:    aws.String(""),
+						TaskToken: aws.String(gm.Token),
+					}
+
+					_, err = sfnsvc.SendTaskSuccess(ctx, &stsi)
 					if err != nil {
 						return callErr(err)
 					}
@@ -634,20 +675,15 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 					if err != nil {
 						return callErr(err)
 					}
+
+					err = send(ctx, apigwsvc, payload, pls)
+					if err != nil {
+						return callErr(err)
+					}
 				}
 
 			}
-			for _, v := range pls {
 
-				conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.ConnID), Data: payload}
-
-				_, err = apigwsvc.PostToConnection(ctx, &conn)
-				if err != nil {
-					return callErr(err)
-				}
-			}
-			// } else if recType == "STAT" {
-			// 	fmt.Printf("%s: %+v\n", "stat item", item)
 		} else {
 			fmt.Printf("%s: %+v\n", "other record type", rec)
 		}

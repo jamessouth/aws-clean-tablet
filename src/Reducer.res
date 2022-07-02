@@ -12,12 +12,14 @@ type listPlayer = {
   ready: bool,
 }
 
+
+
 type livePlayer = {
   // playerid: string,
   name: string,
   color: string,
-  index: string,
-  data: string,//score or answer
+  score: string,//sent as int
+  answer: string,
   hasAnswered: bool,
   pointsThisRound: string,
 }
