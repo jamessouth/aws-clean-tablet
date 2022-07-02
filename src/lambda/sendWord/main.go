@@ -37,7 +37,7 @@ type livePlayerList []struct {
 	Index           string `json:"index"`
 	Answer          string `json:"answer"`
 	HasAnswered     bool   `json:"hasAnswered"`
-	PointsThisRound string `json:"pointsThisRound"`
+	PointsThisRound *int   `json:"pointsThisRound"`
 }
 
 func handler(ctx context.Context, req struct {

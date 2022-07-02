@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
-	"strconv"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -30,21 +29,31 @@ type livePlayer struct {
 	Answer string `json:"answer"`
 }
 
-type plrs struct {
-	Players livePlayerList `json:"players"`
-	Sk      string         `json:"sk"`
+type players struct {
+	Players     livePlayerList `json:"players"`
+	Sk          string         `json:"sk"`
+	ShowAnswers bool           `json:"showAnswers"`
 }
 
 type livePlayerList []struct {
-	PlayerID        string `json:"playerid"`
 	Name            string `json:"name"`
 	ConnID          string `json:"connid"`
 	Color           string `json:"color"`
-	Score           int    `json:"score"`
-	Index           string `json:"index"`
-	Answer          string `json:"answer"`
-	HasAnswered     bool   `json:"hasAnswered"`
-	PointsThisRound string `json:"pointsThisRound"`
+	Score           *int   `json:"score,omitempty"`
+	Answer          string `json:"answer,omitempty"`
+	HasAnswered     bool   `json:"hasAnswered,omitempty"`
+	PointsThisRound *int   `json:"pointsThisRound,omitempty"`
+}
+
+func (players livePlayerList) updateScores() livePlayerList {
+	for i, p := range players {
+		score := *p.Score + *p.PointsThisRound
+		p.Score = &score
+		p.PointsThisRound = aws.Int(0)
+		players[i] = p
+	}
+
+	return players
 }
 
 // type liveGame struct {
@@ -61,78 +70,15 @@ type livePlayerList []struct {
 // 	ModLiveGame liveGame
 // }
 
-// https://go.dev/play/p/CvniMWPoLKG
-// func (p modifyLiveGamePayload) MarshalJSON() ([]byte, error) {
-// 	if p.ModLiveGame.AnswersCount == len(p.ModLiveGame.Players) {
-// 		return []byte(`null`), nil
-// 	}
-
-// 	if p.ModLiveGame.AnswersCount > 0 {
-// 		for i, pl := range p.ModLiveGame.Players {
-// 			if pl.HasAnswered {
-// 				pl.Answer = ""
-// 				p.ModLiveGame.Players[i] = pl
-// 			}
-// 		}
-// 	}
-
-// 	m, err := json.Marshal(p.ModLiveGame)
-// 	if err != nil {
-// 		return m, err
-// 	}
-
-// 	return []byte(fmt.Sprintf("{%q:%s}", "mdLveGm", m)), nil
-// }
-
-func (players livePlayerList) getPoints() livePlayerList {
-	dist := map[string]int{}
-
-	for _, v := range players {
-		dist[v.Answer]++
-	}
-
-	for i, p := range players {
-		if len(p.Answer) > 1 {
-			freq := dist[p.Answer]
-			if freq == 2 {
-				p.PointsThisRound = strconv.Itoa(3)
-			} else if freq > 2 {
-				p.PointsThisRound = strconv.Itoa(1)
-			} else {
-				p.PointsThisRound = strconv.Itoa(0)
-			}
-		} else {
-			p.PointsThisRound = strconv.Itoa(0)
-
-		}
-		players[i] = p
-	}
-
-	return players
-}
-
-func (players livePlayerList) sortByAnswerThenName() {
+func (players livePlayerList) sortByScoreThenName() {
 	sort.Slice(players, func(i, j int) bool {
 		switch {
-		case players[i].Answer != players[j].Answer:
-			return players[i].Answer < players[j].Answer
+		case *players[i].Score != *players[j].Score:
+			return *players[i].Score > *players[j].Score
 		default:
 			return players[i].Name < players[j].Name
 		}
 	})
-}
-
-func (players livePlayerList) sortByScoreThenName() livePlayerList {
-	sort.Slice(players, func(i, j int) bool {
-		switch {
-		case players[i].Score != players[j].Score:
-			return players[i].Score > players[j].Score
-		default:
-			return players[i].Name < players[j].Name
-		}
-	})
-
-	return players
 }
 
 type output struct {
@@ -141,7 +87,7 @@ type output struct {
 
 func handler(ctx context.Context, req struct {
 	Payload struct {
-		Region, Endpoint, Gameno, TableName string
+		Gameno, TableName, Endpoint, Region string
 	}
 }) (output, error) {
 
@@ -191,7 +137,7 @@ func handler(ctx context.Context, req struct {
 		return output{}, err
 	}
 
-	var gameRecord plrs
+	var gameRecord players
 	err = attributevalue.UnmarshalMap(gi.Item, &gameRecord)
 	if err != nil {
 		return output{}, err
@@ -199,9 +145,13 @@ func handler(ctx context.Context, req struct {
 
 	fmt.Printf("%s%+v\n", "unmarshalledGame ", gameRecord)
 
-	payload, err := json.Marshal(plrs{
-		Players: gameRecord.Players.sortByScoreThenName().getPoints(),
-		Sk:      gameRecord.Sk,
+	pls := gameRecord.Players.updateScores()
+	pls.sortByScoreThenName()
+
+	payload, err := json.Marshal(players{
+		Players:     pls,
+		Sk:          gameRecord.Sk,
+		ShowAnswers: false,
 	})
 	if err != nil {
 		return output{}, err

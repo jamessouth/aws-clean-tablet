@@ -86,7 +86,7 @@ const (
 
 func handler(ctx context.Context, req struct {
 	Payload struct {
-		Region, TableName, Gameno string
+		Gameno, TableName, Region string
 	}
 }) (output, error) {
 

@@ -1,5 +1,7 @@
 package main
 
+import "github.com/aws/aws-sdk-go-v2/aws"
+
 var sortListPlayers = []struct {
 	input, expected []listPlayer
 	description     string
@@ -82,13 +84,13 @@ var prep = []struct {
 		},
 
 		expected: livePlayerList{
-			{Name: "will", ConnID: "333", Color: "yellow", Score: &seven, Answer: "heart", HasAnswered: false, PointsThisRound: "3"},
-			{Name: "earl", ConnID: "111", Color: "red", Score: &ten, Answer: "heart", HasAnswered: false, PointsThisRound: "3"},
-			{Name: "carl", ConnID: "222", Color: "green", Score: &twenty, Answer: "verb", HasAnswered: false, PointsThisRound: "0"},
-			{Name: "darlene", ConnID: "333", Color: "yellow", Score: &ten, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
-			{Name: "dean", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
-			{Name: "william", ConnID: "333", Color: "yellow", Score: &twenty, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
-			{Name: "beulah", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
+			{Name: "will", ConnID: "333", Color: "yellow", Score: &seven, Answer: "heart", HasAnswered: false, PointsThisRound: aws.Int(3)},
+			{Name: "earl", ConnID: "111", Color: "red", Score: &ten, Answer: "heart", HasAnswered: false, PointsThisRound: aws.Int(3)},
+			{Name: "carl", ConnID: "222", Color: "green", Score: &twenty, Answer: "verb", HasAnswered: false, PointsThisRound: aws.Int(0)},
+			{Name: "darlene", ConnID: "333", Color: "yellow", Score: &ten, Answer: "meal", HasAnswered: false, PointsThisRound: aws.Int(1)},
+			{Name: "dean", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false, PointsThisRound: aws.Int(1)},
+			{Name: "william", ConnID: "333", Color: "yellow", Score: &twenty, Answer: "meal", HasAnswered: false, PointsThisRound: aws.Int(1)},
+			{Name: "beulah", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false, PointsThisRound: aws.Int(1)},
 		},
 
 		description: "prep live players",
@@ -101,23 +103,23 @@ var showAnswers = []struct {
 }{
 	{
 		input: livePlayerList{
-			{Name: "will", ConnID: "333", Color: "yellow", Score: &seven, Answer: "heart", HasAnswered: false, PointsThisRound: "3"},
-			{Name: "earl", ConnID: "111", Color: "red", Score: &ten, Answer: "heart", HasAnswered: false, PointsThisRound: "3"},
-			{Name: "carl", ConnID: "222", Color: "green", Score: &twenty, Answer: "verb", HasAnswered: false, PointsThisRound: "0"},
-			{Name: "darlene", ConnID: "333", Color: "yellow", Score: &ten, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
-			{Name: "dean", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
-			{Name: "william", ConnID: "333", Color: "yellow", Score: &twenty, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
-			{Name: "beulah", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
+			{Name: "will", ConnID: "333", Color: "yellow", Score: &seven, Answer: "heart", HasAnswered: false, PointsThisRound: aws.Int(3)},
+			{Name: "earl", ConnID: "111", Color: "red", Score: &ten, Answer: "heart", HasAnswered: false, PointsThisRound: aws.Int(3)},
+			{Name: "carl", ConnID: "222", Color: "green", Score: &twenty, Answer: "verb", HasAnswered: false, PointsThisRound: aws.Int(0)},
+			{Name: "darlene", ConnID: "333", Color: "yellow", Score: &ten, Answer: "meal", HasAnswered: false, PointsThisRound: aws.Int(1)},
+			{Name: "dean", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false, PointsThisRound: aws.Int(1)},
+			{Name: "william", ConnID: "333", Color: "yellow", Score: &twenty, Answer: "meal", HasAnswered: false, PointsThisRound: aws.Int(1)},
+			{Name: "beulah", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false, PointsThisRound: aws.Int(1)},
 		},
 
 		expected: livePlayerList{
-			{Name: "will", ConnID: "333", Color: "yellow", Score: nil, Answer: "heart", HasAnswered: false, PointsThisRound: "3"},
-			{Name: "earl", ConnID: "111", Color: "red", Score: nil, Answer: "heart", HasAnswered: false, PointsThisRound: "3"},
-			{Name: "carl", ConnID: "222", Color: "green", Score: nil, Answer: "verb", HasAnswered: false, PointsThisRound: "0"},
-			{Name: "darlene", ConnID: "333", Color: "yellow", Score: nil, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
-			{Name: "dean", ConnID: "333", Color: "yellow", Score: nil, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
-			{Name: "william", ConnID: "333", Color: "yellow", Score: nil, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
-			{Name: "beulah", ConnID: "333", Color: "yellow", Score: nil, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
+			{Name: "will", ConnID: "333", Color: "yellow", Score: nil, Answer: "heart", HasAnswered: false, PointsThisRound: aws.Int(3)},
+			{Name: "earl", ConnID: "111", Color: "red", Score: nil, Answer: "heart", HasAnswered: false, PointsThisRound: aws.Int(3)},
+			{Name: "carl", ConnID: "222", Color: "green", Score: nil, Answer: "verb", HasAnswered: false, PointsThisRound: aws.Int(0)},
+			{Name: "darlene", ConnID: "333", Color: "yellow", Score: nil, Answer: "meal", HasAnswered: false, PointsThisRound: aws.Int(1)},
+			{Name: "dean", ConnID: "333", Color: "yellow", Score: nil, Answer: "meal", HasAnswered: false, PointsThisRound: aws.Int(1)},
+			{Name: "william", ConnID: "333", Color: "yellow", Score: nil, Answer: "meal", HasAnswered: false, PointsThisRound: aws.Int(1)},
+			{Name: "beulah", ConnID: "333", Color: "yellow", Score: nil, Answer: "meal", HasAnswered: false, PointsThisRound: aws.Int(1)},
 		},
 
 		description: "nilificate scores",
@@ -130,23 +132,23 @@ var clearAnswers = []struct {
 }{
 	{
 		input: livePlayerList{
-			{Name: "will", ConnID: "333", Color: "yellow", Score: nil, Answer: "heart", HasAnswered: false, PointsThisRound: "3"},
-			{Name: "earl", ConnID: "111", Color: "red", Score: nil, Answer: "heart", HasAnswered: false, PointsThisRound: "3"},
-			{Name: "carl", ConnID: "222", Color: "green", Score: nil, Answer: "verb", HasAnswered: false, PointsThisRound: "0"},
-			{Name: "darlene", ConnID: "333", Color: "yellow", Score: nil, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
-			{Name: "dean", ConnID: "333", Color: "yellow", Score: nil, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
-			{Name: "william", ConnID: "333", Color: "yellow", Score: nil, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
-			{Name: "beulah", ConnID: "333", Color: "yellow", Score: nil, Answer: "meal", HasAnswered: false, PointsThisRound: "1"},
+			{Name: "will", ConnID: "333", Color: "yellow", Score: nil, Answer: "heart", HasAnswered: false, PointsThisRound: aws.Int(3)},
+			{Name: "earl", ConnID: "111", Color: "red", Score: nil, Answer: "heart", HasAnswered: false, PointsThisRound: aws.Int(3)},
+			{Name: "carl", ConnID: "222", Color: "green", Score: nil, Answer: "verb", HasAnswered: false, PointsThisRound: aws.Int(0)},
+			{Name: "darlene", ConnID: "333", Color: "yellow", Score: nil, Answer: "meal", HasAnswered: false, PointsThisRound: aws.Int(1)},
+			{Name: "dean", ConnID: "333", Color: "yellow", Score: nil, Answer: "meal", HasAnswered: false, PointsThisRound: aws.Int(1)},
+			{Name: "william", ConnID: "333", Color: "yellow", Score: nil, Answer: "meal", HasAnswered: false, PointsThisRound: aws.Int(1)},
+			{Name: "beulah", ConnID: "333", Color: "yellow", Score: nil, Answer: "meal", HasAnswered: false, PointsThisRound: aws.Int(1)},
 		},
 
 		expected: livePlayerList{
-			{Name: "will", ConnID: "333", Color: "yellow", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: "3"},
-			{Name: "earl", ConnID: "111", Color: "red", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: "3"},
-			{Name: "carl", ConnID: "222", Color: "green", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: "0"},
-			{Name: "darlene", ConnID: "333", Color: "yellow", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: "1"},
-			{Name: "dean", ConnID: "333", Color: "yellow", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: "1"},
-			{Name: "william", ConnID: "333", Color: "yellow", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: "1"},
-			{Name: "beulah", ConnID: "333", Color: "yellow", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: "1"},
+			{Name: "will", ConnID: "333", Color: "yellow", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: aws.Int(3)},
+			{Name: "earl", ConnID: "111", Color: "red", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: aws.Int(3)},
+			{Name: "carl", ConnID: "222", Color: "green", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: aws.Int(0)},
+			{Name: "darlene", ConnID: "333", Color: "yellow", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: aws.Int(1)},
+			{Name: "dean", ConnID: "333", Color: "yellow", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: aws.Int(1)},
+			{Name: "william", ConnID: "333", Color: "yellow", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: aws.Int(1)},
+			{Name: "beulah", ConnID: "333", Color: "yellow", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: aws.Int(1)},
 		},
 
 		description: "delete answers",

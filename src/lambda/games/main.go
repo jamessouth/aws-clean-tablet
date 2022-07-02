@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-	"strconv"
 
 	"net/http"
 	"os"
@@ -55,18 +54,8 @@ type livePlayerList []struct {
 	Score           *int   `json:"score,omitempty"`
 	Answer          string `json:"answer,omitempty"`
 	HasAnswered     bool   `json:"hasAnswered,omitempty"`
-	PointsThisRound string `json:"pointsThisRound,omitempty"`
+	PointsThisRound *int   `json:"pointsThisRound,omitempty"`
 }
-
-// type liveGame struct {
-// 	Sk           string         `json:"sk"`
-// 	Players      livePlayerList `json:"players"`
-// 	CurrentWord  string         `json:"currentWord"`
-// 	PreviousWord string         `json:"previousWord"`
-// 	AnswersCount int            `json:"answersCount"`
-// 	ShowAnswers  bool           `json:"showAnswers"`
-// 	Winner       string         `json:"winner"`
-// }
 
 type players struct {
 	Players     livePlayerList `json:"players"`
@@ -109,29 +98,6 @@ func (p listGamePayload) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf("{%q:%s}", p.Tag, m)), nil
 }
 
-// https://go.dev/play/p/CvniMWPoLKG
-// func (p modifyLiveGamePayload) MarshalJSON() ([]byte, error) {
-// 	if p.ModLiveGame.AnswersCount == len(p.ModLiveGame.Players) {
-// 		return []byte(`null`), nil
-// 	}
-
-// 	if p.ModLiveGame.AnswersCount > 0 {
-// 		for i, pl := range p.ModLiveGame.Players {
-// 			if pl.HasAnswered {
-// 				pl.Answer = ""
-// 				p.ModLiveGame.Players[i] = pl
-// 			}
-// 		}
-// 	}
-
-// 	m, err := json.Marshal(p.ModLiveGame)
-// 	if err != nil {
-// 		return m, err
-// 	}
-
-// 	return []byte(fmt.Sprintf("{%q:%s}", "mdLveGm", m)), nil
-// }
-
 func (players livePlayerList) prep() livePlayerList {
 	dist := map[string]int{}
 
@@ -143,14 +109,14 @@ func (players livePlayerList) prep() livePlayerList {
 		if len(p.Answer) > 1 {
 			freq := dist[p.Answer]
 			if freq == 2 {
-				p.PointsThisRound = strconv.Itoa(3)
+				p.PointsThisRound = aws.Int(3)
 			} else if freq > 2 {
-				p.PointsThisRound = strconv.Itoa(1)
+				p.PointsThisRound = aws.Int(1)
 			} else {
-				p.PointsThisRound = strconv.Itoa(0)
+				p.PointsThisRound = aws.Int(0)
 			}
 		} else {
-			p.PointsThisRound = strconv.Itoa(0)
+			p.PointsThisRound = aws.Int(0)
 		}
 		p.HasAnswered = false
 		players[i] = p
