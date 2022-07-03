@@ -47,6 +47,7 @@ type state = {
   sk: string,//game no
   word: string,
   showAnswers: bool,
+  winner: string,
 }
 
 type action =
@@ -54,7 +55,7 @@ type action =
   | AddGame(listGame)
   | RemoveGame(listGame)
   | UpdateListGame(listGame)
-  | UpdatePlayers(array<livePlayer>, string, bool)
+  | UpdatePlayers(array<livePlayer>, string, bool, string)
   | UpdateWord(string)
   | ResetPlayerState(state)
 
@@ -64,6 +65,7 @@ let init = clean => {
   sk: clean.sk,
   word: clean.word,
   showAnswers: clean.showAnswers,
+  winner: clean.winner,
 }
 
 let reducer = (state, action) =>
@@ -90,11 +92,12 @@ let reducer = (state, action) =>
         ),
       ),
     }
-  | (Some(_), UpdatePlayers(players, sk)) => {
+  | (Some(_), UpdatePlayers(players, sk, showAnswers, winner)) => {
       ...state,
       players: players,
       sk: sk,
       showAnswers: showAnswers,
+      winner: winner,
     }
 
   | (Some(_), UpdateWord(word)) => {

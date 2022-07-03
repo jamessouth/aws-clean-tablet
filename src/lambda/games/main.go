@@ -61,6 +61,7 @@ type players struct {
 	Players     livePlayerList `json:"players"`
 	Sk          string         `json:"sk"`
 	ShowAnswers bool           `json:"showAnswers"`
+	Winner      string         `json:"winner"`
 }
 
 func getListPlayersSlice(pm map[string]listPlayer) (res []listPlayer) {
@@ -551,6 +552,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 					Players:     pls,
 					Sk:          gameRecord.Sk,
 					ShowAnswers: false,
+					Winner:      "",
 				})
 				if err != nil {
 					return callErr(err)
@@ -573,6 +575,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 						Players:     plsFE,
 						Sk:          gameRecord.Sk,
 						ShowAnswers: true,
+						Winner:      "",
 					})
 					if err != nil {
 						return callErr(err)
@@ -637,6 +640,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 						Players:     pls.clearAnswers(),
 						Sk:          gameRecord.Sk,
 						ShowAnswers: false,
+						Winner:      "",
 					})
 					if err != nil {
 						return callErr(err)

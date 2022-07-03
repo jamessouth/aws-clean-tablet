@@ -5,7 +5,7 @@ type addGameData = {addGame: Reducer.listGame}
 type modListGameData = {mdLstGm: Reducer.listGame}
 
 
-type modPlayersData = {players: array<Reducer.livePlayer>, sk: string, showAnswers: bool}
+type modPlayersData = {players: array<Reducer.livePlayer>, sk: string, showAnswers: bool, winner: string}
 type wordData = {newword: string}
 
 

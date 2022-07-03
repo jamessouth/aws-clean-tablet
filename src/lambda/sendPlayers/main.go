@@ -33,6 +33,7 @@ type players struct {
 	Players     livePlayerList `json:"players"`
 	Sk          string         `json:"sk"`
 	ShowAnswers bool           `json:"showAnswers"`
+	Winner      string         `json:"winner"`
 }
 
 type livePlayerList []struct {
@@ -49,26 +50,12 @@ func (players livePlayerList) updateScores() livePlayerList {
 	for i, p := range players {
 		score := *p.Score + *p.PointsThisRound
 		p.Score = &score
-		p.PointsThisRound = aws.Int(0)
+		p.PointsThisRound = nil
 		players[i] = p
 	}
 
 	return players
 }
-
-// type liveGame struct {
-// 	Sk           string         `json:"sk"`
-// 	Players      livePlayerList `json:"players"`
-// 	CurrentWord  string         `json:"currentWord"`
-// 	PreviousWord string         `json:"previousWord"`
-// 	AnswersCount int            `json:"answersCount"`
-// 	ShowAnswers  bool           `json:"showAnswers"`
-// 	Winner       string         `json:"winner"`
-// }
-
-// type modifyLiveGamePayload struct {
-// 	ModLiveGame liveGame
-// }
 
 func (players livePlayerList) sortByScoreThenName() {
 	sort.Slice(players, func(i, j int) bool {
@@ -152,6 +139,7 @@ func handler(ctx context.Context, req struct {
 		Players:     pls,
 		Sk:          gameRecord.Sk,
 		ShowAnswers: false,
+		Winner:      "",
 	})
 	if err != nil {
 		return output{}, err

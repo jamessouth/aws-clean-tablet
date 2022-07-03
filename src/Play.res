@@ -11,7 +11,7 @@ type answerPayload = {
 // }
 
 @react.component
-let make = (~players: array<Reducer.livePlayer>, ~sk, ~showAnswers, ~word, ~playerColor, ~playerIndex, ~send, ~playerName) => {
+let make = (~players: array<Reducer.livePlayer>, ~sk, ~showAnswers, ~winner, ~word, ~playerColor, ~playerIndex, ~send, ~playerName) => {
   let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
   let (answered, setAnswered) = React.Uncurried.useState(_ => false)
   let (answer, setAnswer) = React.Uncurried.useState(_ => "")
@@ -20,7 +20,7 @@ let make = (~players: array<Reducer.livePlayer>, ~sk, ~showAnswers, ~word, ~play
   ))
   // let {players, currentWord, previousWord, showAnswers, sk, winner} = game
   let answer_max_length = 12
-  let winner = ""
+  
   
 
   React.useEffect1(() => {
