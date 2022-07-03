@@ -46,6 +46,11 @@ type livePlayerList []struct {
 	PointsThisRound *int   `json:"pointsThisRound,omitempty"`
 }
 
+type output struct {
+	Gameno string `json:"gameno"`
+	Winner string `json:"winner"`
+}
+
 func (players livePlayerList) updateScores() livePlayerList {
 	for i, p := range players {
 		score := *p.Score + *p.PointsThisRound
@@ -68,9 +73,17 @@ func (players livePlayerList) sortByScoreThenName() {
 	})
 }
 
-type output struct {
-	Gameno string `json:"gameno"`
+func (players livePlayerList) getWinner() string {
+	if *players[0].Score != *players[1].Score && *players[0].Score > winThreshold {
+		return players[0].Name
+	}
+
+	return ""
 }
+
+const (
+	winThreshold int = 5
+)
 
 func handler(ctx context.Context, req struct {
 	Payload struct {
@@ -134,12 +147,13 @@ func handler(ctx context.Context, req struct {
 
 	pls := gameRecord.Players.updateScores()
 	pls.sortByScoreThenName()
+	winner := pls.getWinner()
 
 	payload, err := json.Marshal(players{
 		Players:     pls,
 		Sk:          gameRecord.Sk,
 		ShowAnswers: false,
-		Winner:      "",
+		Winner:      winner,
 	})
 	if err != nil {
 		return output{}, err
@@ -155,7 +169,34 @@ func handler(ctx context.Context, req struct {
 		}
 	}
 
-	return output{Gameno: req.Payload.Gameno}, nil
+	marshalledPlayersList, err := attributevalue.Marshal(pls)
+	if err != nil {
+		return output{}, err
+	}
+
+	_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		Key: map[string]types.AttributeValue{
+			"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
+			"sk": &types.AttributeValueMemberS{Value: req.Payload.Gameno},
+		},
+		TableName: aws.String(req.Payload.TableName),
+		ExpressionAttributeNames: map[string]string{
+			"#P": "players",
+		},
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":l": marshalledPlayersList,
+		},
+		UpdateExpression: aws.String("SET #P = :l"),
+	})
+
+	if err != nil {
+		return output{}, err
+	}
+
+	return output{
+		Gameno: req.Payload.Gameno,
+		Winner: winner,
+	}, nil
 
 }
 
