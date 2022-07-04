@@ -1,4 +1,4 @@
-module sendPlayers
+module sendScores
 
 go 1.18
 

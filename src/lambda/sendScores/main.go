@@ -169,28 +169,31 @@ func handler(ctx context.Context, req struct {
 		}
 	}
 
-	marshalledPlayersList, err := attributevalue.Marshal(pls)
-	if err != nil {
-		return output{}, err
-	}
+	if winner == "" {
 
-	_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-		Key: map[string]types.AttributeValue{
-			"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
-			"sk": &types.AttributeValueMemberS{Value: req.Payload.Gameno},
-		},
-		TableName: aws.String(req.Payload.TableName),
-		ExpressionAttributeNames: map[string]string{
-			"#P": "players",
-		},
-		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":l": marshalledPlayersList,
-		},
-		UpdateExpression: aws.String("SET #P = :l"),
-	})
+		marshalledPlayersList, err := attributevalue.Marshal(pls)
+		if err != nil {
+			return output{}, err
+		}
 
-	if err != nil {
-		return output{}, err
+		_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+			Key: map[string]types.AttributeValue{
+				"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
+				"sk": &types.AttributeValueMemberS{Value: req.Payload.Gameno},
+			},
+			TableName: aws.String(req.Payload.TableName),
+			ExpressionAttributeNames: map[string]string{
+				"#P": "players",
+			},
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":l": marshalledPlayersList,
+			},
+			UpdateExpression: aws.String("SET #P = :l"),
+		})
+
+		if err != nil {
+			return output{}, err
+		}
 	}
 
 	return output{

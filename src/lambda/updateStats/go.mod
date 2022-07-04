@@ -1,4 +1,4 @@
-module score
+module updateStats
 
 go 1.18
 
