@@ -47,7 +47,7 @@ type backListGame struct {
 	Players   map[string]listPlayer `dynamodbav:"players"`
 }
 
-type livePlayerList []struct {
+type livePlayer struct {
 	Name            string `json:"name"`
 	ConnID          string `json:"connid"`
 	Color           string `json:"color"`
@@ -58,22 +58,16 @@ type livePlayerList []struct {
 }
 
 type players struct {
-	Players     livePlayerList `json:"players"`
-	Sk          string         `json:"sk"`
-	ShowAnswers bool           `json:"showAnswers"`
-	Winner      string         `json:"winner"`
+	Players     []livePlayer `json:"players"`
+	Sk          string       `json:"sk"`
+	ShowAnswers bool         `json:"showAnswers"`
+	Winner      string       `json:"winner"`
 }
 
-type livePlayerMap map[string]struct {
-	Name, ConnID, Color, Answer string
-	Score, PointsThisRound      int
-	HasAnswered                 bool
-}
+type livePlayerMap map[string]livePlayer
 
-func getListPlayersSlice(pm map[string]listPlayer) (res []listPlayer) {
-	res = []listPlayer{}
-
-	for _, v := range pm {
+func getSlice[Key string, Val listPlayer | livePlayer](m map[Key]Val) (res []Val) {
+	for _, v := range m {
 		res = append(res, v)
 	}
 
@@ -84,7 +78,7 @@ func getFrontListGames(gl []backListGame) (res []frontListGame) {
 	res = []frontListGame{}
 
 	for _, g := range gl {
-		pls := sortByName(getListPlayersSlice(g.Players))
+		pls := sortByName(getSlice(g.Players))
 		res = append(res, frontListGame{
 			No:        g.Sk,
 			TimerCxld: g.TimerCxld,
@@ -105,7 +99,7 @@ func (p listGamePayload) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf("{%q:%s}", p.Tag, m)), nil
 }
 
-func (players livePlayerList) prep() livePlayerList {
+func prep(players []livePlayer) []livePlayer {
 	dist := map[string]int{}
 
 	for _, v := range players {
@@ -132,8 +126,8 @@ func (players livePlayerList) prep() livePlayerList {
 	return players
 }
 
-func (players livePlayerList) showAnswers() livePlayerList {
-	pls := make(livePlayerList, len(players))
+func showAnswers(players []livePlayer) []livePlayer {
+	pls := make([]livePlayer, len(players))
 
 	for i, p := range players {
 		p.Score = nil
@@ -143,7 +137,7 @@ func (players livePlayerList) showAnswers() livePlayerList {
 	return pls
 }
 
-func (players livePlayerList) clearAnswers() livePlayerList {
+func clearAnswers(players []livePlayer) []livePlayer {
 	for i, p := range players {
 		p.Answer = ""
 		players[i] = p
@@ -160,7 +154,7 @@ func sortByName(players []listPlayer) []listPlayer {
 	return players
 }
 
-func (players livePlayerList) sortByAnswerThenName() {
+func sortByAnswerThenName(players []livePlayer) {
 	sort.Slice(players, func(i, j int) bool {
 		switch {
 		case players[i].Answer != players[j].Answer:
@@ -171,7 +165,7 @@ func (players livePlayerList) sortByAnswerThenName() {
 	})
 }
 
-func (players livePlayerList) sortByScoreThenName() {
+func sortByScoreThenName(players []livePlayer) {
 	sort.Slice(players, func(i, j int) bool {
 		switch {
 		case *players[i].Score != *players[j].Score:
@@ -182,7 +176,7 @@ func (players livePlayerList) sortByScoreThenName() {
 	})
 }
 
-func send(ctx context.Context, apigwsvc *apigatewaymanagementapi.Client, payload []byte, pls livePlayerList) error {
+func send(ctx context.Context, apigwsvc *apigatewaymanagementapi.Client, payload []byte, pls []livePlayer) error {
 	for _, v := range pls {
 
 		conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.ConnID), Data: payload}
@@ -194,16 +188,6 @@ func send(ctx context.Context, apigwsvc *apigatewaymanagementapi.Client, payload
 	}
 
 	return nil
-}
-
-func (pm livePlayerMap) getLivePlayersSlice() (res livePlayerList) {
-	res = make(livePlayerList, 0)
-
-	for _, v := range pm {
-		res = append(res, v)
-	}
-
-	return
 }
 
 func FromDynamoDBEventAVMap(m map[string]events.DynamoDBAttributeValue) (res map[string]types.AttributeValue, err error) {
@@ -485,7 +469,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				Game: frontListGame{
 					No:        listGameRecord.Sk,
 					TimerCxld: listGameRecord.TimerCxld,
-					Players:   sortByName(getListPlayersSlice(listGameRecord.Players)),
+					Players:   sortByName(getSlice(listGameRecord.Players)),
 				},
 				Tag: "mdLstGm",
 			}
@@ -557,12 +541,12 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			fmt.Printf("%s%+v\n", "live gammmmme ", gameRecord)
 
-			pls := gameRecord.Players
+			pls := getSlice(gameRecord.Players)
 			var payload []byte
 
 			if rec.EventName == dynamodbstreams.OperationTypeInsert {
 
-				pls.sortByScoreThenName()
+				sortByScoreThenName(pls)
 
 				payload, err = json.Marshal(players{
 					Players:     pls,
@@ -582,10 +566,10 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			} else if rec.EventName == dynamodbstreams.OperationTypeModify {
 
 				if gameRecord.AnswersCount == len(pls) {
-					pls = pls.prep()
+					pls = prep(pls)
 
-					plsFE := pls.showAnswers()
-					plsFE.sortByAnswerThenName()
+					plsFE := showAnswers(pls)
+					sortByAnswerThenName(plsFE)
 
 					payload, err = json.Marshal(players{
 						Players:     plsFE,
@@ -602,7 +586,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 						return callErr(err)
 					}
 
-					marshalledPlayersList, err := attributevalue.Marshal(pls.clearAnswers())
+					marshalledPlayersList, err := attributevalue.Marshal(clearAnswers(pls))
 					if err != nil {
 						return callErr(err)
 					}
@@ -651,9 +635,9 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 				} else {
 
-					pls.sortByScoreThenName()
+					sortByScoreThenName(pls)
 					payload, err = json.Marshal(players{
-						Players:     pls.clearAnswers(),
+						Players:     clearAnswers(pls),
 						Sk:          gameRecord.Sk,
 						ShowAnswers: false,
 						Winner:      "",

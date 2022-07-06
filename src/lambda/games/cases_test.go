@@ -18,27 +18,27 @@ var seven = 7
 var ten = 10
 var twenty = 20
 
-var sortByAnswerThenName = []struct {
-	input, expected livePlayerList
+var sortByAnswerThenNameTests = []struct {
+	input, expected []livePlayer
 	description     string
 }{
 	{
-		input: livePlayerList{{Name: "will", ConnID: "333", Color: "yellow", Score: &seven, Answer: "heart", HasAnswered: false}, {Name: "earl", ConnID: "111", Color: "red", Score: &ten, Answer: "heart", HasAnswered: false}, {Name: "carl", ConnID: "222", Color: "green", Score: &twenty, Answer: "verb", HasAnswered: false}, {Name: "darlene", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false}, {Name: "dean", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false}, {Name: "william", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false}, {Name: "beulah", ConnID: "333", Color: "yellow", Score: &seven, Answer: "heart", HasAnswered: false}},
+		input: []livePlayer{{Name: "will", ConnID: "333", Color: "yellow", Score: &seven, Answer: "heart", HasAnswered: false}, {Name: "earl", ConnID: "111", Color: "red", Score: &ten, Answer: "heart", HasAnswered: false}, {Name: "carl", ConnID: "222", Color: "green", Score: &twenty, Answer: "verb", HasAnswered: false}, {Name: "darlene", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false}, {Name: "dean", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false}, {Name: "william", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false}, {Name: "beulah", ConnID: "333", Color: "yellow", Score: &seven, Answer: "heart", HasAnswered: false}},
 
-		expected: livePlayerList{{Name: "beulah", ConnID: "333", Color: "yellow", Score: &seven, Answer: "heart", HasAnswered: false}, {Name: "earl", ConnID: "111", Color: "red", Score: &ten, Answer: "heart", HasAnswered: false}, {Name: "will", ConnID: "333", Color: "yellow", Score: &seven, Answer: "heart", HasAnswered: false}, {Name: "darlene", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false}, {Name: "dean", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false}, {Name: "william", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false}, {Name: "carl", ConnID: "222", Color: "green", Score: &twenty, Answer: "verb", HasAnswered: false}},
+		expected: []livePlayer{{Name: "beulah", ConnID: "333", Color: "yellow", Score: &seven, Answer: "heart", HasAnswered: false}, {Name: "earl", ConnID: "111", Color: "red", Score: &ten, Answer: "heart", HasAnswered: false}, {Name: "will", ConnID: "333", Color: "yellow", Score: &seven, Answer: "heart", HasAnswered: false}, {Name: "darlene", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false}, {Name: "dean", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false}, {Name: "william", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false}, {Name: "carl", ConnID: "222", Color: "green", Score: &twenty, Answer: "verb", HasAnswered: false}},
 
 		description: "by answer then name",
 	},
 }
 
-var sortByScoreThenName = []struct {
-	input, expected livePlayerList
+var sortByScoreThenNameTests = []struct {
+	input, expected []livePlayer
 	description     string
 }{
 	{
-		input: livePlayerList{{Name: "will", ConnID: "333", Color: "yellow", Score: &seven, Answer: "heart", HasAnswered: false}, {Name: "earl", ConnID: "111", Color: "red", Score: &ten, Answer: "heart", HasAnswered: false}, {Name: "carl", ConnID: "222", Color: "green", Score: &twenty, Answer: "verb", HasAnswered: false}, {Name: "darlene", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false}, {Name: "dean", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false}, {Name: "william", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false}, {Name: "beulah", ConnID: "333", Color: "yellow", Score: &seven, Answer: "heart", HasAnswered: false}},
+		input: []livePlayer{{Name: "will", ConnID: "333", Color: "yellow", Score: &seven, Answer: "heart", HasAnswered: false}, {Name: "earl", ConnID: "111", Color: "red", Score: &ten, Answer: "heart", HasAnswered: false}, {Name: "carl", ConnID: "222", Color: "green", Score: &twenty, Answer: "verb", HasAnswered: false}, {Name: "darlene", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false}, {Name: "dean", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false}, {Name: "william", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false}, {Name: "beulah", ConnID: "333", Color: "yellow", Score: &seven, Answer: "heart", HasAnswered: false}},
 
-		expected: livePlayerList{{Name: "carl", ConnID: "222", Color: "green", Score: &twenty, Answer: "verb", HasAnswered: false}, {Name: "earl", ConnID: "111", Color: "red", Score: &ten, Answer: "heart", HasAnswered: false}, {Name: "beulah", ConnID: "333", Color: "yellow", Score: &seven, Answer: "heart", HasAnswered: false}, {Name: "darlene", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false}, {Name: "dean", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false}, {Name: "will", ConnID: "333", Color: "yellow", Score: &seven, Answer: "heart", HasAnswered: false}, {Name: "william", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false}},
+		expected: []livePlayer{{Name: "carl", ConnID: "222", Color: "green", Score: &twenty, Answer: "verb", HasAnswered: false}, {Name: "earl", ConnID: "111", Color: "red", Score: &ten, Answer: "heart", HasAnswered: false}, {Name: "beulah", ConnID: "333", Color: "yellow", Score: &seven, Answer: "heart", HasAnswered: false}, {Name: "darlene", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false}, {Name: "dean", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false}, {Name: "will", ConnID: "333", Color: "yellow", Score: &seven, Answer: "heart", HasAnswered: false}, {Name: "william", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false}},
 
 		description: "by score then name",
 	},
@@ -68,12 +68,12 @@ var listGamePayload_MarshalJSON_Tests = []struct {
 	},
 }
 
-var prep = []struct {
-	input, expected livePlayerList
+var prepTests = []struct {
+	input, expected []livePlayer
 	description     string
 }{
 	{
-		input: livePlayerList{
+		input: []livePlayer{
 			{Name: "will", ConnID: "333", Color: "yellow", Score: &seven, Answer: "heart", HasAnswered: true},
 			{Name: "earl", ConnID: "111", Color: "red", Score: &ten, Answer: "heart", HasAnswered: true},
 			{Name: "carl", ConnID: "222", Color: "green", Score: &twenty, Answer: "verb", HasAnswered: true},
@@ -83,7 +83,7 @@ var prep = []struct {
 			{Name: "beulah", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: true},
 		},
 
-		expected: livePlayerList{
+		expected: []livePlayer{
 			{Name: "will", ConnID: "333", Color: "yellow", Score: &seven, Answer: "heart", HasAnswered: false, PointsThisRound: aws.Int(3)},
 			{Name: "earl", ConnID: "111", Color: "red", Score: &ten, Answer: "heart", HasAnswered: false, PointsThisRound: aws.Int(3)},
 			{Name: "carl", ConnID: "222", Color: "green", Score: &twenty, Answer: "verb", HasAnswered: false, PointsThisRound: aws.Int(0)},
@@ -97,12 +97,12 @@ var prep = []struct {
 	},
 }
 
-var showAnswers = []struct {
-	input, expected livePlayerList
+var showAnswersTests = []struct {
+	input, expected []livePlayer
 	description     string
 }{
 	{
-		input: livePlayerList{
+		input: []livePlayer{
 			{Name: "will", ConnID: "333", Color: "yellow", Score: &seven, Answer: "heart", HasAnswered: false, PointsThisRound: aws.Int(3)},
 			{Name: "earl", ConnID: "111", Color: "red", Score: &ten, Answer: "heart", HasAnswered: false, PointsThisRound: aws.Int(3)},
 			{Name: "carl", ConnID: "222", Color: "green", Score: &twenty, Answer: "verb", HasAnswered: false, PointsThisRound: aws.Int(0)},
@@ -112,7 +112,7 @@ var showAnswers = []struct {
 			{Name: "beulah", ConnID: "333", Color: "yellow", Score: &seven, Answer: "meal", HasAnswered: false, PointsThisRound: aws.Int(1)},
 		},
 
-		expected: livePlayerList{
+		expected: []livePlayer{
 			{Name: "will", ConnID: "333", Color: "yellow", Score: nil, Answer: "heart", HasAnswered: false, PointsThisRound: aws.Int(3)},
 			{Name: "earl", ConnID: "111", Color: "red", Score: nil, Answer: "heart", HasAnswered: false, PointsThisRound: aws.Int(3)},
 			{Name: "carl", ConnID: "222", Color: "green", Score: nil, Answer: "verb", HasAnswered: false, PointsThisRound: aws.Int(0)},
@@ -126,12 +126,12 @@ var showAnswers = []struct {
 	},
 }
 
-var clearAnswers = []struct {
-	input, expected livePlayerList
+var clearAnswersTests = []struct {
+	input, expected []livePlayer
 	description     string
 }{
 	{
-		input: livePlayerList{
+		input: []livePlayer{
 			{Name: "will", ConnID: "333", Color: "yellow", Score: nil, Answer: "heart", HasAnswered: false, PointsThisRound: aws.Int(3)},
 			{Name: "earl", ConnID: "111", Color: "red", Score: nil, Answer: "heart", HasAnswered: false, PointsThisRound: aws.Int(3)},
 			{Name: "carl", ConnID: "222", Color: "green", Score: nil, Answer: "verb", HasAnswered: false, PointsThisRound: aws.Int(0)},
@@ -141,7 +141,7 @@ var clearAnswers = []struct {
 			{Name: "beulah", ConnID: "333", Color: "yellow", Score: nil, Answer: "meal", HasAnswered: false, PointsThisRound: aws.Int(1)},
 		},
 
-		expected: livePlayerList{
+		expected: []livePlayer{
 			{Name: "will", ConnID: "333", Color: "yellow", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: aws.Int(3)},
 			{Name: "earl", ConnID: "111", Color: "red", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: aws.Int(3)},
 			{Name: "carl", ConnID: "222", Color: "green", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: aws.Int(0)},

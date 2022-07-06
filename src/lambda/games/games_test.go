@@ -20,8 +20,8 @@ func TestSortListPlayers(t *testing.T) {
 
 func TestSortByAnswerThenName(t *testing.T) {
 	t.Skip()
-	for _, ref := range sortByAnswerThenName {
-		ref.input.sortByAnswerThenName()
+	for _, ref := range sortByAnswerThenNameTests {
+		sortByAnswerThenName(ref.input)
 
 		if !cmp.Equal(ref.input, ref.expected) {
 			t.Fatalf("SortByAnswerThenName: %s result: %v,\n  want:%v.", ref.description, ref.input, ref.expected)
@@ -31,8 +31,8 @@ func TestSortByAnswerThenName(t *testing.T) {
 
 func TestSortByScoreThenName(t *testing.T) {
 	t.Skip()
-	for _, ref := range sortByScoreThenName {
-		ref.input.sortByScoreThenName()
+	for _, ref := range sortByScoreThenNameTests {
+		sortByScoreThenName(ref.input)
 
 		if !cmp.Equal(ref.input, ref.expected) {
 			t.Fatalf("SortByScoreThenName: %s result: %v,\n  want:%v.", ref.description, ref.input, ref.expected)
@@ -57,8 +57,8 @@ func TestListGamePayload_MarshalJSON(t *testing.T) {
 func TestPrep(t *testing.T) {
 	t.Skip()
 
-	for _, test := range prep {
-		if act := test.input.prep(); !cmp.Equal(act, test.expected) {
+	for _, test := range prepTests {
+		if act := prep(test.input); !cmp.Equal(act, test.expected) {
 			t.Errorf("FAIL - prep - %s\n act: %+v\n exp: %+v\n",
 				test.description, act, test.expected)
 		}
@@ -69,8 +69,8 @@ func TestPrep(t *testing.T) {
 func TestShowAnswers(t *testing.T) {
 	t.Skip()
 
-	for _, test := range showAnswers {
-		if act := test.input.showAnswers(); !cmp.Equal(act, test.expected) {
+	for _, test := range showAnswersTests {
+		if act := showAnswers(test.input); !cmp.Equal(act, test.expected) {
 			t.Errorf("FAIL - showAnswers - %s\n act: %+v\n exp: %+v\n",
 				test.description, act, test.expected)
 		}
@@ -81,8 +81,8 @@ func TestShowAnswers(t *testing.T) {
 func TestClearAnswers(t *testing.T) {
 	// t.Skip()
 
-	for _, test := range clearAnswers {
-		if act := test.input.clearAnswers(); !cmp.Equal(act, test.expected) {
+	for _, test := range clearAnswersTests {
+		if act := clearAnswers(test.input); !cmp.Equal(act, test.expected) {
 			t.Errorf("FAIL - clearAnswers - %s\n act: %+v\n exp: %+v\n",
 				test.description, act, test.expected)
 		}
