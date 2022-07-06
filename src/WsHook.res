@@ -11,7 +11,6 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
   let (playerName, setPlayerName) = React.Uncurried.useState(_ => "")
   let (playerColor, setPlayerColor) = React.Uncurried.useState(_ => "transparent")
   let (count, setCount) = React.Uncurried.useState(_ => "")
-  let (playerIndex, setPlayerIndex) = React.Uncurried.useState(_ => "")
   let (wsConnected, setWsConnected) = React.Uncurried.useState(_ => false)
   let (wsError, setWsError) = React.Uncurried.useState(_ => "")
   // let (leader, setLeader) = React.Uncurried.useState(_ => false)
@@ -25,7 +24,6 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
   let resetConnState = _ => {
     dispatch(. ResetPlayerState(initialState))
     setPlayerColor(._ => "transparent")
-    setPlayerIndex(._ => "")
     setPlayerGame(._ => "")
     // setLeader(._ => false)
     setLeaderData(._ => [])
@@ -81,7 +79,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
             Js.log2(color, index)
             setPlayerGame(._ => modConn)
             setPlayerColor(._ => color)
-            setPlayerIndex(._ => index)
+      
           }
 
 
@@ -174,5 +172,5 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
 
   let close = (. code, reason) => ws->closeCodeReason(code, reason)
 
-  (playerGame, playerName, playerColor, count, playerIndex, wsConnected, state.players, state.sk, state.showAnswers, state.winner, state.word, state.gamesList, leaderData, send, close, wsError)
+  (playerGame, playerName, playerColor, count, wsConnected, state.players, state.sk, state.showAnswers, state.winner, state.word, state.gamesList, leaderData, send, close, wsError)
 }

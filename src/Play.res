@@ -2,7 +2,6 @@ type answerPayload = {
   action: string,
   gameno: string,
   answer: string,
-  index: string,
 }
 
 // type scorePayload = {
@@ -11,7 +10,7 @@ type answerPayload = {
 // }
 
 @react.component
-let make = (~players: array<Reducer.livePlayer>, ~sk, ~showAnswers, ~winner, ~word, ~playerColor, ~playerIndex, ~send, ~playerName) => {
+let make = (~players: array<Reducer.livePlayer>, ~sk, ~showAnswers, ~winner, ~word, ~playerColor, ~send, ~playerName) => {
   let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
   let (answered, setAnswered) = React.Uncurried.useState(_ => false)
   let (answer, setAnswer) = React.Uncurried.useState(_ => "")
@@ -87,7 +86,6 @@ let make = (~players: array<Reducer.livePlayer>, ~sk, ~showAnswers, ~winner, ~wo
       ->Js.String2.replaceByRe(%re("/\d/g"), "")
       ->Js.String2.replaceByRe(%re("/[!-/:-@\[-`{-~]/g"), "")
       ->Js.String2.trim(_),
-      index: playerIndex,
     }
     send(. Js.Json.stringifyAny(pl))
     setAnswered(._ => true)

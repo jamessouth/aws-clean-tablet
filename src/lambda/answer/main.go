@@ -90,7 +90,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		ddbsvc    = dynamodb.NewFromConfig(cfg)
 		s3svc     = s3.NewFromConfig(cfg)
 		body      struct {
-			Gameno, Answer, Index string
+			Gameno, Answer string
 		}
 		ans string
 	)
@@ -130,7 +130,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		ans = sanitizedAnswer
 	}
 
-	index := body.Index
 	//condition on player name??
 	_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 		Key: map[string]types.AttributeValue{

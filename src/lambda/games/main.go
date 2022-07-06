@@ -64,6 +64,12 @@ type players struct {
 	Winner      string         `json:"winner"`
 }
 
+type livePlayerMap map[string]struct {
+	Name, ConnID, Color, Answer string
+	Score, PointsThisRound      int
+	HasAnswered                 bool
+}
+
 func getListPlayersSlice(pm map[string]listPlayer) (res []listPlayer) {
 	res = []listPlayer{}
 
@@ -188,6 +194,16 @@ func send(ctx context.Context, apigwsvc *apigatewaymanagementapi.Client, payload
 	}
 
 	return nil
+}
+
+func (pm livePlayerMap) getLivePlayersSlice() (res livePlayerList) {
+	res = make(livePlayerList, 0)
+
+	for _, v := range pm {
+		res = append(res, v)
+	}
+
+	return
 }
 
 func FromDynamoDBEventAVMap(m map[string]events.DynamoDBAttributeValue) (res map[string]types.AttributeValue, err error) {
@@ -531,7 +547,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			var gameRecord struct {
 				Sk           string
-				Players      livePlayerList
+				Players      livePlayerMap
 				AnswersCount int
 			}
 			err = attributevalue.UnmarshalMap(item, &gameRecord)

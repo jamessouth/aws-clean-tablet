@@ -49,7 +49,6 @@ let make = () => {
     playerName,
     playerColor,
     count,
-    playerIndex,
     wsConnected,
     players,
     sk,
@@ -168,7 +167,7 @@ let make = () => {
         switch wsConnected {
         | true =>
           switch Js.Array2.length(players) > 0 && gameno == sk {
-          | true => <Play players sk showAnswers winner word playerColor playerIndex send playerName />
+          | true => <Play players sk showAnswers winner word playerColor send playerName />
           | false => <Loading label="game..." />
           }
 

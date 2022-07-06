@@ -43,7 +43,7 @@ func handler(ctx context.Context, req struct {
 	Payload struct {
 		Gameno, TableName, Region string
 	}
-}) (output, error) {
+}) error {
 
 	fmt.Printf("%s%+v\n", "stat req ", req)
 
@@ -51,7 +51,7 @@ func handler(ctx context.Context, req struct {
 		config.WithRegion(req.Payload.Region),
 	)
 	if err != nil {
-		return output{}, err
+		return err
 	}
 
 	var ddbsvc = dynamodb.NewFromConfig(cfg)
@@ -64,13 +64,13 @@ func handler(ctx context.Context, req struct {
 		TableName: aws.String(req.Payload.TableName),
 	})
 	if err != nil {
-		return output{}, err
+		return err
 	}
 
 	var gameRecord players
 	err = attributevalue.UnmarshalMap(gi.Item, &gameRecord)
 	if err != nil {
-		return output{}, err
+		return err
 	}
 
 	fmt.Printf("%s%+v\n", "unmarshalledGame ", gameRecord)
@@ -110,7 +110,7 @@ func handler(ctx context.Context, req struct {
 					"pk": &types.AttributeValueMemberS{Value: "STAT"},
 					"sk": &types.AttributeValueMemberS{Value: gameIDs.Ids[p.PlayerID]},
 				},
-				TableName: tableName,
+				TableName: aws.String(req.Payload.TableName),
 				ExpressionAttributeNames: map[string]string{
 					"#W": "wins",
 					"#G": "games",
