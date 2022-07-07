@@ -93,6 +93,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			Gameno, Answer string
 		}
 		ans string
+		id  = req.RequestContext.Authorizer.(map[string]interface{})["principalId"].(string)
 	)
 
 	err = json.Unmarshal([]byte(req.Body), &body)
@@ -131,6 +132,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	//condition on player name??
+
 	_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 		Key: map[string]types.AttributeValue{
 			"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
@@ -139,16 +141,15 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		TableName: aws.String(tableName),
 		ExpressionAttributeNames: map[string]string{
 			"#P": "players",
-			"#A": "Answer",
+			"#I": id,
+			"#A": "answer",
 			"#C": "answersCount",
-			"#H": "hasAnswered",
 		},
 		ExpressionAttributeValues: map[string]types.AttributeValue{
 			":a": &types.AttributeValueMemberS{Value: ans},
 			":o": &types.AttributeValueMemberN{Value: "1"},
-			":t": &types.AttributeValueMemberBOOL{Value: true},
 		},
-		UpdateExpression: aws.String("SET #P[" + index + "].#A = :a, #P[" + index + "].#H = :t ADD #C :o"),
+		UpdateExpression: aws.String("SET #P.#I.#A = :a ADD #C :o"),
 	})
 
 	if err != nil {

@@ -154,7 +154,7 @@ func sortByName(players []listPlayer) []listPlayer {
 	return players
 }
 
-func sortByAnswerThenName(players []livePlayer) {
+func sortByAnswerThenName(players []livePlayer) []livePlayer {
 	sort.Slice(players, func(i, j int) bool {
 		switch {
 		case players[i].Answer != players[j].Answer:
@@ -163,9 +163,11 @@ func sortByAnswerThenName(players []livePlayer) {
 			return players[i].Name < players[j].Name
 		}
 	})
+
+	return players
 }
 
-func sortByScoreThenName(players []livePlayer) {
+func sortByScoreThenName(players []livePlayer) []livePlayer {
 	sort.Slice(players, func(i, j int) bool {
 		switch {
 		case *players[i].Score != *players[j].Score:
@@ -174,6 +176,8 @@ func sortByScoreThenName(players []livePlayer) {
 			return players[i].Name < players[j].Name
 		}
 	})
+
+	return players
 }
 
 func send(ctx context.Context, apigwsvc *apigatewaymanagementapi.Client, payload []byte, pls []livePlayer) error {
@@ -546,10 +550,8 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			if rec.EventName == dynamodbstreams.OperationTypeInsert {
 
-				sortByScoreThenName(pls)
-
 				payload, err = json.Marshal(players{
-					Players:     pls,
+					Players:     sortByScoreThenName(pls),
 					Sk:          gameRecord.Sk,
 					ShowAnswers: false,
 					Winner:      "",
@@ -568,11 +570,10 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				if gameRecord.AnswersCount == len(pls) {
 					pls = prep(pls)
 
-					plsFE := showAnswers(pls)
-					sortByAnswerThenName(plsFE)
+					pls = sortByAnswerThenName(pls)
 
 					payload, err = json.Marshal(players{
-						Players:     plsFE,
+						Players:     showAnswers(pls),
 						Sk:          gameRecord.Sk,
 						ShowAnswers: true,
 						Winner:      "",
@@ -635,7 +636,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 				} else {
 
-					sortByScoreThenName(pls)
+					pls = sortByScoreThenName(pls)
 					payload, err = json.Marshal(players{
 						Players:     clearAnswers(pls),
 						Sk:          gameRecord.Sk,
