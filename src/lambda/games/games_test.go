@@ -58,7 +58,7 @@ func TestPrep(t *testing.T) {
 	t.Skip()
 
 	for _, test := range prepTests {
-		if act := prep(test.input); !cmp.Equal(act, test.expected) {
+		if act, _ := prep(test.input); !cmp.Equal(act, test.expected) {
 			t.Errorf("FAIL - prep - %s\n act: %+v\n exp: %+v\n",
 				test.description, act, test.expected)
 		}

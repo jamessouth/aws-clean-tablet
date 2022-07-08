@@ -64,8 +64,6 @@ type players struct {
 	Winner      string       `json:"winner"`
 }
 
-type livePlayerMap map[string]livePlayer
-
 func getSlice[Key string, Val listPlayer | livePlayer](m map[Key]Val) (res []Val) {
 	for _, v := range m {
 		res = append(res, v)
@@ -99,8 +97,13 @@ func (p listGamePayload) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf("{%q:%s}", p.Tag, m)), nil
 }
 
-func prep(players []livePlayer) []livePlayer {
-	dist := map[string]int{}
+type output struct {
+	Scores  map[string]int        `json:"scores"`
+	Players map[string]livePlayer `json:"players"`
+}
+
+func prep(players []livePlayer) ([]livePlayer, map[string]int) {
+	dist, scores := map[string]int{}, map[string]int{}
 
 	for _, v := range players {
 		dist[v.Answer]++
@@ -119,11 +122,12 @@ func prep(players []livePlayer) []livePlayer {
 		} else {
 			p.PointsThisRound = aws.Int(0)
 		}
+		scores[p.ConnID] = *p.PointsThisRound
 		p.HasAnswered = false
 		players[i] = p
 	}
 
-	return players
+	return players, scores
 }
 
 func showAnswers(players []livePlayer) []livePlayer {
@@ -139,8 +143,11 @@ func showAnswers(players []livePlayer) []livePlayer {
 
 func clearAnswers(players []livePlayer) []livePlayer {
 	for i, p := range players {
-		p.Answer = ""
-		players[i] = p
+		if p.Answer != "" {
+			p.HasAnswered = true
+			p.Answer = ""
+			players[i] = p
+		}
 	}
 
 	return players
@@ -534,8 +541,8 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 		} else if recType == "LIVEGAME" {
 
 			var gameRecord struct {
-				Sk           string
-				Players      livePlayerMap
+				Sk, Token    string
+				Players      map[string]livePlayer
 				AnswersCount int
 			}
 			err = attributevalue.UnmarshalMap(item, &gameRecord)
@@ -568,7 +575,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			} else if rec.EventName == dynamodbstreams.OperationTypeModify {
 
 				if gameRecord.AnswersCount == len(pls) {
-					pls = prep(pls)
+					pls, scoreMap := prep(pls)
 
 					pls = sortByAnswerThenName(pls)
 
@@ -587,12 +594,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 						return callErr(err)
 					}
 
-					marshalledPlayersList, err := attributevalue.Marshal(clearAnswers(pls))
-					if err != nil {
-						return callErr(err)
-					}
-
-					ui, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+					_, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 						Key: map[string]types.AttributeValue{
 							"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
 							"sk": &types.AttributeValueMemberS{Value: gameRecord.Sk},
@@ -600,33 +602,30 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 						TableName: aws.String(tableName),
 						ExpressionAttributeNames: map[string]string{
 							"#A": "answersCount",
-							"#P": "players",
 						},
 						ExpressionAttributeValues: map[string]types.AttributeValue{
 							":z": &types.AttributeValueMemberN{Value: "0"},
-							":l": marshalledPlayersList,
 						},
-						UpdateExpression: aws.String("SET #A = :z, #P = :l"),
-						ReturnValues:     types.ReturnValueAllOld,
+						UpdateExpression: aws.String("SET #A = :z"),
 					})
 
 					if err != nil {
 						return callErr(err)
 					}
 
-					var gm struct {
-						Token string
+					op := output{
+						Scores:  scoreMap,
+						Players: gameRecord.Players,
 					}
-					err = attributevalue.UnmarshalMap(ui.Attributes, &gm)
+
+					taskOutput, err := json.Marshal(op)
 					if err != nil {
 						return callErr(err)
 					}
 
-					fmt.Printf("%s%+v\n", "token ", gm)
-
 					stsi := sfn.SendTaskSuccessInput{
-						Output:    aws.String(""),
-						TaskToken: aws.String(gm.Token),
+						Output:    aws.String(string(taskOutput)),
+						TaskToken: aws.String(gameRecord.Token),
 					}
 
 					_, err = sfnsvc.SendTaskSuccess(ctx, &stsi)

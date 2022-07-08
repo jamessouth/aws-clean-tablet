@@ -14,31 +14,17 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
-type connectUpdate struct {
-	PlayerID string `json:"playerid"`
-	Color    string `json:"color"`
-	Index    string `json:"index"`
-}
-
 type livePlayer struct {
-	connectUpdate
 	Name   string `json:"name"`
 	ConnID string `json:"connid"`
-	Score  int    `json:"score"`
-	Answer string `json:"answer"`
+	Color  string `json:"color"`
+	Score  *int   `json:"score,omitempty"`
+	Answer string `json:"answer,omitempty"`
+	// HasAnswered     bool   `json:"hasAnswered,omitempty"`
+	// PointsThisRound *int `json:"pointsThisRound,omitempty"`
 }
 
-type livePlayerList []struct {
-	PlayerID        string `json:"playerid"`
-	Name            string `json:"name"`
-	ConnID          string `json:"connid"`
-	Color           string `json:"color"`
-	Score           int    `json:"score"`
-	Index           string `json:"index"`
-	Answer          string `json:"answer"`
-	HasAnswered     bool   `json:"hasAnswered"`
-	PointsThisRound *int   `json:"pointsThisRound"`
-}
+type livePlayerList []livePlayer
 
 func handler(ctx context.Context, req struct {
 	Token, Gameno, TableName, Endpoint, Region string

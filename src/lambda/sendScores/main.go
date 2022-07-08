@@ -15,35 +15,21 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
-type connectUpdate struct {
-	PlayerID string `json:"playerid"`
-	Color    string `json:"color"`
-	Index    string `json:"index"`
-}
-
 type livePlayer struct {
-	connectUpdate
 	Name   string `json:"name"`
 	ConnID string `json:"connid"`
-	Score  int    `json:"score"`
-	Answer string `json:"answer"`
+	Color  string `json:"color"`
+	Score  *int   `json:"score,omitempty"`
+	Answer string `json:"answer,omitempty"`
+	// HasAnswered     bool   `json:"hasAnswered,omitempty"`
+	// PointsThisRound *int `json:"pointsThisRound,omitempty"`
 }
 
 type players struct {
-	Players     livePlayerList `json:"players"`
-	Sk          string         `json:"sk"`
-	ShowAnswers bool           `json:"showAnswers"`
-	Winner      string         `json:"winner"`
-}
-
-type livePlayerList []struct {
-	Name            string `json:"name"`
-	ConnID          string `json:"connid"`
-	Color           string `json:"color"`
-	Score           *int   `json:"score,omitempty"`
-	Answer          string `json:"answer,omitempty"`
-	HasAnswered     bool   `json:"hasAnswered,omitempty"`
-	PointsThisRound *int   `json:"pointsThisRound,omitempty"`
+	Players     []livePlayer `json:"players"`
+	Sk          string       `json:"sk"`
+	ShowAnswers bool         `json:"showAnswers"`
+	Winner      string       `json:"winner"`
 }
 
 type output struct {
@@ -51,18 +37,26 @@ type output struct {
 	Winner string `json:"winner"`
 }
 
-func (players livePlayerList) updateScores() livePlayerList {
-	for i, p := range players {
-		score := *p.Score + *p.PointsThisRound
-		p.Score = &score
-		p.PointsThisRound = nil
-		players[i] = p
+func getSlice(m map[string]livePlayer) (res []livePlayer) {
+	for _, v := range m {
+		res = append(res, v)
+	}
+
+	return
+}
+
+func updateScores(players map[string]livePlayer, scores map[string]int) map[string]livePlayer {
+	for k, v := range players {
+		score := *v.Score + scores[v.ConnID]
+		v.Score = &score
+		v.Answer = ""
+		players[k] = v
 	}
 
 	return players
 }
 
-func (players livePlayerList) sortByScoreThenName() {
+func sortByScoreThenName(players []livePlayer) {
 	sort.Slice(players, func(i, j int) bool {
 		switch {
 		case *players[i].Score != *players[j].Score:
@@ -73,7 +67,7 @@ func (players livePlayerList) sortByScoreThenName() {
 	})
 }
 
-func (players livePlayerList) getWinner() string {
+func getWinner(players []livePlayer) string {
 	if *players[0].Score != *players[1].Score && *players[0].Score > winThreshold {
 		return players[0].Name
 	}
@@ -88,6 +82,8 @@ const (
 func handler(ctx context.Context, req struct {
 	Payload struct {
 		Gameno, TableName, Endpoint, Region string
+		Players                             map[string]livePlayer
+		Scores                              map[string]int
 	}
 }) (output, error) {
 
@@ -126,32 +122,14 @@ func handler(ctx context.Context, req struct {
 
 	var ddbsvc = dynamodb.NewFromConfig(cfg)
 
-	gi, err := ddbsvc.GetItem(ctx, &dynamodb.GetItemInput{
-		Key: map[string]types.AttributeValue{
-			"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
-			"sk": &types.AttributeValueMemberS{Value: req.Payload.Gameno},
-		},
-		TableName: aws.String(req.Payload.TableName),
-	})
-	if err != nil {
-		return output{}, err
-	}
-
-	var gameRecord players
-	err = attributevalue.UnmarshalMap(gi.Item, &gameRecord)
-	if err != nil {
-		return output{}, err
-	}
-
-	fmt.Printf("%s%+v\n", "unmarshalledGame ", gameRecord)
-
-	pls := gameRecord.Players.updateScores()
-	pls.sortByScoreThenName()
-	winner := pls.getWinner()
+	plsMap := updateScores(req.Payload.Players, req.Payload.Scores)
+	plsSlice := getSlice(plsMap)
+	sortByScoreThenName(plsSlice)
+	winner := getWinner(plsSlice)
 
 	payload, err := json.Marshal(players{
-		Players:     pls,
-		Sk:          gameRecord.Sk,
+		Players:     plsSlice,
+		Sk:          req.Payload.Gameno,
 		ShowAnswers: false,
 		Winner:      winner,
 	})
@@ -159,7 +137,7 @@ func handler(ctx context.Context, req struct {
 		return output{}, err
 	}
 
-	for _, v := range gameRecord.Players {
+	for _, v := range plsSlice {
 
 		conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.ConnID), Data: payload}
 
@@ -171,7 +149,7 @@ func handler(ctx context.Context, req struct {
 
 	if winner == "" {
 
-		marshalledPlayersList, err := attributevalue.Marshal(pls)
+		marshalledPlayersMap, err := attributevalue.Marshal(plsMap)
 		if err != nil {
 			return output{}, err
 		}
@@ -186,7 +164,7 @@ func handler(ctx context.Context, req struct {
 				"#P": "players",
 			},
 			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":l": marshalledPlayersList,
+				":l": marshalledPlayersMap,
 			},
 			UpdateExpression: aws.String("SET #P = :l"),
 		})
