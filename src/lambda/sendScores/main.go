@@ -5,14 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strconv"
 
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
 type livePlayer struct {
@@ -33,27 +32,35 @@ type players struct {
 }
 
 type output struct {
-	Gameno string `json:"gameno"`
-	Winner string `json:"winner"`
+	Gameno  string                        `json:"gameno"`
+	Players events.DynamoDBAttributeValue `json:"players"`
+	Winner  string                        `json:"winner"`
 }
 
-func getSlice(m map[string]livePlayer) (res []livePlayer) {
-	for _, v := range m {
-		res = append(res, v)
-	}
+func updateScores(players map[string]livePlayer, scores map[string]int) (res []livePlayer, plrs events.DynamoDBAttributeValue) {
+	m := map[string]events.DynamoDBAttributeValue{}
 
-	return
-}
-
-func updateScores(players map[string]livePlayer, scores map[string]int) map[string]livePlayer {
 	for k, v := range players {
 		score := *v.Score + scores[v.ConnID]
 		v.Score = &score
 		v.Answer = ""
-		players[k] = v
-	}
+		res = append(res, v)
 
-	return players
+		p := map[string]events.DynamoDBAttributeValue{
+			"name":   events.NewStringAttribute(v.Name),
+			"connid": events.NewStringAttribute(v.ConnID),
+			"color":  events.NewStringAttribute(v.Color),
+			"answer": events.NewStringAttribute(""),
+			"score":  events.NewNumberAttribute(strconv.Itoa(score)),
+		}
+
+		marshalledPlayer := events.NewMapAttribute(p)
+
+		m[k] = marshalledPlayer
+	}
+	plrs = events.NewMapAttribute(m)
+
+	return
 }
 
 func sortByScoreThenName(players []livePlayer) {
@@ -113,17 +120,17 @@ func handler(ctx context.Context, req struct {
 
 	apigwsvc := apigatewaymanagementapi.NewFromConfig(apigwcfg)
 
-	cfg, err := config.LoadDefaultConfig(ctx,
-		config.WithRegion(req.Payload.Region),
-	)
-	if err != nil {
-		return output{}, err
-	}
+	// cfg, err := config.LoadDefaultConfig(ctx,
+	// 	config.WithRegion(req.Payload.Region),
+	// )
+	// if err != nil {
+	// 	return output{}, err
+	// }
 
-	var ddbsvc = dynamodb.NewFromConfig(cfg)
+	// var ddbsvc = dynamodb.NewFromConfig(cfg)
 
-	plsMap := updateScores(req.Payload.Players, req.Payload.Scores)
-	plsSlice := getSlice(plsMap)
+	plsSlice, marshalledPlayersMap := updateScores(req.Payload.Players, req.Payload.Scores)
+
 	sortByScoreThenName(plsSlice)
 	winner := getWinner(plsSlice)
 
@@ -147,36 +154,37 @@ func handler(ctx context.Context, req struct {
 		}
 	}
 
-	if winner == "" {
+	// if winner == "" {
 
-		marshalledPlayersMap, err := attributevalue.Marshal(plsMap)
-		if err != nil {
-			return output{}, err
-		}
+	// 	marshalledPlayersMap, err := attributevalue.Marshal(plsMap)
+	// 	if err != nil {
+	// 		return output{}, err
+	// 	}
 
-		_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-			Key: map[string]types.AttributeValue{
-				"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
-				"sk": &types.AttributeValueMemberS{Value: req.Payload.Gameno},
-			},
-			TableName: aws.String(req.Payload.TableName),
-			ExpressionAttributeNames: map[string]string{
-				"#P": "players",
-			},
-			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":l": marshalledPlayersMap,
-			},
-			UpdateExpression: aws.String("SET #P = :l"),
-		})
+	// 	_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+	// 		Key: map[string]types.AttributeValue{
+	// 			"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
+	// 			"sk": &types.AttributeValueMemberS{Value: req.Payload.Gameno},
+	// 		},
+	// 		TableName: aws.String(req.Payload.TableName),
+	// 		ExpressionAttributeNames: map[string]string{
+	// 			"#P": "players",
+	// 		},
+	// 		ExpressionAttributeValues: map[string]types.AttributeValue{
+	// 			":l": marshalledPlayersMap,
+	// 		},
+	// 		UpdateExpression: aws.String("SET #P = :l"),
+	// 	})
 
-		if err != nil {
-			return output{}, err
-		}
-	}
+	// 	if err != nil {
+	// 		return output{}, err
+	// 	}
+	// }
 
 	return output{
-		Gameno: req.Payload.Gameno,
-		Winner: winner,
+		Gameno:  req.Payload.Gameno,
+		Players: marshalledPlayersMap,
+		Winner:  winner,
 	}, nil
 
 }
