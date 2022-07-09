@@ -31,13 +31,38 @@ type players struct {
 	Winner      string       `json:"winner"`
 }
 
-type output struct {
-	Gameno  string                        `json:"gameno"`
-	Players events.DynamoDBAttributeValue `json:"players"`
-	Winner  string                        `json:"winner"`
+type stat struct {
+	PlayerID string `json:"playerid"`
+	Name string `json:"name"`
+	Wins string `json:"wins"`
+	Games string `json:"games"`
+	Points string `json:"points"`
 }
 
-func updateScores(players map[string]livePlayer, scores map[string]int) (res []livePlayer, plrs events.DynamoDBAttributeValue) {
+type output struct {
+	Gameno      string                        `json:"gameno"`
+	Players     events.DynamoDBAttributeValue `json:"players"`
+	StatsList []stat                  `json:"statsList"`
+	Winner      string                        `json:"winner"`
+}
+
+func getStats(players map[string]livePlayer, playersList []livePlayer) (res []stat) {
+	var s stat
+
+	for k, v := range players {
+		
+	}
+
+	for i, p := playersList {
+
+	}
+
+
+
+	return
+}
+
+func updateScores(players map[string]livePlayer, scores map[string]int) (res []livePlayer, plrs events.DynamoDBAttributeValue, stats []stat) {
 	m := map[string]events.DynamoDBAttributeValue{}
 
 	for k, v := range players {
@@ -45,6 +70,15 @@ func updateScores(players map[string]livePlayer, scores map[string]int) (res []l
 		v.Score = &score
 		v.Answer = ""
 		res = append(res, v)
+
+		s := stat{
+			PlayerID: k,
+			Name:     v.Name,
+			Wins:     "0",
+			Games:    "1",
+			Points:   "",
+		}
+		stats = append(stats, s)
 
 		p := map[string]events.DynamoDBAttributeValue{
 			"name":   events.NewStringAttribute(v.Name),
@@ -120,22 +154,13 @@ func handler(ctx context.Context, req struct {
 
 	apigwsvc := apigatewaymanagementapi.NewFromConfig(apigwcfg)
 
-	// cfg, err := config.LoadDefaultConfig(ctx,
-	// 	config.WithRegion(req.Payload.Region),
-	// )
-	// if err != nil {
-	// 	return output{}, err
-	// }
+	playersList, marshalledPlayersMap := updateScores(req.Payload.Players, req.Payload.Scores)
 
-	// var ddbsvc = dynamodb.NewFromConfig(cfg)
-
-	plsSlice, marshalledPlayersMap := updateScores(req.Payload.Players, req.Payload.Scores)
-
-	sortByScoreThenName(plsSlice)
-	winner := getWinner(plsSlice)
+	sortByScoreThenName(playersList)
+	winner := getWinner(playersList)
 
 	payload, err := json.Marshal(players{
-		Players:     plsSlice,
+		Players:     playersList,
 		Sk:          req.Payload.Gameno,
 		ShowAnswers: false,
 		Winner:      winner,
@@ -144,7 +169,7 @@ func handler(ctx context.Context, req struct {
 		return output{}, err
 	}
 
-	for _, v := range plsSlice {
+	for _, v := range playersList {
 
 		conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.ConnID), Data: payload}
 
@@ -154,37 +179,11 @@ func handler(ctx context.Context, req struct {
 		}
 	}
 
-	// if winner == "" {
-
-	// 	marshalledPlayersMap, err := attributevalue.Marshal(plsMap)
-	// 	if err != nil {
-	// 		return output{}, err
-	// 	}
-
-	// 	_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-	// 		Key: map[string]types.AttributeValue{
-	// 			"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
-	// 			"sk": &types.AttributeValueMemberS{Value: req.Payload.Gameno},
-	// 		},
-	// 		TableName: aws.String(req.Payload.TableName),
-	// 		ExpressionAttributeNames: map[string]string{
-	// 			"#P": "players",
-	// 		},
-	// 		ExpressionAttributeValues: map[string]types.AttributeValue{
-	// 			":l": marshalledPlayersMap,
-	// 		},
-	// 		UpdateExpression: aws.String("SET #P = :l"),
-	// 	})
-
-	// 	if err != nil {
-	// 		return output{}, err
-	// 	}
-	// }
-
 	return output{
-		Gameno:  req.Payload.Gameno,
-		Players: marshalledPlayersMap,
-		Winner:  winner,
+		Gameno:      req.Payload.Gameno,
+		Players:     marshalledPlayersMap,
+		StatsList: playersList,
+		Winner:      winner,
 	}, nil
 
 }

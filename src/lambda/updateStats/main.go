@@ -42,6 +42,7 @@ const (
 func handler(ctx context.Context, req struct {
 	Payload struct {
 		Gameno, TableName, Region string
+		PlayersList               []livePlayer
 	}
 }) error {
 
