@@ -30,7 +30,7 @@ func (list stringSlice) shuffleList(length int) stringSlice {
 	return list[:length]
 }
 
-func getSliceAssignColorAndIndex(pm map[string]struct{ Name, ConnID string }) (plrsList []connectUpdate, plrs events.DynamoDBAttributeValue) {
+func getSliceAssignColor(pm map[string]struct{ Name, ConnID string }) (plrsList []connectUpdate, plrs events.DynamoDBAttributeValue) {
 	m := map[string]events.DynamoDBAttributeValue{}
 	count := 0
 	clrs := colors.shuffleList(len(colors))
@@ -136,7 +136,7 @@ func handler(ctx context.Context, req struct {
 
 	fmt.Printf("%s%+v\n", "unmarshalledPlayers ", unmarshalledPlayers)
 
-	playersList, players := getSliceAssignColorAndIndex(unmarshalledPlayers)
+	playersList, players := getSliceAssignColor(unmarshalledPlayers)
 
 	wordList := append(words.shuffleList(slope*len(unmarshalledPlayers)+intercept), "game over")
 

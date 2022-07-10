@@ -393,8 +393,8 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 		if recType == "CONNECT" {
 
 			var connRecord struct {
-				Pk, Sk, Game, Name, Color, Index, ConnID string
-				Playing, Returning                       bool
+				Pk, Sk, Game, Name, Color, ConnID string
+				Playing, Returning                bool
 			}
 			err = attributevalue.UnmarshalMap(item, &connRecord)
 			if err != nil {
@@ -443,11 +443,9 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				payload, err = json.Marshal(struct {
 					ModConnGm string `json:"modConn"`
 					Color     string `json:"color"`
-					Index     string `json:"index"`
 				}{
 					ModConnGm: connRecord.Game,
 					Color:     connRecord.Color,
-					Index:     connRecord.Index,
 				})
 				if err != nil {
 					return callErr(err)
