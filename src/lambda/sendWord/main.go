@@ -88,7 +88,7 @@ func handler(ctx context.Context, req struct {
 
 	var words struct {
 		WordList []string
-		Players  livePlayerList
+		Players  map[string]livePlayer
 	}
 
 	err = attributevalue.UnmarshalMap(ui.Attributes, &words)

@@ -33,36 +33,45 @@ type players struct {
 
 type stat struct {
 	PlayerID string `json:"playerid"`
-	Name string `json:"name"`
-	Wins string `json:"wins"`
-	Games string `json:"games"`
-	Points string `json:"points"`
+	Name     string `json:"name"`
+	Wins     string `json:"wins"`
+	Games    string `json:"games"`
+	Points   string `json:"points"`
 }
 
 type output struct {
-	Gameno      string                        `json:"gameno"`
-	Players     events.DynamoDBAttributeValue `json:"players"`
-	StatsList []stat                  `json:"statsList"`
-	Winner      string                        `json:"winner"`
+	Gameno    string                        `json:"gameno"`
+	Players   events.DynamoDBAttributeValue `json:"players"`
+	StatsList []stat                        `json:"statsList,omitempty"`
+	Winner    string                        `json:"winner"`
 }
 
 func getStats(players map[string]livePlayer, playersList []livePlayer) (res []stat) {
-	var s stat
 
-	for k, v := range players {
-		
+	for _, p := range playersList {
+		for k, v := range players {
+
+			if p.ConnID == v.ConnID {
+
+				s := stat{
+					PlayerID: k,
+					Name:     v.Name,
+					Wins:     "0",
+					Games:    "1",
+					Points:   strconv.Itoa(*p.Score),
+				}
+				res = append(res, s)
+			}
+
+		}
 	}
 
-	for i, p := playersList {
-
-	}
-
-
+	res[0].Wins = "1"
 
 	return
 }
 
-func updateScores(players map[string]livePlayer, scores map[string]int) (res []livePlayer, plrs events.DynamoDBAttributeValue, stats []stat) {
+func updateScores(players map[string]livePlayer, scores map[string]int) (res []livePlayer, plrs events.DynamoDBAttributeValue) {
 	m := map[string]events.DynamoDBAttributeValue{}
 
 	for k, v := range players {
@@ -70,15 +79,6 @@ func updateScores(players map[string]livePlayer, scores map[string]int) (res []l
 		v.Score = &score
 		v.Answer = ""
 		res = append(res, v)
-
-		s := stat{
-			PlayerID: k,
-			Name:     v.Name,
-			Wins:     "0",
-			Games:    "1",
-			Points:   "",
-		}
-		stats = append(stats, s)
 
 		p := map[string]events.DynamoDBAttributeValue{
 			"name":   events.NewStringAttribute(v.Name),
@@ -158,6 +158,10 @@ func handler(ctx context.Context, req struct {
 
 	sortByScoreThenName(playersList)
 	winner := getWinner(playersList)
+	var statsList []stat
+	if winner != "" {
+		statsList = getStats(req.Payload.Players, playersList)
+	}
 
 	payload, err := json.Marshal(players{
 		Players:     playersList,
@@ -180,10 +184,10 @@ func handler(ctx context.Context, req struct {
 	}
 
 	return output{
-		Gameno:      req.Payload.Gameno,
-		Players:     marshalledPlayersMap,
-		StatsList: playersList,
-		Winner:      winner,
+		Gameno:    req.Payload.Gameno,
+		Players:   marshalledPlayersMap,
+		StatsList: statsList,
+		Winner:    winner,
 	}, nil
 
 }
