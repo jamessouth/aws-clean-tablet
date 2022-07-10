@@ -35,7 +35,6 @@ type stat struct {
 	PlayerID string `json:"playerid"`
 	Name     string `json:"name"`
 	Wins     string `json:"wins"`
-	Games    string `json:"games"`
 	Points   string `json:"points"`
 }
 
@@ -57,7 +56,6 @@ func getStats(players map[string]livePlayer, playersList []livePlayer) (res []st
 					PlayerID: k,
 					Name:     v.Name,
 					Wins:     "0",
-					Games:    "1",
 					Points:   strconv.Itoa(*p.Score),
 				}
 				res = append(res, s)

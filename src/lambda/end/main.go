@@ -73,7 +73,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			"#G": "game",
 			"#P": "playing",
 			"#C": "color",
-			"#I": "index",
 			"#R": "returning",
 		},
 		ExpressionAttributeValues: map[string]types.AttributeValue{
@@ -82,16 +81,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			":c": &types.AttributeValueMemberS{Value: "transparent"},
 			":t": &types.AttributeValueMemberBOOL{Value: true},
 		},
-		UpdateExpression: aws.String("SET #G = :g, #P = :f, #C = :c, #I = :g, #R = :t"),
-	})
-	callErr(err)
-
-	_, err = ddbsvc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
-		Key: map[string]types.AttributeValue{
-			"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
-			"sk": &types.AttributeValueMemberS{Value: body.Gameno},
-		},
-		TableName: tableName,
+		UpdateExpression: aws.String("SET #G = :g, #P = :f, #C = :c, #R = :t"),
 	})
 	callErr(err)
 
