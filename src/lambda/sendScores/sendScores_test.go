@@ -15,7 +15,7 @@ func TestGetStats(t *testing.T) {
 }
 
 func TestUpdateScores(t *testing.T) {
-	// t.Skip()
+	t.Skip()
 	act, _ := updateScores(updateScoresTest.players, updateScoresTest.scores)
 	sortByScoreThenName(act)
 	sortByScoreThenName(updateScoresTest.expected)
@@ -25,32 +25,22 @@ func TestUpdateScores(t *testing.T) {
 	}
 }
 
-// func TestGetScoresMap(t *testing.T) {
-// 	// t.Skip()
-// 	for _, test := range bunchOfTests {
-// 		if act := test.input.getScoresMap(); !cmp.Equal(act.Scores, test.expected.Scores) {
-// 			t.Errorf("FAIL - getScoresMap - %s\n act: %+v\n exp: %+v\n",
-// 				test.description, act.Scores, test.expected.Scores)
-// 		}
-// 	}
-// }
+func TestSort(t *testing.T) {
+	t.Skip()
+	act := sortTest.players
+	sortByScoreThenName(act)
+	if !cmp.Equal(act, sortTest.expected) {
+		t.Errorf("FAIL - sortScores - %s\n act: %+v\n exp: %+v\n",
+			sortTest.description, act, sortTest.expected)
+	}
+}
 
-// func TestUpdateScoresAndClearAnswers(t *testing.T) {
-// 	// t.Skip()
-// 	for _, test := range bunchOfTests {
-// 		if act := test.input.updateScoresAndClearAnswers(); !cmp.Equal(act.Players, test.expected.Players) {
-// 			t.Errorf("FAIL - updateScoresAndClearAnswers - %s\n act: %+v\n exp: %+v\n",
-// 				test.description, act.Players, test.expected.Players)
-// 		}
-// 	}
-// }
-
-// func TestGetWinner(t *testing.T) {
-// 	// t.Skip()
-// 	for _, test := range bunchOfTests {
-// 		if act := test.input.getWinner(); act.Winner != test.expected.Winner {
-// 			t.Errorf("FAIL - getWinner - %s\n act: %s\n exp: %s\n",
-// 				test.description, act.Winner, test.expected.Winner)
-// 		}
-// 	}
-// }
+func TestGetWinner(t *testing.T) {
+	// t.Skip()
+	for _, test := range winnerTests {
+		if act := getWinner(test.players); !cmp.Equal(act, test.expected) {
+			t.Errorf("FAIL - getWinner - %s\n act: %+v\n exp: %+v\n",
+				test.description, act, test.expected)
+		}
+	}
+}

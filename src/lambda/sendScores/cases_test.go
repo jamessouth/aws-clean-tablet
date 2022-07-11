@@ -10,6 +10,8 @@ var (
 	twenty     int = 20
 	twentyone  int = 21
 	twentyfour int = 24
+	twentyfive int = 25
+	twentysix  int = 26
 )
 
 var getStatsTest = struct {
@@ -213,4 +215,204 @@ var updateScoresTest = struct {
 			Answer: "",
 		},
 	}, description: "update scores",
+}
+
+var sortTest = struct {
+	players, expected []livePlayer
+	description       string
+}{
+	players: []livePlayer{
+		{
+			Name:   "aaa",
+			ConnID: "111",
+			Color:  "red",
+			Score:  &thirteen,
+			Answer: "",
+		},
+		{
+			Name:   "bbb",
+			ConnID: "222",
+			Color:  "blue",
+			Score:  &twentyone,
+			Answer: "",
+		},
+		{
+			Name:   "ccc",
+			ConnID: "333",
+			Color:  "green",
+			Score:  &twentyfour,
+			Answer: "",
+		},
+		{
+			Name:   "ddd",
+			ConnID: "444",
+			Color:  "yellow",
+			Score:  &nine,
+			Answer: "",
+		},
+		{
+			Name:   "eee",
+			ConnID: "555",
+			Color:  "indigo",
+			Score:  &six,
+			Answer: "",
+		},
+	},
+	expected: []livePlayer{
+		{
+			Name:   "ccc",
+			ConnID: "333",
+			Color:  "green",
+			Score:  &twentyfour,
+			Answer: "",
+		},
+		{
+			Name:   "bbb",
+			ConnID: "222",
+			Color:  "blue",
+			Score:  &twentyone,
+			Answer: "",
+		},
+		{
+			Name:   "aaa",
+			ConnID: "111",
+			Color:  "red",
+			Score:  &thirteen,
+			Answer: "",
+		},
+		{
+			Name:   "ddd",
+			ConnID: "444",
+			Color:  "yellow",
+			Score:  &nine,
+			Answer: "",
+		},
+		{
+			Name:   "eee",
+			ConnID: "555",
+			Color:  "indigo",
+			Score:  &six,
+			Answer: "",
+		},
+	}, description: "sort players",
+}
+
+var winnerTests = []struct {
+	players               []livePlayer
+	expected, description string
+}{
+	{players: []livePlayer{
+		{
+			Name:   "ccc",
+			ConnID: "333",
+			Color:  "green",
+			Score:  &twentyfour,
+			Answer: "",
+		},
+		{
+			Name:   "bbb",
+			ConnID: "222",
+			Color:  "blue",
+			Score:  &twentyone,
+			Answer: "",
+		},
+		{
+			Name:   "aaa",
+			ConnID: "111",
+			Color:  "red",
+			Score:  &thirteen,
+			Answer: "",
+		},
+		{
+			Name:   "ddd",
+			ConnID: "444",
+			Color:  "yellow",
+			Score:  &nine,
+			Answer: "",
+		},
+		{
+			Name:   "eee",
+			ConnID: "555",
+			Color:  "indigo",
+			Score:  &six,
+			Answer: "",
+		},
+	}, expected: "", description: "no winner",
+	},
+	{players: []livePlayer{
+		{
+			Name:   "ccc",
+			ConnID: "333",
+			Color:  "green",
+			Score:  &twentyfive,
+			Answer: "",
+		},
+		{
+			Name:   "bbb",
+			ConnID: "222",
+			Color:  "blue",
+			Score:  &twentyone,
+			Answer: "",
+		},
+		{
+			Name:   "aaa",
+			ConnID: "111",
+			Color:  "red",
+			Score:  &thirteen,
+			Answer: "",
+		},
+		{
+			Name:   "ddd",
+			ConnID: "444",
+			Color:  "yellow",
+			Score:  &nine,
+			Answer: "",
+		},
+		{
+			Name:   "eee",
+			ConnID: "555",
+			Color:  "indigo",
+			Score:  &six,
+			Answer: "",
+		},
+	}, expected: "ccc", description: "winner",
+	},
+	{players: []livePlayer{
+		{
+			Name:   "ccc",
+			ConnID: "333",
+			Color:  "green",
+			Score:  &twentyfive,
+			Answer: "",
+		},
+		{
+			Name:   "bbb",
+			ConnID: "222",
+			Color:  "blue",
+			Score:  &twentyfive,
+			Answer: "",
+		},
+		{
+			Name:   "aaa",
+			ConnID: "111",
+			Color:  "red",
+			Score:  &thirteen,
+			Answer: "",
+		},
+		{
+			Name:   "ddd",
+			ConnID: "444",
+			Color:  "yellow",
+			Score:  &nine,
+			Answer: "",
+		},
+		{
+			Name:   "eee",
+			ConnID: "555",
+			Color:  "indigo",
+			Score:  &six,
+			Answer: "",
+		},
+	}, expected: "", description: "tied, no winner",
+	},
 }
