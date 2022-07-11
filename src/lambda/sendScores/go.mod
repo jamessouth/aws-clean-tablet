@@ -7,6 +7,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.16.5
 	github.com/aws/aws-sdk-go-v2/config v1.15.11
 	github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi v1.10.6
+	github.com/google/go-cmp v0.5.8
 )
 
 require (

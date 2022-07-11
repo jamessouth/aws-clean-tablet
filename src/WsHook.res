@@ -74,9 +74,8 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
             dispatch(. ListGames(Js.Nullable.return(listGms)))
           }
         | ModifyConn => {
-            let {modConn, color, index} = parseModConn(data)
-            Js.log2("parsedmodconn", modConn)
-            Js.log2(color, index)
+            let {modConn, color} = parseModConn(data)
+            Js.log3("parsedmodconn", modConn, color)
             setPlayerGame(._ => modConn)
             setPlayerColor(._ => color)
       

@@ -108,11 +108,11 @@ let make = (~players: array<Reducer.livePlayer>, ~sk, ~showAnswers, ~winner, ~wo
   }
 
   let onClick = _ => {
-    let pl: Game.startPayload = {
-      action: "end",
-      gameno: sk,
-    }
-    send(. Js.Json.stringifyAny(pl))
+    // let pl: Game.startPayload = {
+    //   action: "end",
+    //   gameno: sk,
+    // }
+    // send(. Js.Json.stringifyAny(pl))
 
     RescriptReactRouter.push("/lobby")
   }
