@@ -1,8 +1,8 @@
 @react.component
 let make = (
   ~players: array<Reducer.livePlayer>,
+  ~oldWord,
   ~word,
-  ~previousWord,
   ~showAnswers,
   ~winner,
   ~onClick,
@@ -37,7 +37,7 @@ let make = (
         <p className="text-center font-anon font-bold text-stone-100 text-xl mb-2">
           {React.string("Answers for:")}
         </p>
-        <h2 className=hstyles> {React.string(previousWord)} </h2>
+        <h2 className=hstyles> {React.string(oldWord)} </h2>
       </>
     | false => <>
         <p className="h-7 mb-2" />

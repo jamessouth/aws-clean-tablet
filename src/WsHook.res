@@ -171,5 +171,5 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
 
   let close = (. code, reason) => ws->closeCodeReason(code, reason)
 
-  (playerGame, playerName, playerColor, count, wsConnected, state.players, state.sk, state.showAnswers, state.winner, state.word, state.gamesList, leaderData, send, close, wsError)
+  (playerGame, playerName, playerColor, count, wsConnected, state.players, state.sk, state.showAnswers, state.winner, state.oldWord, state.word, state.gamesList, leaderData, send, close, wsError)
 }

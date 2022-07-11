@@ -36,12 +36,10 @@ let make = () => {
     gamesList: Js.Nullable.null,
     players: [],
     sk: "",
+    oldWord: "",
     word: "",
     showAnswers: false,
     winner: "",
-    // game: {
-    //   previousWord: "",
-    // },
   }
 
   let (
@@ -54,6 +52,7 @@ let make = () => {
     sk,
     showAnswers,
     winner,
+    oldWord,
     word,
     games,
     leaderData,
@@ -167,7 +166,7 @@ let make = () => {
         switch wsConnected {
         | true =>
           switch Js.Array2.length(players) > 0 && gameno == sk {
-          | true => <Play players sk showAnswers winner word playerColor send playerName />
+          | true => <Play players sk showAnswers winner oldWord word playerColor send playerName />
           | false => <Loading label="game..." />
           }
 

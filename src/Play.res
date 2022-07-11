@@ -10,72 +10,33 @@ type answerPayload = {
 // }
 
 @react.component
-let make = (~players: array<Reducer.livePlayer>, ~sk, ~showAnswers, ~winner, ~word, ~playerColor, ~send, ~playerName) => {
+let make = (
+  ~players: array<Reducer.livePlayer>,
+  ~sk,
+  ~showAnswers,
+  ~winner,
+  ~oldWord,
+  ~word,
+  ~playerColor,
+  ~send,
+  ~playerName,
+) => {
   let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
   let (answered, setAnswered) = React.Uncurried.useState(_ => false)
   let (answer, setAnswer) = React.Uncurried.useState(_ => "")
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(
     "ANSWER: 2-12 length; letters and spaces only; ",
   ))
-  // let {players, currentWord, previousWord, showAnswers, sk, winner} = game
+  
   let answer_max_length = 12
-  
-  
 
   React.useEffect1(() => {
     ErrorHook.useError(answer, "ANSWER", setValidationError)
     None
   }, [answer])
 
-  // React.useEffect2(() => {
-  //   Js.log("send start useeff")
-  //   switch (leader, playerColor == "transparent") {
-  //   | (_, true) | (false, _) => ()
-  //   | (true, false) => {
-  //       Js.log3("send start", leader, playerColor)
-  //       let pl: Game.startPayload = {
-  //         action: "start",
-  //         gameno: sk,
-  //       }
-  //       send(. Js.Json.stringifyAny(pl))
-  //     }
-  //   }
-  //   None
-  // }, (leader, playerColor))
-
   let hasRendered = React.useRef(false)
   Js.log3("play", players, hasRendered)
-
-  // React.useEffect3(() => {
-  //   switch (leader, showAnswers, winner == "") {
-  //   | (true, true, _) => Js.Global.setTimeout(() => {
-  //       let pl: scorePayload = {
-  //         action: "score",
-  //         game: game,
-  //       }
-  //       send(. Js.Json.stringifyAny(pl))
-  //     }, 8564)->ignore
-
-  //   | (true, false, true) => {
-  //       setAnswered(._ => false)
-  //       switch hasRendered.current {
-  //       | true => Js.Global.setTimeout(() => {
-  //           let pl: Game.startPayload = {
-  //             action: "start",
-  //             gameno: sk,
-  //           }
-  //           send(. Js.Json.stringifyAny(pl))
-  //         }, 2564)->ignore
-
-  //       | false => hasRendered.current = true
-  //       }
-  //     }
-
-  //   | (false, false, true) => setAnswered(._ => false)
-  //   | (false, true, _) | (_, false, false) => ()
-  //   }
-  //   None
-  // }, (leader, showAnswers, winner))
 
   let sendAnswer = _ => {
     let pl = {
@@ -108,12 +69,6 @@ let make = (~players: array<Reducer.livePlayer>, ~sk, ~showAnswers, ~winner, ~wo
   }
 
   let onClick = _ => {
-    // let pl: Game.startPayload = {
-    //   action: "end",
-    //   gameno: sk,
-    // }
-    // send(. Js.Json.stringifyAny(pl))
-
     RescriptReactRouter.push("/lobby")
   }
 
@@ -132,19 +87,19 @@ let make = (~players: array<Reducer.livePlayer>, ~sk, ~showAnswers, ~winner, ~wo
     | _ => ()
     }
   }
-// open Web
-//   // addDocumentEventListener("popstate", e => Js.log2("vis", e))
+  // open Web
+  //   // addDocumentEventListener("popstate", e => Js.log2("vis", e))
 
-//   addWindowEventListener("popstate", e => {
+  //   addWindowEventListener("popstate", e => {
 
-//     // preventDefault(e)
-//     // let c = confirm("you can't leave now!!!")
-//     Js.log2("bfu", e)
-    
-// })
+  //     // preventDefault(e)
+  //     // let c = confirm("you can't leave now!!!")
+  //     Js.log2("bfu", e)
+
+  // })
 
   <div>
-    <Scoreboard players word previousWord="" showAnswers winner onClick playerName />
+    <Scoreboard players oldWord word showAnswers winner onClick playerName />
     {switch winner == "" {
     | false => React.null
     | true =>
@@ -153,10 +108,10 @@ let make = (~players: array<Reducer.livePlayer>, ~sk, ~showAnswers, ~winner, ~wo
       | false => <>
           <Word onAnimationEnd playerColor word answered showTimer={word != ""} />
           {switch word == "" {
-          | true => <div className="bg-transparent h-45 w-full"></div>
+          | true => <div className="bg-transparent h-45 w-full" />
           | false =>
             switch answered {
-            | true => <div className="bg-transparent h-45 w-full"></div>
+            | true => <div className="bg-transparent h-45 w-full" />
             | false =>
               <Form
                 ht="h-24" onClick=onClick2 leg="" submitClicked validationError cognitoError=None>
@@ -174,6 +129,5 @@ let make = (~players: array<Reducer.livePlayer>, ~sk, ~showAnswers, ~winner, ~wo
         </>
       }
     }}
-
   </div>
 }

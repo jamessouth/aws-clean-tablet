@@ -12,13 +12,11 @@ type listPlayer = {
   ready: bool,
 }
 
-
-
 type livePlayer = {
   // playerid: string,
   name: string,
   color: string,
-  score: string,//sent as int
+  score: string, //sent as int
   answer: string,
   hasAnswered: bool,
   pointsThisRound: string,
@@ -30,21 +28,11 @@ type listGame = {
   players: array<listPlayer>,
 }
 
-
-
-// type liveGame = {
-//   sk: string, 
-//   currentWord: string,
-//   previousWord: string,
-//   players: array<livePlayer>,
-//   showAnswers: bool,
-//   winner: string,
-// }
-
 type state = {
   gamesList: Js.Nullable.t<array<listGame>>,
   players: array<livePlayer>,
-  sk: string,//game no
+  sk: string, //game no
+  oldWord: string,
   word: string,
   showAnswers: bool,
   winner: string,
@@ -63,6 +51,7 @@ let init = clean => {
   gamesList: clean.gamesList,
   players: clean.players,
   sk: clean.sk,
+  oldWord: clean.oldWord,
   word: clean.word,
   showAnswers: clean.showAnswers,
   winner: clean.winner,
@@ -98,6 +87,14 @@ let reducer = (state, action) =>
       sk: sk,
       showAnswers: showAnswers,
       winner: winner,
+      oldWord: switch showAnswers {
+      | true => state.word
+      | false => ""
+      },
+      word: switch showAnswers {
+      | true => ""
+      | false => state.word
+      },
     }
 
   | (Some(_), UpdateWord(word)) => {
