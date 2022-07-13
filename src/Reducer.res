@@ -82,19 +82,23 @@ let reducer = (state, action) =>
       ),
     }
   | (Some(_), UpdatePlayers(players, sk, showAnswers, winner)) => {
-      ...state,
-      players: players,
-      sk: sk,
-      showAnswers: showAnswers,
-      winner: winner,
-      oldWord: switch showAnswers {
+      let ow = switch showAnswers {
       | true => state.word
       | false => ""
-      },
-      word: switch showAnswers {
+      }
+      let nw = switch showAnswers {
       | true => ""
       | false => state.word
-      },
+      }
+      {
+        ...state,
+        players: players,
+        sk: sk,
+        showAnswers: showAnswers,
+        winner: winner,
+        oldWord: ow,
+        word: nw,
+      }
     }
 
   | (Some(_), UpdateWord(word)) => {
