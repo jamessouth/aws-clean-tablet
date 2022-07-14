@@ -39,10 +39,10 @@ type stat struct {
 }
 
 type output struct {
-	Gameno    string                        `json:"gameno"`
-	Players   events.DynamoDBAttributeValue `json:"players"`
-	StatsList []stat                        `json:"statsList,omitempty"`
-	Winner    string                        `json:"winner"`
+	Gameno    string                                   `json:"gameno"`
+	Players   map[string]events.DynamoDBAttributeValue `json:"players"`
+	StatsList []stat                                   `json:"statsList,omitempty"`
+	Winner    string                                   `json:"winner"`
 }
 
 func getStats(players map[string]livePlayer, playersList []livePlayer) (res []stat) {
@@ -69,8 +69,8 @@ func getStats(players map[string]livePlayer, playersList []livePlayer) (res []st
 	return
 }
 
-func updateScores(players map[string]livePlayer, scores map[string]int) (res []livePlayer, plrs events.DynamoDBAttributeValue) {
-	m := map[string]events.DynamoDBAttributeValue{}
+func updateScores(players map[string]livePlayer, scores map[string]int) (res []livePlayer, plrs map[string]events.DynamoDBAttributeValue) {
+	plrs = map[string]events.DynamoDBAttributeValue{}
 
 	for k, v := range players {
 		score := *v.Score + scores[v.ConnID]
@@ -88,9 +88,8 @@ func updateScores(players map[string]livePlayer, scores map[string]int) (res []l
 
 		marshalledPlayer := events.NewMapAttribute(p)
 
-		m[k] = marshalledPlayer
+		plrs[k] = marshalledPlayer
 	}
-	plrs = events.NewMapAttribute(m)
 
 	return
 }
