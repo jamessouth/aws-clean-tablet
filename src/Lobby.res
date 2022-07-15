@@ -1,5 +1,5 @@
 @react.component
-let make = (~playerGame, ~games, ~send, ~wsError, ~close, ~count, ~returnToGame=false) => {
+let make = (~playerGame, ~games, ~send, ~wsError, ~close, ~count) => {
   let onClick = _ => {
     let pl: Game.lobbyPayload = {
       action: "lobby",
@@ -47,58 +47,50 @@ let make = (~playerGame, ~games, ~send, ~wsError, ~close, ~count, ~returnToGame=
       | None => <Loading label="games..." />
       | Some(gs) =>
         <div className="flex flex-col items-center">
-          {switch returnToGame {
-          | true =>
-            <Link
-              url={`/game/${playerGame}`} className="p-4 font-perm text-6xl text-stone-100 bg-red-600" content="back to game >"
+          <div className="relative m-auto <newgmimg:w-11/12 w-max">
+            <img
+              srcSet="../../assets/ekko1x.webp, ../../assets/ekko2x.webp 2x"
+              src="../../assets/ekko1x.webp"
+              alt=""
+              className="block <newgmimg:max-w-full"
+              width="421"
+              height="80"
             />
-          | false => <>
-              <div className="relative m-auto <newgmimg:w-11/12 w-max">
-                <img
-                  srcSet="../../assets/ekko1x.webp, ../../assets/ekko2x.webp 2x"
-                  src="../../assets/ekko1x.webp"
-                  alt=""
-                  className="block <newgmimg:max-w-full"
-                  width="421"
-                  height="80"
+            {switch playerGame == "" {
+            | true =>
+              <Button
+                textTrue="start a new game"
+                textFalse="start a new game"
+                onClick
+                className="h-full right-0 top-0 w-1/2 bg-transparent text-stone-100 text-2xl font-flow cursor-pointer absolute border-l-2 border-gray-500/50"
+              />
+            | false => React.null
+            }}
+          </div>
+          {switch Js.Array2.length(gs) < 1 {
+          | true =>
+            <p className="text-stone-100 font-anon text-lg mt-8">
+              {React.string("no games found.")}
+            </p>
+          | false =>
+            <ul
+              className="m-12 newgmimg:mt-14 w-11/12 <md:(flex max-w-lg flex-col) md:(grid grid-cols-2 gap-8) lg:(gap-10 justify-items-center) xl:(grid-cols-3 gap-12 max-w-1688px)">
+              {gs
+              ->Js.Array2.map((game: Reducer.listGame) => {
+                let class = "game" ++ Js.String2.sliceToEnd(game.no, ~from=18)
+                <Game
+                  key=game.no
+                  game
+                  inThisGame={playerGame == game.no}
+                  inAGame={playerGame != ""}
+                  count
+                  send
+                  class
+                  onlyGame={Js.Array2.length(gs) == 1}
                 />
-                {switch playerGame == "" {
-                | true =>
-                  <Button
-                    textTrue="start a new game"
-                    textFalse="start a new game"
-                    onClick
-                    className="h-full right-0 top-0 w-1/2 bg-transparent text-stone-100 text-2xl font-flow cursor-pointer absolute border-l-2 border-gray-500/50"
-                  />
-                | false => React.null
-                }}
-              </div>
-              {switch Js.Array2.length(gs) < 1 {
-              | true =>
-                <p className="text-stone-100 font-anon text-lg mt-8">
-                  {React.string("no games found.")}
-                </p>
-              | false =>
-                <ul
-                  className="m-12 newgmimg:mt-14 w-11/12 <md:(flex max-w-lg flex-col) md:(grid grid-cols-2 gap-8) lg:(gap-10 justify-items-center) xl:(grid-cols-3 gap-12 max-w-1688px)">
-                  {gs
-                  ->Js.Array2.map((game: Reducer.listGame) => {
-                    let class = "game" ++ Js.String2.sliceToEnd(game.no, ~from=18)
-                    <Game
-                      key=game.no
-                      game
-                      inThisGame={playerGame == game.no}
-                      inAGame={playerGame != ""}
-                      count
-                      send
-                      class
-                      onlyGame={Js.Array2.length(gs) == 1}
-                    />
-                  })
-                  ->React.array}
-                </ul>
-              }}
-            </>
+              })
+              ->React.array}
+            </ul>
           }}
         </div>
       }

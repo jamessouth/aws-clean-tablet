@@ -8,13 +8,27 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/aws-sdk-go/aws"
 )
 
 type connectUpdate struct {
 	PlayerID string `json:"playerid"`
 	Color    string `json:"color"`
+}
+
+type livePlayer struct {
+	Name   string `json:"name"`
+	ConnID string `json:"connid"`
+	Score  int    `json:"score"`
+	Answer string `json:"answer"`
+}
+
+type output struct {
+	Gameno string `json:"gameno"`
 }
 
 type stringSlice []string
@@ -67,85 +81,102 @@ const (
 	intercept int = 2
 )
 
-type output struct {
-	Gameno      string                        `json:"gameno"`
-	PlayersList []connectUpdate               `json:"playersList"`
-	Players     events.DynamoDBAttributeValue `json:"players"`
-	WordList    stringSlice                   `json:"wordList"`
-}
-
-func FromDynamoDBEventAVMap(m map[string]events.DynamoDBAttributeValue) (res map[string]types.AttributeValue, err error) {
-	// fmt.Println("av map: ", m)
-	res = make(map[string]types.AttributeValue, len(m))
-
-	for k, v := range m {
-		res[k], err = FromDynamoDBEventAV(v)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return
-}
-
-func FromDynamoDBEventAV(av events.DynamoDBAttributeValue) (types.AttributeValue, error) {
-	// fmt.Println("av type: ", av, av.DataType())
-	switch av.DataType() {
-
-	case events.DataTypeBoolean: // 1
-		return &types.AttributeValueMemberBOOL{Value: av.Boolean()}, nil
-
-	case events.DataTypeMap: // 4
-		values, err := FromDynamoDBEventAVMap(av.Map())
-		if err != nil {
-			return nil, err
-		}
-		return &types.AttributeValueMemberM{Value: values}, nil
-
-	case events.DataTypeNull: // 7
-		return &types.AttributeValueMemberNULL{Value: av.IsNull()}, nil
-
-	case events.DataTypeString: // 8
-		return &types.AttributeValueMemberS{Value: av.String()}, nil
-
-	default:
-		return nil, fmt.Errorf("unknown AttributeValue union member, %T", av)
-	}
-}
-
 func handler(ctx context.Context, req struct {
 	Payload struct {
-		Gameno  string
-		Players events.DynamoDBAttributeValue
+		Region, TableName, Gameno string
 	}
 }) (output, error) {
 
 	fmt.Printf("%s%+v\n", "prep req ", req)
 
-	decodedPlayers, err := FromDynamoDBEventAV(req.Payload.Players)
+	cfg, err := config.LoadDefaultConfig(ctx,
+		config.WithRegion(req.Payload.Region),
+	)
 	if err != nil {
 		return output{}, err
 	}
 
-	var unmarshalledPlayers map[string]struct{ Name, ConnID string }
+	var ddbsvc = dynamodb.NewFromConfig(cfg)
 
-	err = attributevalue.Unmarshal(decodedPlayers, &unmarshalledPlayers)
+	di, err := ddbsvc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
+		Key: map[string]types.AttributeValue{
+			"pk": &types.AttributeValueMemberS{Value: "LISTGAME"},
+			"sk": &types.AttributeValueMemberS{Value: req.Payload.Gameno},
+		},
+		TableName:    aws.String(req.Payload.TableName),
+		ReturnValues: types.ReturnValueAllOld,
+	})
 	if err != nil {
 		return output{}, err
 	}
 
-	fmt.Printf("%s%+v\n", "unmarshalledPlayers ", unmarshalledPlayers)
+	var game struct {
+		Players map[string]struct {
+			Name, ConnID string
+		}
+	}
+	err = attributevalue.UnmarshalMap(di.Attributes, &game)
+	if err != nil {
+		return output{}, err
+	}
 
-	playersList, players := getSliceAssignColor(unmarshalledPlayers)
+	playersList, players := getSliceAssignColor(game.Players)
 
-	wordList := append(words.shuffleList(slope*len(unmarshalledPlayers)+intercept), "game over")
+	marshalledPlayers, err := attributevalue.Marshal(players)
+	if err != nil {
+		return output{}, err
+	}
+	wordList := append(words.shuffleList(slope*len(game.Players)+intercept), "game over")
 
-	return output{
-		Gameno:      req.Payload.Gameno,
-		PlayersList: playersList,
-		Players:     players,
-		WordList:    wordList,
-	}, nil
+	marshalledWordList, err := attributevalue.Marshal(wordList)
+	if err != nil {
+		return output{}, err
+	}
+
+	for _, p := range playersList {
+
+		_, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+			Key: map[string]types.AttributeValue{
+				"pk": &types.AttributeValueMemberS{Value: "CONNECT"},
+				"sk": &types.AttributeValueMemberS{Value: p.PlayerID},
+			},
+			TableName: aws.String(req.Payload.TableName),
+
+			ExpressionAttributeNames: map[string]string{
+				"#P": "playing",
+				"#C": "color",
+				"#I": "index",
+			},
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":p": &types.AttributeValueMemberBOOL{Value: true},
+				":c": &types.AttributeValueMemberS{Value: p.Color},
+				":i": &types.AttributeValueMemberS{Value: p.Index},
+			},
+
+			UpdateExpression: aws.String("set #P = :p, #C = :c, #I = :i"),
+		})
+		if err != nil {
+			return output{}, err
+		}
+
+	}
+
+	_, err = ddbsvc.PutItem(ctx, &dynamodb.PutItemInput{
+		Item: map[string]types.AttributeValue{
+			"pk":           &types.AttributeValueMemberS{Value: "LIVEGAME"},
+			"sk":           &types.AttributeValueMemberS{Value: req.Payload.Gameno},
+			"answersCount": &types.AttributeValueMemberN{Value: "0"},
+			"ids":          marshalledIDsMap,
+			"players":      marshalledPlayers,
+			"wordList":     marshalledWordList,
+		},
+		TableName: aws.String(req.Payload.TableName),
+	})
+	if err != nil {
+		return output{}, err
+	}
+
+	return output{Gameno: req.Payload.Gameno}, nil
 
 }
 

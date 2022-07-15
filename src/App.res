@@ -156,12 +156,9 @@ let make = () => {
           }
         | true => {
             body(document)->classList->removeClassList3("bodleadmob", "bodleadtab", "bodleadbig")
-            <Lobby
-              playerGame games send wsError close count returnToGame={playerColor != "transparent"}
-            />
+            <Lobby playerGame games send wsError close count />
           }
         }
-
       | (list{"game", gameno}, Some(_)) =>
         switch wsConnected {
         | true =>

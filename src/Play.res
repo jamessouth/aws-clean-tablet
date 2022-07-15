@@ -27,13 +27,18 @@ let make = (
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(
     "ANSWER: 2-12 length; letters and spaces only; ",
   ))
-  
+
   let answer_max_length = 12
 
   React.useEffect1(() => {
     ErrorHook.useError(answer, "ANSWER", setValidationError)
     None
   }, [answer])
+
+  React.useEffect1(() => {
+    setAnswered(._ => false)
+    None
+  }, [showAnswers])
 
   let hasRendered = React.useRef(false)
   Js.log3("play", players, hasRendered)

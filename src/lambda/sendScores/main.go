@@ -12,6 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 )
 
 type livePlayer struct {
@@ -178,6 +180,26 @@ func handler(ctx context.Context, req struct {
 		if err != nil {
 			return output{}, err
 		}
+	}
+
+	_, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		Key: map[string]types.AttributeValue{
+			"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
+			"sk": &types.AttributeValueMemberS{Value: req.Payload.Gameno},
+		},
+		TableName: aws.String(req.Payload.TableName),
+
+		ExpressionAttributeNames: map[string]string{
+			"#P": "players",
+		},
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":p": &types.AttributeValueMemberBOOL{Value: true},
+		},
+
+		UpdateExpression: aws.String("set #P = :p"),
+	})
+	if err != nil {
+		return output{}, err
 	}
 
 	return output{
