@@ -6,7 +6,6 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
@@ -15,16 +14,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 )
 
-type connectUpdate struct {
-	PlayerID string `json:"playerid"`
-	Color    string `json:"color"`
-}
-
 type livePlayer struct {
 	Name   string `json:"name"`
 	ConnID string `json:"connid"`
-	Score  int    `json:"score"`
+	Color  string `json:"color"`
 	Answer string `json:"answer"`
+	Score  *int   `json:"score"`
 }
 
 type output struct {
@@ -44,34 +39,31 @@ func (list stringSlice) shuffleList(length int) stringSlice {
 	return list[:length]
 }
 
-func getSliceAssignColor(pm map[string]struct{ Name, ConnID string }) (plrsList []connectUpdate, plrs events.DynamoDBAttributeValue) {
-	m := map[string]events.DynamoDBAttributeValue{}
+func getSliceAssignColor(pm map[string]struct{ Name, ConnID string }) (plrsList []struct{ PlayerID, Color string }, plrs map[string]livePlayer) {
+	plrs = map[string]livePlayer{}
 	count := 0
 	clrs := colors.shuffleList(len(colors))
 
 	for k, v := range pm {
 		c := clrs[count]
 
-		plrsList = append(plrsList, connectUpdate{
+		plrsList = append(plrsList, struct {
+			PlayerID, Color string
+		}{
 			PlayerID: k,
 			Color:    c,
 		})
 		count++
 
-		p := map[string]events.DynamoDBAttributeValue{
-			"name":   events.NewStringAttribute(v.Name),
-			"connid": events.NewStringAttribute(v.ConnID),
-			"color":  events.NewStringAttribute(c),
-			"answer": events.NewStringAttribute(""),
-			"score":  events.NewNumberAttribute("0"),
+		plrs[k] = livePlayer{
+			Name:   v.Name,
+			ConnID: v.ConnID,
+			Color:  c,
+			Answer: "",
+			Score:  aws.Int(0),
 		}
 
-		marshalledPlayer := events.NewMapAttribute(p)
-
-		m[k] = marshalledPlayer
-
 	}
-	plrs = events.NewMapAttribute(m)
 
 	return
 }
@@ -83,7 +75,7 @@ const (
 
 func handler(ctx context.Context, req struct {
 	Payload struct {
-		Region, TableName, Gameno string
+		Gameno, TableName, Region string
 	}
 }) (output, error) {
 
@@ -96,14 +88,18 @@ func handler(ctx context.Context, req struct {
 		return output{}, err
 	}
 
-	var ddbsvc = dynamodb.NewFromConfig(cfg)
+	var (
+		ddbsvc    = dynamodb.NewFromConfig(cfg)
+		gameno    = req.Payload.Gameno
+		tableName = aws.String(req.Payload.TableName)
+	)
 
 	di, err := ddbsvc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
 		Key: map[string]types.AttributeValue{
 			"pk": &types.AttributeValueMemberS{Value: "LISTGAME"},
-			"sk": &types.AttributeValueMemberS{Value: req.Payload.Gameno},
+			"sk": &types.AttributeValueMemberS{Value: gameno},
 		},
-		TableName:    aws.String(req.Payload.TableName),
+		TableName:    tableName,
 		ReturnValues: types.ReturnValueAllOld,
 	})
 	if err != nil {
@@ -126,6 +122,7 @@ func handler(ctx context.Context, req struct {
 	if err != nil {
 		return output{}, err
 	}
+
 	wordList := append(words.shuffleList(slope*len(game.Players)+intercept), "game over")
 
 	marshalledWordList, err := attributevalue.Marshal(wordList)
@@ -140,20 +137,17 @@ func handler(ctx context.Context, req struct {
 				"pk": &types.AttributeValueMemberS{Value: "CONNECT"},
 				"sk": &types.AttributeValueMemberS{Value: p.PlayerID},
 			},
-			TableName: aws.String(req.Payload.TableName),
+			TableName: tableName,
 
 			ExpressionAttributeNames: map[string]string{
 				"#P": "playing",
 				"#C": "color",
-				"#I": "index",
 			},
 			ExpressionAttributeValues: map[string]types.AttributeValue{
 				":p": &types.AttributeValueMemberBOOL{Value: true},
 				":c": &types.AttributeValueMemberS{Value: p.Color},
-				":i": &types.AttributeValueMemberS{Value: p.Index},
 			},
-
-			UpdateExpression: aws.String("set #P = :p, #C = :c, #I = :i"),
+			UpdateExpression: aws.String("set #P = :p, #C = :c"),
 		})
 		if err != nil {
 			return output{}, err
@@ -164,19 +158,18 @@ func handler(ctx context.Context, req struct {
 	_, err = ddbsvc.PutItem(ctx, &dynamodb.PutItemInput{
 		Item: map[string]types.AttributeValue{
 			"pk":           &types.AttributeValueMemberS{Value: "LIVEGAME"},
-			"sk":           &types.AttributeValueMemberS{Value: req.Payload.Gameno},
+			"sk":           &types.AttributeValueMemberS{Value: gameno},
 			"answersCount": &types.AttributeValueMemberN{Value: "0"},
-			"ids":          marshalledIDsMap,
 			"players":      marshalledPlayers,
 			"wordList":     marshalledWordList,
 		},
-		TableName: aws.String(req.Payload.TableName),
+		TableName: tableName,
 	})
 	if err != nil {
 		return output{}, err
 	}
 
-	return output{Gameno: req.Payload.Gameno}, nil
+	return output{Gameno: gameno}, nil
 
 }
 

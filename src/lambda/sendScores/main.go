@@ -7,13 +7,13 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
 )
 
 type livePlayer struct {
@@ -41,10 +41,9 @@ type stat struct {
 }
 
 type output struct {
-	Gameno    string                                   `json:"gameno"`
-	Players   map[string]events.DynamoDBAttributeValue `json:"players"`
-	StatsList []stat                                   `json:"statsList,omitempty"`
-	Winner    string                                   `json:"winner"`
+	Gameno    string `json:"gameno"`
+	StatsList []stat `json:"statsList,omitempty"`
+	Winner    string `json:"winner"`
 }
 
 func getStats(players map[string]livePlayer, playersList []livePlayer) (res []stat) {
@@ -71,8 +70,8 @@ func getStats(players map[string]livePlayer, playersList []livePlayer) (res []st
 	return
 }
 
-func updateScores(players map[string]livePlayer, scores map[string]int) (res []livePlayer, plrs map[string]events.DynamoDBAttributeValue) {
-	plrs = map[string]events.DynamoDBAttributeValue{}
+func updateScores(players map[string]livePlayer, scores map[string]int) (res []livePlayer, plrs map[string]livePlayer) {
+	plrs = map[string]livePlayer{}
 
 	for k, v := range players {
 		score := *v.Score + scores[v.ConnID]
@@ -80,17 +79,13 @@ func updateScores(players map[string]livePlayer, scores map[string]int) (res []l
 		v.Answer = ""
 		res = append(res, v)
 
-		p := map[string]events.DynamoDBAttributeValue{
-			"name":   events.NewStringAttribute(v.Name),
-			"connid": events.NewStringAttribute(v.ConnID),
-			"color":  events.NewStringAttribute(v.Color),
-			"answer": events.NewStringAttribute(""),
-			"score":  events.NewNumberAttribute(strconv.Itoa(score)),
+		plrs[k] = livePlayer{
+			Name:   v.Name,
+			ConnID: v.ConnID,
+			Color:  v.Color,
+			Answer: "",
+			Score:  &score,
 		}
-
-		marshalledPlayer := events.NewMapAttribute(p)
-
-		plrs[k] = marshalledPlayer
 	}
 
 	return
@@ -151,9 +146,24 @@ func handler(ctx context.Context, req struct {
 		return output{}, err
 	}
 
-	apigwsvc := apigatewaymanagementapi.NewFromConfig(apigwcfg)
+	cfg, err := config.LoadDefaultConfig(ctx,
+		config.WithRegion(req.Payload.Region),
+	)
+	if err != nil {
+		return output{}, err
+	}
 
-	playersList, marshalledPlayersMap := updateScores(req.Payload.Players, req.Payload.Scores)
+	var (
+		ddbsvc   = dynamodb.NewFromConfig(cfg)
+		apigwsvc = apigatewaymanagementapi.NewFromConfig(apigwcfg)
+	)
+
+	playersList, playersMap := updateScores(req.Payload.Players, req.Payload.Scores)
+
+	marshalledPlayers, err := attributevalue.Marshal(playersMap)
+	if err != nil {
+		return output{}, err
+	}
 
 	sortByScoreThenName(playersList)
 	winner := getWinner(playersList)
@@ -182,7 +192,7 @@ func handler(ctx context.Context, req struct {
 		}
 	}
 
-	_, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+	_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 		Key: map[string]types.AttributeValue{
 			"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
 			"sk": &types.AttributeValueMemberS{Value: req.Payload.Gameno},
@@ -193,7 +203,7 @@ func handler(ctx context.Context, req struct {
 			"#P": "players",
 		},
 		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":p": &types.AttributeValueMemberBOOL{Value: true},
+			":p": marshalledPlayers,
 		},
 
 		UpdateExpression: aws.String("set #P = :p"),
@@ -204,7 +214,6 @@ func handler(ctx context.Context, req struct {
 
 	return output{
 		Gameno:    req.Payload.Gameno,
-		Players:   marshalledPlayersMap,
 		StatsList: statsList,
 		Winner:    winner,
 	}, nil

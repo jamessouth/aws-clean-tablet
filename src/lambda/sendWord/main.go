@@ -56,8 +56,6 @@ func handler(ctx context.Context, req struct {
 		return err
 	}
 
-	apigwsvc := apigatewaymanagementapi.NewFromConfig(apigwcfg)
-
 	cfg, err := config.LoadDefaultConfig(ctx,
 		config.WithRegion(reg),
 	)
@@ -65,7 +63,10 @@ func handler(ctx context.Context, req struct {
 		return err
 	}
 
-	var ddbsvc = dynamodb.NewFromConfig(cfg)
+	var (
+		apigwsvc = apigatewaymanagementapi.NewFromConfig(apigwcfg)
+		ddbsvc   = dynamodb.NewFromConfig(cfg)
+	)
 
 	ui, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 		Key: map[string]types.AttributeValue{
