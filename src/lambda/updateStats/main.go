@@ -5,41 +5,44 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-lambda-go/lambda"
-)
-
-type livePlayer struct {
-	PlayerID string `json:"playerid"`
-	Name     string `json:"name"`
-	ConnID   string `json:"connid"`
-	Color    string `json:"color"`
-	Index    string `json:"index"`
-	Score    int    `json:"score"`
-	Answer   string `json:"answer"`
-}
-
-type game struct {
-	Players []livePlayer `dynamodbav:"players"`
-	Answers map[string][]string
-	Scores  map[string]int
-	Winner  string
-}
-
-const (
-	zeroPoints int = iota
-	onePoint
-	twoPoints
-	threePoints
-	winThreshold int = 5
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/aws-sdk-go/aws"
 )
 
 func handler(ctx context.Context, req struct {
-	Payload struct {
-		Gameno, TableName, Region string
-		PlayersList               []livePlayer
-	}
+	Token, Gameno, TableName, Endpoint, Region string
 }) error {
 
-	fmt.Printf("%s%+v\n", "stat req ", req)
+	fmt.Printf("%s%+v\n", "sent req ", req)
+
+	cfg, err := config.LoadDefaultConfig(ctx,
+		config.WithRegion(req.Region),
+	)
+	if err != nil {
+		return err
+	}
+
+	ddbsvc := dynamodb.NewFromConfig(cfg)
+
+	_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		Key: map[string]types.AttributeValue{
+			"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
+			"sk": &types.AttributeValueMemberS{Value: req.Gameno},
+		},
+		TableName: aws.String(req.TableName),
+		ExpressionAttributeNames: map[string]string{
+			"#T": "endtoken",
+		},
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":t": &types.AttributeValueMemberS{Value: req.Token},
+		},
+		UpdateExpression: aws.String("set #T = :t"),
+	})
+	if err != nil {
+		return err
+	}
 
 	return nil
 

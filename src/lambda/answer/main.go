@@ -142,7 +142,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		ExpressionAttributeNames: map[string]string{
 			"#P": "players",
 			"#I": id,
-			"#A": "answer",
+			"#A": "Answer",
 			"#C": "answersCount",
 		},
 		ExpressionAttributeValues: map[string]types.AttributeValue{
