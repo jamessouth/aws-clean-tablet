@@ -9,6 +9,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
   let (ws, setWs) = React.Uncurried.useState(_ => Js.Nullable.null)
   let (playerGame, setPlayerGame) = React.Uncurried.useState(_ => "")
   let (playerName, setPlayerName) = React.Uncurried.useState(_ => "")
+  let (endtoken, setEndtoken) = React.Uncurried.useState(_ => Js.Nullable.undefined)
   let (playerColor, setPlayerColor) = React.Uncurried.useState(_ => "transparent")
   let (count, setCount) = React.Uncurried.useState(_ => "")
   let (wsConnected, setWsConnected) = React.Uncurried.useState(_ => false)
@@ -23,9 +24,6 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
 
   let resetConnState = _ => {
     dispatch(. ResetPlayerState(initialState))
-    setPlayerColor(._ => "transparent")
-    setPlayerGame(._ => "")
-    // setLeader(._ => false)
     setLeaderData(._ => [])
   }
 
@@ -74,11 +72,11 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
             dispatch(. ListGames(Js.Nullable.return(listGms)))
           }
         | ModifyConn => {
-            let {modConn, color} = parseModConn(data)
-            Js.log3("parsedmodconn", modConn, color)
+            let {modConn, color, endtoken} = parseModConn(data)
+            Js.log4("parsedmodconn", modConn, color, endtoken)
             setPlayerGame(._ => modConn)
             setPlayerColor(._ => color)
-      
+            setEndtoken(._ => endtoken)
           }
 
 
@@ -171,5 +169,5 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
 
   let close = (. code, reason) => ws->closeCodeReason(code, reason)
 
-  (playerGame, playerName, playerColor, count, wsConnected, state.players, state.sk, state.showAnswers, state.winner, state.oldWord, state.word, state.gamesList, leaderData, send, close, wsError)
+  (playerGame, playerName, playerColor, endtoken, count, wsConnected, state.players, state.sk, state.showAnswers, state.winner, state.oldWord, state.word, state.gamesList, leaderData, send, close, wsError)
 }

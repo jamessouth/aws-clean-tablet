@@ -4,10 +4,7 @@ type lobbyPayload = {
   tipe: string,
 }
 
-type startPayload = {
-  action: string,
-  gameno: string,
-}
+
 
 @react.component
 let make = (~game: Reducer.listGame, ~inThisGame, ~inAGame, ~count, ~send, ~class, ~onlyGame) => {

@@ -6,36 +6,15 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/aws-sdk-go-v2/service/sfn"
 	"github.com/aws/smithy-go"
 )
-
-type livePlayerList []struct {
-	PlayerID string `dynamodbav:"playerid"`
-	Name     string `dynamodbav:"name"`
-	ConnID   string `dynamodbav:"connid"`
-	Color    string `dynamodbav:"color"`
-	Score    int    `dynamodbav:"score"`
-	Index    string `dynamodbav:"index"`
-}
-
-func getReturnValue(status int) events.APIGatewayProxyResponse {
-	return events.APIGatewayProxyResponse{
-		StatusCode:        status,
-		Headers:           map[string]string{"Content-Type": "application/json"},
-		MultiValueHeaders: map[string][]string{},
-		Body:              "",
-		IsBase64Encoded:   false,
-	}
-}
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
@@ -49,43 +28,34 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	var (
-		tableName = aws.String(os.Getenv("tableName"))
-		ddbsvc    = dynamodb.NewFromConfig(cfg)
-		auth      = req.RequestContext.Authorizer.(map[string]interface{})
-		id        = auth["principalId"].(string)
-		body      struct {
-			Action, Gameno string
+		sfnsvc = sfn.NewFromConfig(cfg)
+		body   struct {
+			Action, Gameno, Token string
 		}
 	)
 
 	err = json.Unmarshal([]byte(req.Body), &body)
 	if err != nil {
-		fmt.Println("unmarshal err")
+		callErr(err)
 	}
 
-	_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-		Key: map[string]types.AttributeValue{
-			"pk": &types.AttributeValueMemberS{Value: "CONNECT"},
-			"sk": &types.AttributeValueMemberS{Value: id},
-		},
-		TableName: tableName,
-		ExpressionAttributeNames: map[string]string{
-			"#G": "game",
-			"#P": "playing",
-			"#C": "color",
-			"#R": "returning",
-		},
-		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":g": &types.AttributeValueMemberS{Value: ""},
-			":f": &types.AttributeValueMemberBOOL{Value: false},
-			":c": &types.AttributeValueMemberS{Value: "transparent"},
-			":t": &types.AttributeValueMemberBOOL{Value: true},
-		},
-		UpdateExpression: aws.String("SET #G = :g, #P = :f, #C = :c, #R = :t"),
-	})
-	callErr(err)
+	stsi := sfn.SendTaskSuccessInput{
+		Output:    aws.String(""),
+		TaskToken: aws.String(body.Token),
+	}
 
-	return getReturnValue(http.StatusOK), nil
+	_, err = sfnsvc.SendTaskSuccess(ctx, &stsi)
+	if err != nil {
+		callErr(err)
+	}
+
+	return events.APIGatewayProxyResponse{
+		StatusCode:        http.StatusOK,
+		Headers:           map[string]string{"Content-Type": "application/json"},
+		MultiValueHeaders: map[string][]string{},
+		Body:              "",
+		IsBase64Encoded:   false,
+	}, nil
 }
 
 func main() {
@@ -94,17 +64,6 @@ func main() {
 
 func callErr(err error) {
 	if err != nil {
-		var transCxldErr *types.TransactionCanceledException
-		if errors.As(err, &transCxldErr) {
-			fmt.Printf("put item error777, %v\n",
-				transCxldErr.CancellationReasons)
-		}
-
-		var intServErr *types.InternalServerError
-		if errors.As(err, &intServErr) {
-			fmt.Printf("get item error, %v",
-				intServErr.ErrorMessage())
-		}
 
 		// To get any API error
 		var apiErr smithy.APIError

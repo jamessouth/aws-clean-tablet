@@ -4,6 +4,12 @@ type answerPayload = {
   answer: string,
 }
 
+type startPayload = {
+  action: string,
+  gameno: string,
+  token: string,
+}
+
 // type scorePayload = {
 //   action: string,
 //   game: Reducer.liveGame,
@@ -20,6 +26,7 @@ let make = (
   ~playerColor,
   ~send,
   ~playerName,
+  ~endtoken,
 ) => {
   let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
   let (answered, setAnswered) = React.Uncurried.useState(_ => false)
@@ -74,6 +81,13 @@ let make = (
   }
 
   let onClick = _ => {
+    let pl: Game.startPayload = {
+      action: "end",
+      gameno: sk,
+      token: endtoken,
+    }
+    send(. Js.Json.stringifyAny(pl))
+
     RescriptReactRouter.push("/lobby")
   }
 
