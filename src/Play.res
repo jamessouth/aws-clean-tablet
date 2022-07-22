@@ -27,6 +27,7 @@ let make = (
   ~send,
   ~playerName,
   ~endtoken,
+  ~resetConnState,
 ) => {
   let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
   let (answered, setAnswered) = React.Uncurried.useState(_ => false)
@@ -87,6 +88,7 @@ let make = (
       token: endtoken,
     }
     send(. Js.Json.stringifyAny(pl))
+    resetConnState()
 
     RescriptReactRouter.push("/lobby")
   }

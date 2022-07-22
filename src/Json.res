@@ -1,4 +1,4 @@
-type listGamesData = {listGms: array<Reducer.listGame>, name: string, returning: bool}
+type listGamesData = {listGms: array<Reducer.listGame>, name: string}
 type modConnData = {modConn: string, color: string, endtoken: Js.Nullable.t<string>}
 type countdownData = {cntdown: string}
 type addGameData = {addGame: Reducer.listGame}

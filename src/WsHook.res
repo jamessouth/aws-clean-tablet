@@ -62,13 +62,9 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
 
         switch getMsgType(data) {
         | InsertConn => {
-            let {listGms, name, returning} = parseListGames(data)
-            Js.log4("parsedlistgames", listGms, name, returning)
+            let {listGms, name} = parseListGames(data)
+            Js.log3("parsedlistgames", listGms, name)
             setPlayerName(._ => name)
-            switch returning {
-            | true => resetConnState()
-            | false => ()
-            }
             dispatch(. ListGames(Js.Nullable.return(listGms)))
           }
         | ModifyConn => {
@@ -169,5 +165,5 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
 
   let close = (. code, reason) => ws->closeCodeReason(code, reason)
 
-  (playerGame, playerName, playerColor, endtoken, count, wsConnected, state.players, state.sk, state.showAnswers, state.winner, state.oldWord, state.word, state.gamesList, leaderData, send, close, wsError)
+  (playerGame, playerName, playerColor, endtoken, count, wsConnected, state.players, state.sk, state.showAnswers, state.winner, state.oldWord, state.word, state.gamesList, leaderData, send, resetConnState, close, wsError)
 }

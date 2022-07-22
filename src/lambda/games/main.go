@@ -428,11 +428,9 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				payload, err = json.Marshal(struct {
 					ListGames []frontListGame `json:"listGms"`
 					Name      string          `json:"name"`
-					Returning bool            `json:"returning"`
 				}{
 					ListGames: getFrontListGames(listGames),
 					Name:      connRecord.Name,
-					Returning: connRecord.Returning,
 				})
 				if err != nil {
 					return callErr(err)
