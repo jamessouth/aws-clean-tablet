@@ -441,7 +441,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				payload, err = json.Marshal(struct {
 					ModConnGm string `json:"modConn"`
 					Color     string `json:"color"`
-					Endtoken  string `json:"endtoken,omitempty"`
+					Endtoken  string `json:"endtoken"`
 				}{
 					ModConnGm: connRecord.Game,
 					Color:     connRecord.Color,

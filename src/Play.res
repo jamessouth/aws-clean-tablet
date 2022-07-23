@@ -4,7 +4,7 @@ type answerPayload = {
   answer: string,
 }
 
-type startPayload = {
+type endPayload = {
   action: string,
   gameno: string,
   token: string,
@@ -81,16 +81,23 @@ let make = (
     Js.log("onenter")
   }
 
-  let onClick = _ => {
-    let pl: Game.startPayload = {
-      action: "end",
-      gameno: sk,
-      token: endtoken,
-    }
-    send(. Js.Json.stringifyAny(pl))
-    resetConnState()
+  let reset = _ => {
 
+    resetConnState()
     RescriptReactRouter.push("/lobby")
+  }
+
+  let onClick = (n, _) => {
+   Js.log(n)
+        let pl: endPayload = {
+          action: "end",
+          gameno: sk,
+          token: endtoken,
+        }
+        send(. Js.Json.stringifyAny(pl))
+   
+    reset()
+
   }
 
   let onClick2 = _ => {
@@ -120,7 +127,7 @@ let make = (
   // })
 
   <div>
-    <Scoreboard players oldWord word showAnswers winner onClick playerName />
+    <Scoreboard players oldWord word showAnswers winner onClick reset playerName />
     {switch winner == "" {
     | false => React.null
     | true =>

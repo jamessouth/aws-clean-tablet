@@ -9,7 +9,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
   let (ws, setWs) = React.Uncurried.useState(_ => Js.Nullable.null)
   let (playerGame, setPlayerGame) = React.Uncurried.useState(_ => "")
   let (playerName, setPlayerName) = React.Uncurried.useState(_ => "")
-  let (endtoken, setEndtoken) = React.Uncurried.useState(_ => Js.Nullable.undefined)
+  let (endtoken, setEndtoken) = React.Uncurried.useState(_ => "")
   let (playerColor, setPlayerColor) = React.Uncurried.useState(_ => "transparent")
   let (count, setCount) = React.Uncurried.useState(_ => "")
   let (wsConnected, setWsConnected) = React.Uncurried.useState(_ => false)
