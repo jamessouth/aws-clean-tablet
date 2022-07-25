@@ -5,8 +5,8 @@ let make = (
   ~word,
   ~showAnswers,
   ~winner,
-  ~onClick,
-  ~reset,
+  ~onClickTrue,
+  ~onClickFalse,
   ~playerName,
 ) => {
   Js.log2("score", players)
@@ -52,7 +52,7 @@ let make = (
 
   React.useEffect1(() => {
     switch count == 0 {
-    | true => reset()
+    | true => onClickFalse()
     | false => ()
     }
     None
@@ -139,7 +139,7 @@ let make = (
         <Button
           textTrue="Return to lobby"
           textFalse="Return to lobby"
-          onClick={onClick("u")}
+          onClick=onClickTrue
           className="mt-1.5 mb-14 block cursor-pointer text-stone-800 font-perm mx-auto px-8 py-2 text-2xl"
         />
         {switch count < 11 {

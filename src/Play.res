@@ -81,23 +81,20 @@ let make = (
     Js.log("onenter")
   }
 
-  let reset = _ => {
-
-    resetConnState()
-    RescriptReactRouter.push("/lobby")
-  }
-
-  let onClick = (n, _) => {
-   Js.log(n)
+  let onClick = (sendPayload, _) => {
+    switch sendPayload {
+    | true => {
         let pl: endPayload = {
           action: "end",
           gameno: sk,
           token: endtoken,
         }
         send(. Js.Json.stringifyAny(pl))
-   
-    reset()
-
+      }
+    | false => ()
+    }
+    resetConnState()
+    RescriptReactRouter.push("/lobby")
   }
 
   let onClick2 = _ => {
@@ -127,13 +124,23 @@ let make = (
   // })
 
   <div>
-    <Scoreboard players oldWord word showAnswers winner onClick reset playerName />
+    <Scoreboard
+      players
+      oldWord
+      word
+      showAnswers
+      winner
+      onClickTrue={onClick(true)}
+      onClickFalse={onClick(false)}
+      playerName
+    />
     {switch winner == "" {
     | false => React.null
     | true =>
       switch word == "game over" {
       | true => <Word onAnimationEnd playerColor word answered showTimer=false />
-      | false => <>
+      | false =>
+        <>
           <Word onAnimationEnd playerColor word answered showTimer={word != ""} />
           {switch word == "" {
           | true => <div className="bg-transparent h-45 w-full" />
