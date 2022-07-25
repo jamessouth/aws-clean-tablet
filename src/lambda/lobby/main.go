@@ -175,13 +175,15 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			ExpressionAttributeNames: map[string]string{
 				"#G": "game",
 				"#R": "returning",
+				"#E": "endtoken",
 			},
 			ExpressionAttributeValues: map[string]types.AttributeValue{
 				":g": &types.AttributeValueMemberS{Value: gameno},
+				":e": &types.AttributeValueMemberS{Value: ""},
 				":z": &types.AttributeValueMemberN{Value: "0"},
 				":f": &types.AttributeValueMemberBOOL{Value: false},
 			},
-			UpdateExpression: aws.String("SET #G = :g, #R = :f"),
+			UpdateExpression: aws.String("SET #G = :g, #R = :f, #E = :e"),
 		}
 
 		_, err = ddbsvc.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{

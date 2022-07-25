@@ -114,6 +114,7 @@ let make = () => {
             }}
           </nav>
         }
+
       | (list{"signin"}, None) =>
         <Signin userpool setCognitoUser setToken cognitoUser cognitoError setCognitoError />
 
@@ -156,6 +157,7 @@ let make = () => {
             body(document)->setClassName("bodchmob bodchtab bodchbig")
             <Loading label="games..." />
           }
+
         | true => {
             body(document)->classList->removeClassList3("bodleadmob", "bodleadtab", "bodleadbig")
             <Lobby playerGame games send wsError close count />
@@ -165,7 +167,20 @@ let make = () => {
         switch wsConnected {
         | true =>
           switch Js.Array2.length(players) > 0 && gameno == sk {
-          | true => <Play players sk showAnswers winner oldWord word playerColor send playerName endtoken resetConnState/>
+          | true =>
+            <Play
+              players
+              sk
+              showAnswers
+              winner
+              oldWord
+              word
+              playerColor
+              send
+              playerName
+              endtoken
+              resetConnState
+            />
           | false => <Loading label="game..." />
           }
 

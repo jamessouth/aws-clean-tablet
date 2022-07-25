@@ -142,9 +142,11 @@ let make = (
           onClick=onClickTrue
           className="mt-1.5 mb-14 block cursor-pointer text-stone-800 font-perm mx-auto px-8 py-2 text-2xl"
         />
-        {switch count < 11 {
+        {switch count < 6 {
         | true =>
-          <p className="text-red-600"> {React.string(j`Returning to lobby in $count seconds.`)} </p>
+          <p className="font-perm text-stone-100 text-xl">
+            {React.string(j`Returning to lobby in: $count`)}
+          </p>
         | false => React.null
         }}
       </>

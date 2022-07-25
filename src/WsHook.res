@@ -25,6 +25,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
   let resetConnState = _ => {
     dispatch(. ResetPlayerState(initialState))
     setLeaderData(._ => [])
+    setEndtoken(._ => "")
   }
 
   open Web
