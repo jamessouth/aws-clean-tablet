@@ -65,6 +65,8 @@ type players struct {
 }
 
 func getSlice[Key string, Val listPlayer | livePlayer](m map[Key]Val) (res []Val) {
+	res = []Val{}
+
 	for _, v := range m {
 		res = append(res, v)
 	}
