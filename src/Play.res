@@ -21,6 +21,7 @@ let make = (
   ~sk,
   ~showAnswers,
   ~winner,
+  ~isWinner,
   ~oldWord,
   ~word,
   ~playerColor,
@@ -130,11 +131,13 @@ let make = (
       word
       showAnswers
       winner
+      isWinner
       onClickTrue={onClick(true)}
       onClickFalse={onClick(false)}
       playerName
+      noplrs={Js.Array2.length(players)}
     />
-    {switch winner == "" {
+    {switch !isWinner {
     | false => React.null
     | true =>
       switch word == "game over" {

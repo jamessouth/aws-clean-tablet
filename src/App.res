@@ -173,6 +173,7 @@ let make = () => {
               sk
               showAnswers
               winner
+              isWinner={winner != ""}
               oldWord
               word
               playerColor

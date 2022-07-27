@@ -5,17 +5,16 @@ let make = (
   ~word,
   ~showAnswers,
   ~winner,
+  ~isWinner,
   ~onClickTrue,
   ~onClickFalse,
   ~playerName,
+  ~noplrs,
 ) => {
   Js.log2("score", players)
 
   let (count, setCount) = React.Uncurried.useState(_ => 30)
-
-  let isWinner = winner != ""
-
-  let bgimg = switch isWinner {
+  let (bgimg, _) = React.Uncurried.useState(_ => switch isWinner {
   | true =>
     switch winner == playerName {
     | true => "bg-win"
@@ -28,13 +27,12 @@ let make = (
       }
     }
   | false => ""
-  }
+  })
 
   let hstyles = "text-center font-anon mb-5 text-stone-100 "
 
-  let noplrs = Js.Array2.length(players)
-
   React.useEffect1(() => {
+    Js.log("useff run")
     let id = if isWinner {
       Js.Global.setInterval(() => {
         setCount(. c => c - 1)
