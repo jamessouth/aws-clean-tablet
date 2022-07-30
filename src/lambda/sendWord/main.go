@@ -99,10 +99,32 @@ func handler(ctx context.Context, req struct {
 
 	fmt.Printf("%s%+v\n", "words ", words)
 
+	current, next := words.WordList[0], words.WordList[1]
+
+	if next == "game over" {
+		_, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+			Key: map[string]types.AttributeValue{
+				"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
+				"sk": &types.AttributeValueMemberS{Value: req.Gameno},
+			},
+			TableName: aws.String(req.TableName),
+			ExpressionAttributeNames: map[string]string{
+				"#L": "lastword",
+			},
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":l": &types.AttributeValueMemberBOOL{Value: true},
+			},
+			UpdateExpression: aws.String("set #L = :l"),
+		})
+		if err != nil {
+			return err
+		}
+	}
+
 	payload, err := json.Marshal(struct {
 		Word string `json:"newword"`
 	}{
-		Word: words.WordList[0],
+		Word: current,
 	})
 	if err != nil {
 		return err

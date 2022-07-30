@@ -40,7 +40,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	stsi := sfn.SendTaskSuccessInput{
-		Output:    aws.String(""),
+		Output:    aws.String("\"\""),
 		TaskToken: aws.String(body.Token),
 	}
 

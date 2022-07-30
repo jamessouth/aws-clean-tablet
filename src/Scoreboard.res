@@ -31,9 +31,9 @@ let make = (
 
   let hstyles = "text-center font-anon mb-5 text-stone-100 "
 
-  React.useEffect1(() => {
+  React.useEffect2(() => {
     Js.log("useff run")
-    let id = if isWinner {
+    let id = if isWinner || word == "game over" {
       Js.Global.setInterval(() => {
         setCount(. c => c - 1)
       }, 1000)
@@ -46,7 +46,7 @@ let make = (
         Js.Global.clearInterval(id)
       },
     )
-  }, [isWinner])
+  }, (isWinner, word))
 
   React.useEffect1(() => {
     switch count == 0 {
@@ -130,8 +130,8 @@ let make = (
       })
       ->React.array}
     </ul>
-    {switch (!isWinner, word == "game over") {
-    | (false, _) | (true, true) =>
+    {switch isWinner {
+    | true =>
       <>
         <div className={`w-64 h-96 bg-no-repeat opacity-0 m-auto animate-fadein ${bgimg}`} />
         <Button
@@ -142,13 +142,21 @@ let make = (
         />
         {switch count < 6 {
         | true =>
-          <p className="font-perm text-stone-100 text-xl">
+          <p className="font-perm text-center text-stone-100 text-xl">
             {React.string(j`Returning to lobby in: $count`)}
           </p>
         | false => React.null
         }}
       </>
-    | (true, false) => React.null
+    | false => React.null
     }}
+
+  {switch word == "game over" {
+        | true =>
+          <p className="font-perm mt-2 text-center text-stone-100 text-xl">
+            {React.string(j`Returning to lobby in: $count`)}
+          </p>
+        | false => React.null
+        }}
   </div>
 }

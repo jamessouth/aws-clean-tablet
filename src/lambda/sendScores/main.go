@@ -102,8 +102,8 @@ func sortByScoreThenName(players []livePlayer) {
 	})
 }
 
-func getWinner(players []livePlayer) string {
-	if *players[0].Score != *players[1].Score && *players[0].Score > winThreshold {
+func getWinner(players []livePlayer, lw bool) string {
+	if (*players[0].Score != *players[1].Score && *players[0].Score > winThreshold) || lw {
 		return players[0].Name
 	}
 
@@ -117,8 +117,9 @@ const (
 func handler(ctx context.Context, req struct {
 	Payload struct {
 		Gameno, TableName, Endpoint, Region string
-		Players                             map[string]livePlayer
 		Scores                              map[string]int
+		Players                             map[string]livePlayer
+		Lastword                            bool
 	}
 }) (output, error) {
 
@@ -166,7 +167,7 @@ func handler(ctx context.Context, req struct {
 	}
 
 	sortByScoreThenName(playersList)
-	winner := getWinner(playersList)
+	winner := getWinner(playersList, req.Payload.Lastword)
 	var statsList []stat
 	if winner != "" {
 		statsList = getStats(req.Payload.Players, playersList)

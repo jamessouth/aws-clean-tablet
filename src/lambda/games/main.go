@@ -100,8 +100,9 @@ func (p listGamePayload) MarshalJSON() ([]byte, error) {
 }
 
 type output struct {
-	Scores  map[string]int        `json:"scores"`
-	Players map[string]livePlayer `json:"players"`
+	Scores   map[string]int        `json:"scores"`
+	Players  map[string]livePlayer `json:"players"`
+	Lastword bool                  `json:"lastword"`
 }
 
 func prep(players []livePlayer) ([]livePlayer, map[string]int) {
@@ -594,7 +595,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 						return callErr(err)
 					}
 
-					_, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+					ui, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 						Key: map[string]types.AttributeValue{
 							"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
 							"sk": &types.AttributeValueMemberS{Value: gameRecord.Sk},
@@ -607,15 +608,25 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 							":z": &types.AttributeValueMemberN{Value: "0"},
 						},
 						UpdateExpression: aws.String("SET #A = :z"),
+						ReturnValues:     types.ReturnValueAllOld,
 					})
+					if err != nil {
+						return callErr(err)
+					}
 
+					var lw struct {
+						Lastword bool
+					}
+
+					err = attributevalue.UnmarshalMap(ui.Attributes, &lw)
 					if err != nil {
 						return callErr(err)
 					}
 
 					op := output{
-						Scores:  scoreMap,
-						Players: gameRecord.Players,
+						Scores:   scoreMap,
+						Players:  gameRecord.Players,
+						Lastword: lw.Lastword,
 					}
 
 					taskOutput, err := json.Marshal(op)
