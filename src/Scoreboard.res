@@ -2,7 +2,6 @@
 let make = (
   ~players: array<Reducer.livePlayer>,
   ~oldWord,
-  ~word,
   ~showAnswers,
   ~winner,
   ~isWinner,
@@ -13,27 +12,33 @@ let make = (
 ) => {
   Js.log2("score", players)
 
-  let (count, setCount) = React.Uncurried.useState(_ => 30)
-  let (bgimg, _) = React.Uncurried.useState(_ => switch isWinner {
-  | true =>
-    switch winner == playerName {
-    | true => "bg-win"
-    | false =>
-      switch Js.Math.unsafe_trunc(Js.Math.random() *. 4.) + 1 {
-      | 1 => "bg-lose1"
-      | 2 => "bg-lose2"
-      | 3 => "bg-lose3"
-      | _ => "bg-lose4"
-      }
-    }
-  | false => ""
-  })
-
   let hstyles = "text-center font-anon mb-5 text-stone-100 "
+  let (count, setCount) = React.Uncurried.useState(_ => 30)
+  let (bgimg, setBgimg) = React.Uncurried.useState(_ => "")
 
-  React.useEffect2(() => {
+  React.useEffect3(() => {
+    let bg = switch isWinner {
+    | true =>
+      switch winner == playerName {
+      | true => "bg-win"
+      | false =>
+        switch Js.Math.unsafe_trunc(Js.Math.random() *. 4.) + 1 {
+        | 1 => "bg-lose1"
+        | 2 => "bg-lose2"
+        | 3 => "bg-lose3"
+        | _ => "bg-lose4"
+        }
+      }
+    | false => ""
+    }
+    setBgimg(._ => bg)
+
+    None
+  }, (isWinner, winner, playerName))
+
+  React.useEffect1(() => {
     Js.log("useff run")
-    let id = if isWinner || word == "game over" {
+    let id = if isWinner {
       Js.Global.setInterval(() => {
         setCount(. c => c - 1)
       }, 1000)
@@ -46,7 +51,7 @@ let make = (
         Js.Global.clearInterval(id)
       },
     )
-  }, (isWinner, word))
+  }, [isWinner])
 
   React.useEffect1(() => {
     switch count == 0 {
@@ -93,7 +98,7 @@ let make = (
             isWinner && i != 0
           ) {
             "filter brightness-30 contrast-60"
-          } else if (isWinner || word == "game over") && i == 0 {
+          } else if isWinner && i == 0 {
             "animate-rotate"
           } else {
             ""
@@ -130,6 +135,13 @@ let make = (
       })
       ->React.array}
     </ul>
+    {switch count < 26 {
+        | true =>
+          <p className="font-perm absolute left-1/2 transform -translate-x-2/4 text-stone-100 text-xl">
+            {React.string(j`Returning to lobby in: $count`)}
+          </p>
+        | false => React.null
+        }}
     {switch isWinner {
     | true =>
       <>
@@ -140,23 +152,8 @@ let make = (
           onClick=onClickTrue
           className="mt-1.5 mb-14 block cursor-pointer text-stone-800 font-perm mx-auto px-8 py-2 text-2xl"
         />
-        {switch count < 6 {
-        | true =>
-          <p className="font-perm text-center text-stone-100 text-xl">
-            {React.string(j`Returning to lobby in: $count`)}
-          </p>
-        | false => React.null
-        }}
       </>
     | false => React.null
     }}
-
-  {switch word == "game over" {
-        | true =>
-          <p className="font-perm mt-2 text-center text-stone-100 text-xl">
-            {React.string(j`Returning to lobby in: $count`)}
-          </p>
-        | false => React.null
-        }}
   </div>
 }

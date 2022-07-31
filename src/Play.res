@@ -92,6 +92,7 @@ let make = (
         }
         send(. Js.Json.stringifyAny(pl))
       }
+
     | false => ()
     }
     resetConnState()
@@ -128,7 +129,6 @@ let make = (
     <Scoreboard
       players
       oldWord
-      word
       showAnswers
       winner
       isWinner
@@ -137,35 +137,30 @@ let make = (
       playerName
       noplrs={Js.Array2.length(players)}
     />
-    {switch !isWinner {
-    | false => React.null
-    | true =>
-      switch word == "game over" {
-      | true => <Word onAnimationEnd playerColor word answered showTimer=false />
-      | false =>
-        <>
-          <Word onAnimationEnd playerColor word answered showTimer={word != ""} />
-          {switch word == "" {
+    {switch isWinner {
+    | true => React.null
+    | false =>
+      <>
+        <Word onAnimationEnd playerColor word answered showTimer={word != ""} />
+        {switch word == "" {
+        | true => <div className="bg-transparent h-45 w-full" />
+        | false =>
+          switch answered {
           | true => <div className="bg-transparent h-45 w-full" />
           | false =>
-            switch answered {
-            | true => <div className="bg-transparent h-45 w-full" />
-            | false =>
-              <Form
-                ht="h-24" onClick=onClick2 leg="" submitClicked validationError cognitoError=None>
-                <Input
-                  value=answer
-                  propName="answer"
-                  autoComplete="off"
-                  inputMode="text"
-                  onKeyPress
-                  setFunc=setAnswer
-                />
-              </Form>
-            }
-          }}
-        </>
-      }
+            <Form ht="h-24" onClick=onClick2 leg="" submitClicked validationError cognitoError=None>
+              <Input
+                value=answer
+                propName="answer"
+                autoComplete="off"
+                inputMode="text"
+                onKeyPress
+                setFunc=setAnswer
+              />
+            </Form>
+          }
+        }}
+      </>
     }}
   </div>
 }

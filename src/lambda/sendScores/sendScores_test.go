@@ -38,7 +38,7 @@ func TestSort(t *testing.T) {
 func TestGetWinner(t *testing.T) {
 	// t.Skip()
 	for _, test := range winnerTests {
-		if act := getWinner(test.players); !cmp.Equal(act, test.expected) {
+		if act := getWinner(test.players, test.lastword); !cmp.Equal(act, test.expected) {
 			t.Errorf("FAIL - getWinner - %s\n act: %+v\n exp: %+v\n",
 				test.description, act, test.expected)
 		}

@@ -299,6 +299,7 @@ var sortTest = struct {
 
 var winnerTests = []struct {
 	players               []livePlayer
+	lastword              bool
 	expected, description string
 }{
 	{players: []livePlayer{
@@ -337,7 +338,45 @@ var winnerTests = []struct {
 			Score:  &six,
 			Answer: "",
 		},
-	}, expected: "", description: "no winner",
+	}, lastword: false, expected: "", description: "no winner",
+	},
+	{players: []livePlayer{
+		{
+			Name:   "ccc",
+			ConnID: "333",
+			Color:  "green",
+			Score:  &twentyfour,
+			Answer: "",
+		},
+		{
+			Name:   "bbb",
+			ConnID: "222",
+			Color:  "blue",
+			Score:  &twentyone,
+			Answer: "",
+		},
+		{
+			Name:   "aaa",
+			ConnID: "111",
+			Color:  "red",
+			Score:  &thirteen,
+			Answer: "",
+		},
+		{
+			Name:   "ddd",
+			ConnID: "444",
+			Color:  "yellow",
+			Score:  &nine,
+			Answer: "",
+		},
+		{
+			Name:   "eee",
+			ConnID: "555",
+			Color:  "indigo",
+			Score:  &six,
+			Answer: "",
+		},
+	}, lastword: true, expected: "ccc", description: "winner due to last word",
 	},
 	{players: []livePlayer{
 		{
@@ -375,7 +414,7 @@ var winnerTests = []struct {
 			Score:  &six,
 			Answer: "",
 		},
-	}, expected: "ccc", description: "winner",
+	}, lastword: false, expected: "ccc", description: "winner",
 	},
 	{players: []livePlayer{
 		{
@@ -413,6 +452,44 @@ var winnerTests = []struct {
 			Score:  &six,
 			Answer: "",
 		},
-	}, expected: "", description: "tied, no winner",
+	}, lastword: false, expected: "", description: "tied, no winner",
+	},
+	{players: []livePlayer{
+		{
+			Name:   "bbb",
+			ConnID: "222",
+			Color:  "blue",
+			Score:  &twentyfive,
+			Answer: "",
+		},
+		{
+			Name:   "ccc",
+			ConnID: "333",
+			Color:  "green",
+			Score:  &twentyfive,
+			Answer: "",
+		},
+		{
+			Name:   "aaa",
+			ConnID: "111",
+			Color:  "red",
+			Score:  &thirteen,
+			Answer: "",
+		},
+		{
+			Name:   "ddd",
+			ConnID: "444",
+			Color:  "yellow",
+			Score:  &nine,
+			Answer: "",
+		},
+		{
+			Name:   "eee",
+			ConnID: "555",
+			Color:  "indigo",
+			Score:  &six,
+			Answer: "",
+		},
+	}, lastword: true, expected: "bbb", description: "tied, winner due to last word",
 	},
 }
