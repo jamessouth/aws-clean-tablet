@@ -135,17 +135,20 @@ let make = (
       })
       ->React.array}
     </ul>
-    {switch count < 26 {
+    {switch isWinner {
+    | true =>
+      <>
+        <div
+          className={`w-64 h-96 bg-no-repeat relative opacity-0 m-auto animate-fadein ${bgimg}`}
+        />
+        {switch count < 26 {
         | true =>
-          <p className="font-perm absolute left-1/2 transform -translate-x-2/4 text-stone-100 text-xl">
+          <p
+            className="font-perm absolute left-1/2 transform -translate-x-2/4 text-stone-100 text-2xl">
             {React.string(j`Returning to lobby in: $count`)}
           </p>
         | false => React.null
         }}
-    {switch isWinner {
-    | true =>
-      <>
-        <div className={`w-64 h-96 bg-no-repeat opacity-0 m-auto animate-fadein ${bgimg}`} />
         <Button
           textTrue="Return to lobby"
           textFalse="Return to lobby"

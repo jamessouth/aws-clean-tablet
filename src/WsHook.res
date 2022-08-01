@@ -26,6 +26,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
     dispatch(. ResetPlayerState(initialState))
     setLeaderData(._ => [])
     setEndtoken(._ => "")
+    setCount(._ => "")
   }
 
   open Web
@@ -141,7 +142,6 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
         setCognitoUser(._ => Js.Nullable.null)
         setWs(._ => Js.Nullable.null)
         setPlayerName(._ => "")
-        setCount(._ => "")
 
         resetConnState()
       })
