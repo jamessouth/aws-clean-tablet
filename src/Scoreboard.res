@@ -138,23 +138,20 @@ let make = (
     {switch isWinner {
     | true =>
       <>
-        <div
-          className={`w-64 h-96 bg-no-repeat relative opacity-0 m-auto animate-fadein ${bgimg}`}
-        />
-        {switch count < 26 {
-        | true =>
-          <p
-            className="font-perm absolute left-1/2 transform -translate-x-2/4 text-stone-100 text-2xl">
-            {React.string(j`Returning to lobby in: $count`)}
-          </p>
-        | false => React.null
-        }}
+        <div className={`w-64 h-96 bg-no-repeat opacity-0 m-auto animate-fadein ${bgimg}`} />
         <Button
           textTrue="Return to lobby"
           textFalse="Return to lobby"
           onClick=onClickTrue
-          className="mt-1.5 mb-14 block cursor-pointer text-stone-800 font-perm mx-auto px-8 py-2 text-2xl"
+          className="mt-1.5 mb-4 block cursor-pointer text-stone-800 font-perm mx-auto px-8 py-2 text-2xl"
         />
+        {switch count < 6 {
+        | true =>
+          <p className="font-perm text-center mb-14 text-stone-100 text-2xl">
+            {React.string(j`Returning to lobby in: $count`)}
+          </p>
+        | false => React.null
+        }}
       </>
     | false => React.null
     }}
