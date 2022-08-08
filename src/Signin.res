@@ -1,3 +1,29 @@
+
+
+module Lazy = {
+ 
+  type dynamicImport = Promise.t<{"make": React.component<{"fillColor": option<string>, "label": option<string>}>}>
+
+  @module("react")
+  external lazy_: (unit => Promise.t<React.component<{"fillColor": option<string>, "label": option<string>}>>) => React.component<{"fillColor": option<string>, "label": option<string>}> = "lazy"
+
+  let load: ((unit => dynamicImport), {"fillColor": option<string>, "label": option<string>}) => React.element = (func, props) => {
+    let propsPromise = Promise.promiseConstructor((resolve, _) => resolve(. props))
+
+    lazy_(() => Promise.all2((func(), propsPromise))->Promise.then(((comp, prps)) => {
+      let ccc = comp["make"]
+
+      React.createElement(ccc, prps)
+      }->Promise.resolve))
+  }
+  
+}
+
+@val
+external import_: string => Lazy.dynamicImport = "import"
+
+
+
 @react.component
 let make = (
   ~userpool,
@@ -7,6 +33,16 @@ let make = (
   ~cognitoError,
   ~setCognitoError,
 ) => {
+
+let comp = Lazy.load(() => import_("./Spin.bs"), Spin.makeProps(
+  ~fillColor= "fill-blue-700",
+  // ~label="jj",
+  // ~key="",
+  (),
+))
+// Js.log(comp)
+// let comp = ->cmp
+
   let (username, setUsername) = React.Uncurried.useState(_ => "")
   let (password, setPassword) = React.Uncurried.useState(_ => "")
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(
@@ -77,16 +113,32 @@ let make = (
     }
   }
 
+//   let f = Spin.makeProps(
+//   ~fillColor= "fill-blue-700",
+//   // ~label="jj",
+//   // ~key="",
+//   (),
+// )->Spin.make
+// Js.log(f)
+
   {
     switch submitClicked {
-    | true => <Loading label="lobby..." />
+    // | true => <Loading label="lobby..." />
+    | true => React.null
     | false =>
+    <>
+    
+    // f
+    <React.Suspense fallback=React.null>
+      comp
+    </React.Suspense>
       <Form onClick leg="Sign in" submitClicked validationError cognitoError>
         <Input value=username propName="username" setFunc=setUsername />
         <Input
           value=password propName="password" autoComplete="current-password" setFunc=setPassword
         />
       </Form>
+      </>
     }
   }
 }

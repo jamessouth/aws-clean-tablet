@@ -1,6 +1,12 @@
 type t<+'a> = Js.Promise.t<'a>
 exception JsError(Js.Exn.t)
 external unsafeToJsExn: exn => Js.Exn.t = "%identity"
+
+@new
+external promiseConstructor: ((@uncurry (. 'a) => unit, (. 'e) => unit) => unit) => t<'a> = "Promise"
+
+
+
 @val @scope("Promise")
 external resolve: 'a => t<'a> = "resolve"
 @send external then: (t<'a>, @uncurry ('a => t<'b>)) => t<'b> = "then"
@@ -19,6 +25,8 @@ type outcome = {
 }
 @val @scope("Promise")
 external allSettled3: ((t<'a>, t<'b>, t<'c>)) => t<(outcome, outcome, outcome)> = "allSettled"
+@val @scope("Promise")
+external all2: ((t<'a>, t<'b>)) => t<('a, 'b)> = "all"
 @val @scope("Promise")
 external all3: ((t<'a>, t<'b>, t<'c>)) => t<('a, 'b, 'c)> = "all"
 @send external _catch: (t<'a>, @uncurry (exn => t<'a>)) => t<'a> = "catch"
