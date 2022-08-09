@@ -1,23 +1,13 @@
-type propShape = {"fillColor": option<string>, "label": option<string>}
 
-module Lazy = {
-  type dynamicImport = Promise.t<{"make": React.component<propShape>}>
 
-  @module("react")
-  external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => React.component<
-    propShape,
-  > = "lazy"
 
-  let load = func =>
-    lazy_(() =>
-      func(. ignore())->Promise.then(comp => {
-        Promise.resolve({"default": comp["make"]})
-      })
-    )
-}
 
-@val
-external import_: string => Lazy.dynamicImport = "import"
+  
+
+ 
+    
+
+
 
 @react.component
 let make = (
@@ -29,8 +19,12 @@ let make = (
   ~setCognitoError,
 ) => {
   let comp = React.createElement(
-    Lazy.load((._) => import_("./Spin.bs")),
-    Spin.makeProps(~fillColor="fill-red-800", ~label="jj", ()),
+    Spin.lazy_(() =>
+       Spin.import_("./Spin.bs")->Promise.then(comp => {
+        Promise.resolve({"default": comp["make"]})
+      })
+    ),
+    Spin.makeProps(~fillColor="fill-amber-800", ~label="j4j", ()),
   )
 
   let (username, setUsername) = React.Uncurried.useState(_ => "")
