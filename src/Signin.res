@@ -1,28 +1,23 @@
-
+type propShape = {"fillColor": option<string>, "label": option<string>}
 
 module Lazy = {
- 
-  type dynamicImport = Promise.t<{"make": React.component<{"fillColor": option<string>, "label": option<string>}>}>
+  type dynamicImport = Promise.t<{"make": React.component<propShape>}>
 
   @module("react")
-  external lazy_: (unit => Promise.t<React.component<{"fillColor": option<string>, "label": option<string>}>>) => React.component<{"fillColor": option<string>, "label": option<string>}> = "lazy"
+  external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => React.component<
+    propShape,
+  > = "lazy"
 
-  let load: ((unit => dynamicImport), {"fillColor": option<string>, "label": option<string>}) => React.element = (func, props) => {
-    let propsPromise = Promise.promiseConstructor((resolve, _) => resolve(. props))
-
-    lazy_(() => Promise.all2((func(), propsPromise))->Promise.then(((comp, prps)) => {
-      let ccc = comp["make"]
-
-      React.createElement(ccc, prps)
-      }->Promise.resolve))
-  }
-  
+  let load = func =>
+    lazy_(() =>
+      func(. ignore())->Promise.then(comp => {
+        Promise.resolve({"default": comp["make"]})
+      })
+    )
 }
 
 @val
 external import_: string => Lazy.dynamicImport = "import"
-
-
 
 @react.component
 let make = (
@@ -33,15 +28,10 @@ let make = (
   ~cognitoError,
   ~setCognitoError,
 ) => {
-
-let comp = Lazy.load(() => import_("./Spin.bs"), Spin.makeProps(
-  ~fillColor= "fill-blue-700",
-  // ~label="jj",
-  // ~key="",
-  (),
-))
-// Js.log(comp)
-// let comp = ->cmp
+  let comp = React.createElement(
+    Lazy.load((._) => import_("./Spin.bs")),
+    Spin.makeProps(~fillColor="fill-red-800", ~label="jj", ()),
+  )
 
   let (username, setUsername) = React.Uncurried.useState(_ => "")
   let (password, setPassword) = React.Uncurried.useState(_ => "")
@@ -106,38 +96,28 @@ let comp = Lazy.load(() => import_("./Spin.bs"), Spin.makeProps(
             user->authenticateUser(authnDetails, cbs)
             setCognitoUser(._ => user)
           }
+
         | false => cognitoUser->authenticateUser(authnDetails, cbs)
         }
       }
+
     | Some(_) => ()
     }
   }
-
-//   let f = Spin.makeProps(
-//   ~fillColor= "fill-blue-700",
-//   // ~label="jj",
-//   // ~key="",
-//   (),
-// )->Spin.make
-// Js.log(f)
 
   {
     switch submitClicked {
     // | true => <Loading label="lobby..." />
     | true => React.null
     | false =>
-    <>
-    
-    // f
-    <React.Suspense fallback=React.null>
-      comp
-    </React.Suspense>
-      <Form onClick leg="Sign in" submitClicked validationError cognitoError>
-        <Input value=username propName="username" setFunc=setUsername />
-        <Input
-          value=password propName="password" autoComplete="current-password" setFunc=setPassword
-        />
-      </Form>
+      <>
+        <React.Suspense fallback=React.null> comp </React.Suspense>
+        <Form onClick leg="Sign in" submitClicked validationError cognitoError>
+          <Input value=username propName="username" setFunc=setUsername />
+          <Input
+            value=password propName="password" autoComplete="current-password" setFunc=setPassword
+          />
+        </Form>
       </>
     }
   }
