@@ -24,6 +24,15 @@ let make = (~playerGame, ~games, ~send, ~wsError, ~close, ~count) => {
     close(. 1000, "user sign-out")
   }
 
+   let loading = React.createElement(
+    Loading.lazy_(() =>
+      Loading.import_("./Loading.bs")->Promise.then(comp => {
+        Promise.resolve({"default": comp["make"]})
+      })
+    ),
+    Loading.makeProps(~label="games...", ()),
+  )
+
   <>
     <Link
       url="/leaderboard"
@@ -44,7 +53,7 @@ let make = (~playerGame, ~games, ~send, ~wsError, ~close, ~count) => {
       </p>
     | false =>
       switch Js.Nullable.toOption(games) {
-      | None => <Loading label="games..." />
+      | None => <React.Suspense fallback=React.null> loading </React.Suspense>
       | Some(gs) =>
         <div className="flex flex-col items-center">
           <div className="relative m-auto <newgmimg:w-11/12 w-max">

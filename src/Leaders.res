@@ -71,9 +71,18 @@ let make = (~send, ~leaderData: array<Reducer.stat>, ~playerName) => {
 
   let arrowClass = ` relative after:content-${arrow} after:text-2xl after:font-over after:absolute`
 
+    let loading = React.createElement(
+    Loading.lazy_(() =>
+      Loading.import_("./Loading.bs")->Promise.then(comp => {
+        Promise.resolve({"default": comp["make"]})
+      })
+    ),
+    Loading.makeProps(~label="data...", ()),
+  )
+
   <div className="leadermobbg leadertabbg leaderbigbg w-100vw h-100vh overflow-y-scroll leader">
     {switch data->Js.Array2.length == 0 {
-    | true => <> <div className="h-42vh" /> <Loading label="data..." /> </>
+    | true => <> <div className="h-42vh" /> <React.Suspense fallback=React.null> loading </React.Suspense> </>
     | false =>
       <table
         className="border-collapse text-dark-600 font-anon table-fixed tablewidth:mx-8 lg:mx-16 desk:mx-32">

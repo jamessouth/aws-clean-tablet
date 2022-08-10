@@ -63,6 +63,62 @@ let make = () => {
     wsError,
   ) = WsHook.useWs(token, setToken, cognitoUser, setCognitoUser, initialState)
 
+  let loading1 = React.createElement(
+    Loading.lazy_(() =>
+      Loading.import_("./Loading.bs")->Promise.then(comp => {
+        Promise.resolve({"default": comp["make"]})
+      })
+    ),
+    Loading.makeProps(~label="games...", ()),
+  )
+
+  let loading2 = React.createElement(
+    Loading.lazy_(() =>
+      Loading.import_("./Loading.bs")->Promise.then(comp => {
+        Promise.resolve({"default": comp["make"]})
+      })
+    ),
+    Loading.makeProps(~label="game...", ()),
+  )
+
+ 
+
+  let signin = React.createElement(
+    Signin.lazy_(() =>
+      Signin.import_("./Signin.bs")->Promise.then(comp => {
+        Promise.resolve({"default": comp["make"]})
+      })
+    ),
+    Signin.makeProps(
+  ~userpool=userpool,
+  ~setCognitoUser=setCognitoUser,
+  ~setToken=setToken,
+  ~cognitoUser=cognitoUser,
+  ~cognitoError=cognitoError,
+  ~setCognitoError=setCognitoError,
+  ()),
+  )
+
+  let signup = React.createElement(
+    Signup.lazy_(() =>
+      Signup.import_("./Signup.bs")->Promise.then(comp => {
+        Promise.resolve({"default": comp["make"]})
+      })
+    ),
+Signup.makeProps(
+  ~cognitoError=cognitoError,
+  ~setCognitoError=setCognitoError,
+  ~setCognitoUser=setCognitoUser,
+  ~userpool=userpool,
+  ())
+
+
+  )
+
+
+// 66
+
+
   open Web
   <>
     {switch path {
@@ -116,9 +172,11 @@ let make = () => {
         }
 
       | (list{"signin"}, None) =>
-        <Signin userpool setCognitoUser setToken cognitoUser cognitoError setCognitoError />
+        
 
-      | (list{"signup"}, None) => <Signup userpool setCognitoUser cognitoError setCognitoError />
+        <React.Suspense fallback=React.null> signin </React.Suspense>
+
+      | (list{"signup"}, None) => <React.Suspense fallback=React.null> signup </React.Suspense>
 
       | (list{"getinfo"}, None) =>
         switch search {
@@ -155,7 +213,7 @@ let make = () => {
         switch wsConnected {
         | false => {
             body(document)->setClassName("bodchmob bodchtab bodchbig")
-            <Loading label="games..." />
+            <React.Suspense fallback=React.null> loading1 </React.Suspense>
           }
 
         | true => {
@@ -182,7 +240,7 @@ let make = () => {
               endtoken
               resetConnState
             />
-          | false => <Loading label="game..." />
+          | false => <React.Suspense fallback=React.null> loading2 </React.Suspense>
           }
 
         | false =>

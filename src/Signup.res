@@ -1,3 +1,21 @@
+
+
+type propShape = {
+  "cognitoError": option<string>,
+  "setCognitoError": (. option<string> => option<string>) => unit,
+  "setCognitoUser": (.Js.Nullable.t<Cognito.usr> => Js.Nullable.t<Cognito.usr>,
+) => unit,
+  "userpool": Cognito.poolData,
+}
+
+@val
+external import_: string => Promise.t<{"make": React.component<propShape>}> = "import"
+
+@module("react")
+external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => React.component<propShape> = "lazy"
+
+
+
 @react.component
 let make = (~userpool, ~setCognitoUser, ~cognitoError, ~setCognitoError) => {
   let (username, setUsername) = React.Uncurried.useState(_ => "")

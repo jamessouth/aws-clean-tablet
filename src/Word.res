@@ -10,6 +10,15 @@ let make = (~onAnimationEnd, ~playerColor, ~word, ~answered, ~showTimer) => {
 
   let pStyle = " text-stone-700 py-0 px-6 font-perm"
 
+  let loading = React.createElement(
+    Loading.lazy_(() =>
+      Loading.import_("./Loading.bs")->Promise.then(comp => {
+        Promise.resolve({"default": comp["make"]})
+      })
+    ),
+    Loading.makeProps(~fillColor="fill-stone-800", ()),
+  )
+
   React.useEffect1(() => {
     let alph = switch answered {
     | true => "70"
@@ -22,7 +31,7 @@ let make = (~onAnimationEnd, ~playerColor, ~word, ~answered, ~showTimer) => {
   <div
     className="mt-20 mb-10 mx-auto bg-stone-100 relative w-80 h-36 flex flex-col items-center justify-center">
     {switch (playerColor == "transparent", word == "") {
-    | (true, true) => <Loading fillColor="fill-stone-800" />
+    | (true, true) => <React.Suspense fallback=React.null> loading </React.Suspense>
     | _ => React.null
     }}
     {switch showTimer {
