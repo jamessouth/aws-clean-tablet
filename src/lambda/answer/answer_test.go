@@ -13,7 +13,7 @@ func TestGetRandomByte(t *testing.T) {
 }
 
 func TestGetWord(t *testing.T) {
-	t.Skip()
+	// t.Skip()
 	for _, test := range bunchOfTests {
 		if act := getWord(test.input); act != test.expected {
 			t.Errorf("FAIL - getWord - %s\n act: %+v\n exp: %+v\n",

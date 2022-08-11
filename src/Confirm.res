@@ -1,3 +1,18 @@
+type propShape = {
+  "cognitoError": option<string>,
+  "cognitoUser": Js.Nullable.t<Cognito.usr>,
+  "search": string,
+  "setCognitoError": (. option<string> => option<string>) => unit,
+}
+
+@val
+external import_: string => Promise.t<{"make": React.component<propShape>}> = "import"
+
+@module("react")
+external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => React.component<
+  propShape,
+> = "lazy"
+
 @react.component
 let make = (~cognitoUser, ~cognitoError, ~setCognitoError, ~search) => {
   let valErrInit = switch search {
@@ -28,6 +43,7 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError, ~search) => {
         RescriptReactRouter.push("/signin")
         Js.log2("conf res", val)
       }
+
     | (Some(ex), _) => {
         switch Js.Exn.message(ex) {
         | Some(msg) => setCognitoError(._ => Some(msg))
@@ -35,6 +51,7 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError, ~search) => {
         }
         Js.log2("conf problem", ex)
       }
+
     | _ => Js.Exn.raiseError("invalid cb argument")
     }
 

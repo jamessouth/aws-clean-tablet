@@ -1,3 +1,17 @@
+type propShape = {
+  "leaderData": array<Reducer.stat>,
+  "playerName": string,
+  "send": (. option<string>) => unit,
+}
+
+@val
+external import_: string => Promise.t<{"make": React.component<propShape>}> = "import"
+
+@module("react")
+external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => React.component<
+  propShape,
+> = "lazy"
+
 type leaderPayload = {
   action: string,
   info: string,
@@ -58,6 +72,7 @@ let make = (~send, ~leaderData: array<Reducer.stat>, ~playerName) => {
         setArrow(._ => "['\\2193']")
         func(._ => Down)
       }
+
     | Down => {
         setArrow(._ => "['\\2191']")
         func(._ => Up)
@@ -71,18 +86,13 @@ let make = (~send, ~leaderData: array<Reducer.stat>, ~playerName) => {
 
   let arrowClass = ` relative after:content-${arrow} after:text-2xl after:font-over after:absolute`
 
-    let loading = React.createElement(
-    Loading.lazy_(() =>
-      Loading.import_("./Loading.bs")->Promise.then(comp => {
-        Promise.resolve({"default": comp["make"]})
-      })
-    ),
-    Loading.makeProps(~label="data...", ()),
-  )
-
   <div className="leadermobbg leadertabbg leaderbigbg w-100vw h-100vh overflow-y-scroll leader">
     {switch data->Js.Array2.length == 0 {
-    | true => <> <div className="h-42vh" /> <React.Suspense fallback=React.null> loading </React.Suspense> </>
+    | true =>
+      <>
+        <div className="h-42vh" />
+        <Loading label="data..." />
+      </>
     | false =>
       <table
         className="border-collapse text-dark-600 font-anon table-fixed tablewidth:mx-8 lg:mx-16 desk:mx-32">

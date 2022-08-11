@@ -1,3 +1,21 @@
+type propShape = {
+  "cognitoError": option<string>,
+  "cognitoUser": Js.Nullable.t<Cognito.usr>,
+  "search": string,
+  "setCognitoError": (. option<string> => option<string>) => unit,
+  "setCognitoUser": (. Js.Nullable.t<Cognito.usr> => Js.Nullable.t<Cognito.usr>) => unit,
+  "setShowName": (. Js.String2.t => Js.String2.t) => unit,
+  "userpool": Cognito.poolData,
+}
+
+@val
+external import_: string => Promise.t<{"make": React.component<propShape>}> = "import"
+
+@module("react")
+external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => React.component<
+  propShape,
+> = "lazy"
+
 @react.component
 let make = (
   ~userpool,
@@ -49,12 +67,14 @@ let make = (
                 }
               }
             }
+
           | false => setCognitoError(._ => Some(msg))
           }
         | None => setCognitoError(._ => Some("unknown signup error"))
         }
         Js.log2("problem", ex)
       }
+
     | _ => Js.Exn.raiseError("invalid cb argument")
     }
   }
@@ -83,6 +103,7 @@ let make = (
           }
           setCognitoUser(._ => Js.Nullable.return(userConstructor(userdata)))
         }
+
       | Some(_) => ()
       }
     | "pw_un" =>
@@ -117,6 +138,7 @@ let make = (
             Js.Nullable.return({key: "forgotusername"}),
           )
         }
+
       | Some(_) => ()
       }
     | _ => ()

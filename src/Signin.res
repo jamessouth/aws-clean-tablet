@@ -1,8 +1,6 @@
-
 type propShape = {
   "userpool": Cognito.poolData,
-  "setCognitoUser": (.Js.Nullable.t<Cognito.usr> => Js.Nullable.t<Cognito.usr>,
-) => unit,
+  "setCognitoUser": (. Js.Nullable.t<Cognito.usr> => Js.Nullable.t<Cognito.usr>) => unit,
   "setToken": (. option<string> => option<string>) => unit,
   "cognitoUser": Js.Nullable.t<Cognito.usr>,
   "cognitoError": option<string>,
@@ -13,9 +11,9 @@ type propShape = {
 external import_: string => Promise.t<{"make": React.component<propShape>}> = "import"
 
 @module("react")
-external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => React.component<propShape> = "lazy"
-
-
+external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => React.component<
+  propShape,
+> = "lazy"
 
 @react.component
 let make = (
@@ -26,15 +24,6 @@ let make = (
   ~cognitoError,
   ~setCognitoError,
 ) => {
-  let loading = React.createElement(
-    Loading.lazy_(() =>
-      Loading.import_("./Loading.bs")->Promise.then(comp => {
-        Promise.resolve({"default": comp["make"]})
-      })
-    ),
-    Loading.makeProps(~label="lobby...", ()),
-  )
-
   let (username, setUsername) = React.Uncurried.useState(_ => "")
   let (password, setPassword) = React.Uncurried.useState(_ => "")
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(
@@ -109,7 +98,7 @@ let make = (
 
   {
     switch submitClicked {
-    | true => <React.Suspense fallback=React.null> loading </React.Suspense>
+    | true => <Loading label="lobby..." />
     | false =>
       <Form onClick leg="Sign in" submitClicked validationError cognitoError>
         <Input value=username propName="username" setFunc=setUsername />
