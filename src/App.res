@@ -33,13 +33,13 @@ let make = () => {
   })
 
   // 66
-// html - 1
-// css - 7
-// js - 46
-// xhr - 4
-// font - 4
-// img - 6
-// ws - 1
+  // html - 1
+  // css - 7
+  // js - 46
+  // xhr - 4
+  // font - 4
+  // img - 6
+  // ws - 1
 
   let initialState: Reducer.state = {
     gamesList: Js.Nullable.null,
@@ -66,6 +66,7 @@ let make = () => {
     word,
     games,
     leaderData,
+    setLeaderData,
     send,
     resetConnState,
     close,
@@ -164,7 +165,7 @@ let make = () => {
         Promise.resolve({"default": comp["make"]})
       })
     ),
-    Lobby.makeProps(~playerGame, ~games, ~send, ~wsError, ~close, ~count, ()),
+    Lobby.makeProps(~playerGame, ~games, ~send, ~wsError, ~close, ~count, ~setLeaderData, ()),
   )
 
   let leaders = React.createElement(
@@ -173,7 +174,7 @@ let make = () => {
         Promise.resolve({"default": comp["make"]})
       })
     ),
-    Leaders.makeProps(~send, ~leaderData, ~playerName, ()),
+    Leaders.makeProps(~leaderData, ~playerName, ()),
   )
 
   open Web

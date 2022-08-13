@@ -5,6 +5,7 @@ type propShape = {
   "playerGame": string,
   "send": (. option<string>) => unit,
   "wsError": string,
+  "setLeaderData": (. array<Reducer.stat> => array<Reducer.stat>) => unit,
 }
 
 @val
@@ -15,8 +16,15 @@ external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => 
   propShape,
 > = "lazy"
 
+
+type leaderPayload = {
+  action: string,
+  info: string,
+}
+
+
 @react.component
-let make = (~playerGame, ~games, ~send, ~wsError, ~close, ~count) => {
+let make = (~playerGame, ~games, ~send, ~wsError, ~close, ~count, ~setLeaderData) => {
   let onClick = _ => {
     let pl: Game.lobbyPayload = {
       action: "lobby",
@@ -41,11 +49,26 @@ let make = (~playerGame, ~games, ~send, ~wsError, ~close, ~count) => {
     close(. 1000, "user sign-out")
   }
 
+
+  let leaderboard = _ => {
+    Js.log("leaderboard click")
+    setLeaderData(._ => [])
+
+    let pl = {
+      action: "leaders",
+      info: "hello",
+    }
+    send(. Js.Json.stringifyAny(pl))
+    RescriptReactRouter.push("/leaderboard")
+  }
+
   <>
-    <Link
-      url="/leaderboard"
-      className={"absolute top-1 left-1"}
-      image={<img className="block" src="../../assets/leader.png" />}
+    <Button
+      textTrue=""
+      textFalse=""
+      onClick=leaderboard
+      className="absolute top-1 left-1 bg-transparent cursor-pointer"
+      img={<img className="block" src="../../assets/leader.png" />}
     />
     <Button
       textTrue=""

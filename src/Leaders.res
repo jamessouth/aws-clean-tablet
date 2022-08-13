@@ -1,7 +1,6 @@
 type propShape = {
   "leaderData": array<Reducer.stat>,
   "playerName": string,
-  "send": (. option<string>) => unit,
 }
 
 @val
@@ -12,10 +11,7 @@ external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => 
   propShape,
 > = "lazy"
 
-type leaderPayload = {
-  action: string,
-  info: string,
-}
+
 type sortDirection = Up | Down
 let sortData = (field, dir, a: Reducer.stat, b: Reducer.stat) => {
   let res = switch field {
@@ -34,7 +30,7 @@ let sortData = (field, dir, a: Reducer.stat, b: Reducer.stat) => {
 }
 
 @react.component
-let make = (~send, ~leaderData: array<Reducer.stat>, ~playerName) => {
+let make = (~leaderData: array<Reducer.stat>, ~playerName) => {
   let (nameDir, setNameDir) = React.Uncurried.useState(_ => Down)
   let (winDir, setWinDir) = React.Uncurried.useState(_ => Down)
   let (ptsDir, setPtsDir) = React.Uncurried.useState(_ => Up)
@@ -47,17 +43,10 @@ let make = (~send, ~leaderData: array<Reducer.stat>, ~playerName) => {
 
   let (data, setData) = React.Uncurried.useState(_ => [])
 
-  React.useEffect0(() => {
-    Js.log("useeff")
-    let pl = {
-      action: "leaders",
-      info: "hello",
-    }
-    send(. Js.Json.stringifyAny(pl))
-    None
-  })
+
 
   React.useEffect1(() => {
+    Js.log("copyleader")
     setData(._ => leaderData->Js.Array2.copy)
     None
   }, [leaderData])
