@@ -6,6 +6,7 @@ type propShape = {
   "send": (. option<string>) => unit,
   "wsError": string,
   "setLeaderData": (. array<Reducer.stat> => array<Reducer.stat>) => unit,
+  "url": list<string>,
 }
 
 @val
@@ -24,7 +25,11 @@ type leaderPayload = {
 
 
 @react.component
-let make = (~playerGame, ~games, ~send, ~wsError, ~close, ~count, ~setLeaderData) => {
+let make = (~playerGame, ~games, ~send, ~wsError, ~close, ~count, ~setLeaderData, ~url) => {
+
+Js.log(url)
+
+
   let onClick = _ => {
     let pl: Game.lobbyPayload = {
       action: "lobby",

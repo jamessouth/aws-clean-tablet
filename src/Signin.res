@@ -5,6 +5,8 @@ type propShape = {
   "cognitoUser": Js.Nullable.t<Cognito.usr>,
   "cognitoError": option<string>,
   "setCognitoError": (. option<string> => option<string>) => unit,
+  "token": option<string>,
+  "path": list<string>,
 }
 
 @val
@@ -15,6 +17,19 @@ external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => 
   propShape,
 > = "lazy"
 
+
+  let initialState: Reducer.state = {
+    gamesList: Js.Nullable.null,
+    players: [],
+    sk: "",
+    oldWord: "",
+    word: "",
+    showAnswers: false,
+    winner: "",
+  }
+
+
+
 @react.component
 let make = (
   ~userpool,
@@ -23,7 +38,56 @@ let make = (
   ~cognitoUser,
   ~cognitoError,
   ~setCognitoError,
+  ~token,
+  ~path,
 ) => {
+
+
+
+
+
+  let (
+    playerGame,
+    _,
+    _,
+    _,
+    count,
+    wsConnected,
+    _,
+    _,
+    _,
+    _,
+    _,
+    _,
+    games,
+    _,
+    setLeaderData,
+    send,
+    _,
+    close,
+    wsError,
+  ) = WsHook.useWs(token, setToken, cognitoUser, setCognitoUser, initialState)
+
+
+  let lobby = React.createElement(
+    Lobby.lazy_(() =>
+      Lobby.import_("./Lobby.bs")->Promise.then(comp => {
+        Promise.resolve({"default": comp["make"]})
+      })
+    ),
+    Lobby.makeProps(~playerGame, ~games, ~send, ~wsError, ~close, ~count, ~setLeaderData, ~url=path, ()),
+  )
+
+  let loading1 = React.createElement(Loading.lazy_(() =>
+    Loading.import_("./Loading.bs")->Promise.then(comp => {
+      Promise.resolve({"default": comp["make"]})
+    })
+  ), Loading.makeProps(~label="games...", ()))
+
+
+
+
+
   let (username, setUsername) = React.Uncurried.useState(_ => "")
   let (password, setPassword) = React.Uncurried.useState(_ => "")
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(
@@ -96,16 +160,39 @@ let make = (
     }
   }
 
-  {
-    switch submitClicked {
-    | true => <Loading label="lobby..." />
-    | false =>
-      <Form onClick leg="Sign in" submitClicked validationError cognitoError>
-        <Input value=username propName="username" setFunc=setUsername />
-        <Input
-          value=password propName="password" autoComplete="current-password" setFunc=setPassword
-        />
-      </Form>
-    }
-  }
+open Web
+
+  {switch (path, token) {
+    | (list{"signin"}, None) => {
+        switch submitClicked {
+        | true => <Loading label="lobby..." />
+        | false =>
+          <Form onClick leg="Sign in" submitClicked validationError cognitoError>
+            <Input value=username propName="username" setFunc=setUsername />
+            <Input
+              value=password propName="password" autoComplete="current-password" setFunc=setPassword
+            />
+          </Form>
+        }
+      }
+
+    | (list{"lobby"}, Some(_)) =>
+        switch wsConnected {
+        | false => {
+            body(document)->setClassName("bodchmob bodchtab bodchbig")
+            <React.Suspense fallback=React.null> loading1 </React.Suspense>
+          }
+
+        | true => {
+            body(document)->classList->removeClassList3("bodleadmob", "bodleadtab", "bodleadbig")
+
+            <React.Suspense fallback=React.null> lobby </React.Suspense>
+          }
+        }
+
+    | (_, _) => <div> {React.string("other222")} </div> // <PageNotFound/>
+
+  }}
+
+  
 }
