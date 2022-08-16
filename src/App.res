@@ -18,14 +18,7 @@ let make = () => {
     advancedSecurityDataCollectionFlag: false,
   })
 
-  let initurl = RescriptReactRouter.useUrl()
-
-
-
-
-  let (urlData, setUrlData) = React.Uncurried.useState(_ => initurl)
-  
-
+  let {path, search} = RescriptReactRouter.useUrl()
   let (cognitoUser: Js.Nullable.t<usr>, setCognitoUser) = React.Uncurried.useState(_ =>
     Js.Nullable.null
   )
@@ -35,10 +28,7 @@ let make = () => {
   let (showName, setShowName) = React.Uncurried.useState(_ => "")
 
   React.useEffect0(() => {
-    let tok = RescriptReactRouter.watchUrl(r => {Js.log2("waa", r)
-    
-    setUrlData(._ => r)
-    })
+    let tok = RescriptReactRouter.watchUrl(r => Js.log2("waa", r))
     Some(() => {RescriptReactRouter.unwatchUrl(tok)})
   })
 
@@ -62,11 +52,11 @@ let make = () => {
   }
 
   let (
-    _,
+    playerGame,
     playerName,
     playerColor,
     endtoken,
-    _,
+    count,
     wsConnected,
     players,
     sk,
@@ -74,13 +64,13 @@ let make = () => {
     winner,
     oldWord,
     word,
-    _,
+    games,
     leaderData,
-    _,
+    setLeaderData,
     send,
     resetConnState,
-    _,
-    _,
+    close,
+    wsError,
   ) = WsHook.useWs(token, setToken, cognitoUser, setCognitoUser, initialState)
 
   let load = Loading.lazy_(() =>
@@ -89,7 +79,7 @@ let make = () => {
     })
   )
 
-  
+  let loading1 = React.createElement(load, Loading.makeProps(~label="games...", ()))
 
   let loading2 = React.createElement(load, Loading.makeProps(~label="game...", ()))
 
@@ -106,8 +96,6 @@ let make = () => {
       ~cognitoUser,
       ~cognitoError,
       ~setCognitoError,
-      ~token,
-      ~path=urlData.path,
       (),
     ),
   )
@@ -157,7 +145,7 @@ let make = () => {
       ~cognitoError,
       ~setCognitoError,
       ~setShowName,
-      ~search=urlData.search,
+      ~search,
       (),
     ),
   )
@@ -168,10 +156,17 @@ let make = () => {
         Promise.resolve({"default": comp["make"]})
       })
     ),
-    Confirm.makeProps(~cognitoUser, ~cognitoError, ~setCognitoError, ~search=urlData.search, ()),
+    Confirm.makeProps(~cognitoUser, ~cognitoError, ~setCognitoError, ~search, ()),
   )
 
-
+  let lobby = React.createElement(
+    Lobby.lazy_(() =>
+      Lobby.import_("./Lobby.bs")->Promise.then(comp => {
+        Promise.resolve({"default": comp["make"]})
+      })
+    ),
+    Lobby.makeProps(~playerGame, ~games, ~send, ~wsError, ~close, ~count, ~setLeaderData, ()),
+  )
 
   let leaders = React.createElement(
     Leaders.lazy_(() =>
@@ -184,7 +179,7 @@ let make = () => {
 
   open Web
   <>
-    {switch urlData.path {
+    {switch path {
     | list{"leaderboard"} => React.null
     | _ =>
       <header className="mb-10 newgmimg:mb-12">
@@ -199,11 +194,11 @@ let make = () => {
       </header>
     }}
     <main
-      className={switch urlData.path {
+      className={switch path {
       | list{"leaderboard"} => ""
       | _ => "mb-8"
       }}>
-      {switch (urlData.path, token) {
+      {switch (path, token) {
       | (list{}, None) => {
           body(document)->setClassName("bodmob bodtab bodbig")
           <nav className="flex flex-col items-center relative">
@@ -239,7 +234,7 @@ let make = () => {
       | (list{"signup"}, None) => <React.Suspense fallback=React.null> signup </React.Suspense>
 
       | (list{"getinfo"}, None) =>
-        switch urlData.search {
+        switch search {
         | "cd_un" | "pw_un" | "un_em" =>
           <React.Suspense fallback=React.null> getInfo </React.Suspense>
 
@@ -248,7 +243,7 @@ let make = () => {
         }
 
       | (list{"confirm"}, None) =>
-        switch urlData.search {
+        switch search {
         | "cd_un" | "pw_un" => <React.Suspense fallback=React.null> confirm </React.Suspense>
 
         | _ =>
@@ -269,7 +264,19 @@ let make = () => {
           React.null
         }
 
-      
+      | (list{"lobby"}, Some(_)) =>
+        switch wsConnected {
+        | false => {
+            body(document)->setClassName("bodchmob bodchtab bodchbig")
+            <React.Suspense fallback=React.null> loading1 </React.Suspense>
+          }
+
+        | true => {
+            body(document)->classList->removeClassList3("bodleadmob", "bodleadtab", "bodleadbig")
+
+            <React.Suspense fallback=React.null> lobby </React.Suspense>
+          }
+        }
       | (list{"game", gameno}, Some(_)) =>
         switch wsConnected {
         | true =>
