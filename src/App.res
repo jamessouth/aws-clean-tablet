@@ -27,11 +27,15 @@ let make = () => {
   let (token, setToken) = React.Uncurried.useState(_ => None)
   let (showName, setShowName) = React.Uncurried.useState(_ => "")
 
-  React.useEffect0(() => {
-    let tok = RescriptReactRouter.watchUrl(r => Js.log2("waa", r))
-    Some(() => {RescriptReactRouter.unwatchUrl(tok)})
-  })
 
+  let (appName, setAppName) = React.Uncurried.useState(_ => "")
+  let (appColor, setAppColor) = React.Uncurried.useState(_ => "transparent")
+
+  // React.useEffect0(() => {
+  //   let tok = RescriptReactRouter.watchUrl(r => Js.log2("waa", r))
+  //   Some(() => {RescriptReactRouter.unwatchUrl(tok)})
+  // })
+Js.log3("uurrll", path, search)
   // 66
   // html - 1
   // css - 7
@@ -40,48 +44,6 @@ let make = () => {
   // font - 4
   // img - 6
   // ws - 1
-
-  let initialState: Reducer.state = {
-    gamesList: Js.Nullable.null,
-    players: [],
-    sk: "",
-    oldWord: "",
-    word: "",
-    showAnswers: false,
-    winner: "",
-  }
-
-  let (
-    playerGame,
-    playerName,
-    playerColor,
-    endtoken,
-    count,
-    wsConnected,
-    players,
-    sk,
-    showAnswers,
-    winner,
-    oldWord,
-    word,
-    games,
-    leaderData,
-    setLeaderData,
-    send,
-    resetConnState,
-    close,
-    wsError,
-  ) = WsHook.useWs(token, setToken, cognitoUser, setCognitoUser, initialState)
-
-  let load = Loading.lazy_(() =>
-    Loading.import_("./Loading.bs")->Promise.then(comp => {
-      Promise.resolve({"default": comp["make"]})
-    })
-  )
-
-  let loading1 = React.createElement(load, Loading.makeProps(~label="games...", ()))
-
-  let loading2 = React.createElement(load, Loading.makeProps(~label="game...", ()))
 
   let signin = React.createElement(
     Signin.lazy_(() =>
@@ -107,29 +69,6 @@ let make = () => {
       })
     ),
     Signup.makeProps(~cognitoError, ~setCognitoError, ~setCognitoUser, ~userpool, ()),
-  )
-
-  let play = React.createElement(
-    Play.lazy_(() =>
-      Play.import_("./Play.bs")->Promise.then(comp => {
-        Promise.resolve({"default": comp["make"]})
-      })
-    ),
-    Play.makeProps(
-      ~players,
-      ~sk,
-      ~showAnswers,
-      ~winner,
-      ~isWinner={winner != ""},
-      ~oldWord,
-      ~word,
-      ~playerColor,
-      ~send,
-      ~playerName,
-      ~endtoken,
-      ~resetConnState,
-      (),
-    ),
   )
 
   let getInfo = React.createElement(
@@ -159,24 +98,6 @@ let make = () => {
     Confirm.makeProps(~cognitoUser, ~cognitoError, ~setCognitoError, ~search, ()),
   )
 
-  let lobby = React.createElement(
-    Lobby.lazy_(() =>
-      Lobby.import_("./Lobby.bs")->Promise.then(comp => {
-        Promise.resolve({"default": comp["make"]})
-      })
-    ),
-    Lobby.makeProps(~playerGame, ~games, ~send, ~wsError, ~close, ~count, ~setLeaderData, ()),
-  )
-
-  let leaders = React.createElement(
-    Leaders.lazy_(() =>
-      Leaders.import_("./Leaders.bs")->Promise.then(comp => {
-        Promise.resolve({"default": comp["make"]})
-      })
-    ),
-    Leaders.makeProps(~leaderData, ~playerName, ()),
-  )
-
   open Web
   <>
     {switch path {
@@ -184,10 +105,10 @@ let make = () => {
     | _ =>
       <header className="mb-10 newgmimg:mb-12">
         <p className="font-flow text-stone-100 text-4xl h-10 font-bold text-center">
-          {React.string(playerName)}
+          {React.string(appName)}
         </p>
         <h1
-          style={ReactDOM.Style.make(~backgroundColor={playerColor}, ())}
+          style={ReactDOM.Style.make(~backgroundColor={appColor}, ())}
           className="text-6xl mt-11 mx-auto px-6 text-center font-arch decay-mask text-stone-100">
           {React.string("CLEAN TABLET")}
         </h1>
@@ -198,8 +119,8 @@ let make = () => {
       | list{"leaderboard"} => ""
       | _ => "mb-8"
       }}>
-      {switch (path, token) {
-      | (list{}, None) => {
+      {switch path {
+      | list{} => {
           body(document)->setClassName("bodmob bodtab bodbig")
           <nav className="flex flex-col items-center relative">
             <Link
@@ -229,76 +150,25 @@ let make = () => {
           </nav>
         }
 
-      | (list{"signin"}, None) => <React.Suspense fallback=React.null> signin </React.Suspense>
+      | list{"signin"} => <React.Suspense fallback=React.null> signin </React.Suspense>
 
-      | (list{"signup"}, None) => <React.Suspense fallback=React.null> signup </React.Suspense>
+      | list{"signup"} => <React.Suspense fallback=React.null> signup </React.Suspense>
 
-      | (list{"getinfo"}, None) =>
-        switch search {
-        | "cd_un" | "pw_un" | "un_em" =>
-          <React.Suspense fallback=React.null> getInfo </React.Suspense>
+      | list{"getinfo"} if search == "cd_un" || search == "pw_un" || search == "un_em" =>
+        <React.Suspense fallback=React.null> getInfo </React.Suspense>
 
-        | _ =>
-          <div className="text-stone-100"> {React.string("unknown path, please try again")} </div>
-        }
+      | list{"getinfo"} if search != "cd_un" && search != "pw_un" && search != "un_em" =>
+        <div className="text-stone-100"> {React.string("unknown path, please try again")} </div>
 
-      | (list{"confirm"}, None) =>
-        switch search {
-        | "cd_un" | "pw_un" => <React.Suspense fallback=React.null> confirm </React.Suspense>
+      | list{"confirm"} if search == "cd_un" || search == "pw_un" =>
+        <React.Suspense fallback=React.null> confirm </React.Suspense>
 
-        | _ =>
-          <div className="text-stone-100"> {React.string("unknown path, please try again")} </div>
-        }
+      | list{"confirm"} if search != "cd_un" && search != "pw_un" =>
+        <div className="text-stone-100"> {React.string("unknown path, please try again")} </div>
 
-      | (list{"lobby"}, None) | (list{"game"}, None) | (list{"leaderboard"}, None) => {
-          RescriptReactRouter.replace("/")
-          React.null
-        }
+      | list{"auth", ..._} => <Auth token setToken cognitoUser setCognitoUser setAppName setAppColor ppp=path/>
 
-      | (list{}, Some(_))
-      | (list{"signin"}, Some(_))
-      | (list{"signup"}, Some(_))
-      | (list{"getinfo"}, Some(_))
-      | (list{"confirm"}, Some(_)) => {
-          RescriptReactRouter.replace("/lobby")
-          React.null
-        }
-
-      | (list{"lobby"}, Some(_)) =>
-        switch wsConnected {
-        | false => {
-            body(document)->setClassName("bodchmob bodchtab bodchbig")
-            <React.Suspense fallback=React.null> loading1 </React.Suspense>
-          }
-
-        | true => {
-            body(document)->classList->removeClassList3("bodleadmob", "bodleadtab", "bodleadbig")
-
-            <React.Suspense fallback=React.null> lobby </React.Suspense>
-          }
-        }
-      | (list{"game", gameno}, Some(_)) =>
-        switch wsConnected {
-        | true =>
-          switch Js.Array2.length(players) > 0 && gameno == sk {
-          | true => <React.Suspense fallback=React.null> play </React.Suspense>
-
-          | false => <React.Suspense fallback=React.null> loading2 </React.Suspense>
-          }
-
-        | false =>
-          <p className="text-center text-stone-100 font-anon text-lg">
-            {React.string("not connected...")}
-          </p>
-        }
-
-      | (list{"leaderboard"}, Some(_)) => {
-          body(document)->classList->addClassList3("bodleadmob", "bodleadtab", "bodleadbig")
-
-          <React.Suspense fallback=React.null> leaders </React.Suspense>
-        }
-
-      | (_, _) => <div> {React.string("other")} </div> // <PageNotFound/>
+      | _ => <div> {React.string("other111")} </div> // <PageNotFound/>
       }}
     </main>
   </>

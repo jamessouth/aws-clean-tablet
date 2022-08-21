@@ -78,7 +78,7 @@ let make = (~game: Reducer.listGame, ~inThisGame, ~inAGame, ~count, ~send, ~clas
 
   React.useEffect3(() => {
     switch inThisGame && count == "start" {
-    | true => RescriptReactRouter.push(`/game/${game.no}`)
+    | true => RescriptReactRouter.push(`/play/${game.no}`)
     | false => ()
     }
     None
