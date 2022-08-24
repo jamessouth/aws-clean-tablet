@@ -131,7 +131,6 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
       ws->onClose(({code, reason, wasClean}) => {
         open Cognito
         Js.log4("close", code, reason, wasClean)
-        setToken(._ => None)
         setWsConnected(._ => false)
         setWsError(._ => "")
 
@@ -144,6 +143,7 @@ let useWs = (token, setToken, cognitoUser, setCognitoUser, initialState) => {
         setPlayerName(._ => "")
 
         resetConnState()
+        setToken(._ => None)
       })
     }
 
