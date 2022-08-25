@@ -48,6 +48,9 @@ let make = (
             setCognitoError(._ => None)
             Js.log2("signin result:", res)
             setToken(._ => Some(res.accessToken.jwtToken))
+            Js.log(ImageLoad.import_("./ImageLoad.bs")->Promise.then(comp => {
+    Promise.resolve(comp["ppp"](5,6))
+  }))
           },
           onFailure: ex => {
             switch Js.Exn.message(ex) {

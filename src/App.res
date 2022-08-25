@@ -162,16 +162,12 @@ let make = () => {
           <div className="text-stone-100"> {React.string("unknown path, please try again")} </div>
         }
 
-      | (list{"auth", ..._}, None) | (list{"game"}, None) | (list{"leaderboard"}, None) => {
+      | (list{"auth", ..._} | list{"play"} | list{"leaderboard"}, None) => {
           RescriptReactRouter.replace("/")
           React.null
         }
 
-      | (list{}, Some(_))
-      | (list{"signin"}, Some(_))
-      | (list{"signup"}, Some(_))
-      | (list{"getinfo"}, Some(_))
-      | (list{"confirm"}, Some(_)) => {
+      | (list{} | list{"signin"} | list{"signup"} | list{"getinfo"} | list{"confirm"}, Some(_)) => {
           RescriptReactRouter.replace("/auth/lobby")
           React.null
         }
