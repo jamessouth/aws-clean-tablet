@@ -92,7 +92,7 @@ let make = () => {
   open Web
   <>
     {switch path {
-    | list{"leaderboard"} => React.null
+    | list{"auth/leaderboard"} => React.null
     | _ =>
       switch token {
       | None =>
@@ -107,7 +107,7 @@ let make = () => {
     }}
     <main
       className={switch path {
-      | list{"leaderboard"} => ""
+      | list{"auth/leaderboard"} => ""
       | _ => "mb-8"
       }}>
       {switch (path, token) {

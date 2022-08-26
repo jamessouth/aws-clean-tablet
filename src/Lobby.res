@@ -59,7 +59,7 @@ let make = (~playerGame, ~games, ~send, ~wsError, ~close, ~count, ~setLeaderData
       info: "hello",
     }
     send(. Js.Json.stringifyAny(pl))
-    RescriptReactRouter.push("/leaderboard")
+    RescriptReactRouter.push("/auth/leaderboard")
   }
 
   <>

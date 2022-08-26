@@ -119,7 +119,7 @@ let make = (
     | false => ()
     }
     resetConnState()
-    RescriptReactRouter.push("/lobby")
+    RescriptReactRouter.push("/auth/lobby")
   }
 
   let onClick2 = _ => {

@@ -24,7 +24,7 @@ type outcome = {
   reason: Js.Nullable.t<string>,
 }
 @val @scope("Promise")
-external allSettled3: ((t<'a>, t<'b>, t<'c>)) => t<(outcome, outcome, outcome)> = "allSettled"
+external allSettled4: ((t<'a>, t<'b>, t<'c>, t<'d>)) => t<(outcome, outcome, outcome, outcome)> = "allSettled"
 @val @scope("Promise")
 external all2: ((t<'a>, t<'b>)) => t<('a, 'b)> = "all"
 @val @scope("Promise")
