@@ -89,10 +89,23 @@ let make = () => {
     Confirm.makeProps(~cognitoUser, ~cognitoError, ~setCognitoError, ~search, ()),
   )
 
+  let auth = React.useMemo4(_ =>
+    React.createElement(
+      Auth.lazy_(() =>
+        Auth.import_("./Auth.bs")->Promise.then(
+          comp => {
+            Promise.resolve({"default": comp["make"]})
+          },
+        )
+      ),
+      Auth.makeProps(~token, ~setToken, ~cognitoUser, ~setCognitoUser, ()),
+    )
+  , (token, setToken, cognitoUser, setCognitoUser))
+
   open Web
   <>
     {switch path {
-    | list{"auth/leaderboard"} => React.null
+    | list{"auth", "leaderboard"} => React.null
     | _ =>
       switch token {
       | None =>
@@ -107,7 +120,7 @@ let make = () => {
     }}
     <main
       className={switch path {
-      | list{"auth/leaderboard"} => ""
+      | list{"auth", "leaderboard"} => ""
       | _ => "mb-8"
       }}>
       {switch (path, token) {
@@ -172,17 +185,7 @@ let make = () => {
           React.null
         }
 
-      | (list{"auth", ...subpath}, Some(_)) =>
-        <React.Suspense fallback=React.null>
-          {React.createElement(
-            Auth.lazy_(() =>
-              Auth.import_("./Auth.bs")->Promise.then(comp => {
-                Promise.resolve({"default": comp["make"]})
-              })
-            ),
-            Auth.makeProps(~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~subpath, ()),
-          )}
-        </React.Suspense>
+      | (list{"auth", ..._}, Some(_)) => <React.Suspense fallback=React.null> auth </React.Suspense>
 
       | (_, _) => <div> {React.string("other")} </div> // <PageNotFound/>
       }}

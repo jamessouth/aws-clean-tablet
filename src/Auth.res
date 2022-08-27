@@ -2,7 +2,7 @@ type propShape = {
   "cognitoUser": Js.Nullable.t<Cognito.usr>,
   "setCognitoUser": (. Js.Nullable.t<Cognito.usr> => Js.Nullable.t<Cognito.usr>) => unit,
   "setToken": (. option<string> => option<string>) => unit,
-  "subpath": list<string>,
+  // "subpath": list<string>,
   "token": option<string>,
 }
 
@@ -15,14 +15,11 @@ external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => 
 > = "lazy"
 
 @react.component
-let make = (
-  ~token,
-  ~setToken,
-  ~cognitoUser,
-  ~setCognitoUser,
-  ~subpath,
-) => {
-  Js.log2("u345876l", subpath)
+let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
+  // ~subpath,
+
+  let {path} = RescriptReactRouter.useUrl()
+  Js.log2("u345876l", path)
 
   let initialState: Reducer.state = {
     gamesList: Js.Nullable.null,
@@ -109,18 +106,22 @@ let make = (
 
   open Web
   <>
-    <header className="mb-10 newgmimg:mb-12">
-      <p className="font-flow text-stone-100 text-4xl h-10 font-bold text-center">
-        {React.string(playerName)}
-      </p>
-      <h1
-        style={ReactDOM.Style.make(~backgroundColor={playerColor}, ())}
-        className="text-6xl mt-11 mx-auto px-6 text-center font-arch decay-mask text-stone-100">
-        {React.string("CLEAN TABLET")}
-      </h1>
-    </header>
-    {switch subpath {
-    | list{"lobby"} =>
+    {switch path {
+    | list{"auth", "leaderboard"} => React.null
+    | _ =>
+      <header className="mb-10 newgmimg:mb-12">
+        <p className="font-flow text-stone-100 text-4xl h-10 font-bold text-center">
+          {React.string(playerName)}
+        </p>
+        <h1
+          style={ReactDOM.Style.make(~backgroundColor={playerColor}, ())}
+          className="text-6xl mt-11 mx-auto px-6 text-center font-arch decay-mask text-stone-100">
+          {React.string("CLEAN TABLET")}
+        </h1>
+      </header>
+    }}
+    {switch path {
+    | list{"auth", "lobby"} =>
       switch wsConnected {
       | false => {
           body(document)->setClassName("bodchmob bodchtab bodchbig")
@@ -133,7 +134,7 @@ let make = (
           <React.Suspense fallback=React.null> lobby </React.Suspense>
         }
       }
-    | list{"play", gameno} =>
+    | list{"auth", "play", gameno} =>
       switch wsConnected {
       | true =>
         switch Js.Array2.length(players) > 0 && gameno == sk {
@@ -148,7 +149,7 @@ let make = (
         </p>
       }
 
-    | list{"leaderboard"} => {
+    | list{"auth", "leaderboard"} => {
         body(document)->classList->addClassList3("bodleadmob", "bodleadtab", "bodleadbig")
 
         <React.Suspense fallback=React.null> leaders </React.Suspense>
