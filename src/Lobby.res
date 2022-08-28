@@ -16,12 +16,10 @@ external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => 
   propShape,
 > = "lazy"
 
-
 type leaderPayload = {
   action: string,
   info: string,
 }
-
 
 @react.component
 let make = (~playerGame, ~games, ~send, ~wsError, ~close, ~count, ~setLeaderData) => {
@@ -49,9 +47,7 @@ let make = (~playerGame, ~games, ~send, ~wsError, ~close, ~count, ~setLeaderData
     close(. 1000, "user sign-out")
   }
 
-
   let leaderboard = _ => {
-    Js.log("leaderboard click")
     setLeaderData(._ => [])
 
     let pl = {

@@ -42,13 +42,9 @@ let make = (~leaderData: array<Reducer.stat>, ~playerName) => {
   let larrow = Js.String2.fromCharCode(8592)
 
   React.useEffect1(() => {
-    Js.log("copyleader")
     setData(._ => leaderData->Js.Array2.copy)
     None
   }, [leaderData])
-
-  Js.log(leaderData)
-  Js.log(data)
 
   let onClick = (field, dir, func, _e) => {
     setSortedField(._ => field)

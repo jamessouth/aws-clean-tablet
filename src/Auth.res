@@ -63,15 +63,6 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
 
   let loading2 = React.createElement(load, Loading.makeProps(~label="game...", ()))
 
-  let lobby = React.createElement(
-    Lobby.lazy_(() =>
-      Lobby.import_("./Lobby.bs")->Promise.then(comp => {
-        Promise.resolve({"default": comp["make"]})
-      })
-    ),
-    Lobby.makeProps(~playerGame, ~games, ~send, ~wsError, ~close, ~count, ~setLeaderData, ()),
-  )
-
   let play = React.createElement(
     Play.lazy_(() =>
       Play.import_("./Play.bs")->Promise.then(comp => {
@@ -130,8 +121,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
 
       | true => {
           body(document)->classList->removeClassList3("bodleadmob", "bodleadtab", "bodleadbig")
-
-          <React.Suspense fallback=React.null> lobby </React.Suspense>
+          <Lobby playerGame games send wsError close count setLeaderData />
         }
       }
     | list{"auth", "play", gameno} =>
