@@ -1,7 +1,4 @@
-type propShape = {
-  "leaderData": array<Reducer.stat>,
-  "playerName": string,
-}
+type propShape = {"leaderData": array<Reducer.stat>, "playerName": string}
 
 @val
 external import_: string => Promise.t<{"make": React.component<propShape>}> = "import"
@@ -10,7 +7,6 @@ external import_: string => Promise.t<{"make": React.component<propShape>}> = "i
 external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => React.component<
   propShape,
 > = "lazy"
-
 
 type sortDirection = Up | Down
 let sortData = (field, dir, a: Reducer.stat, b: Reducer.stat) => {
@@ -43,7 +39,7 @@ let make = (~leaderData: array<Reducer.stat>, ~playerName) => {
 
   let (data, setData) = React.Uncurried.useState(_ => [])
 
-
+  let larrow = Js.String2.fromCharCode(8592)
 
   React.useEffect1(() => {
     Js.log("copyleader")
@@ -86,7 +82,13 @@ let make = (~leaderData: array<Reducer.stat>, ~playerName) => {
       <table
         className="border-collapse text-dark-600 font-anon table-fixed tablewidth:mx-8 lg:mx-16 desk:mx-32">
         <caption
-          className="my-6 text-4xl md:my-12 md:text-5xl desk:my-18 desk:text-6xl font-fred font-bold text-shadow-lead">
+          className="my-6 relative text-4xl md:my-12 md:text-5xl desk:my-18 desk:text-6xl font-fred font-bold text-shadow-lead">
+          <Button
+            textTrue=larrow
+            textFalse=larrow
+            onClick={_ => RescriptReactRouter.push("/auth/lobby")}
+            className="cursor-pointer font-over text-5xl bg-transparent absolute left-10"
+          />
           {React.string("Leaderboard")}
         </caption>
         <colgroup>
