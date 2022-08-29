@@ -3,7 +3,6 @@ external upid: string = "VITE_UPID"
 @val @scope(("import", "meta", "env"))
 external cid: string = "VITE_CID"
 
-
 module Link = {
   @react.component
   let make = (~url, ~className, ~content="") => {
@@ -21,12 +20,9 @@ module Link = {
       }
     }
 
-    <a onClick className href={url}>
-      {React.string(content)}
-    </a>
+    <a onClick className href={url}> {React.string(content)} </a>
   }
 }
-
 
 @react.component
 let make = () => {
