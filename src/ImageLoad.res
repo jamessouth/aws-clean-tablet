@@ -1,10 +1,7 @@
-
-type propShape = {"bghand": (.unit) => unit}
+type propShape = {"bghand": (. unit) => unit}
 
 @val
 external import_: string => Promise.t<propShape> = "import"
-
-
 
 open Web
 
@@ -39,12 +36,13 @@ let chalkbg = switch mob.matches {
   }
 }
 
-let newgamebg = switch retina.matches {
-| true => "../../assets/ekko2x.webp"
-| false => "../../assets/ekko1x.webp"
-}
-
-let signout = "../../assets/signout.png"
-let leader = "../../assets/leader.png"
-
-let bghand = (._) => Prefetch.getPicsAllSettled4((chalkbg, newgamebg, signout, leader))
+let bghand = (. _) =>
+  Promise.getPicsAllSettled4((
+    chalkbg,
+    switch retina.matches {
+    | true => "../../assets/ekko2x.webp"
+    | false => "../../assets/ekko1x.webp"
+    },
+    "../../assets/signout.png",
+    "../../assets/leader.png",
+  ))

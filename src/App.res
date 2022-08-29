@@ -3,6 +3,31 @@ external upid: string = "VITE_UPID"
 @val @scope(("import", "meta", "env"))
 external cid: string = "VITE_CID"
 
+
+module Link = {
+  @react.component
+  let make = (~url, ~className, ~content="") => {
+    let onClick = e => {
+      ReactEvent.Mouse.preventDefault(e)
+      RescriptReactRouter.push(url)
+      switch url {
+      | "/signin" =>
+        ImageLoad.import_("./ImageLoad.bs")
+        ->Promise.then(func => {
+          Promise.resolve(func["bghand"](.))
+        })
+        ->ignore
+      | _ => ()
+      }
+    }
+
+    <a onClick className href={url}>
+      {React.string(content)}
+    </a>
+  }
+}
+
+
 @react.component
 let make = () => {
   Js.log("app")
