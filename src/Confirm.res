@@ -24,7 +24,6 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError, ~search) => {
   let (code, setCode) = React.Uncurried.useState(_ => "")
   let (password, setPassword) = React.Uncurried.useState(_ => "")
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(valErrInit))
-  let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
   let code_max_length = 6
   let password_max_length = 98
 
@@ -71,8 +70,7 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError, ~search) => {
     },
   }
 
-  let onClick = _ => {
-    setSubmitClicked(._ => true)
+  let on_Click = _ => {
     switch validationError {
     | None =>
       switch Js.Nullable.isNullable(cognitoUser) {
@@ -108,12 +106,11 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError, ~search) => {
 
   <Form
     ht="h-52"
-    onClick
+    on_Click
     leg={switch search {
     | "pw_un" => "Change password"
     | _ => "Confirm code"
     }}
-    submitClicked
     validationError
     cognitoError>
     <Input

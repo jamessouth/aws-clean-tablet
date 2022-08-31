@@ -35,7 +35,6 @@ let make = (
   let (username, setUsername) = React.Uncurried.useState(_ => "")
   let (email, setEmail) = React.Uncurried.useState(_ => "")
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(valErrInit))
-  let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
   Js.log("getinfo")
   let name_starts_index = 41
   let username_max_length = 10
@@ -90,7 +89,6 @@ let make = (
 
   let onClick = (tipe, _) => {
     open Cognito
-    setSubmitClicked(._ => true)
     switch tipe {
     | "cd_un" =>
       switch validationError {
@@ -147,12 +145,11 @@ let make = (
 
   <Form
     ht="h-52"
-    onClick={onClick(search)}
+    on_Click={onClick(search)}
     leg={switch search {
     | "un_em" => "Enter email"
     | _ => "Enter username"
     }}
-    submitClicked
     validationError
     cognitoError>
     {switch search {

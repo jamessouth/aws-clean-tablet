@@ -53,7 +53,6 @@ let make = (
   ~endtoken,
   ~resetConnState,
 ) => {
-  let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
   let (answered, setAnswered) = React.Uncurried.useState(_ => false)
   let (answer, setAnswer) = React.Uncurried.useState(_ => "")
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(
@@ -88,7 +87,6 @@ let make = (
     send(. Js.Json.stringifyAny(pl))
     setAnswered(._ => true)
     setAnswer(._ => "")
-    setSubmitClicked(._ => false)
   }
 
   let onAnimationEnd = _ => {
@@ -123,7 +121,6 @@ let make = (
   }
 
   let onClick2 = _ => {
-    setSubmitClicked(._ => true)
     switch validationError {
     | None => onEnter(. ignore())
     | Some(_) => ()
@@ -171,7 +168,7 @@ let make = (
           switch answered {
           | true => <div className="bg-transparent h-45 w-full" />
           | false =>
-            <Form ht="h-24" onClick=onClick2 leg="" submitClicked validationError cognitoError=None>
+            <Form ht="h-24" on_Click=onClick2 leg="" validationError cognitoError=None>
               <Input
                 value=answer
                 propName="answer"

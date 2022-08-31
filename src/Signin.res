@@ -29,7 +29,6 @@ let make = (
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(
     "USERNAME: 3-10 length; PASSWORD: 8-98 length; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; ",
   ))
-  let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
   let username_max_length = 10
   let password_max_length = 98
 
@@ -39,8 +38,7 @@ let make = (
   }, (username, password))
 
   open Cognito
-  let onClick = _ => {
-    setSubmitClicked(._ => true)
+  let on_Click = _ => {
     switch validationError {
     | None => {
         let cbs = {
@@ -96,16 +94,8 @@ let make = (
     }
   }
 
-  {
-    switch submitClicked {
-    | true => <Loading label="lobby..." />
-    | false =>
-      <Form onClick leg="Sign in" submitClicked validationError cognitoError>
-        <Input value=username propName="username" setFunc=setUsername />
-        <Input
-          value=password propName="password" autoComplete="current-password" setFunc=setPassword
-        />
-      </Form>
-    }
-  }
+  <Form on_Click leg="Sign in" validationError cognitoError>
+    <Input value=username propName="username" setFunc=setUsername />
+    <Input value=password propName="password" autoComplete="current-password" setFunc=setPassword />
+  </Form>
 }
