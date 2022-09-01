@@ -14,7 +14,7 @@ external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => 
 > = "lazy"
 
 @react.component
-let make = (~cognitoUser, ~cognitoError, ~setCognitoError, ~search) => {
+let make = (~cognitoUser, ~search) => {
   let valErrInit = switch search {
   | "cd_un" => "CODE: 6-digit number only; "
   | _ => "CODE: 6-digit number only; PASSWORD: 8-98 length; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; "
@@ -26,7 +26,7 @@ let make = (~cognitoUser, ~cognitoError, ~setCognitoError, ~search) => {
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(valErrInit))
   let code_max_length = 6
   let password_max_length = 98
-
+let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
   React.useEffect3(() => {
     switch search {
     | "cd_un" => ErrorHook.useError(code, "CODE", setValidationError)

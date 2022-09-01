@@ -17,11 +17,11 @@ external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => 
 
 
 @react.component
-let make = (~userpool, ~setCognitoUser, ~cognitoError, ~setCognitoError) => {
+let make = (~userpool, ~setCognitoUser) => {
   let (username, setUsername) = React.Uncurried.useState(_ => "")
   let (password, setPassword) = React.Uncurried.useState(_ => "")
   let (email, setEmail) = React.Uncurried.useState(_ => "")
-
+let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(
     "USERNAME: 3-10 length; PASSWORD: 8-98 length; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; EMAIL: 5-99 length; enter a valid email address.",
   ))

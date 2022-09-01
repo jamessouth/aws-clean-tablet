@@ -21,8 +21,8 @@ let make = (
   ~setCognitoUser,
   ~setToken,
   ~cognitoUser,
-  ~cognitoError,
-  ~setCognitoError,
+  // ~cognitoError,
+  // ~setCognitoError,
 ) => {
   let (username, setUsername) = React.Uncurried.useState(_ => "")
   let (password, setPassword) = React.Uncurried.useState(_ => "")
@@ -31,7 +31,7 @@ let make = (
   ))
   let username_max_length = 10
   let password_max_length = 98
-
+let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
   React.useEffect2(() => {
     ErrorHook.useMultiError([(username, "USERNAME"), (password, "PASSWORD")], setValidationError)
     None

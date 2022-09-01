@@ -43,7 +43,7 @@ let make = () => {
   let (cognitoUser: Js.Nullable.t<usr>, setCognitoUser) = React.Uncurried.useState(_ =>
     Js.Nullable.null
   )
-  let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
+  
 
   let (token, setToken) = React.Uncurried.useState(_ => None)
   let (showName, setShowName) = React.Uncurried.useState(_ => "")
@@ -57,58 +57,58 @@ let make = () => {
   // img - 6
   // ws - 1
 
-  let signin = React.createElement(
-    Signin.lazy_(() =>
-      Signin.import_("./Signin.bs")->Promise.then(comp => {
-        Promise.resolve({"default": comp["make"]})
-      })
-    ),
-    Signin.makeProps(
-      ~userpool,
-      ~setCognitoUser,
-      ~setToken,
-      ~cognitoUser,
-      ~cognitoError,
-      ~setCognitoError,
-      (),
-    ),
-  )
+  // let signin = React.createElement(
+  //   Signin.lazy_(() =>
+  //     Signin.import_("./Signin.bs")->Promise.then(comp => {
+  //       Promise.resolve({"default": comp["make"]})
+  //     })
+  //   ),
+  //   Signin.makeProps(
+  //     ~userpool,
+  //     ~setCognitoUser,
+  //     ~setToken,
+  //     ~cognitoUser,
+  //     ~cognitoError,
+  //     ~setCognitoError,
+  //     (),
+  //   ),
+  // )
 
-  let signup = React.createElement(
-    Signup.lazy_(() =>
-      Signup.import_("./Signup.bs")->Promise.then(comp => {
-        Promise.resolve({"default": comp["make"]})
-      })
-    ),
-    Signup.makeProps(~cognitoError, ~setCognitoError, ~setCognitoUser, ~userpool, ()),
-  )
+  // let signup = React.createElement(
+  //   Signup.lazy_(() =>
+  //     Signup.import_("./Signup.bs")->Promise.then(comp => {
+  //       Promise.resolve({"default": comp["make"]})
+  //     })
+  //   ),
+  //   Signup.makeProps(~cognitoError, ~setCognitoError, ~setCognitoUser, ~userpool, ()),
+  // )
 
-  let getInfo = React.createElement(
-    GetInfo.lazy_(() =>
-      GetInfo.import_("./GetInfo.bs")->Promise.then(comp => {
-        Promise.resolve({"default": comp["make"]})
-      })
-    ),
-    GetInfo.makeProps(
-      ~userpool,
-      ~cognitoUser,
-      ~setCognitoUser,
-      ~cognitoError,
-      ~setCognitoError,
-      ~setShowName,
-      ~search,
-      (),
-    ),
-  )
+  // let getInfo = React.createElement(
+  //   GetInfo.lazy_(() =>
+  //     GetInfo.import_("./GetInfo.bs")->Promise.then(comp => {
+  //       Promise.resolve({"default": comp["make"]})
+  //     })
+  //   ),
+  //   GetInfo.makeProps(
+  //     ~userpool,
+  //     ~cognitoUser,
+  //     ~setCognitoUser,
+  //     ~cognitoError,
+  //     ~setCognitoError,
+  //     ~setShowName,
+  //     ~search,
+  //     (),
+  //   ),
+  // )
 
-  let confirm = React.createElement(
-    Confirm.lazy_(() =>
-      Confirm.import_("./Confirm.bs")->Promise.then(comp => {
-        Promise.resolve({"default": comp["make"]})
-      })
-    ),
-    Confirm.makeProps(~cognitoUser, ~cognitoError, ~setCognitoError, ~search, ()),
-  )
+  // let confirm = React.createElement(
+  //   Confirm.lazy_(() =>
+  //     Confirm.import_("./Confirm.bs")->Promise.then(comp => {
+  //       Promise.resolve({"default": comp["make"]})
+  //     })
+  //   ),
+  //   Confirm.makeProps(~cognitoUser, ~cognitoError, ~setCognitoError, ~search, ()),
+  // )
 
   let auth = React.useMemo4(_ =>
     React.createElement(
@@ -175,14 +175,27 @@ let make = () => {
           </nav>
         }
 
-      | (list{"signin"}, None) => <React.Suspense fallback=React.null> signin </React.Suspense>
+      | (list{"signin"}, None) =>
+      <Signin userpool setCognitoUser setToken cognitoUser 
+      // cognitoError setCognitoError 
+      />
+      //  <React.Suspense fallback=React.null> signin </React.Suspense>
 
-      | (list{"signup"}, None) => <React.Suspense fallback=React.null> signup </React.Suspense>
+      | (list{"signup"}, None) => 
+      <Signup userpool setCognitoUser 
+      // cognitoError setCognitoError 
+      />
+      // <React.Suspense fallback=React.null> signup </React.Suspense>
 
       | (list{"getinfo"}, None) =>
         switch search {
         | "cd_un" | "pw_un" | "un_em" =>
-          <React.Suspense fallback=React.null> getInfo </React.Suspense>
+<GetInfo
+            userpool cognitoUser setCognitoUser 
+            // cognitoError setCognitoError
+             setShowName search
+          />
+          // <React.Suspense fallback=React.null> getInfo </React.Suspense>
 
         | _ =>
           <div className="text-stone-100"> {React.string("unknown path, please try again")} </div>
@@ -190,7 +203,11 @@ let make = () => {
 
       | (list{"confirm"}, None) =>
         switch search {
-        | "cd_un" | "pw_un" => <React.Suspense fallback=React.null> confirm </React.Suspense>
+        | "cd_un" | "pw_un" => 
+        <Confirm cognitoUser 
+        // cognitoError setCognitoError
+         search />
+        // <React.Suspense fallback=React.null> confirm </React.Suspense>
 
         | _ =>
           <div className="text-stone-100"> {React.string("unknown path, please try again")} </div>

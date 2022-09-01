@@ -21,8 +21,8 @@ let make = (
   ~userpool,
   ~cognitoUser,
   ~setCognitoUser,
-  ~cognitoError,
-  ~setCognitoError,
+  // ~cognitoError,
+  // ~setCognitoError,
   ~setShowName,
   ~search,
 ) => {
@@ -39,7 +39,7 @@ let make = (
   let name_starts_index = 41
   let username_max_length = 10
   let email_max_length = 99
-
+let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
   React.useEffect2(() => {
     switch search {
     | "un_em" => ErrorHook.useError(email, "EMAIL", setValidationError)
