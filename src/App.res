@@ -24,6 +24,51 @@ module Link = {
   }
 }
 
+
+module Route = {
+  type t =
+  | Home
+  | SignIn
+  | SignUp
+  | GetInfo({search: string})
+  | Confirm({search: string})
+  | Lobby
+  | Leaderboard
+  | Play({play: string})
+
+let toType = (url: ReasonReactRouter.url) =>
+  switch url.path {
+  | list{} => Some(Home)
+  | list{"signin"} => Some(Signin)
+  | list{"signup"} => Some(Signup)
+  | list{"getinfo"} => Some(GetInfo({search: url.search}))
+  | list{"confirm"} => Some(Confirm({search: url.search}))
+  | list{"auth", "lobby"} => Some(Lobby)
+  | list{"auth", "leaderboard"} => Some(Leaderboard)
+  | list{"auth", "play", gameno} => Some(Play({play: gameno}))
+  | _ => None
+  }
+
+let toString = t =>
+  switch t {
+  | Home => "/"
+  | SignIn => "/signin"
+  | SignUp => "/signup"
+  | GetInfo({search}) => `/getinfo/?${search}`
+  | Confirm({search}) => `/confirm/?${search}`
+  | Lobby => "/auth/lobby"
+  | Leaderboard => "/auth/leaderboard"
+  | Play({play}) => `/auth/play/${play}`
+  }
+}
+
+
+
+
+
+
+
+
 @react.component
 let make = () => {
   Js.log("app")
@@ -48,67 +93,7 @@ let make = () => {
   let (token, setToken) = React.Uncurried.useState(_ => None)
   let (showName, setShowName) = React.Uncurried.useState(_ => "")
 
-  // 66
-  // html - 1
-  // css - 7
-  // js - 46
-  // xhr - 4
-  // font - 4
-  // img - 6
-  // ws - 1
 
-  // let signin = React.createElement(
-  //   Signin.lazy_(() =>
-  //     Signin.import_("./Signin.bs")->Promise.then(comp => {
-  //       Promise.resolve({"default": comp["make"]})
-  //     })
-  //   ),
-  //   Signin.makeProps(
-  //     ~userpool,
-  //     ~setCognitoUser,
-  //     ~setToken,
-  //     ~cognitoUser,
-  //     ~cognitoError,
-  //     ~setCognitoError,
-  //     (),
-  //   ),
-  // )
-
-  // let signup = React.createElement(
-  //   Signup.lazy_(() =>
-  //     Signup.import_("./Signup.bs")->Promise.then(comp => {
-  //       Promise.resolve({"default": comp["make"]})
-  //     })
-  //   ),
-  //   Signup.makeProps(~cognitoError, ~setCognitoError, ~setCognitoUser, ~userpool, ()),
-  // )
-
-  // let getInfo = React.createElement(
-  //   GetInfo.lazy_(() =>
-  //     GetInfo.import_("./GetInfo.bs")->Promise.then(comp => {
-  //       Promise.resolve({"default": comp["make"]})
-  //     })
-  //   ),
-  //   GetInfo.makeProps(
-  //     ~userpool,
-  //     ~cognitoUser,
-  //     ~setCognitoUser,
-  //     ~cognitoError,
-  //     ~setCognitoError,
-  //     ~setShowName,
-  //     ~search,
-  //     (),
-  //   ),
-  // )
-
-  // let confirm = React.createElement(
-  //   Confirm.lazy_(() =>
-  //     Confirm.import_("./Confirm.bs")->Promise.then(comp => {
-  //       Promise.resolve({"default": comp["make"]})
-  //     })
-  //   ),
-  //   Confirm.makeProps(~cognitoUser, ~cognitoError, ~setCognitoError, ~search, ()),
-  // )
 
   let auth = React.useMemo4(_ =>
     React.createElement(
@@ -190,7 +175,7 @@ let make = () => {
       | (list{"getinfo"}, None) =>
         switch search {
         | "cd_un" | "pw_un" | "un_em" =>
-<GetInfo
+          <GetInfo
             userpool cognitoUser setCognitoUser 
             // cognitoError setCognitoError
              setShowName search

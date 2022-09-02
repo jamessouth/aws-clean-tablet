@@ -33,6 +33,7 @@ let catch = (promise, callback) => {
 }
 type blob
 @send external blob: resp => t<blob> = "blob"
+@val external fetch: string => t<resp> = "fetch"
 @val external fetchAllSettled: string => t<outcome> = "fetch"
 let getPicsAllSettled4 = assets =>
   {

@@ -248,38 +248,19 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
 
   let close = (. code, reason) => ws->closeCodeReason(code, reason)
 
-  let load = Loading.lazy_(() =>
-    Loading.import_("./Loading.bs")->Promise.then(comp => {
-      Promise.resolve({"default": comp["make"]})
-    })
-  )
+  // let load = Loading.lazy_(() =>
+  //   Loading.import_("./Loading.bs")->Promise.then(comp => {
+  //     Promise.resolve({"default": comp["make"]})
+  //   })
+  // )
 
-  let loading1 = React.createElement(load, Loading.makeProps(~label="games...", ()))
+  // let loading1 = React.createElement(load, Loading.makeProps(~label="games...", ()))
 
-  let loading2 = React.createElement(load, Loading.makeProps(~label="game...", ()))
+  // let loading2 = React.createElement(load, Loading.makeProps(~label="game...", ()))
 
-  let play = React.createElement(
-    Play.lazy_(() =>
-      Play.import_("./Play.bs")->Promise.then(comp => {
-        Promise.resolve({"default": comp["make"]})
-      })
-    ),
-    Play.makeProps(
-      ~players,
-      ~sk,
-      ~showAnswers,
-      ~winner,
-      ~isWinner={winner != ""},
-      ~oldWord,
-      ~word,
-      ~playerColor,
-      ~send,
-      ~playerName,
-      ~endtoken,
-      ~resetConnState,
-      (),
-    ),
-  )
+
+
+
 
   let leaders = React.createElement(
     Leaders.lazy_(() =>
@@ -310,7 +291,9 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
       switch wsConnected {
       | false => {
           body(document)->setClassName("bodchmob bodchtab bodchbig")
-          <React.Suspense fallback=React.null> loading1 </React.Suspense>
+
+          <Loading label="games..." />
+          // <React.Suspense fallback=React.null> loading1 </React.Suspense>
         }
 
       | true => {
@@ -322,9 +305,26 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
       switch wsConnected {
       | true =>
         switch Js.Array2.length(players) > 0 && gameno == sk {
-        | true => <React.Suspense fallback=React.null> play </React.Suspense>
+        | true => 
+        
+          <Play
+              players
+              sk
+              showAnswers
+              winner
+              isWinner={winner != ""}
+              oldWord
+              word
+              playerColor
+              send
+              playerName
+              endtoken
+              resetConnState
+            />
 
-        | false => <React.Suspense fallback=React.null> loading2 </React.Suspense>
+        | false => 
+        <Loading label="game..." />
+        // <React.Suspense fallback=React.null> loading2 </React.Suspense>
         }
 
       | false =>
