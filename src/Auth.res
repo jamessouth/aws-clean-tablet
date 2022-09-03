@@ -90,8 +90,8 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
     winner: "",
   }
 
-  let {path} = RescriptReactRouter.useUrl()
-  Js.log2("u345876l", path)
+ let route = App.Route.urlStringToType(RescriptReactRouter.useUrl())
+  Js.log2("u345876l", route)
 
   let (ws, setWs) = React.Uncurried.useState(_ => Js.Nullable.null)
   let (playerGame, setPlayerGame) = React.Uncurried.useState(_ => "")

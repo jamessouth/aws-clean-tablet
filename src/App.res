@@ -35,30 +35,32 @@ module Route = {
   | Lobby
   | Leaderboard
   | Play({play: string})
+  | Other
 
-let toType = (url: ReasonReactRouter.url) =>
+let urlStringToType = (url: ReasonReactRouter.url) =>
   switch url.path {
-  | list{} => Some(Home)
-  | list{"signin"} => Some(Signin)
-  | list{"signup"} => Some(Signup)
-  | list{"getinfo"} => Some(GetInfo({search: url.search}))
-  | list{"confirm"} => Some(Confirm({search: url.search}))
-  | list{"auth", "lobby"} => Some(Lobby)
-  | list{"auth", "leaderboard"} => Some(Leaderboard)
-  | list{"auth", "play", gameno} => Some(Play({play: gameno}))
-  | _ => None
+  | list{} => Home
+  | list{"signin"} => Signin
+  | list{"signup"} => Signup
+  | list{"getinfo"} => GetInfo({search: url.search})
+  | list{"confirm"} => Confirm({search: url.search})
+  | list{"auth", "lobby"} => Lobby
+  | list{"auth", "leaderboard"} => Leaderboard
+  | list{"auth", "play", gameno} => Play({play: gameno})
+  | _ => Other
   }
 
-let toString = t =>
+let typeToUrlString = t =>
   switch t {
   | Home => "/"
   | SignIn => "/signin"
   | SignUp => "/signup"
-  | GetInfo({search}) => `/getinfo/?${search}`
-  | Confirm({search}) => `/confirm/?${search}`
+  | GetInfo({search}) => `/getinfo?${search}`
+  | Confirm({search}) => `/confirm?${search}`
   | Lobby => "/auth/lobby"
   | Leaderboard => "/auth/leaderboard"
   | Play({play}) => `/auth/play/${play}`
+  | Other => ""
   }
 }
 
@@ -84,7 +86,7 @@ let make = () => {
     advancedSecurityDataCollectionFlag: false,
   })
 
-  let {path, search} = RescriptReactRouter.useUrl()
+  let route = Route.urlStringToType(RescriptReactRouter.useUrl())
   let (cognitoUser: Js.Nullable.t<usr>, setCognitoUser) = React.Uncurried.useState(_ =>
     Js.Nullable.null
   )
@@ -110,9 +112,9 @@ let make = () => {
 
   open Web
   <>
-    {switch path {
-    | list{"auth", "leaderboard"} => React.null
-    | _ =>
+    {switch route {
+    | Leaderboard => React.null
+    | Home  | SignIn | SignUp | GetInfo | Confirm | Lobby | Play | Other =>
       switch token {
       | None =>
         <header className="mb-10 newgmimg:mb-12">
@@ -125,12 +127,12 @@ let make = () => {
       }
     }}
     <main
-      className={switch path {
-      | list{"auth", "leaderboard"} => ""
-      | _ => "mb-8"
+      className={switch route {
+      | Leaderboard => ""
+      | Home  | SignIn | SignUp | GetInfo | Confirm | Lobby | Play | Other => "mb-8"
       }}>
-      {switch (path, token) {
-      | (list{}, None) => {
+      {switch (route, token) {
+      | (Home, None) => {
           body(document)->setClassName("bodmob bodtab bodbig")
           <nav className="flex flex-col items-center relative">
             <Link
@@ -160,19 +162,19 @@ let make = () => {
           </nav>
         }
 
-      | (list{"signin"}, None) =>
+      | (Signin, None) =>
       <Signin userpool setCognitoUser setToken cognitoUser 
       // cognitoError setCognitoError 
       />
       //  <React.Suspense fallback=React.null> signin </React.Suspense>
 
-      | (list{"signup"}, None) => 
+      | (Signup, None) => 
       <Signup userpool setCognitoUser 
       // cognitoError setCognitoError 
       />
       // <React.Suspense fallback=React.null> signup </React.Suspense>
 
-      | (list{"getinfo"}, None) =>
+      | (GetInfo, None) =>
         switch search {
         | "cd_un" | "pw_un" | "un_em" =>
           <GetInfo
@@ -186,7 +188,7 @@ let make = () => {
           <div className="text-stone-100"> {React.string("unknown path, please try again")} </div>
         }
 
-      | (list{"confirm"}, None) =>
+      | (Confirm, None) =>
         switch search {
         | "cd_un" | "pw_un" => 
         <Confirm cognitoUser 
@@ -198,19 +200,19 @@ let make = () => {
           <div className="text-stone-100"> {React.string("unknown path, please try again")} </div>
         }
 
-      | (list{"auth", ..._} | list{"play"} | list{"leaderboard"}, None) => {
+      | (Lobby | Play | Leaderboard, None) => {
           RescriptReactRouter.replace("/")
           React.null
         }
 
-      | (list{} | list{"signin"} | list{"signup"} | list{"getinfo"} | list{"confirm"}, Some(_)) => {
-          RescriptReactRouter.replace("/auth/lobby")
+      | (Home | Signin | Signup | GetInfo | Confirm, Some(_)) => {
+          RescriptReactRouter.replace(Route.typeToUrlString(Lobby))
           React.null
         }
 
-      | (list{"auth", ..._}, Some(_)) => <React.Suspense fallback=React.null> auth </React.Suspense>
+      | (Lobby | Play | Leaderboard, Some(_)) => <React.Suspense fallback=React.null> auth </React.Suspense>
 
-      | (_, _) => <div> {React.string("other")} </div> // <PageNotFound/>
+      | (Other, _) => <div> {React.string("other")} </div> // <PageNotFound/>
       }}
     </main>
   </>
