@@ -90,7 +90,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
     winner: "",
   }
 
- let route = App.Route.urlStringToType(RescriptReactRouter.useUrl())
+ let route = Promise.Route.urlStringToType(RescriptReactRouter.useUrl())
   Js.log2("u345876l", route)
 
   let (ws, setWs) = React.Uncurried.useState(_ => Js.Nullable.null)
@@ -272,8 +272,8 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
   )
 
   <>
-    {switch path {
-    | list{"auth", "leaderboard"} => React.null
+    {switch route {
+    | Leaderboard => React.null
     | _ =>
       <header className="mb-10 newgmimg:mb-12">
         <p className="font-flow text-stone-100 text-4xl h-10 font-bold text-center">
@@ -286,8 +286,8 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
         </h1>
       </header>
     }}
-    {switch path {
-    | list{"auth", "lobby"} =>
+    {switch route {
+    | Lobby =>
       switch wsConnected {
       | false => {
           body(document)->setClassName("bodchmob bodchtab bodchbig")
@@ -301,10 +301,10 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
           <Lobby playerGame games send wsError close count setLeaderData />
         }
       }
-    | list{"auth", "play", gameno} =>
+    | Play({play}) =>
       switch wsConnected {
       | true =>
-        switch Js.Array2.length(players) > 0 && gameno == sk {
+        switch Js.Array2.length(players) > 0 && play == sk {
         | true => 
         
           <Play
@@ -333,7 +333,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
         </p>
       }
 
-    | list{"auth", "leaderboard"} => {
+    | Leaderboard => {
         body(document)->classList->addClassList3("bodleadmob", "bodleadtab", "bodleadbig")
 
         <React.Suspense fallback=React.null> leaders </React.Suspense>

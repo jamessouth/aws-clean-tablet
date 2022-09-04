@@ -25,44 +25,7 @@ module Link = {
 }
 
 
-module Route = {
-  type t =
-  | Home
-  | SignIn
-  | SignUp
-  | GetInfo({search: string})
-  | Confirm({search: string})
-  | Lobby
-  | Leaderboard
-  | Play({play: string})
-  | Other
 
-let urlStringToType = (url: ReasonReactRouter.url) =>
-  switch url.path {
-  | list{} => Home
-  | list{"signin"} => Signin
-  | list{"signup"} => Signup
-  | list{"getinfo"} => GetInfo({search: url.search})
-  | list{"confirm"} => Confirm({search: url.search})
-  | list{"auth", "lobby"} => Lobby
-  | list{"auth", "leaderboard"} => Leaderboard
-  | list{"auth", "play", gameno} => Play({play: gameno})
-  | _ => Other
-  }
-
-let typeToUrlString = t =>
-  switch t {
-  | Home => "/"
-  | SignIn => "/signin"
-  | SignUp => "/signup"
-  | GetInfo({search}) => `/getinfo?${search}`
-  | Confirm({search}) => `/confirm?${search}`
-  | Lobby => "/auth/lobby"
-  | Leaderboard => "/auth/leaderboard"
-  | Play({play}) => `/auth/play/${play}`
-  | Other => ""
-  }
-}
 
 
 
@@ -86,7 +49,7 @@ let make = () => {
     advancedSecurityDataCollectionFlag: false,
   })
 
-  let route = Route.urlStringToType(RescriptReactRouter.useUrl())
+  let route = Promise.Route.urlStringToType(RescriptReactRouter.useUrl())
   let (cognitoUser: Js.Nullable.t<usr>, setCognitoUser) = React.Uncurried.useState(_ =>
     Js.Nullable.null
   )
@@ -114,7 +77,7 @@ let make = () => {
   <>
     {switch route {
     | Leaderboard => React.null
-    | Home  | SignIn | SignUp | GetInfo | Confirm | Lobby | Play | Other =>
+    | Home  | SignIn | SignUp | GetInfo(_) | Confirm(_) | Lobby | Play(_) | Other =>
       switch token {
       | None =>
         <header className="mb-10 newgmimg:mb-12">
@@ -129,7 +92,7 @@ let make = () => {
     <main
       className={switch route {
       | Leaderboard => ""
-      | Home  | SignIn | SignUp | GetInfo | Confirm | Lobby | Play | Other => "mb-8"
+      | Home  | SignIn | SignUp | GetInfo(_) | Confirm(_) | Lobby | Play(_) | Other => "mb-8"
       }}>
       {switch (route, token) {
       | (Home, None) => {
@@ -162,19 +125,19 @@ let make = () => {
           </nav>
         }
 
-      | (Signin, None) =>
+      | (SignIn, None) =>
       <Signin userpool setCognitoUser setToken cognitoUser 
       // cognitoError setCognitoError 
       />
       //  <React.Suspense fallback=React.null> signin </React.Suspense>
 
-      | (Signup, None) => 
+      | (SignUp, None) => 
       <Signup userpool setCognitoUser 
       // cognitoError setCognitoError 
       />
       // <React.Suspense fallback=React.null> signup </React.Suspense>
 
-      | (GetInfo, None) =>
+      | (GetInfo({search}), None) =>
         switch search {
         | "cd_un" | "pw_un" | "un_em" =>
           <GetInfo
@@ -188,7 +151,7 @@ let make = () => {
           <div className="text-stone-100"> {React.string("unknown path, please try again")} </div>
         }
 
-      | (Confirm, None) =>
+      | (Confirm({search}), None) =>
         switch search {
         | "cd_un" | "pw_un" => 
         <Confirm cognitoUser 
@@ -200,17 +163,17 @@ let make = () => {
           <div className="text-stone-100"> {React.string("unknown path, please try again")} </div>
         }
 
-      | (Lobby | Play | Leaderboard, None) => {
+      | (Lobby | Play(_) | Leaderboard, None) => {
           RescriptReactRouter.replace("/")
           React.null
         }
 
-      | (Home | Signin | Signup | GetInfo | Confirm, Some(_)) => {
-          RescriptReactRouter.replace(Route.typeToUrlString(Lobby))
+      | (Home | SignIn | SignUp | GetInfo(_) | Confirm(_), Some(_)) => {
+          RescriptReactRouter.replace(Promise.Route.typeToUrlString(Lobby))
           React.null
         }
 
-      | (Lobby | Play | Leaderboard, Some(_)) => <React.Suspense fallback=React.null> auth </React.Suspense>
+      | (Lobby | Play(_) | Leaderboard, Some(_)) => <React.Suspense fallback=React.null> auth </React.Suspense>
 
       | (Other, _) => <div> {React.string("other")} </div> // <PageNotFound/>
       }}
