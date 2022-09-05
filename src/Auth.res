@@ -90,7 +90,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
     winner: "",
   }
 
- let route = Promise.Route.urlStringToType(RescriptReactRouter.useUrl())
+  let route = Route.useRouter()
   Js.log2("u345876l", route)
 
   let (ws, setWs) = React.Uncurried.useState(_ => Js.Nullable.null)
@@ -258,10 +258,6 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
 
   // let loading2 = React.createElement(load, Loading.makeProps(~label="game...", ()))
 
-
-
-
-
   let leaders = React.createElement(
     Leaders.lazy_(() =>
       Leaders.import_("./Leaders.bs")->Promise.then(comp => {
@@ -293,8 +289,8 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
           body(document)->setClassName("bodchmob bodchtab bodchbig")
 
           <Loading label="games..." />
-          // <React.Suspense fallback=React.null> loading1 </React.Suspense>
         }
+      // <React.Suspense fallback=React.null> loading1 </React.Suspense>
 
       | true => {
           body(document)->classList->removeClassList3("bodleadmob", "bodleadtab", "bodleadbig")
@@ -305,25 +301,23 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
       switch wsConnected {
       | true =>
         switch Js.Array2.length(players) > 0 && play == sk {
-        | true => 
-        
+        | true =>
           <Play
-              players
-              sk
-              showAnswers
-              winner
-              isWinner={winner != ""}
-              oldWord
-              word
-              playerColor
-              send
-              playerName
-              endtoken
-              resetConnState
-            />
+            players
+            sk
+            showAnswers
+            winner
+            isWinner={winner != ""}
+            oldWord
+            word
+            playerColor
+            send
+            playerName
+            endtoken
+            resetConnState
+          />
 
-        | false => 
-        <Loading label="game..." />
+        | false => <Loading label="game..." />
         // <React.Suspense fallback=React.null> loading2 </React.Suspense>
         }
 

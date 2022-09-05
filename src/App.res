@@ -4,35 +4,26 @@ external upid: string = "VITE_UPID"
 external cid: string = "VITE_CID"
 
 module Link = {
+  open Route
   @react.component
-  let make = (~url, ~className, ~content="") => {
+  let make = (~route, ~className, ~content="") => {
     let onClick = e => {
       ReactEvent.Mouse.preventDefault(e)
-      RescriptReactRouter.push(url)
-      switch url {
-      | "/signin" =>
+      push(route)
+      switch route {
+      | SignIn =>
         ImageLoad.import_("./ImageLoad.bs")
         ->Promise.then(func => {
           Promise.resolve(func["bghand"](.))
         })
         ->ignore
-      | _ => ()
+      | Home | SignUp | GetInfo(_) | Confirm(_) | Lobby | Leaderboard | Play(_) | Other => ()
       }
     }
 
-    <a onClick className href={url}> {React.string(content)} </a>
+    <a onClick className href={typeToUrlString(route)}> {React.string(content)} </a>
   }
 }
-
-
-
-
-
-
-
-
-
-
 
 @react.component
 let make = () => {
@@ -49,16 +40,13 @@ let make = () => {
     advancedSecurityDataCollectionFlag: false,
   })
 
-  let route = Promise.Route.urlStringToType(RescriptReactRouter.useUrl())
+  let route = Route.useRouter()
   let (cognitoUser: Js.Nullable.t<usr>, setCognitoUser) = React.Uncurried.useState(_ =>
     Js.Nullable.null
   )
-  
 
   let (token, setToken) = React.Uncurried.useState(_ => None)
   let (showName, setShowName) = React.Uncurried.useState(_ => "")
-
-
 
   let auth = React.useMemo4(_ =>
     React.createElement(
@@ -74,10 +62,11 @@ let make = () => {
   , (token, setToken, cognitoUser, setCognitoUser))
 
   open Web
+  open Route
   <>
     {switch route {
     | Leaderboard => React.null
-    | Home  | SignIn | SignUp | GetInfo(_) | Confirm(_) | Lobby | Play(_) | Other =>
+    | Home | SignIn | SignUp | GetInfo(_) | Confirm(_) | Lobby | Play(_) | Other =>
       switch token {
       | None =>
         <header className="mb-10 newgmimg:mb-12">
@@ -92,27 +81,37 @@ let make = () => {
     <main
       className={switch route {
       | Leaderboard => ""
-      | Home  | SignIn | SignUp | GetInfo(_) | Confirm(_) | Lobby | Play(_) | Other => "mb-8"
+      | Home | SignIn | SignUp | GetInfo(_) | Confirm(_) | Lobby | Play(_) | Other => "mb-8"
       }}>
       {switch (route, token) {
       | (Home, None) => {
           body(document)->setClassName("bodmob bodtab bodbig")
           <nav className="flex flex-col items-center relative">
             <Link
-              url="/signin"
+              route=SignIn
               className={linkBase2 ++ "decay-mask text-3xl p-2 max-w-80 font-fred mb-8 sm:mb-16"}
               content="SIGN IN"
             />
             <Link
-              url="/signup"
+              route=SignUp
               className={linkBase2 ++ "decay-mask text-3xl p-2 max-w-80 font-fred"}
               content="SIGN UP"
             />
             <Link
-              url="/getinfo?cd_un" className={linkBase ++ "mt-10"} content="verification code?"
+              route=GetInfo({search: "cd_un"})
+              className={linkBase ++ "mt-10"}
+              content="verification code?"
             />
-            <Link url="/getinfo?pw_un" className={linkBase ++ "mt-6"} content="forgot password?" />
-            <Link url="/getinfo?un_em" className={linkBase ++ "mt-6"} content="forgot username?" />
+            <Link
+              route=GetInfo({search: "pw_un"})
+              className={linkBase ++ "mt-6"}
+              content="forgot password?"
+            />
+            <Link
+              route=GetInfo({search: "un_em"})
+              className={linkBase ++ "mt-6"}
+              content="forgot username?"
+            />
             {switch showName == "" {
             | true => React.null
             | false =>
@@ -125,57 +124,24 @@ let make = () => {
           </nav>
         }
 
-      | (SignIn, None) =>
-      <Signin userpool setCognitoUser setToken cognitoUser 
-      // cognitoError setCognitoError 
-      />
-      //  <React.Suspense fallback=React.null> signin </React.Suspense>
-
-      | (SignUp, None) => 
-      <Signup userpool setCognitoUser 
-      // cognitoError setCognitoError 
-      />
-      // <React.Suspense fallback=React.null> signup </React.Suspense>
-
+      | (SignIn, None) => <Signin userpool setCognitoUser setToken cognitoUser />
+      | (SignUp, None) => <Signup userpool setCognitoUser />
       | (GetInfo({search}), None) =>
-        switch search {
-        | "cd_un" | "pw_un" | "un_em" =>
-          <GetInfo
-            userpool cognitoUser setCognitoUser 
-            // cognitoError setCognitoError
-             setShowName search
-          />
-          // <React.Suspense fallback=React.null> getInfo </React.Suspense>
-
-        | _ =>
-          <div className="text-stone-100"> {React.string("unknown path, please try again")} </div>
-        }
-
-      | (Confirm({search}), None) =>
-        switch search {
-        | "cd_un" | "pw_un" => 
-        <Confirm cognitoUser 
-        // cognitoError setCognitoError
-         search />
-        // <React.Suspense fallback=React.null> confirm </React.Suspense>
-
-        | _ =>
-          <div className="text-stone-100"> {React.string("unknown path, please try again")} </div>
-        }
-
+        <GetInfo userpool cognitoUser setCognitoUser setShowName search />
+      | (Confirm({search}), None) => <Confirm cognitoUser search />
       | (Lobby | Play(_) | Leaderboard, None) => {
-          RescriptReactRouter.replace("/")
+          replace(Home)
           React.null
         }
 
       | (Home | SignIn | SignUp | GetInfo(_) | Confirm(_), Some(_)) => {
-          RescriptReactRouter.replace(Promise.Route.typeToUrlString(Lobby))
+          replace(Lobby)
           React.null
         }
 
-      | (Lobby | Play(_) | Leaderboard, Some(_)) => <React.Suspense fallback=React.null> auth </React.Suspense>
-
-      | (Other, _) => <div> {React.string("other")} </div> // <PageNotFound/>
+      | (Lobby | Play(_) | Leaderboard, Some(_)) =>
+        <React.Suspense fallback=React.null> auth </React.Suspense>
+      | (Other, _) => <div> {React.string("page not found")} </div> // <PageNotFound/>
       }}
     </main>
   </>

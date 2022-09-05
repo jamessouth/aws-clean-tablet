@@ -39,7 +39,7 @@ let make = (
   let name_starts_index = 41
   let username_max_length = 10
   let email_max_length = 99
-let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
+  let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
   React.useEffect2(() => {
     switch search {
     | "un_em" => ErrorHook.useError(email, "EMAIL", setValidationError)
@@ -59,9 +59,9 @@ let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
           | true => {
               setCognitoError(._ => None)
               switch Js.String2.endsWith(msg, "error user found.") {
-              | true => RescriptReactRouter.push(`/confirm?${search}`)
+              | true => Route.push(Confirm({search: search}))
               | false => {
-                  RescriptReactRouter.push("/")
+                  Route.push(Home)
                   setShowName(._ => Js.String2.sliceToEnd(msg, ~from=name_starts_index))
                 }
               }
@@ -82,7 +82,7 @@ let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
     Js.log2("coguser useeff", search)
     switch Js.Nullable.isNullable(cognitoUser) {
     | true => ()
-    | false => RescriptReactRouter.push(`/confirm?${search}`)
+    | false => Route.push(Confirm({search: search}))
     }
     None
   }, [cognitoUser])

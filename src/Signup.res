@@ -1,10 +1,7 @@
-
-
 type propShape = {
   "cognitoError": option<string>,
   "setCognitoError": (. option<string> => option<string>) => unit,
-  "setCognitoUser": (.Js.Nullable.t<Cognito.usr> => Js.Nullable.t<Cognito.usr>,
-) => unit,
+  "setCognitoUser": (. Js.Nullable.t<Cognito.usr> => Js.Nullable.t<Cognito.usr>) => unit,
   "userpool": Cognito.poolData,
 }
 
@@ -12,16 +9,16 @@ type propShape = {
 external import_: string => Promise.t<{"make": React.component<propShape>}> = "import"
 
 @module("react")
-external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => React.component<propShape> = "lazy"
-
-
+external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => React.component<
+  propShape,
+> = "lazy"
 
 @react.component
 let make = (~userpool, ~setCognitoUser) => {
   let (username, setUsername) = React.Uncurried.useState(_ => "")
   let (password, setPassword) = React.Uncurried.useState(_ => "")
   let (email, setEmail) = React.Uncurried.useState(_ => "")
-let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
+  let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(
     "USERNAME: 3-10 length; PASSWORD: 8-98 length; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; EMAIL: 5-99 length; enter a valid email address.",
   ))
@@ -43,10 +40,11 @@ let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
     | (_, Some(val)) => {
         setCognitoError(._ => None)
         setCognitoUser(._ => Js.Nullable.return(val.user))
-        RescriptReactRouter.push("/confirm?cd_un")
+        Route.push(Confirm({search: "cd_un"}))
 
         Js.log2("res", val.user.username)
       }
+
     | (Some(ex), _) => {
         switch Js.Exn.message(ex) {
         | Some(msg) => setCognitoError(._ => Some(msg))
@@ -55,6 +53,7 @@ let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
 
         Js.log2("problem", ex)
       }
+
     | _ => Js.Exn.raiseError("invalid cb argument")
     }
 
@@ -79,6 +78,7 @@ let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
           Js.Nullable.null,
         )
       }
+
     | Some(_) => ()
     }
   }

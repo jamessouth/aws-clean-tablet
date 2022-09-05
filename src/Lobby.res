@@ -99,7 +99,7 @@ module Game = {
 
     React.useEffect3(() => {
       switch inThisGame && count == "start" {
-      | true => RescriptReactRouter.push(`/auth/play/${game.no}`)
+      | true => Route.push(Play({play: game.no}))
       | false => ()
       }
       None
@@ -197,7 +197,7 @@ let make = (~playerGame, ~games, ~send, ~wsError, ~close, ~count, ~setLeaderData
       info: "hello",
     }
     send(. Js.Json.stringifyAny(pl))
-    RescriptReactRouter.push("/auth/leaderboard")
+    Route.push(Leaderboard)
   }
 
   <>

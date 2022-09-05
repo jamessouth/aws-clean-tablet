@@ -117,7 +117,7 @@ let make = (
     | false => ()
     }
     resetConnState()
-    RescriptReactRouter.push("/auth/lobby")
+    Route.push(Lobby)
   }
 
   let onClick2 = _ => {

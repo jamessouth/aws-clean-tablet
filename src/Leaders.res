@@ -82,7 +82,7 @@ let make = (~leaderData: array<Reducer.stat>, ~playerName) => {
           <Button
             textTrue=larrow
             textFalse=larrow
-            onClick={_ => RescriptReactRouter.push("/auth/lobby")}
+            onClick={_ => Route.push(Lobby)}
             className="cursor-pointer font-over text-5xl bg-transparent absolute left-10"
           />
           {React.string("Leaderboard")}

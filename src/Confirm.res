@@ -26,7 +26,7 @@ let make = (~cognitoUser, ~search) => {
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(valErrInit))
   let code_max_length = 6
   let password_max_length = 98
-let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
+  let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
   React.useEffect3(() => {
     switch search {
     | "cd_un" => ErrorHook.useError(code, "CODE", setValidationError)
@@ -39,7 +39,7 @@ let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
     switch (Js.Nullable.toOption(err), Js.Nullable.toOption(res)) {
     | (_, Some(val)) => {
         setCognitoError(._ => None)
-        RescriptReactRouter.push("/signin")
+        Route.push(SignIn)
         Js.log2("conf res", val)
       }
 
@@ -58,7 +58,7 @@ let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
   let confirmpasswordCallback = {
     onSuccess: str => {
       setCognitoError(._ => None)
-      RescriptReactRouter.push("/signin")
+      Route.push(SignIn)
       Js.log2("pw confirmed: ", str)
     },
     onFailure: err => {
