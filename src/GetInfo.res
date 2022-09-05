@@ -28,9 +28,12 @@ let make = (
 ) => {
   let dummyPassword = "lllLLL!!!111"
   let dummyUsername = "letmein"
-  let valErrInit = switch search {
-  | "un_em" => "EMAIL: 5-99 length; enter a valid email address."
-  | _ => "USERNAME: 3-10 length; "
+  let valErrInit = {
+    open Route
+    switch search {
+    | ForgotUsername => "EMAIL: 5-99 length; enter a valid email address."
+    | VerificationCode | ForgotPassword | Other => "USERNAME: 3-10 length; "
+    }
   }
   let (username, setUsername) = React.Uncurried.useState(_ => "")
   let (email, setEmail) = React.Uncurried.useState(_ => "")
@@ -41,14 +44,17 @@ let make = (
   let email_max_length = 99
   let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
   React.useEffect2(() => {
+    open Route
     switch search {
-    | "un_em" => ErrorHook.useError(email, "EMAIL", setValidationError)
-    | _ => ErrorHook.useError(username, "USERNAME", setValidationError)
+    | ForgotUsername => ErrorHook.useError(email, "EMAIL", setValidationError)
+    | VerificationCode | ForgotPassword | Other =>
+      ErrorHook.useError(username, "USERNAME", setValidationError)
     }
     None
   }, (username, email))
 
   let signupCallback = (. err, res) => {
+    open Route
     Js.log2("signup cb", search)
     switch (Js.Nullable.toOption(err), Js.Nullable.toOption(res)) {
     | (_, Some(_)) => ()
@@ -59,9 +65,9 @@ let make = (
           | true => {
               setCognitoError(._ => None)
               switch Js.String2.endsWith(msg, "error user found.") {
-              | true => Route.push(Confirm({search: search}))
+              | true => push(Confirm({search: search}))
               | false => {
-                  Route.push(Home)
+                  push(Home)
                   setShowName(._ => Js.String2.sliceToEnd(msg, ~from=name_starts_index))
                 }
               }
@@ -89,8 +95,9 @@ let make = (
 
   let onClick = (tipe, _) => {
     open Cognito
+    open Route
     switch tipe {
-    | "cd_un" =>
+    | VerificationCode =>
       switch validationError {
       | None => {
           let userdata: userDataInput = {
@@ -104,7 +111,7 @@ let make = (
 
       | Some(_) => ()
       }
-    | "pw_un" =>
+    | ForgotPassword =>
       switch validationError {
       | None =>
         userpool->signUp(
@@ -119,7 +126,7 @@ let make = (
         )
       | Some(_) => ()
       }
-    | "un_em" =>
+    | ForgotUsername =>
       switch validationError {
       | None => {
           let emailData: attributeDataInput = {
@@ -139,7 +146,7 @@ let make = (
 
       | Some(_) => ()
       }
-    | _ => ()
+    | Other => ()
     }
   }
 
@@ -147,14 +154,15 @@ let make = (
     ht="h-52"
     on_Click={onClick(search)}
     leg={switch search {
-    | "un_em" => "Enter email"
-    | _ => "Enter username"
+    | ForgotUsername => "Enter email"
+    | VerificationCode | ForgotPassword | Other => "Enter username"
     }}
     validationError
     cognitoError>
     {switch search {
-    | "un_em" => <Input value=email propName="email" inputMode="email" setFunc=setEmail />
-    | _ => <Input value=username propName="username" setFunc=setUsername />
+    | ForgotUsername => <Input value=email propName="email" inputMode="email" setFunc=setEmail />
+    | VerificationCode | ForgotPassword | Other =>
+      <Input value=username propName="username" setFunc=setUsername />
     }}
   </Form>
 }

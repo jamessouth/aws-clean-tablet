@@ -63,7 +63,7 @@ external parseWord: string => wordData = "parse"
 external parseRmvGame: string => rmvGameData = "parse"
 @scope("JSON") @val
 external parseLeaders: string => leadersData = "parse"
-let getMsgType = tag => {
+let getMsgType = tag =>
   switch tag->Js.String2.slice(~from=2, ~to_=9) {
   | "listGms" => InsertConn
   | "modConn" => ModifyConn
@@ -76,7 +76,6 @@ let getMsgType = tag => {
   | "leaders" => Leaders
   | _ => Other
   }
-}
 
 @react.component
 let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
@@ -248,16 +247,6 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
 
   let close = (. code, reason) => ws->closeCodeReason(code, reason)
 
-  // let load = Loading.lazy_(() =>
-  //   Loading.import_("./Loading.bs")->Promise.then(comp => {
-  //     Promise.resolve({"default": comp["make"]})
-  //   })
-  // )
-
-  // let loading1 = React.createElement(load, Loading.makeProps(~label="games...", ()))
-
-  // let loading2 = React.createElement(load, Loading.makeProps(~label="game...", ()))
-
   let leaders = React.createElement(
     Leaders.lazy_(() =>
       Leaders.import_("./Leaders.bs")->Promise.then(comp => {
@@ -270,7 +259,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
   <>
     {switch route {
     | Leaderboard => React.null
-    | _ =>
+    | Home | SignIn | SignUp | GetInfo(_) | Confirm(_) | Lobby | Play(_) | Other  =>
       <header className="mb-10 newgmimg:mb-12">
         <p className="font-flow text-stone-100 text-4xl h-10 font-bold text-center">
           {React.string(playerName)}
@@ -290,7 +279,6 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
 
           <Loading label="games..." />
         }
-      // <React.Suspense fallback=React.null> loading1 </React.Suspense>
 
       | true => {
           body(document)->classList->removeClassList3("bodleadmob", "bodleadtab", "bodleadbig")
@@ -318,7 +306,6 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
           />
 
         | false => <Loading label="game..." />
-        // <React.Suspense fallback=React.null> loading2 </React.Suspense>
         }
 
       | false =>
@@ -333,7 +320,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
         <React.Suspense fallback=React.null> leaders </React.Suspense>
       }
 
-    | _ => <div> {React.string("other")} </div> // <PageNotFound/>
+    | Home | SignIn | SignUp | GetInfo(_) | Confirm(_)  | Other  => <div> {React.string("page not found")} </div> // <PageNotFound/>
     }}
   </>
 }

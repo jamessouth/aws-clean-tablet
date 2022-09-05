@@ -15,9 +15,14 @@ external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => 
 
 @react.component
 let make = (~cognitoUser, ~search) => {
-  let valErrInit = switch search {
-  | "cd_un" => "CODE: 6-digit number only; "
-  | _ => "CODE: 6-digit number only; PASSWORD: 8-98 length; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; "
+  let valErrInit = {
+    open Route
+    switch search {
+    | VerificationCode => "CODE: 6-digit number only; "
+    | ForgotPassword
+    | ForgotUsername
+    | Other => "CODE: 6-digit number only; PASSWORD: 8-98 length; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; "
+    }
   }
   Js.log3("user", cognitoUser, search)
 
@@ -28,9 +33,11 @@ let make = (~cognitoUser, ~search) => {
   let password_max_length = 98
   let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
   React.useEffect3(() => {
+    open ErrorHook
     switch search {
-    | "cd_un" => ErrorHook.useError(code, "CODE", setValidationError)
-    | _ => ErrorHook.useMultiError([(code, "CODE"), (password, "PASSWORD")], setValidationError)
+    | VerificationCode => useError(code, "CODE", setValidationError)
+    | ForgotPassword | ForgotUsername | Other =>
+      useMultiError([(code, "CODE"), (password, "PASSWORD")], setValidationError)
     }
     None
   }, (code, password, search))
@@ -76,7 +83,7 @@ let make = (~cognitoUser, ~search) => {
       switch Js.Nullable.isNullable(cognitoUser) {
       | false =>
         switch search {
-        | "cd_un" =>
+        | VerificationCode =>
           cognitoUser->confirmRegistration(
             code
             ->Js.String2.slice(~from=0, ~to_=code_max_length)
@@ -85,7 +92,7 @@ let make = (~cognitoUser, ~search) => {
             confirmregistrationCallback,
             Js.Nullable.null,
           )
-        | "pw_un" =>
+        | ForgotPassword =>
           cognitoUser->confirmPassword(
             code
             ->Js.String2.slice(~from=0, ~to_=code_max_length)
@@ -96,7 +103,7 @@ let make = (~cognitoUser, ~search) => {
             confirmpasswordCallback,
             Js.Nullable.null,
           )
-        | _ => setCognitoError(._ => Some("unknown method - not submitting"))
+        | ForgotUsername | Other => setCognitoError(._ => Some("unknown method - not submitting"))
         }
       | true => setCognitoError(._ => Some("null user - not submitting"))
       }
@@ -108,8 +115,8 @@ let make = (~cognitoUser, ~search) => {
     ht="h-52"
     on_Click
     leg={switch search {
-    | "pw_un" => "Change password"
-    | _ => "Confirm code"
+    | ForgotPassword => "Change password"
+    | VerificationCode | ForgotUsername | Other => "Confirm code"
     }}
     validationError
     cognitoError>
@@ -117,9 +124,9 @@ let make = (~cognitoUser, ~search) => {
       value=code propName="code" autoComplete="one-time-code" inputMode="numeric" setFunc=setCode
     />
     {switch search {
-    | "pw_un" =>
+    | ForgotPassword =>
       <Input value=password propName="password" autoComplete="new-password" setFunc=setPassword />
-    | _ => React.null
+    | VerificationCode | ForgotUsername | Other => React.null
     }}
   </Form>
 }

@@ -40,7 +40,7 @@ let make = (~userpool, ~setCognitoUser) => {
     | (_, Some(val)) => {
         setCognitoError(._ => None)
         setCognitoUser(._ => Js.Nullable.return(val.user))
-        Route.push(Confirm({search: "cd_un"}))
+        Route.push(Confirm({search: VerificationCode}))
 
         Js.log2("res", val.user.username)
       }

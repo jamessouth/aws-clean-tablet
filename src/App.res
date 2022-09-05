@@ -98,17 +98,17 @@ let make = () => {
               content="SIGN UP"
             />
             <Link
-              route=GetInfo({search: "cd_un"})
+              route=GetInfo({search: VerificationCode})
               className={linkBase ++ "mt-10"}
               content="verification code?"
             />
             <Link
-              route=GetInfo({search: "pw_un"})
+              route=GetInfo({search: ForgotPassword})
               className={linkBase ++ "mt-6"}
               content="forgot password?"
             />
             <Link
-              route=GetInfo({search: "un_em"})
+              route=GetInfo({search: ForgotUsername})
               className={linkBase ++ "mt-6"}
               content="forgot username?"
             />
