@@ -62,7 +62,7 @@ let make = (
   let answer_max_length = 12
 
   React.useEffect1(() => {
-    ErrorHook.useError(answer, "ANSWER", setValidationError)
+    ErrorHook.useError(answer, Answer, setValidationError)
     None
   }, [answer])
 

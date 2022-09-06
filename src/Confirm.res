@@ -35,9 +35,9 @@ let make = (~cognitoUser, ~search) => {
   React.useEffect3(() => {
     open ErrorHook
     switch search {
-    | VerificationCode => useError(code, "CODE", setValidationError)
+    | VerificationCode => useError(code, Code, setValidationError)
     | ForgotPassword | ForgotUsername | Other =>
-      useMultiError([(code, "CODE"), (password, "PASSWORD")], setValidationError)
+      useMultiError([(code, Code), (password, Password)], setValidationError)
     }
     None
   }, (code, password, search))

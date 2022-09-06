@@ -108,7 +108,7 @@ module Game = {
     <li
       className={switch (inThisGame, onlyGame) {
       | (true, false) => "shadow-lg shadow-stone-100 " ++ liStyle
-      | (false, _) | (_, true) => liStyle
+      | (false, true) | (true, true) | (false, false) => liStyle
       }}>
       <p className="absolute text-stone-100 text-xs left-1/2 transform -translate-x-2/4 -top-3.5">
         {React.string(game.no)}
@@ -141,7 +141,7 @@ module Game = {
           </p>
         | false => React.null
         }
-      | (true, _) => React.null
+      | (true, false) | (true, true) => React.null
       }}
       <Button
         textTrue="leave"

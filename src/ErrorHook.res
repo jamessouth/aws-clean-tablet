@@ -1,3 +1,19 @@
+type t =
+  | Username
+  | Password
+  | Code
+  | Email
+  | Answer
+
+let fromTypeToString = e =>
+  switch e {
+  | Username => "USERNAME"
+  | Password => "PASSWORD"
+  | Code => "CODE"
+  | Email => "EMAIL"
+  | Answer => "ANSWER"
+  }
+
 let checkLength = (. min, max, str) =>
   switch Js.String2.length(str) < min || Js.String2.length(str) > max {
   | false => ""
@@ -16,7 +32,7 @@ let checkExclusion = (. re, msg, str) =>
 
 let getFuncs = input =>
   switch input {
-  | "USERNAME" => [
+  | Username => [
       (. s) => checkLength(. 3, 10, s),
       (. s) =>
         checkExclusion(.
@@ -25,7 +41,7 @@ let getFuncs = input =>
           s,
         ),
     ]
-  | "PASSWORD" => [
+  | Password => [
       (. s) => checkLength(. 8, 98, s),
       (. s) => checkInclusion(. %re("/[!-/:-@\[-`{-~]/"), "at least 1 symbol; ", s),
       (. s) => checkInclusion(. %re("/\d/"), "at least 1 number; ", s),
@@ -33,8 +49,8 @@ let getFuncs = input =>
       (. s) => checkInclusion(. %re("/[a-z]/"), "at least 1 lowercase letter; ", s),
       (. s) => checkExclusion(. %re("/\s/"), "no whitespace; ", s),
     ]
-  | "CODE" => [(. s) => checkInclusion(. %re("/^\d{6}$/"), "6-digit number only; ", s)]
-  | "EMAIL" => [
+  | Code => [(. s) => checkInclusion(. %re("/^\d{6}$/"), "6-digit number only; ", s)]
+  | Email => [
       (. s) => checkLength(. 5, 99, s),
       (. s) =>
         checkInclusion(.
@@ -45,14 +61,13 @@ let getFuncs = input =>
           s,
         ),
     ]
-  | "ANSWER" => [
+  | Answer => [
       (. s) => checkLength(. 2, 12, s),
       (. s) => checkInclusion(. %re("/[a-z ]/i"), "letters and spaces only; ", s),
       (. s) => checkExclusion(. %re("/\d/"), "no numbers; ", s),
       (. s) => checkExclusion(. %re("/[!-/:-@\[-`{-~]/"), "no symbols; ", s),
       (. s) => checkExclusion(. %re("/^\s|\s$/"), "must begin and end with letters; ", s),
     ]
-  | _ => []
   }
 
 let useMultiError = (fields, setErrorFunc) => {
@@ -61,7 +76,7 @@ let useMultiError = (fields, setErrorFunc) => {
     let error = getFuncs(prop)->Js.Array2.reduce((acc, f) => acc ++ f(. val), "")
     switch error == "" {
     | true => ""
-    | false => prop ++ ": " ++ error
+    | false => fromTypeToString(prop) ++ ": " ++ error
     }
   })
   let total = errs->Js.Array2.joinWith("")
@@ -78,7 +93,7 @@ let useError = (value, propName, setErrorFunc) => {
   let error = getFuncs(propName)->Js.Array2.reduce((acc, f) => acc ++ f(. value), "")
   let final = switch error == "" {
   | true => None
-  | false => Some(propName ++ ": " ++ error)
+  | false => Some(fromTypeToString(propName) ++ ": " ++ error)
   }
   setErrorFunc(._ => final)
 }

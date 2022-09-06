@@ -111,7 +111,7 @@ let make = (
             | false =>
               switch (isWinner, i == 0) {
               | (true, true) => "text-shadow-win"
-              | _ => ""
+              | (false, true) | (true, false) | (false, false) => ""
               }
             }}>
             {React.string(p.name)}
@@ -126,7 +126,7 @@ let make = (
             <p
               className={switch (isWinner, i == 0) {
               | (true, true) => "text-shadow-win"
-              | _ => ""
+              | (false, true) | (true, false) | (false, false) => ""
               }}>
               {React.string(p.score)}
             </p>

@@ -8,15 +8,23 @@ external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => 
   propShape,
 > = "lazy"
 
+type field =
+  | Name
+  | Wins
+  | Points
+  | Games
+  | WinPercentage
+  | PointsPerGame
+
 type sortDirection = Up | Down
 let sortData = (field, dir, a: Reducer.stat, b: Reducer.stat) => {
   let res = switch field {
-  | "name" => compare(a.name, b.name)
-  | "wins" => compare(a.wins, b.wins)
-  | "points" => compare(a.points, b.points)
-  | "games" => compare(a.games, b.games)
-  | "win %" => compare(a.winPct, b.winPct)
-  | _ => compare(a.ppg, b.ppg)
+  | Name => compare(a.name, b.name)
+  | Wins => compare(a.wins, b.wins)
+  | Points => compare(a.points, b.points)
+  | Games => compare(a.games, b.games)
+  | WinPercentage => compare(a.winPct, b.winPct)
+  | PointsPerGame => compare(a.ppg, b.ppg)
   }
 
   switch dir {
@@ -34,7 +42,7 @@ let make = (~leaderData: array<Reducer.stat>, ~playerName) => {
   let (winPctDir, setWinPctDir) = React.Uncurried.useState(_ => Up)
   let (ppgDir, setPPGDir) = React.Uncurried.useState(_ => Up)
 
-  let (sortedField, setSortedField) = React.Uncurried.useState(_ => "wins")
+  let (sortedField, setSortedField) = React.Uncurried.useState(_ => Wins)
   let (arrow, setArrow) = React.Uncurried.useState(_ => "['\\2193']")
 
   let (data, setData) = React.Uncurried.useState(_ => [])
@@ -89,37 +97,37 @@ let make = (~leaderData: array<Reducer.stat>, ~playerName) => {
         </caption>
         <colgroup>
           <col
-            className={switch sortedField == "name" {
+            className={switch sortedField == Name {
             | true => "bg-stone-100/12"
             | false => ""
             }}
           />
           <col
-            className={switch sortedField == "wins" {
+            className={switch sortedField == Wins {
             | true => "bg-stone-100/12"
             | false => ""
             }}
           />
           <col
-            className={switch sortedField == "points" {
+            className={switch sortedField == Points {
             | true => "bg-stone-100/12"
             | false => ""
             }}
           />
           <col
-            className={switch sortedField == "games" {
+            className={switch sortedField == Games {
             | true => "bg-stone-100/12"
             | false => ""
             }}
           />
           <col
-            className={switch sortedField == "win %" {
+            className={switch sortedField == WinPercentage {
             | true => "bg-stone-100/12"
             | false => ""
             }}
           />
           <col
-            className={switch sortedField == "pts/gm" {
+            className={switch sortedField == PointsPerGame {
             | true => "bg-stone-100/12"
             | false => ""
             }}
@@ -131,8 +139,8 @@ let make = (~leaderData: array<Reducer.stat>, ~playerName) => {
               <Button
                 textTrue="name"
                 textFalse="name"
-                onClick={onClick("name", nameDir, setNameDir)}
-                className={switch sortedField == "name" {
+                onClick={onClick(Name, nameDir, setNameDir)}
+                className={switch sortedField == Name {
                 | true => buttonBase ++ arrowClass
                 | false => buttonBase
                 }}
@@ -142,8 +150,8 @@ let make = (~leaderData: array<Reducer.stat>, ~playerName) => {
               <Button
                 textTrue="wins"
                 textFalse="wins"
-                onClick={onClick("wins", winDir, setWinDir)}
-                className={switch sortedField == "wins" {
+                onClick={onClick(Wins, winDir, setWinDir)}
+                className={switch sortedField == Wins {
                 | true => buttonBase ++ arrowClass
                 | false => buttonBase
                 }}
@@ -153,8 +161,8 @@ let make = (~leaderData: array<Reducer.stat>, ~playerName) => {
               <Button
                 textTrue="points"
                 textFalse="points"
-                onClick={onClick("points", ptsDir, setPtsDir)}
-                className={switch sortedField == "points" {
+                onClick={onClick(Points, ptsDir, setPtsDir)}
+                className={switch sortedField == Points {
                 | true => buttonBase ++ arrowClass
                 | false => buttonBase
                 }}
@@ -164,8 +172,8 @@ let make = (~leaderData: array<Reducer.stat>, ~playerName) => {
               <Button
                 textTrue="games"
                 textFalse="games"
-                onClick={onClick("games", gamesDir, setGamesDir)}
-                className={switch sortedField == "games" {
+                onClick={onClick(Games, gamesDir, setGamesDir)}
+                className={switch sortedField == Games {
                 | true => buttonBase ++ arrowClass
                 | false => buttonBase
                 }}
@@ -175,8 +183,8 @@ let make = (~leaderData: array<Reducer.stat>, ~playerName) => {
               <Button
                 textTrue="win %"
                 textFalse="win %"
-                onClick={onClick("win %", winPctDir, setWinPctDir)}
-                className={switch sortedField == "win %" {
+                onClick={onClick(WinPercentage, winPctDir, setWinPctDir)}
+                className={switch sortedField == WinPercentage {
                 | true => buttonBase ++ arrowClass
                 | false => buttonBase
                 }}
@@ -186,8 +194,8 @@ let make = (~leaderData: array<Reducer.stat>, ~playerName) => {
               <Button
                 textTrue="pts/gm"
                 textFalse="pts/gm"
-                onClick={onClick("pts/gm", ppgDir, setPPGDir)}
-                className={switch sortedField == "pts/gm" {
+                onClick={onClick(PointsPerGame, ppgDir, setPPGDir)}
+                className={switch sortedField == PointsPerGame {
                 | true => buttonBase ++ arrowClass
                 | false => buttonBase
                 }}
@@ -224,17 +232,3 @@ let make = (~leaderData: array<Reducer.stat>, ~playerName) => {
     }}
   </div>
 }
-
-// let zzz: array<Reducer.stat> = [
-//   {name: "mmmmmmmmmm", wins: 241, points: 5152, games: 83, winPct: 0.12, ppg: 11.0},
-//   {name: "stu", wins: 121, points: 121, games: 32, winPct: 0.22, ppg: 11.1},
-//   {name: "liz", wins: 50, points: 59, games: 363, winPct: 0.32, ppg: 11.2},
-//   {name: "abner", wins: 42, points: 18, games: 173, winPct: 0.42, ppg: 11.3},
-//   {name: "harold", wins: 40, points: 97, games: 333, winPct: 0.52, ppg: 11.4},
-//   {name: "stacie", wins: 32, points: 17, games: 313, winPct: 0.62, ppg: 11.5},
-//   {name: "marcy", wins: 30, points: 91, games: 332, winPct: 0.72, ppg: 11.6},
-//   {name: "wes", wins: 22, points: 11, games: 213, winPct: 0.82, ppg: 11.7},
-//   {name: "carl", wins: 21, points: 12, games: 23, winPct: 0.92, ppg: 11.8},
-//   {name: "bill", wins: 10, points: 9, games: 323, winPct: 0.02, ppg: 11.9},
-//   {name: "test", wins: 2, points: 1, games: 13, winPct: 0.17, ppg: 12.8},
-// ]

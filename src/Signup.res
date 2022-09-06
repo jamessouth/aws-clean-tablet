@@ -28,7 +28,7 @@ let make = (~userpool, ~setCognitoUser) => {
 
   React.useEffect3(() => {
     ErrorHook.useMultiError(
-      [(username, "USERNAME"), (password, "PASSWORD"), (email, "EMAIL")],
+      [(username, Username), (password, Password), (email, Email)],
       setValidationError,
     )
     None

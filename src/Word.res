@@ -23,7 +23,7 @@ let make = (~onAnimationEnd, ~playerColor, ~word, ~answered, ~showTimer) => {
     className="mt-20 mb-10 mx-auto bg-stone-100 relative w-80 h-36 flex flex-col items-center justify-center">
     {switch (playerColor == "transparent", word == "") {
     | (true, true) => <Loading fillColor="fill-stone-800" />
-    | _ => React.null
+    | (false, true) | (true, false) | (false, false) => React.null
     }}
     {switch showTimer {
     | true =>

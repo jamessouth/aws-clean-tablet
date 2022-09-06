@@ -33,7 +33,7 @@ let make = (
   let password_max_length = 98
 let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
   React.useEffect2(() => {
-    ErrorHook.useMultiError([(username, "USERNAME"), (password, "PASSWORD")], setValidationError)
+    ErrorHook.useMultiError([(username, Username), (password, Password)], setValidationError)
     None
   }, (username, password))
 

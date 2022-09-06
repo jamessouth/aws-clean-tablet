@@ -46,9 +46,9 @@ let make = (
   React.useEffect2(() => {
     open Route
     switch search {
-    | ForgotUsername => ErrorHook.useError(email, "EMAIL", setValidationError)
+    | ForgotUsername => ErrorHook.useError(email, Email, setValidationError)
     | VerificationCode | ForgotPassword | Other =>
-      ErrorHook.useError(username, "USERNAME", setValidationError)
+      ErrorHook.useError(username, Username, setValidationError)
     }
     None
   }, (username, email))
