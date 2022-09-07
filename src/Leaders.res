@@ -33,6 +33,9 @@ let sortData = (field, dir, a: Reducer.stat, b: Reducer.stat) => {
   }
 }
 
+let thbase = "sticky top-0 h-8 bg-amber-300 w-16.667vw "
+let buttonBase = "bg-transparent text-dark-600 text-base font-anon font-bold w-full h-8"
+
 @react.component
 let make = (~leaderData: array<Reducer.stat>, ~playerName) => {
   let (nameDir, setNameDir) = React.Uncurried.useState(_ => Down)
@@ -71,8 +74,6 @@ let make = (~leaderData: array<Reducer.stat>, ~playerName) => {
     setData(._ => data->Js.Array2.sortInPlaceWith(sortData(field, dir)))
   }
 
-  let buttonBase = "bg-transparent text-dark-600 text-base font-anon font-bold w-full h-8"
-
   let arrowClass = ` relative after:content-${arrow} after:text-2xl after:font-over after:absolute`
 
   <div className="leadermobbg leadertabbg leaderbigbg w-100vw h-100vh overflow-y-scroll leader">
@@ -96,111 +97,48 @@ let make = (~leaderData: array<Reducer.stat>, ~playerName) => {
           {React.string("Leaderboard")}
         </caption>
         <colgroup>
-          <col
-            className={switch sortedField == Name {
-            | true => "bg-stone-100/12"
-            | false => ""
-            }}
-          />
-          <col
-            className={switch sortedField == Wins {
-            | true => "bg-stone-100/12"
-            | false => ""
-            }}
-          />
-          <col
-            className={switch sortedField == Points {
-            | true => "bg-stone-100/12"
-            | false => ""
-            }}
-          />
-          <col
-            className={switch sortedField == Games {
-            | true => "bg-stone-100/12"
-            | false => ""
-            }}
-          />
-          <col
-            className={switch sortedField == WinPercentage {
-            | true => "bg-stone-100/12"
-            | false => ""
-            }}
-          />
-          <col
-            className={switch sortedField == PointsPerGame {
-            | true => "bg-stone-100/12"
-            | false => ""
-            }}
-          />
+          {[Name, Wins, Points, Games, WinPercentage, PointsPerGame]
+          ->Js.Array2.map(c =>
+            <col
+              key={j`$c`}
+              className={switch sortedField == c {
+              | true => "bg-stone-100/17"
+              | false => ""
+              }}
+            />
+          )
+          ->React.array}
         </colgroup>
         <thead className="">
           <tr>
-            <th className="sticky left-0 top-0 z-10 h-8 bg-amber-300 w-16.667vw min-w-104px">
-              <Button
-                textTrue="name"
-                textFalse="name"
-                onClick={onClick(Name, nameDir, setNameDir)}
-                className={switch sortedField == Name {
-                | true => buttonBase ++ arrowClass
-                | false => buttonBase
-                }}
-              />
-            </th>
-            <th className="sticky top-0 h-8 bg-amber-300 w-16.667vw min-w-64px">
-              <Button
-                textTrue="wins"
-                textFalse="wins"
-                onClick={onClick(Wins, winDir, setWinDir)}
-                className={switch sortedField == Wins {
-                | true => buttonBase ++ arrowClass
-                | false => buttonBase
-                }}
-              />
-            </th>
-            <th className="sticky top-0 h-8 bg-amber-300 w-16.667vw min-w-80px">
-              <Button
-                textTrue="points"
-                textFalse="points"
-                onClick={onClick(Points, ptsDir, setPtsDir)}
-                className={switch sortedField == Points {
-                | true => buttonBase ++ arrowClass
-                | false => buttonBase
-                }}
-              />
-            </th>
-            <th className="sticky top-0 h-8 bg-amber-300 w-16.667vw min-w-72px">
-              <Button
-                textTrue="games"
-                textFalse="games"
-                onClick={onClick(Games, gamesDir, setGamesDir)}
-                className={switch sortedField == Games {
-                | true => buttonBase ++ arrowClass
-                | false => buttonBase
-                }}
-              />
-            </th>
-            <th className="sticky top-0 h-8 bg-amber-300 w-16.667vw min-w-72px">
-              <Button
-                textTrue="win %"
-                textFalse="win %"
-                onClick={onClick(WinPercentage, winPctDir, setWinPctDir)}
-                className={switch sortedField == WinPercentage {
-                | true => buttonBase ++ arrowClass
-                | false => buttonBase
-                }}
-              />
-            </th>
-            <th className="sticky top-0 h-8 bg-amber-300 w-16.667vw min-w-80px">
-              <Button
-                textTrue="pts/gm"
-                textFalse="pts/gm"
-                onClick={onClick(PointsPerGame, ppgDir, setPPGDir)}
-                className={switch sortedField == PointsPerGame {
-                | true => buttonBase ++ arrowClass
-                | false => buttonBase
-                }}
-              />
-            </th>
+            {[
+              ("min-w-104px left-0 z-10", "name", onClick(Name, nameDir, setNameDir), Name),
+              ("min-w-64px", "wins", onClick(Wins, winDir, setWinDir), Wins),
+              ("min-w-80px", "points", onClick(Points, ptsDir, setPtsDir), Points),
+              ("min-w-72px", "games", onClick(Games, gamesDir, setGamesDir), Games),
+              (
+                "min-w-72px",
+                "win %",
+                onClick(WinPercentage, winPctDir, setWinPctDir),
+                WinPercentage,
+              ),
+              ("min-w-80px", "pts/gm", onClick(PointsPerGame, ppgDir, setPPGDir), PointsPerGame),
+            ]
+            ->Js.Array2.map(c => {
+              let (cn, btnText, oc, field) = c
+              <th key=btnText className={thbase ++ cn}>
+                <Button
+                  textTrue=btnText
+                  textFalse=btnText
+                  onClick=oc
+                  className={switch sortedField == field {
+                  | true => buttonBase ++ arrowClass
+                  | false => buttonBase
+                  }}
+                />
+              </th>
+            })
+            ->React.array}
           </tr>
         </thead>
         <tbody>
