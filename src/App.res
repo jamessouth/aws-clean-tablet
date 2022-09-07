@@ -25,23 +25,22 @@ module Link = {
   }
 }
 
+let linkBase = "w-3/5 text-stone-100 block font-bold font-anon text-sm max-w-80 "
+
+let linkBase2 = "w-3/5 border border-stone-100 block bg-stone-800/40 text-center text-stone-100 "
+
 @react.component
 let make = () => {
   Js.log("app")
 
-  let linkBase = "w-3/5 text-stone-100 block font-bold font-anon text-sm max-w-80 "
-
-  let linkBase2 = "w-3/5 border border-stone-100 block bg-stone-800/40 text-center text-stone-100 "
-
-  open Cognito
-  let userpool = userPoolConstructor({
+  let userpool = Cognito.userPoolConstructor({
     userPoolId: upid,
     clientId: cid,
     advancedSecurityDataCollectionFlag: false,
   })
 
   let route = Route.useRouter()
-  let (cognitoUser: Js.Nullable.t<usr>, setCognitoUser) = React.Uncurried.useState(_ =>
+  let (cognitoUser: Js.Nullable.t<Cognito.usr>, setCognitoUser) = React.Uncurried.useState(_ =>
     Js.Nullable.null
   )
 
@@ -61,8 +60,6 @@ let make = () => {
     )
   , (token, setToken, cognitoUser, setCognitoUser))
 
-  open Web
-  open Route
   <>
     {switch route {
     | Leaderboard => React.null
@@ -85,7 +82,8 @@ let make = () => {
       }}>
       {switch (route, token) {
       | (Home, None) => {
-          body(document)->setClassName("bodmob bodtab bodbig")
+          open Route
+          Web.body(Web.document)->Web.setClassName("bodmob bodtab bodbig")
           <nav className="flex flex-col items-center relative">
             <Link
               route=SignIn
@@ -130,12 +128,12 @@ let make = () => {
         <GetInfo userpool cognitoUser setCognitoUser setShowName search />
       | (Confirm({search}), None) => <Confirm cognitoUser search />
       | (Lobby | Play(_) | Leaderboard, None) => {
-          replace(Home)
+          Route.replace(Home)
           React.null
         }
 
       | (Home | SignIn | SignUp | GetInfo(_) | Confirm(_), Some(_)) => {
-          replace(Lobby)
+          Route.replace(Lobby)
           React.null
         }
 

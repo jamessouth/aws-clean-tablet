@@ -77,18 +77,17 @@ let getMsgType = tag =>
   | _ => Other
   }
 
+let initialState: Reducer.state = {
+  gamesList: Js.Nullable.null,
+  players: [],
+  sk: "",
+  oldWord: "",
+  word: "",
+  showAnswers: false,
+  winner: "",
+}
 @react.component
 let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
-  let initialState: Reducer.state = {
-    gamesList: Js.Nullable.null,
-    players: [],
-    sk: "",
-    oldWord: "",
-    word: "",
-    showAnswers: false,
-    winner: "",
-  }
-
   let route = Route.useRouter()
   Js.log2("u345876l", route)
 
@@ -259,7 +258,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
   <>
     {switch route {
     | Leaderboard => React.null
-    | Home | SignIn | SignUp | GetInfo(_) | Confirm(_) | Lobby | Play(_) | Other  =>
+    | Home | SignIn | SignUp | GetInfo(_) | Confirm(_) | Lobby | Play(_) | Other =>
       <header className="mb-10 newgmimg:mb-12">
         <p className="font-flow text-stone-100 text-4xl h-10 font-bold text-center">
           {React.string(playerName)}
@@ -320,7 +319,8 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
         <React.Suspense fallback=React.null> leaders </React.Suspense>
       }
 
-    | Home | SignIn | SignUp | GetInfo(_) | Confirm(_)  | Other  => <div> {React.string("page not found")} </div> // <PageNotFound/>
+    | Home | SignIn | SignUp | GetInfo(_) | Confirm(_) | Other =>
+      <div> {React.string("page not found")} </div> // <PageNotFound/>
     }}
   </>
 }

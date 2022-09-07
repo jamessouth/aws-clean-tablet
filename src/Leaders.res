@@ -17,6 +17,7 @@ type field =
   | PointsPerGame
 
 type sortDirection = Up | Down
+
 let sortData = (field, dir, a: Reducer.stat, b: Reducer.stat) => {
   let res = switch field {
   | Name => compare(a.name, b.name)
@@ -33,11 +34,12 @@ let sortData = (field, dir, a: Reducer.stat, b: Reducer.stat) => {
   }
 }
 
+let larrow = Js.String2.fromCharCode(8592)
 let thbase = "sticky top-0 h-8 bg-amber-300 w-16.667vw "
 let buttonBase = "bg-transparent text-dark-600 text-base font-anon font-bold w-full h-8"
 
 @react.component
-let make = (~leaderData: array<Reducer.stat>, ~playerName) => {
+let make = (~leaderData, ~playerName) => {
   let (nameDir, setNameDir) = React.Uncurried.useState(_ => Down)
   let (winDir, setWinDir) = React.Uncurried.useState(_ => Down)
   let (ptsDir, setPtsDir) = React.Uncurried.useState(_ => Up)
@@ -49,8 +51,6 @@ let make = (~leaderData: array<Reducer.stat>, ~playerName) => {
   let (arrow, setArrow) = React.Uncurried.useState(_ => "['\\2193']")
 
   let (data, setData) = React.Uncurried.useState(_ => [])
-
-  let larrow = Js.String2.fromCharCode(8592)
 
   React.useEffect1(() => {
     setData(._ => leaderData->Js.Array2.copy)
