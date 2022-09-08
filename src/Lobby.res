@@ -143,22 +143,18 @@ module Game = {
         }
       | (true, false) | (true, true) => React.null
       }}
-      <Button
-        textTrue="leave"
-        textFalse="join"
-        textProp=inThisGame
-        onClick=onClickJoin
-        disabled=disabledJoin
-        className={"left-0" ++ btnStyle}
-      />
-      <Button
-        textTrue="ready"
-        textFalse="not ready"
-        textProp=ready
-        onClick=onClickReady
-        disabled=disabledReady
-        className={"right-0" ++ btnStyle}
-      />
+      <Button onClick=onClickJoin disabled=disabledJoin className={"left-0" ++ btnStyle}>
+        {switch inThisGame {
+        | true => React.string("leave")
+        | false => React.string("join")
+        }}
+      </Button>
+      <Button onClick=onClickReady disabled=disabledReady className={"right-0" ++ btnStyle}>
+        {switch ready {
+        | true => React.string("ready")
+        | false => React.string("not ready")
+        }}
+      </Button>
     </li>
   }
 }
@@ -201,20 +197,12 @@ let make = (~playerGame, ~games, ~send, ~wsError, ~close, ~count, ~setLeaderData
   }
 
   <>
-    <Button
-      textTrue=""
-      textFalse=""
-      onClick=leaderboard
-      className="absolute top-1 left-1 bg-transparent cursor-pointer"
-      img={<img className="block" src="../../assets/leader.png" />}
-    />
-    <Button
-      textTrue=""
-      textFalse=""
-      onClick=signOut
-      className="absolute top-1 right-1 bg-transparent cursor-pointer"
-      img={<img className="block" src="../../assets/signout.png" />}
-    />
+    <Button onClick=leaderboard className="absolute top-1 left-1 bg-transparent cursor-pointer">
+      <img className="block" src="../../assets/leader.png" />
+    </Button>
+    <Button onClick=signOut className="absolute top-1 right-1 bg-transparent cursor-pointer">
+      <img className="block" src="../../assets/signout.png" />
+    </Button>
     {switch wsError !== "" {
     | true =>
       <p className="text-center text-stone-100 font-anon text-lg">
@@ -237,11 +225,10 @@ let make = (~playerGame, ~games, ~send, ~wsError, ~close, ~count, ~setLeaderData
             {switch playerGame == "" {
             | true =>
               <Button
-                textTrue="start a new game"
-                textFalse="start a new game"
                 onClick
-                className="h-full right-0 top-0 w-1/2 bg-transparent text-stone-100 text-2xl font-flow cursor-pointer absolute border-l-2 border-gray-500/50"
-              />
+                className="h-full right-0 top-0 w-1/2 bg-transparent text-stone-100 text-2xl font-flow cursor-pointer absolute border-l-2 border-gray-500/50">
+                {React.string("start a new game")}
+              </Button>
             | false => React.null
             }}
           </div>

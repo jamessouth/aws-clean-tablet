@@ -38,13 +38,12 @@ let make = (
     />
     {switch propName == "password" {
     | true =>
-      <Button
-        textTrue="hide"
-        textFalse="show"
-        textProp=showPassword
-        onClick={_ => setShowPassword(.prev => !prev)}
-        className
-      />
+      <Button onClick={_ => setShowPassword(.prev => !prev)} className>
+        {switch showPassword {
+        | true => React.string("hide")
+        | false => React.string("show")
+        }}
+      </Button>
     | false => React.null
     }}
   </div>

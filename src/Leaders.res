@@ -89,11 +89,10 @@ let make = (~leaderData, ~playerName) => {
         <caption
           className="my-6 relative text-4xl md:my-12 md:text-5xl desk:my-18 desk:text-6xl font-fred font-bold text-shadow-lead">
           <Button
-            textTrue=larrow
-            textFalse=larrow
             onClick={_ => Route.push(Lobby)}
-            className="cursor-pointer font-over text-5xl bg-transparent absolute left-10"
-          />
+            className="cursor-pointer font-over text-5xl bg-transparent absolute left-10">
+            {React.string(larrow)}
+          </Button>
           {React.string("Leaderboard")}
         </caption>
         <colgroup>
@@ -128,14 +127,13 @@ let make = (~leaderData, ~playerName) => {
               let (cn, btnText, oc, field) = c
               <th key=btnText className={thbase ++ cn}>
                 <Button
-                  textTrue=btnText
-                  textFalse=btnText
                   onClick=oc
                   className={switch sortedField == field {
                   | true => buttonBase ++ arrowClass
                   | false => buttonBase
-                  }}
-                />
+                  }}>
+                  {React.string(btnText)}
+                </Button>
               </th>
             })
             ->React.array}

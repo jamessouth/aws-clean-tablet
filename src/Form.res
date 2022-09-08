@@ -1,12 +1,5 @@
 @react.component
-let make = (
-  ~ht="h-72",
-  ~on_Click,
-  ~leg,
-  ~validationError,
-  ~cognitoError,
-  ~children,
-) => {
+let make = (~ht="h-72", ~on_Click, ~leg, ~validationError, ~cognitoError, ~children) => {
   let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
   let onClick = _ => {
     setSubmitClicked(._ => true)
@@ -32,6 +25,6 @@ let make = (
       }}
       {children}
     </fieldset>
-    <Button onClick />
+    <Button onClick> {React.string("submit")} </Button>
   </form>
 }
