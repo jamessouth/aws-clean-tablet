@@ -77,7 +77,7 @@ let make = (~cognitoUser, ~search) => {
     },
   }
 
-  let on_Click = _ => {
+  let on_Click = (. ()) => {
     switch validationError {
     | None =>
       switch Js.Nullable.isNullable(cognitoUser) {

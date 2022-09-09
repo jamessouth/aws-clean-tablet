@@ -57,7 +57,7 @@ let make = (~userpool, ~setCognitoUser) => {
     | _ => Js.Exn.raiseError("invalid cb argument")
     }
 
-  let on_Click = _ => {
+  let on_Click = (. ()) => {
     switch validationError {
     | None => {
         let emailData = {

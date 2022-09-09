@@ -1,33 +1,11 @@
-type propShape = {
-  "cognitoError": option<string>,
-  "cognitoUser": Js.Nullable.t<Cognito.usr>,
-  "search": string,
-  "setCognitoError": (. option<string> => option<string>) => unit,
-  "setCognitoUser": (. Js.Nullable.t<Cognito.usr> => Js.Nullable.t<Cognito.usr>) => unit,
-  "setShowName": (. Js.String2.t => Js.String2.t) => unit,
-  "userpool": Cognito.poolData,
-}
-
-@val
-external import_: string => Promise.t<{"make": React.component<propShape>}> = "import"
-
-@module("react")
-external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => React.component<
-  propShape,
-> = "lazy"
+let dummyUsername = "letmein"
+let dummyPassword = "lllLLL!!!111"
+let name_starts_index = 41
+let username_max_length = 10
+let email_max_length = 99
 
 @react.component
-let make = (
-  ~userpool,
-  ~cognitoUser,
-  ~setCognitoUser,
-  // ~cognitoError,
-  // ~setCognitoError,
-  ~setShowName,
-  ~search,
-) => {
-  let dummyPassword = "lllLLL!!!111"
-  let dummyUsername = "letmein"
+let make = (~userpool, ~cognitoUser, ~setCognitoUser, ~setShowName, ~search) => {
   let valErrInit = {
     open Route
     switch search {
@@ -39,9 +17,7 @@ let make = (
   let (email, setEmail) = React.Uncurried.useState(_ => "")
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(valErrInit))
   Js.log("getinfo")
-  let name_starts_index = 41
-  let username_max_length = 10
-  let email_max_length = 99
+
   let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
   React.useEffect2(() => {
     open Route
@@ -93,7 +69,7 @@ let make = (
     None
   }, [cognitoUser])
 
-  let onClick = (tipe, _) => {
+  let onClick = (. tipe, ()) => {
     open Cognito
     open Route
     switch tipe {
@@ -152,7 +128,7 @@ let make = (
 
   <Form
     ht="h-52"
-    on_Click={onClick(search)}
+    on_Click={(. ()) => onClick(. search, ())}
     leg={switch search {
     | ForgotUsername => "Enter email"
     | VerificationCode | ForgotPassword | Other => "Enter username"

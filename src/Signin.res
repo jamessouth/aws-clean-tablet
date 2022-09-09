@@ -16,14 +16,10 @@ external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => 
 > = "lazy"
 
 @react.component
-let make = (
-  ~userpool,
-  ~setCognitoUser,
-  ~setToken,
-  ~cognitoUser,
+let make = (~userpool, ~setCognitoUser, ~setToken, ~cognitoUser) => {
   // ~cognitoError,
   // ~setCognitoError,
-) => {
+
   let (username, setUsername) = React.Uncurried.useState(_ => "")
   let (password, setPassword) = React.Uncurried.useState(_ => "")
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(
@@ -31,14 +27,14 @@ let make = (
   ))
   let username_max_length = 10
   let password_max_length = 98
-let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
+  let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
   React.useEffect2(() => {
     ErrorHook.useMultiError([(username, Username), (password, Password)], setValidationError)
     None
   }, (username, password))
 
   open Cognito
-  let on_Click = _ => {
+  let on_Click = (. ()) => {
     switch validationError {
     | None => {
         let cbs = {

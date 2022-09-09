@@ -1,10 +1,6 @@
 @react.component
 let make = (~ht="h-72", ~on_Click, ~leg, ~validationError, ~cognitoError, ~children) => {
   let (submitClicked, setSubmitClicked) = React.Uncurried.useState(_ => false)
-  let onClick = _ => {
-    setSubmitClicked(._ => true)
-    on_Click()
-  }
 
   <form className="w-4/5 m-auto relative">
     <fieldset className={`flex flex-col items-center justify-around ${ht}`}>
@@ -25,6 +21,12 @@ let make = (~ht="h-72", ~on_Click, ~leg, ~validationError, ~cognitoError, ~child
       }}
       {children}
     </fieldset>
-    <Button onClick> {React.string("submit")} </Button>
+    <Button
+      onClick={_ => {
+        setSubmitClicked(._ => true)
+        on_Click(.)
+      }}>
+      {React.string("submit")}
+    </Button>
   </form>
 }

@@ -120,7 +120,7 @@ let make = (
     Route.push(Lobby)
   }
 
-  let onClick2 = _ => {
+  let onClick2 = (. ()) => {
     switch validationError {
     | None => onEnter(. ignore())
     | Some(_) => ()
@@ -130,7 +130,7 @@ let make = (
   let onKeyPress = e => {
     let key = ReactEvent.Keyboard.key(e)
     switch key {
-    | "Enter" => onClick2()
+    | "Enter" => onClick2(.)
     | _ => ()
     }
   }
