@@ -1,25 +1,25 @@
-type propShape = {
-  "endtoken": string,
-  "isWinner": bool,
-  "oldWord": string,
-  "playerColor": string,
-  "playerName": string,
-  "players": array<Reducer.livePlayer>,
-  "resetConnState": unit => unit,
-  "send": (. option<string>) => unit,
-  "showAnswers": bool,
-  "sk": string,
-  "winner": string,
-  "word": Js.String2.t,
-}
+// type propShape = {
+//   "endtoken": string,
+//   "isWinner": bool,
+//   "oldWord": string,
+//   "playerColor": string,
+//   "playerName": string,
+//   "players": array<Reducer.livePlayer>,
+//   "resetConnState": unit => unit,
+//   "send": (. option<string>) => unit,
+//   "showAnswers": bool,
+//   "sk": string,
+//   "winner": string,
+//   "word": Js.String2.t,
+// }
 
-@val
-external import_: string => Promise.t<{"make": React.component<propShape>}> = "import"
+// @val
+// external import_: string => Promise.t<{"make": React.component<propShape>}> = "import"
 
-@module("react")
-external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => React.component<
-  propShape,
-> = "lazy"
+// @module("react")
+// external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => React.component<
+//   propShape,
+// > = "lazy"
 
 type answerPayload = {
   action: string,
@@ -37,10 +37,11 @@ type endPayload = {
 //   action: string,
 //   game: Reducer.liveGame,
 // }
+let answer_max_length = 12
 
 @react.component
 let make = (
-  ~players: array<Reducer.livePlayer>,
+  ~players,
   ~sk,
   ~showAnswers,
   ~winner,
@@ -58,8 +59,6 @@ let make = (
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(
     "ANSWER: 2-12 length; letters and spaces only; ",
   ))
-
-  let answer_max_length = 12
 
   React.useEffect1(() => {
     ErrorHook.useError(answer, Answer, setValidationError)
@@ -103,7 +102,7 @@ let make = (
     Js.log("onenter")
   }
 
-  let onClick = (sendPayload, _) => {
+  let onEndClick = (. sendPayload) => {
     switch sendPayload {
     | true => {
         let pl: endPayload = {
@@ -116,7 +115,7 @@ let make = (
 
     | false => ()
     }
-    resetConnState()
+    resetConnState(.)
     Route.push(Lobby)
   }
 
@@ -152,8 +151,7 @@ let make = (
       showAnswers
       winner
       isWinner
-      onClickTrue={onClick(true)}
-      onClickFalse={onClick(false)}
+      onEndClick
       playerName
       noplrs={Js.Array2.length(players)}
     />

@@ -108,7 +108,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
 
   let {players, sk, showAnswers, winner, oldWord, word, gamesList: games} = state
 
-  let resetConnState = _ => {
+  let resetConnState = (.) => {
     dispatch(. ResetPlayerState(initialState))
     setLeaderData(._ => [])
     setEndtoken(._ => "")
@@ -222,7 +222,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
         setWs(. _ => Js.Nullable.null)
         setPlayerName(. _ => "")
 
-        resetConnState()
+        resetConnState(.)
         setToken(. _ => None)
       })
     }

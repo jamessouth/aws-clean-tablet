@@ -1,18 +1,18 @@
+let hstyles = "text-center font-anon mb-5 text-stone-100 "
+
 @react.component
 let make = (
-  ~players: array<Reducer.livePlayer>,
+  ~players,
   ~oldWord,
   ~showAnswers,
   ~winner,
   ~isWinner,
-  ~onClickTrue,
-  ~onClickFalse,
+  ~onEndClick,
   ~playerName,
   ~noplrs,
 ) => {
   Js.log2("score", players)
 
-  let hstyles = "text-center font-anon mb-5 text-stone-100 "
   let (count, setCount) = React.Uncurried.useState(_ => 30)
   let (bgimg, setBgimg) = React.Uncurried.useState(_ => "")
 
@@ -21,12 +21,9 @@ let make = (
     | true =>
       switch winner == playerName {
       | true => "bg-win"
-      | false =>
-        switch Js.Math.unsafe_trunc(Js.Math.random() *. 4.) + 1 {
-        | 1 => "bg-lose1"
-        | 2 => "bg-lose2"
-        | 3 => "bg-lose3"
-        | _ => "bg-lose4"
+      | false => {
+          let i = Js.Math.unsafe_trunc(Js.Math.random() *. 4.) + 1
+          j`bg-lose$i`
         }
       }
     | false => ""
@@ -55,7 +52,7 @@ let make = (
 
   React.useEffect1(() => {
     switch count == 0 {
-    | true => onClickFalse()
+    | true => onEndClick(. false)
     | false => ()
     }
     None
@@ -80,7 +77,7 @@ let make = (
           }}>
           {switch !isWinner {
           | false => {
-              let hiScore = players->Js.Array2.unsafe_get(0)
+              let hiScore: Reducer.livePlayer = players->Js.Array2.unsafe_get(0)
               React.string(winner ++ " wins with " ++ hiScore.score ++ " points!")
             }
 
@@ -140,7 +137,7 @@ let make = (
       <>
         <div className={`w-64 h-96 bg-no-repeat opacity-0 m-auto animate-fadein ${bgimg}`} />
         <Button
-          onClick=onClickTrue
+          onClick={_ => onEndClick(. true)}
           className="mt-1.5 mb-4 block cursor-pointer text-stone-800 font-perm mx-auto px-8 py-2 text-2xl">
           {React.string("Return to lobby")}
         </Button>
