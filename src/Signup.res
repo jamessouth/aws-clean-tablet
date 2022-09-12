@@ -1,17 +1,6 @@
-type propShape = {
-  "cognitoError": option<string>,
-  "setCognitoError": (. option<string> => option<string>) => unit,
-  "setCognitoUser": (. Js.Nullable.t<Cognito.usr> => Js.Nullable.t<Cognito.usr>) => unit,
-  "userpool": Cognito.poolData,
-}
-
-@val
-external import_: string => Promise.t<{"make": React.component<propShape>}> = "import"
-
-@module("react")
-external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => React.component<
-  propShape,
-> = "lazy"
+let email_max_length = 99
+let username_max_length = 10
+let password_max_length = 98
 
 @react.component
 let make = (~userpool, ~setCognitoUser) => {
@@ -22,9 +11,6 @@ let make = (~userpool, ~setCognitoUser) => {
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(
     "USERNAME: 3-10 length; PASSWORD: 8-98 length; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; EMAIL: 5-99 length; enter a valid email address.",
   ))
-  let email_max_length = 99
-  let username_max_length = 10
-  let password_max_length = 98
 
   React.useEffect3(() => {
     ErrorHook.useMultiError(

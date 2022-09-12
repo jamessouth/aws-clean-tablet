@@ -1,32 +1,13 @@
-type propShape = {
-  "userpool": Cognito.poolData,
-  "setCognitoUser": (. Js.Nullable.t<Cognito.usr> => Js.Nullable.t<Cognito.usr>) => unit,
-  "setToken": (. option<string> => option<string>) => unit,
-  "cognitoUser": Js.Nullable.t<Cognito.usr>,
-  "cognitoError": option<string>,
-  "setCognitoError": (. option<string> => option<string>) => unit,
-}
-
-@val
-external import_: string => Promise.t<{"make": React.component<propShape>}> = "import"
-
-@module("react")
-external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => React.component<
-  propShape,
-> = "lazy"
+let username_max_length = 10
+let password_max_length = 98
 
 @react.component
 let make = (~userpool, ~setCognitoUser, ~setToken, ~cognitoUser) => {
-  // ~cognitoError,
-  // ~setCognitoError,
-
   let (username, setUsername) = React.Uncurried.useState(_ => "")
   let (password, setPassword) = React.Uncurried.useState(_ => "")
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(
     "USERNAME: 3-10 length; PASSWORD: 8-98 length; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; ",
   ))
-  let username_max_length = 10
-  let password_max_length = 98
   let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
   React.useEffect2(() => {
     ErrorHook.useMultiError([(username, Username), (password, Password)], setValidationError)

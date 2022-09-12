@@ -1,14 +1,14 @@
+let pStyle = " text-stone-700 py-0 px-6 font-perm"
+let maxWordLength = 12
+
 @react.component
 let make = (~onAnimationEnd, ~playerColor, ~word, ~answered, ~showTimer) => {
-  // let circ = Js.String2.fromCharCode(8635)
   let (alpha, setAlpha) = React.Uncurried.useState(_ => "")
 
   let blankPos = switch word->Js.String2.startsWith("_") {
   | true => "a blank then a word"
   | false => "a word then a blank"
   }
-
-  let pStyle = " text-stone-700 py-0 px-6 font-perm"
 
   React.useEffect1(() => {
     let alph = switch answered {
@@ -43,7 +43,7 @@ let make = (~onAnimationEnd, ~playerColor, ~word, ~answered, ~showTimer) => {
     <p
       ariaLabel={blankPos}
       role="alert"
-      className={switch Js.String2.length(word) > 12 {
+      className={switch Js.String2.length(word) > maxWordLength {
       | true => "text-3xl" ++ pStyle
       | false => "text-4xl" ++ pStyle
       }}>
