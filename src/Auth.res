@@ -108,7 +108,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
 
   let {players, sk, showAnswers, winner, oldWord, word, gamesList: games} = state
 
-  let resetConnState = (.) => {
+  let resetConnState = (. ()) => {
     dispatch(. ResetPlayerState(initialState))
     setLeaderData(._ => [])
     setEndtoken(._ => "")
@@ -320,7 +320,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
       }
 
     | Home | SignIn | SignUp | GetInfo(_) | Confirm(_) | Other =>
-      <div> {React.string("page not found")} </div> // <PageNotFound/>
+      <div className="text-center text-stone-100 text-4xl"> {React.string("page not found")} </div>
     }}
   </>
 }

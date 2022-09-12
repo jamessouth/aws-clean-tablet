@@ -1,26 +1,3 @@
-// type propShape = {
-//   "endtoken": string,
-//   "isWinner": bool,
-//   "oldWord": string,
-//   "playerColor": string,
-//   "playerName": string,
-//   "players": array<Reducer.livePlayer>,
-//   "resetConnState": unit => unit,
-//   "send": (. option<string>) => unit,
-//   "showAnswers": bool,
-//   "sk": string,
-//   "winner": string,
-//   "word": Js.String2.t,
-// }
-
-// @val
-// external import_: string => Promise.t<{"make": React.component<propShape>}> = "import"
-
-// @module("react")
-// external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => React.component<
-//   propShape,
-// > = "lazy"
-
 type answerPayload = {
   action: string,
   gameno: string,
@@ -33,10 +10,6 @@ type endPayload = {
   token: string,
 }
 
-// type scorePayload = {
-//   action: string,
-//   game: Reducer.liveGame,
-// }
 let answer_max_length = 12
 
 @react.component

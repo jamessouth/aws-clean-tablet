@@ -1,13 +1,3 @@
-type propShape = {"fillColor": option<string>, "label": option<string>}
-
-@val
-external import_: string => Promise.t<{"make": React.component<propShape>}> = "import"
-
-@module("react")
-external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => React.component<
-  propShape,
-> = "lazy"
-
 @react.component
 let make = (~fillColor="fill-stone-100", ~label="") => <>
   {switch label == "" {

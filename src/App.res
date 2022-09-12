@@ -139,7 +139,10 @@ let make = () => {
 
       | (Lobby | Play(_) | Leaderboard, Some(_)) =>
         <React.Suspense fallback=React.null> auth </React.Suspense>
-      | (Other, _) => <div> {React.string("page not found")} </div> // <PageNotFound/>
+      | (Other, _) =>
+        <div className="text-center text-stone-100 text-4xl">
+          {React.string("page not found")}
+        </div>
       }}
     </main>
   </>

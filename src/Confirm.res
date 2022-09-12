@@ -1,17 +1,5 @@
-type propShape = {
-  "cognitoError": option<string>,
-  "cognitoUser": Js.Nullable.t<Cognito.usr>,
-  "search": string,
-  "setCognitoError": (. option<string> => option<string>) => unit,
-}
-
-@val
-external import_: string => Promise.t<{"make": React.component<propShape>}> = "import"
-
-@module("react")
-external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => React.component<
-  propShape,
-> = "lazy"
+let code_max_length = 6
+let password_max_length = 98
 
 @react.component
 let make = (~cognitoUser, ~search) => {
@@ -29,8 +17,6 @@ let make = (~cognitoUser, ~search) => {
   let (code, setCode) = React.Uncurried.useState(_ => "")
   let (password, setPassword) = React.Uncurried.useState(_ => "")
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(valErrInit))
-  let code_max_length = 6
-  let password_max_length = 98
   let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
   React.useEffect3(() => {
     open ErrorHook
