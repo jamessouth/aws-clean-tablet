@@ -1,3 +1,5 @@
+%%raw(`import './css/leader.css'`)
+
 type propShape = {"leaderData": array<Reducer.stat>, "playerName": string}
 
 @val

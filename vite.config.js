@@ -3,7 +3,7 @@ import reactRefresh from '@vitejs/plugin-react-refresh'
 import WindiCSS from 'vite-plugin-windicss'
 
 // import pluginTypography from "windicss/plugin/typography";
-import colors from 'windicss/colors';
+// import colors from 'windicss/colors';
 
 export default defineConfig({
   plugins: [

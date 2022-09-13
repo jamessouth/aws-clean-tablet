@@ -1,0 +1,110 @@
+@import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap');
+
+.game0 {
+    background-image: -webkit-image-set(url("../../assets/troldslottet1x.webp") 1x, url("../../assets/troldslottet2x.webp") 2x);
+    background-image: image-set(url("../../assets/troldslottet1x.webp") 1x,
+        url("../../assets/troldslottet2x.webp") 2x);
+  }
+  
+  .game1 {
+    background-image: -webkit-image-set(url("../../assets/huldra1x.webp") 1x,
+        url("../../assets/huldra2x.webp") 2x);
+    background-image: image-set(url("../../assets/huldra1x.webp") 1x,
+        url("../../assets/huldra2x.webp") 2x);
+  }
+  
+  .game2 {
+    background-image: -webkit-image-set(url("../../assets/svaelg1x.webp") 1x,
+        url("../../assets/svaelg2x.webp") 2x);
+    background-image: image-set(url("../../assets/svaelg1x.webp") 1x,
+        url("../../assets/svaelg2x.webp") 2x);
+  }
+  
+  .game3 {
+    background-image: -webkit-image-set(url("../../assets/korn1x.webp") 1x,
+        url("../../assets/korn2x.webp") 2x);
+    background-image: image-set(url("../../assets/korn1x.webp") 1x,
+        url("../../assets/korn2x.webp") 2x);
+  }
+  
+  .game4 {
+    background-image: -webkit-image-set(url("../../assets/dammen1x.webp") 1x,
+        url("../../assets/dammen2x.webp") 2x);
+    background-image: image-set(url("../../assets/dammen1x.webp") 1x,
+        url("../../assets/dammen2x.webp") 2x);
+  }
+  
+  .game5 {
+    background-image: -webkit-image-set(url("../../assets/fossen1x.webp") 1x,
+        url("../../assets/fossen2x.webp") 2x);
+    background-image: image-set(url("../../assets/fossen1x.webp") 1x,
+        url("../../assets/fossen2x.webp") 2x);
+  }
+  
+  .game6 {
+    background-image: -webkit-image-set(url("../../assets/pluk1x.webp") 1x,
+        url("../../assets/pluk2x.webp") 2x);
+    background-image: image-set(url("../../assets/pluk1x.webp") 1x,
+        url("../../assets/pluk2x.webp") 2x);
+  }
+  
+  .game7 {
+    background-image: -webkit-image-set(url("../../assets/spring1x.webp") 1x,
+        url("../../assets/spring2x.webp") 2x);
+    background-image: image-set(url("../../assets/spring1x.webp") 1x,
+        url("../../assets/spring2x.webp") 2x);
+  }
+  
+  .game8 {
+    background-image: -webkit-image-set(url("../../assets/troldspor1x.webp") 1x,
+        url("../../assets/troldspor2x.webp") 2x);
+    background-image: image-set(url("../../assets/troldspor1x.webp") 1x,
+        url("../../assets/troldspor2x.webp") 2x);
+  }
+  
+  .game9 {
+    background-image: -webkit-image-set(url("../../assets/bear1x.webp") 1x,
+        url("../../assets/bear2x.webp") 2x);
+    background-image: image-set(url("../../assets/bear1x.webp") 1x,
+        url("../../assets/bear2x.webp") 2x);
+  }
+
+  .bodchmob {
+    background: -webkit-image-set(url("../../assets/chmob1x.webp") 1x,
+        url("../../assets/chmob2x.webp") 2x) top/cover;
+    background: image-set(url("../../assets/chmob1x.webp") 1x,
+        url("../../assets/chmob2x.webp") 2x) top/cover;
+  }
+
+  .bodleadmob {
+    background: -webkit-image-set(url("/assets/leadermobbg1x.webp") 1x, url("/assets/leadermobbg2x.webp") 2x) no-repeat center/cover;
+    background: image-set(url("/assets/leadermobbg1x.webp") 1x, url("/assets/leadermobbg2x.webp") 2x) no-repeat center/cover;
+  }
+
+  @media screen and (min-width: 768px) {
+    .bodchtab {
+      background: -webkit-image-set(url("../../assets/chtab1x.webp") 1x,
+          url("../../assets/chtab2x.webp") 2x) top/cover;
+      background: image-set(url("../../assets/chtab1x.webp") 1x,
+          url("../../assets/chtab2x.webp") 2x) top/cover;
+    }
+  
+    .bodleadtab {
+      background: -webkit-image-set(url("/assets/leadertabbg1x.webp") 1x, url("/assets/leadertabbg2x.webp") 2x) no-repeat center/cover;
+      background: image-set(url("/assets/leadertabbg1x.webp") 1x, url("/assets/leadertabbg2x.webp") 2x) no-repeat center/cover;
+    }
+  }
+
+  @media screen and (min-width: 1440px) {
+    .bodchbig {
+      background: -webkit-image-set(url("../../assets/chbig1x.webp") 1x,
+          url("../../assets/chbig2x.webp") 2x) top/cover;
+      background: image-set(url("../../assets/chbig1x.webp") 1x,
+          url("../../assets/chbig2x.webp") 2x) top/cover;
+    }
+  
+    .bodleadbig {
+      background: -webkit-image-set(url("/assets/leaderbigbg1x.webp") 1x, url("/assets/leaderbigbg2x.webp") 2x) no-repeat center/cover;
+      background: image-set(url("/assets/leaderbigbg1x.webp") 1x, url("/assets/leaderbigbg2x.webp") 2x) no-repeat center/cover;
+    }
+  }

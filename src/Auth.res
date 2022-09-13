@@ -4,6 +4,7 @@ external apiid: string = "VITE_APIID"
 external region: string = "VITE_REGION"
 @val @scope(("import", "meta", "env"))
 external stage: string = "VITE_STAGE"
+%%raw(`import './css/lobby.css'`)
 
 type propShape = {
   "cognitoUser": Js.Nullable.t<Cognito.usr>,
