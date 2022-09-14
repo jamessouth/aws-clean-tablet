@@ -9,12 +9,11 @@ export default defineConfig({
   plugins: [
     reactRefresh(),
     WindiCSS({
-      // preflight: false,
+      preflight: false,
       scan: {
         dirs: ['./src'], // all files in the cwd
         fileExtensions: ['bs.js'], // also enabled scanning for js/ts
       },
-
       config: {
         // safelist: ['prose', 'prose-sm', 'm-auto'],
         darkMode: false, // or 'media' or 'class'
@@ -35,9 +34,6 @@ export default defineConfig({
               'lose4': '-webkit-image-set(url("../../assets/lose41x.webp") 1x, url("../../assets/lose42x.webp") 2x)',
               'win': '-webkit-image-set(url("../../assets/win1x.webp") 1x, url("../../assets/win2x.webp") 2x)',
             },
-            // boxShadow: {
-            //   'lead': '0px 0px 1px #f5f5f4',
-            // },
             fontFamily: {
               'anon': 'Anonymous Pro, monospace',
               'arch': 'Architects Daughter, cursive',
@@ -74,9 +70,6 @@ export default defineConfig({
               rotate: {
                 'to': { 'filter': 'hue-rotate(360deg)' },
               },
-            },
-            lineHeight: {
-              '12rem': '12rem',
             },
             screens: {
               'newgmimg': '459px',//11/12*459=421
