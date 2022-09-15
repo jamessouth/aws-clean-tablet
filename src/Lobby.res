@@ -10,7 +10,7 @@ module Game = {
     tipe: string,
   }
 
-  let btnStyle = " cursor-pointer text-base font-bold text-stone-100 font-anon w-1/2 bottom-0 h-8 absolute bg-stone-700 bg-opacity-70 filter disabled:cursor-not-allowed disabled:contrast-[0.25]"
+  let btnStyle = " cursor-pointer text-base font-bold text-stone-100 font-anon w-1/2 bottom-0 h-8 absolute bg-stone-700 bg-opacity-70 filter disabled:cursor-not-allowed disabled:contrast-25"
 
   @react.component
   let make = (~game: Reducer.listGame, ~inThisGame, ~inAGame, ~count, ~send, ~class, ~onlyGame) => {
