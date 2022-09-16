@@ -22,9 +22,9 @@ let make = (~ht="h-72", ~on_Click, ~leg, ~validationError, ~cognitoError, ~child
       }}
       {children}
     </fieldset>
-    {switch (submitClicked, leg == "Sign in", validationError) {
-    | (false, _, _) | (true, false, _) | (true, true, Some(_)) => React.null
-    | (true, true, None) =>
+    {switch (submitClicked, leg == "Sign in", validationError, cognitoError) {
+    | (false, _, _, _) | (true, false, _, _) | (true, true, Some(_), _) | (true, true, _, Some(_)) => React.null
+    | (true, true, None, None) =>
       <div className="absolute left-1/2 transform -translate-x-2/4 bottom-10">
         <Loading label="..." />
       </div>

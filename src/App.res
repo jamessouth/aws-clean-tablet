@@ -47,7 +47,7 @@ let make = () => {
   let (token, setToken) = React.Uncurried.useState(_ => None)
   let (showName, setShowName) = React.Uncurried.useState(_ => "")
 
-  let auth = React.useMemo4(_ =>
+  let auth = React.useMemo5(_ =>
     React.createElement(
       Auth.lazy_(() =>
         Auth.import_("./Auth.bs")->Promise.then(
@@ -56,9 +56,9 @@ let make = () => {
           },
         )
       ),
-      Auth.makeProps(~token, ~setToken, ~cognitoUser, ~setCognitoUser, ()),
+      Auth.makeProps(~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~route, ()),
     )
-  , (token, setToken, cognitoUser, setCognitoUser))
+  , (token, setToken, cognitoUser, setCognitoUser, route))
 
   <>
     {switch route {

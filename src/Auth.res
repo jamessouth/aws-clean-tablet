@@ -11,6 +11,7 @@ type propShape = {
   "setCognitoUser": (. Js.Nullable.t<Cognito.usr> => Js.Nullable.t<Cognito.usr>) => unit,
   "setToken": (. option<string> => option<string>) => unit,
   "token": option<string>,
+  "route": Route.t,
 }
 
 @val
@@ -88,8 +89,7 @@ let initialState: Reducer.state = {
   winner: "",
 }
 @react.component
-let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
-  let route = Route.useRouter()
+let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~route) => {
   Js.log2("u345876l", route)
 
   let (ws, setWs) = React.Uncurried.useState(_ => Js.Nullable.null)
@@ -258,7 +258,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser) => {
 
   <>
     {switch route {
-    | Leaderboard => React.null
+    | Route.Leaderboard => React.null
     | Home | SignIn | SignUp | GetInfo(_) | Confirm(_) | Lobby | Play(_) | Other =>
       <header className="mb-10 newgmimg:mb-12">
         <p className="font-flow text-stone-100 text-4xl h-10 font-bold text-center">
