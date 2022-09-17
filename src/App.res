@@ -47,18 +47,32 @@ let make = () => {
   let (token, setToken) = React.Uncurried.useState(_ => None)
   let (showName, setShowName) = React.Uncurried.useState(_ => "")
 
-  let auth = React.useMemo5(_ =>
-    React.createElement(
-      Auth.lazy_(() =>
-        Auth.import_("./Auth.bs")->Promise.then(
-          comp => {
-            Promise.resolve({"default": comp["make"]})
-          },
-        )
-      ),
-      Auth.makeProps(~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~route, ()),
-    )
-  , (token, setToken, cognitoUser, setCognitoUser, route))
+  let signin = React.createElement(
+    Signin.lazy_(() =>
+      Signin.import_("./Signin.bs")->Promise.then(comp => {
+        Promise.resolve({"default": comp["make"]})
+      })
+    ),
+    Signin.makeProps(~userpool, ~setCognitoUser, ~setToken, ~cognitoUser, ()),
+  )
+
+  let signup = React.createElement(
+    Signup.lazy_(() =>
+      Signup.import_("./Signup.bs")->Promise.then(comp => {
+        Promise.resolve({"default": comp["make"]})
+      })
+    ),
+    Signup.makeProps(~userpool, ~setCognitoUser, ()),
+  )
+
+  let auth = React.createElement(
+    Auth.lazy_(() =>
+      Auth.import_("./Auth.bs")->Promise.then(comp => {
+        Promise.resolve({"default": comp["make"]})
+      })
+    ),
+    Auth.makeProps(~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~route, ()),
+  )
 
   <>
     {switch route {
@@ -122,11 +136,32 @@ let make = () => {
           </nav>
         }
 
-      | (SignIn, None) => <Signin userpool setCognitoUser setToken cognitoUser />
-      | (SignUp, None) => <Signup userpool setCognitoUser />
+      | (SignIn, None) => <React.Suspense fallback=React.null> signin </React.Suspense>
+      | (SignUp, None) => <React.Suspense fallback=React.null> signup </React.Suspense>
+
       | (GetInfo({search}), None) =>
-        <GetInfo userpool cognitoUser setCognitoUser setShowName search />
-      | (Confirm({search}), None) => <Confirm cognitoUser search />
+        <React.Suspense fallback=React.null>
+          {React.createElement(
+            GetInfo.lazy_(() =>
+              GetInfo.import_("./GetInfo.bs")->Promise.then(comp => {
+                Promise.resolve({"default": comp["make"]})
+              })
+            ),
+            GetInfo.makeProps(~userpool, ~cognitoUser, ~setCognitoUser, ~setShowName, ~search, ()),
+          )}
+        </React.Suspense>
+
+      | (Confirm({search}), None) =>
+        <React.Suspense fallback=React.null>
+          {React.createElement(
+            Confirm.lazy_(() =>
+              Confirm.import_("./Confirm.bs")->Promise.then(comp => {
+                Promise.resolve({"default": comp["make"]})
+              })
+            ),
+            Confirm.makeProps(~cognitoUser, ~search, ()),
+          )}
+        </React.Suspense>
       | (Lobby | Play(_) | Leaderboard, None) => {
           Route.replace(Home)
           React.null
