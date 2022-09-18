@@ -104,7 +104,7 @@ let make = (
           style={ReactDOM.Style.make(~backgroundColor=p.color, ())}>
           <p
             className={switch p.hasAnswered {
-            | true => "after:content-['\\22C5'] after:text-yellow-200 after:text-5xl after:absolute after:leading-25px"
+            | true => "dot after:(text-yellow-200 text-5xl absolute leading-25px)"
             | false =>
               switch (isWinner, i == 0) {
               | (true, true) => "text-shadow-win"

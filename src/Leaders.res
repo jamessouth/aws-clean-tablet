@@ -36,10 +36,6 @@ let sortData = (field, dir, a: Reducer.stat, b: Reducer.stat) => {
   }
 }
 
-let larrow = Js.String2.fromCharCode(8592)
-let thbase = "sticky top-0 h-8 bg-amber-300 w-16.667vw "
-let buttonBase = "bg-transparent text-dark-600 text-base font-anon font-bold w-full h-8"
-
 @react.component
 let make = (~leaderData, ~playerName) => {
   let (nameDir, setNameDir) = React.Uncurried.useState(_ => Down)
@@ -50,7 +46,7 @@ let make = (~leaderData, ~playerName) => {
   let (ppgDir, setPPGDir) = React.Uncurried.useState(_ => Up)
 
   let (sortedField, setSortedField) = React.Uncurried.useState(_ => Wins)
-  let (arrow, setArrow) = React.Uncurried.useState(_ => "['\\2193']")
+  let (arrowClass, setArrowClass) = React.Uncurried.useState(_ => "downArrow")
 
   let (data, setData) = React.Uncurried.useState(_ => [])
 
@@ -63,20 +59,18 @@ let make = (~leaderData, ~playerName) => {
     setSortedField(._ => field)
     switch dir {
     | Up => {
-        setArrow(._ => "['\\2193']")
+        setArrowClass(._ => "downArrow")
         func(._ => Down)
       }
 
     | Down => {
-        setArrow(._ => "['\\2191']")
+        setArrowClass(._ => "upArrow")
         func(._ => Up)
       }
     }
 
     setData(._ => data->Js.Array2.sortInPlaceWith(sortData(field, dir)))
   }
-
-  let arrowClass = ` relative after:content-${arrow} after:text-2xl after:font-over after:absolute`
 
   <div className="leadermobbg leadertabbg leaderbigbg w-100vw h-100vh overflow-y-scroll leader">
     {switch data->Js.Array2.length == 0 {
@@ -89,11 +83,11 @@ let make = (~leaderData, ~playerName) => {
       <table
         className="border-collapse text-dark-600 font-anon table-fixed tablewidth:mx-8 lg:mx-16 desk:mx-32">
         <caption
-          className="my-6 relative text-4xl md:my-12 md:text-5xl desk:my-18 desk:text-6xl font-fred font-bold text-shadow-lead">
+          className="my-6 relative text-4xl md:(my-12 text-5xl) desk:(my-18 text-6xl) font-fred font-bold text-shadow-lead">
           <Button
             onClick={_ => Route.push(Lobby)}
             className="cursor-pointer font-over text-5xl bg-transparent absolute left-10">
-            {React.string(larrow)}
+            {React.string("←")}
           </Button>
           {React.string("Leaderboard")}
         </caption>
@@ -127,12 +121,15 @@ let make = (~leaderData, ~playerName) => {
             ]
             ->Js.Array2.map(c => {
               let (cn, btnText, oc, field) = c
-              <th key=btnText className={thbase ++ cn}>
+              <th key=btnText className={"sticky top-0 h-8 bg-amber-300 w-16.667vw " ++ cn}>
                 <Button
                   onClick=oc
-                  className={switch sortedField == field {
-                  | true => buttonBase ++ arrowClass
-                  | false => buttonBase
+                  className={"bg-transparent cursor-pointer text-dark-600 text-base font-anon font-bold w-full h-8" ++ if (
+                    sortedField == field
+                  ) {
+                    ` relative ${arrowClass} after:(text-2xl font-over absolute)`
+                  } else {
+                    ""
                   }}>
                   {React.string(btnText)}
                 </Button>

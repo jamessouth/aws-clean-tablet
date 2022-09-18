@@ -8,6 +8,14 @@
     -webkit-mask-repeat: no-repeat;
     mask-repeat: no-repeat;
   }
+
+  .downArrow:after{
+    content: '↓';
+  }
+  
+  .upArrow:after{
+    content: '↑';
+  }
   
 .leadermobbg {
     background: -webkit-image-set(url("/assets/leadermobbg1x.webp") 1x, url("/assets/leadermobbg2x.webp") 2x) no-repeat center/cover;

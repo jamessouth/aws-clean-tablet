@@ -1,6 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap');
 
+.dot::after{
+  content: '⋅';
+}
+
 .game0 {
     background-image: -webkit-image-set(url("../../assets/troldslottet1x.webp") 1x, url("../../assets/troldslottet2x.webp") 2x);
     background-image: image-set(url("../../assets/troldslottet1x.webp") 1x,
