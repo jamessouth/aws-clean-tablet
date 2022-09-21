@@ -261,7 +261,8 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~route) => {
     | Route.Leaderboard => React.null
     | Home | SignIn | SignUp | GetInfo(_) | Confirm(_) | Lobby | Play(_) | Other =>
       <header className="mb-10 newgmimg:mb-12">
-        <p className="font-flow text-stone-100 text-4xl h-10 font-bold text-center">
+        <p
+          className="font-flow text-stone-100 text-2xl newgmimg:text-4xl h-10 font-bold text-center">
           {React.string(playerName)}
         </p>
         <h1
