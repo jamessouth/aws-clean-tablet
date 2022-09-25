@@ -1,15 +1,3 @@
-type answerPayload = {
-  action: string,
-  gameno: string,
-  answer: string,
-}
-
-type endPayload = {
-  action: string,
-  gameno: string,
-  token: string,
-}
-
 let answer_max_length = 12
 
 @react.component
@@ -47,15 +35,17 @@ let make = (
   Js.log3("play", players, hasRendered)
 
   let sendAnswer = _ => {
-    let pl = {
-      action: "answer",
+    open Lobby
+    let pl: apigwPayload = {
+      action: fromAPIRouteToString(Answer),
       gameno: sk,
-      answer: answer
+      data: answer
       ->Js.String2.slice(~from=0, ~to_=answer_max_length)
       ->Js.String2.replaceByRe(%re("/\d/g"), "")
       ->Js.String2.replaceByRe(%re("/[!-/:-@\[-`{-~]/g"), "")
       ->Js.String2.trim(_),
     }
+
     send(. Js.Json.stringifyAny(pl))
     setAnswered(._ => true)
     setAnswer(._ => "")
@@ -76,13 +66,15 @@ let make = (
   }
 
   let onEndClick = (. sendPayload) => {
+    open Lobby
     switch sendPayload {
     | true => {
-        let pl: endPayload = {
-          action: "end",
+        let pl: apigwPayload = {
+          action: fromAPIRouteToString(End),
           gameno: sk,
-          token: endtoken,
+          data: endtoken,
         }
+
         send(. Js.Json.stringifyAny(pl))
       }
 

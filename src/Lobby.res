@@ -1,33 +1,41 @@
-type leaderPayload = {
+type apiRoute = Answer | End | Leaders | Lobby
+
+let fromAPIRouteToString = r =>
+  switch r {
+  | Answer => "answer"
+  | End => "end"
+  | Leaders => "leaders"
+  | Lobby => "lobby"
+  }
+
+type apigwPayload = {
   action: string,
-  info: string,
+  gameno: string,
+  data: string,
 }
 
 module Game = {
-  type lobbyPayload = {
-    action: string,
-    gameno: string,
-    tipe: string,
-  }
-
   let btnStyle = " cursor-pointer text-base font-bold text-stone-100 font-anon w-1/2 bottom-0 h-8 absolute bg-stone-700 bg-opacity-70 filter disabled:(cursor-not-allowed contrast-25)"
 
   @react.component
-  let make = (~game: Reducer.listGame, ~inThisGame, ~inAGame, ~count, ~send, ~class, ~onlyGame) => {
+  let make = (~game, ~inThisGame, ~inAGame, ~count, ~send, ~class, ~onlyGame) => {
     let liStyle = `<md:mb-16 grid grid-cols-2 grid-rows-6 relative text-xl bg-bottom bg-no-repeat h-200px text-center font-bold text-dark-800 font-anon pb-8 ${class} lg:(max-w-lg w-full)`
     let (ready, setReady) = React.Uncurried.useState(_ => true)
     let (disabledJoin, setDisabledJoin) = React.Uncurried.useState(_ => false)
     let (disabledReady, setDisabledReady) = React.Uncurried.useState(_ => true)
 
+    let {no, timerCxld, players}: Reducer.listGame = game
+
     let onClickJoin = _ => {
-      let pl = {
-        action: "lobby",
-        gameno: game.no,
-        tipe: switch inThisGame {
+      let pl: apigwPayload = {
+        action: fromAPIRouteToString(Lobby),
+        gameno: no,
+        data: switch inThisGame {
         | true => "leave"
         | false => "join"
         },
       }
+
       send(. Js.Json.stringifyAny(pl))
       switch inThisGame {
       | true => setReady(._ => true)
@@ -36,20 +44,21 @@ module Game = {
     }
 
     let onClickReady = _ => {
-      let pl = {
-        action: "lobby",
-        gameno: game.no,
-        tipe: switch ready {
+      let pl: apigwPayload = {
+        action: fromAPIRouteToString(Lobby),
+        gameno: no,
+        data: switch ready {
         | true => "ready"
         | false => "unready"
         },
       }
+
       send(. Js.Json.stringifyAny(pl))
       setReady(._ => !ready)
     }
 
     React.useEffect3(() => {
-      let size = Js.Array2.length(game.players)
+      let size = Js.Array2.length(players)
       switch (inThisGame, inAGame) {
       | (true, _) => {
           //in this game
@@ -78,15 +87,15 @@ module Game = {
         }
       }
       None
-    }, (inThisGame, inAGame, game.players))
+    }, (inThisGame, inAGame, players))
 
     React.useEffect3(() => {
       switch inThisGame && count == "start" {
-      | true => Route.push(Play({play: game.no}))
+      | true => Route.push(Play({play: no}))
       | false => ()
       }
       None
-    }, (inThisGame, count, game.no))
+    }, (inThisGame, count, no))
 
     <li
       className={switch (inThisGame, onlyGame) {
@@ -94,10 +103,10 @@ module Game = {
       | (false, true) | (true, true) | (false, false) => liStyle
       }}>
       <p className="absolute text-stone-100 text-xs left-1/2 transform -translate-x-2/4 -top-3.5">
-        {React.string(game.no)}
+        {React.string(no)}
       </p>
       <p className="col-span-2" />
-      {game.players
+      {players
       ->Js.Array2.mapi((p, i) => {
         <p
           className={switch p.ready {
@@ -109,7 +118,7 @@ module Game = {
         </p>
       })
       ->React.array}
-      {switch (game.timerCxld, inThisGame) {
+      {switch (timerCxld, inThisGame) {
       | (false, false) =>
         <p
           className="absolute text-2xl animate-pulse font-perm left-1/2 top-2/3 transform -translate-x-2/4 w-full">
@@ -145,25 +154,27 @@ module Game = {
 @react.component
 let make = (~playerGame, ~games, ~send, ~wsError, ~close, ~count, ~setLeaderData) => {
   let onClick = _ => {
-    let pl: Game.lobbyPayload = {
-      action: "lobby",
+    let pl: apigwPayload = {
+      action: fromAPIRouteToString(Lobby),
       gameno: "new",
-      tipe: "join",
+      data: "join",
     }
+
     send(. Js.Json.stringifyAny(pl))
   }
 
   let signOut = _ => {
     Js.log("sign out click")
 
-    let pl: Game.lobbyPayload = {
-      action: "lobby",
+    let pl: apigwPayload = {
+      action: fromAPIRouteToString(Lobby),
       gameno: switch playerGame == "" {
       | true => "dc"
       | false => playerGame
       },
-      tipe: "disconnect",
+      data: "disconnect",
     }
+
     send(. Js.Json.stringifyAny(pl))
     close(. 1000, "user sign-out")
   }
@@ -171,9 +182,10 @@ let make = (~playerGame, ~games, ~send, ~wsError, ~close, ~count, ~setLeaderData
   let leaderboard = _ => {
     setLeaderData(._ => [])
 
-    let pl = {
-      action: "leaders",
-      info: "hello",
+    let pl: apigwPayload = {
+      action: fromAPIRouteToString(Leaders),
+      gameno: "",
+      data: "hello",
     }
     send(. Js.Json.stringifyAny(pl))
     Route.push(Leaderboard)
@@ -194,7 +206,7 @@ let make = (~playerGame, ~games, ~send, ~wsError, ~close, ~count, ~setLeaderData
     | false =>
       switch Js.Nullable.toOption(games) {
       | None => <Loading label="games..." />
-      | Some(gs) =>
+      | Some(gs: Js.Array2.t<Reducer.listGame>) =>
         <div className="flex flex-col items-center">
           <div className="relative m-auto <newgmimg:w-11/12 w-max">
             <img
@@ -224,7 +236,7 @@ let make = (~playerGame, ~games, ~send, ~wsError, ~close, ~count, ~setLeaderData
             <ul
               className="m-12 newgmimg:mt-14 w-11/12 <md:(flex max-w-lg flex-col) md:(grid grid-cols-2 gap-8) lg:(gap-10 justify-items-center) xl:(grid-cols-3 gap-12 max-w-1688px)">
               {gs
-              ->Js.Array2.map((game: Reducer.listGame) => {
+              ->Js.Array2.map(game => {
                 let class = "game" ++ Js.String2.sliceToEnd(game.no, ~from=18)
                 <Game
                   key=game.no

@@ -1,6 +1,11 @@
-type leaderPayload = {
+type apiRoute = Answer | End | Leaders | Lobby
+
+let fromAPIRouteToString: apiRoute => string
+
+type apigwPayload = {
   action: string,
-  info: string,
+  gameno: string,
+  data: string,
 }
 
 @react.component

@@ -1,15 +1,3 @@
-type answerPayload = {
-  action: string,
-  gameno: string,
-  answer: string,
-}
-
-type endPayload = {
-  action: string,
-  gameno: string,
-  token: string,
-}
-
 @react.component
 let make: (
   ~players: array<Reducer.livePlayer>,
