@@ -1,13 +1,3 @@
-type apiRoute = Answer | End | Leaders | Lobby
-
-let fromAPIRouteToString = r =>
-  switch r {
-  | Answer => "answer"
-  | End => "end"
-  | Leaders => "leaders"
-  | Lobby => "lobby"
-  }
-
 type apigwPayload = {
   action: string,
   gameno: string,
@@ -27,8 +17,8 @@ module Game = {
     let {no, timerCxld, players}: Reducer.listGame = game
 
     let onClickJoin = _ => {
-      let pl: apigwPayload = {
-        action: fromAPIRouteToString(Lobby),
+      let pl = {
+        action: "lobby",
         gameno: no,
         data: switch inThisGame {
         | true => "leave"
@@ -44,8 +34,8 @@ module Game = {
     }
 
     let onClickReady = _ => {
-      let pl: apigwPayload = {
-        action: fromAPIRouteToString(Lobby),
+      let pl = {
+        action: "lobby",
         gameno: no,
         data: switch ready {
         | true => "ready"
@@ -154,8 +144,8 @@ module Game = {
 @react.component
 let make = (~playerGame, ~games, ~send, ~wsError, ~close, ~count, ~setLeaderData) => {
   let onClick = _ => {
-    let pl: apigwPayload = {
-      action: fromAPIRouteToString(Lobby),
+    let pl = {
+      action: "lobby",
       gameno: "new",
       data: "join",
     }
@@ -166,8 +156,8 @@ let make = (~playerGame, ~games, ~send, ~wsError, ~close, ~count, ~setLeaderData
   let signOut = _ => {
     Js.log("sign out click")
 
-    let pl: apigwPayload = {
-      action: fromAPIRouteToString(Lobby),
+    let pl = {
+      action: "lobby",
       gameno: switch playerGame == "" {
       | true => "dc"
       | false => playerGame
@@ -182,8 +172,8 @@ let make = (~playerGame, ~games, ~send, ~wsError, ~close, ~count, ~setLeaderData
   let leaderboard = _ => {
     setLeaderData(._ => [])
 
-    let pl: apigwPayload = {
-      action: fromAPIRouteToString(Leaders),
+    let pl = {
+      action: "leaders",
       gameno: "",
       data: "hello",
     }

@@ -1,7 +1,3 @@
-type apiRoute = Answer | End | Leaders | Lobby
-
-let fromAPIRouteToString: apiRoute => string
-
 type apigwPayload = {
   action: string,
   gameno: string,
@@ -16,5 +12,5 @@ let make: (
   ~wsError: string,
   ~close: (. int, string) => unit,
   ~count: string,
-  ~setLeaderData: (. 'a => array<'b>) => unit,
+  ~setLeaderData: (. array<Reducer.stat> => array<Reducer.stat>) => unit,
 ) => React.element

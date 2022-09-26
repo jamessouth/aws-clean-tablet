@@ -35,9 +35,8 @@ let make = (
   Js.log3("play", players, hasRendered)
 
   let sendAnswer = _ => {
-    open Lobby
-    let pl: apigwPayload = {
-      action: fromAPIRouteToString(Answer),
+    let pl: Lobby.apigwPayload = {
+      action: "answer",
       gameno: sk,
       data: answer
       ->Js.String2.slice(~from=0, ~to_=answer_max_length)
@@ -66,11 +65,10 @@ let make = (
   }
 
   let onEndClick = (. sendPayload) => {
-    open Lobby
     switch sendPayload {
     | true => {
-        let pl: apigwPayload = {
-          action: fromAPIRouteToString(End),
+        let pl: Lobby.apigwPayload = {
+          action: "end",
           gameno: sk,
           data: endtoken,
         }
