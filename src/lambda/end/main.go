@@ -30,7 +30,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	var (
 		sfnsvc = sfn.NewFromConfig(cfg)
 		body   struct {
-			Action, Gameno, Token string
+			Gameno, Data string
 		}
 	)
 
@@ -41,7 +41,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	stsi := sfn.SendTaskSuccessInput{
 		Output:    aws.String("\"\""),
-		TaskToken: aws.String(body.Token),
+		TaskToken: aws.String(body.Data),
 	}
 
 	_, err = sfnsvc.SendTaskSuccess(ctx, &stsi)

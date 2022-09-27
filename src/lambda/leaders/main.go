@@ -90,12 +90,9 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		// auth      = req.RequestContext.Authorizer.(map[string]interface{})
 		// id, name  = auth["principalId"].(string), auth["username"].(string)
-		body struct {
-			Action, Info string
-		}
 	)
 
-	customResolver := aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
 		if service == apigatewaymanagementapi.ServiceID && region == reg {
 			ep := aws.Endpoint{
 				PartitionID:   "aws",
@@ -110,7 +107,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	apigwcfg, err := config.LoadDefaultConfig(ctx,
 		config.WithRegion(reg),
-		config.WithEndpointResolver(customResolver),
+		config.WithEndpointResolverWithOptions(customResolver),
 	)
 	if err != nil {
 		return callErr(err)
@@ -127,12 +124,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		apigwsvc = apigatewaymanagementapi.NewFromConfig(apigwcfg)
 		ddbsvc   = dynamodb.NewFromConfig(ddbcfg)
 	)
-
-	err = json.Unmarshal([]byte(req.Body), &body)
-	if err != nil {
-		fmt.Println("unmarshal err")
-	}
-	fmt.Printf("%s%+v\n", "bod ", body)
 
 	leadersResults, err := ddbsvc.Query(ctx, &dynamodb.QueryInput{
 		TableName:              tableName,

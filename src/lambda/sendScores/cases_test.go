@@ -11,7 +11,6 @@ var (
 	twentyone  int = 21
 	twentyfour int = 24
 	twentyfive int = 25
-	twentysix  int = 26
 )
 
 var getStatsTest = struct {

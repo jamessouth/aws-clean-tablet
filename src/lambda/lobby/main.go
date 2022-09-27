@@ -42,7 +42,10 @@ func getReturnValue(status int) events.APIGatewayProxyResponse {
 	}
 }
 
-const maxPlayersPerGame string = "8"
+const (
+	maxPlayersPerGame string = "8"
+	gameNoLength      int    = 19
+)
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
@@ -56,18 +59,15 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	var (
-		apiid    = os.Getenv("CT_APIID")
-		stage    = os.Getenv("CT_STAGE")
-		endpoint = "https://" + apiid + ".execute-api." + reg + ".amazonaws.com/" + stage
-	)
-
-	var (
+		apiid     = os.Getenv("CT_APIID")
+		stage     = os.Getenv("CT_STAGE")
 		tableName = os.Getenv("tableName")
+		endpoint  = "https://" + apiid + ".execute-api." + reg + ".amazonaws.com/" + stage
 		ddbsvc    = dynamodb.NewFromConfig(cfg)
 		auth      = req.RequestContext.Authorizer.(map[string]interface{})
 		id, name  = auth["principalId"].(string), auth["username"].(string)
 		body      struct {
-			Action, Gameno, Tipe string
+			Gameno, Data string
 		}
 		gameno  string
 		connKey = map[string]types.AttributeValue{
@@ -77,7 +77,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		ebsvc = eventbridge.NewFromConfig(cfg)
 	)
 
-	customResolver := aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
 		if service == apigatewaymanagementapi.ServiceID && region == reg {
 			ep := aws.Endpoint{
 				PartitionID:   "aws",
@@ -93,15 +93,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	apigwcfg, err := config.LoadDefaultConfig(ctx,
 		config.WithRegion(reg),
 		// config.WithLogger(logger),
-		config.WithEndpointResolver(customResolver),
+		config.WithEndpointResolverWithOptions(customResolver),
 	)
 	if err != nil {
 		callErr(err)
 	}
 
-	var (
-		apigwsvc = apigatewaymanagementapi.NewFromConfig(apigwcfg)
-	)
+	var apigwsvc = apigatewaymanagementapi.NewFromConfig(apigwcfg)
 
 	err = json.Unmarshal([]byte(req.Body), &body)
 	if err != nil {
@@ -114,7 +112,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		gameno = body.Gameno
 	} else if _, err = strconv.ParseInt(body.Gameno, 10, 64); err != nil {
 		return getReturnValue(http.StatusBadRequest), err
-	} else if len(body.Gameno) != 19 {
+	} else if len(body.Gameno) != gameNoLength {
 		return getReturnValue(http.StatusBadRequest), errors.New("invalid game number")
 	} else {
 		gameno = body.Gameno
@@ -137,18 +135,16 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		ExpressionAttributeNames: map[string]string{
 			"#P": "players",
 			"#I": id,
-
 			"#T": "timerCxld",
 		},
 		ExpressionAttributeValues: map[string]types.AttributeValue{
-
 			":t": &types.AttributeValueMemberBOOL{Value: true},
 		},
 		UpdateExpression: aws.String("REMOVE #P.#I SET #T = :t"),
 		ReturnValues:     types.ReturnValueAllNew,
 	}
 
-	if body.Tipe == "join" {
+	if body.Data == "join" {
 
 		player := listPlayer{
 			Name:   name,
@@ -196,11 +192,9 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 						ExpressionAttributeNames: map[string]string{
 							"#P": "players",
 							"#I": id,
-
 							"#T": "timerCxld",
 						},
 						ExpressionAttributeValues: map[string]types.AttributeValue{
-
 							":t": &types.AttributeValueMemberBOOL{Value: true},
 							":m": &types.AttributeValueMemberN{Value: maxPlayersPerGame},
 							":p": marshalledPlayer,
@@ -224,12 +218,10 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 						ConditionExpression: aws.String("attribute_not_exists(#P)"),
 						ExpressionAttributeNames: map[string]string{
 							"#P": "players",
-
 							"#T": "timerCxld",
 						},
 						ExpressionAttributeValues: map[string]types.AttributeValue{
 							":p": marshalledPlayersMap,
-
 							":t": &types.AttributeValueMemberBOOL{Value: true},
 						},
 						UpdateExpression: aws.String("SET #P = :p, #T = :t"),
@@ -242,7 +234,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		})
 		callErr(err)
 
-	} else if body.Tipe == "leave" {
+	} else if body.Data == "leave" {
 
 		_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 			Key:       connKey,
@@ -260,9 +252,9 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		ui2, err := ddbsvc.UpdateItem(ctx, &removePlayerInput)
 		callErr(err)
 
-		callFunction(ui2.Attributes, gameItemKey, tableName, ctx, ddbsvc, apigwsvc, req.RequestContext.RequestTimeEpoch, ebsvc)
+		getReadyStartGame(ui2.Attributes, gameItemKey, tableName, ctx, ddbsvc, apigwsvc, req.RequestContext.RequestTimeEpoch, ebsvc)
 
-	} else if body.Tipe == "ready" {
+	} else if body.Data == "ready" {
 
 		ui2, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 			Key:       gameItemKey,
@@ -281,9 +273,9 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		callErr(err)
 
-		callFunction(ui2.Attributes, gameItemKey, tableName, ctx, ddbsvc, apigwsvc, req.RequestContext.RequestTimeEpoch, ebsvc)
+		getReadyStartGame(ui2.Attributes, gameItemKey, tableName, ctx, ddbsvc, apigwsvc, req.RequestContext.RequestTimeEpoch, ebsvc)
 
-	} else if body.Tipe == "unready" {
+	} else if body.Data == "unready" {
 
 		_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 			Key:       gameItemKey,
@@ -302,14 +294,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		})
 		callErr(err)
 
-	} else if body.Tipe == "disconnect" {
+	} else if body.Data == "disconnect" {
 		if gameno != "dc" {
 
 			ui2, err := ddbsvc.UpdateItem(ctx, &removePlayerInput)
 
 			callErr(err)
 
-			callFunction(ui2.Attributes, gameItemKey, tableName, ctx, ddbsvc, apigwsvc, req.RequestContext.RequestTimeEpoch, ebsvc)
+			getReadyStartGame(ui2.Attributes, gameItemKey, tableName, ctx, ddbsvc, apigwsvc, req.RequestContext.RequestTimeEpoch, ebsvc)
 
 		}
 
@@ -358,17 +350,20 @@ func getTimer(gik map[string]types.AttributeValue, tn string, ctx context.Contex
 
 }
 
-func callFunction(rv, gik map[string]types.AttributeValue, tn string, ctx context.Context, ddbsvc *dynamodb.Client, apigwsvc *apigatewaymanagementapi.Client, reqTime int64, ebsvc *eventbridge.Client) {
-	var gm struct {
-		Sk      string
-		Players map[string]listPlayer
-	}
+func getReadyStartGame(rv, gik map[string]types.AttributeValue, tn string, ctx context.Context, ddbsvc *dynamodb.Client, apigwsvc *apigatewaymanagementapi.Client, reqTime int64, ebsvc *eventbridge.Client) {
+	var (
+		minPlayers = 3
+		gm         struct {
+			Sk      string
+			Players map[string]listPlayer
+		}
+	)
 	err := attributevalue.UnmarshalMap(rv, &gm)
 	if err != nil {
 		fmt.Println("unmarshal err", err)
 	}
 
-	if len(gm.Players) < 3 {
+	if len(gm.Players) < minPlayers {
 		return
 	}
 

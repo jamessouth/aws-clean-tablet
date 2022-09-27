@@ -142,13 +142,13 @@ var clearAnswersTests = []struct {
 		},
 
 		expected: []livePlayer{
-			{Name: "will", ConnID: "333", Color: "yellow", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: aws.Int(3)},
-			{Name: "earl", ConnID: "111", Color: "red", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: aws.Int(3)},
-			{Name: "carl", ConnID: "222", Color: "green", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: aws.Int(0)},
-			{Name: "darlene", ConnID: "333", Color: "yellow", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: aws.Int(1)},
-			{Name: "dean", ConnID: "333", Color: "yellow", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: aws.Int(1)},
-			{Name: "william", ConnID: "333", Color: "yellow", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: aws.Int(1)},
-			{Name: "beulah", ConnID: "333", Color: "yellow", Score: nil, Answer: "", HasAnswered: false, PointsThisRound: aws.Int(1)},
+			{Name: "will", ConnID: "333", Color: "yellow", Score: nil, Answer: "", HasAnswered: true, PointsThisRound: aws.Int(3)},
+			{Name: "earl", ConnID: "111", Color: "red", Score: nil, Answer: "", HasAnswered: true, PointsThisRound: aws.Int(3)},
+			{Name: "carl", ConnID: "222", Color: "green", Score: nil, Answer: "", HasAnswered: true, PointsThisRound: aws.Int(0)},
+			{Name: "darlene", ConnID: "333", Color: "yellow", Score: nil, Answer: "", HasAnswered: true, PointsThisRound: aws.Int(1)},
+			{Name: "dean", ConnID: "333", Color: "yellow", Score: nil, Answer: "", HasAnswered: true, PointsThisRound: aws.Int(1)},
+			{Name: "william", ConnID: "333", Color: "yellow", Score: nil, Answer: "", HasAnswered: true, PointsThisRound: aws.Int(1)},
+			{Name: "beulah", ConnID: "333", Color: "yellow", Score: nil, Answer: "", HasAnswered: true, PointsThisRound: aws.Int(1)},
 		},
 
 		description: "delete answers",

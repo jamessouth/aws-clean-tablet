@@ -8,7 +8,7 @@ import (
 )
 
 func TestSortListPlayers(t *testing.T) {
-	t.Skip()
+	// t.Skip()
 	for _, ref := range sortListPlayers {
 		ref.input = sortByName(ref.input)
 
@@ -19,7 +19,7 @@ func TestSortListPlayers(t *testing.T) {
 }
 
 func TestSortByAnswerThenName(t *testing.T) {
-	t.Skip()
+	// t.Skip()
 	for _, ref := range sortByAnswerThenNameTests {
 		sortByAnswerThenName(ref.input)
 
@@ -30,7 +30,7 @@ func TestSortByAnswerThenName(t *testing.T) {
 }
 
 func TestSortByScoreThenName(t *testing.T) {
-	t.Skip()
+	// t.Skip()
 	for _, ref := range sortByScoreThenNameTests {
 		sortByScoreThenName(ref.input)
 
@@ -41,7 +41,7 @@ func TestSortByScoreThenName(t *testing.T) {
 }
 
 func TestListGamePayload_MarshalJSON(t *testing.T) {
-	t.Skip()
+	// t.Skip()
 	for _, ref := range listGamePayload_MarshalJSON_Tests {
 		j, err := json.Marshal(ref.input)
 		// t.Log(string(j))
@@ -55,7 +55,7 @@ func TestListGamePayload_MarshalJSON(t *testing.T) {
 }
 
 func TestPrep(t *testing.T) {
-	t.Skip()
+	// t.Skip()
 
 	for _, test := range prepTests {
 		if act, _ := prep(test.input); !cmp.Equal(act, test.expected) {
@@ -67,7 +67,7 @@ func TestPrep(t *testing.T) {
 }
 
 func TestShowAnswers(t *testing.T) {
-	t.Skip()
+	// t.Skip()
 
 	for _, test := range showAnswersTests {
 		if act := showAnswers(test.input); !cmp.Equal(act, test.expected) {

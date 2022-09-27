@@ -356,7 +356,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			endpoint = "https://" + apiid + ".execute-api." + rec.AWSRegion + ".amazonaws.com/" + stage
 		)
 
-		customResolver := aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
+		customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
 			if service == apigatewaymanagementapi.ServiceID && region == rec.AWSRegion {
 				ep := aws.Endpoint{
 					PartitionID:   "aws",
@@ -372,7 +372,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 		apigwcfg, err := config.LoadDefaultConfig(ctx,
 			config.WithRegion(rec.AWSRegion),
 			// config.WithLogger(logger),
-			config.WithEndpointResolver(customResolver),
+			config.WithEndpointResolverWithOptions(customResolver),
 		)
 		if err != nil {
 			return callErr(err)

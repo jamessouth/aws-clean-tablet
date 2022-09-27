@@ -1,13 +1,13 @@
 module authorizer
 
-go 1.18
+go 1.19
 
 require (
-	github.com/aws/aws-lambda-go v1.29.0
-	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
-	github.com/goccy/go-json v0.9.6 // indirect
-	github.com/lestrrat-go/jwx v1.2.22
-	golang.org/x/crypto v0.0.0-20220408190544-5352b0902921 // indirect
+	github.com/aws/aws-lambda-go v1.34.1
+	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0 // indirect
+	github.com/goccy/go-json v0.9.11 // indirect
+	github.com/lestrrat-go/jwx v1.2.25
+	golang.org/x/crypto v0.0.0-20220926161630-eccd6366d1be // indirect
 )
 
 require (

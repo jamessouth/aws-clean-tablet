@@ -90,7 +90,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		ddbsvc    = dynamodb.NewFromConfig(cfg)
 		s3svc     = s3.NewFromConfig(cfg)
 		body      struct {
-			Gameno, Answer string
+			Gameno, Data string
 		}
 		ans string
 		id  = req.RequestContext.Authorizer.(map[string]interface{})["principalId"].(string)
@@ -101,7 +101,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		return callErr(err)
 	}
 
-	sanitizedAnswer := sanitize(body.Answer)
+	sanitizedAnswer := sanitize(body.Data)
 
 	if sanitizedAnswer == "" {
 

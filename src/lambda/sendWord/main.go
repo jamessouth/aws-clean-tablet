@@ -20,11 +20,7 @@ type livePlayer struct {
 	Color  string `json:"color"`
 	Score  *int   `json:"score,omitempty"`
 	Answer string `json:"answer,omitempty"`
-	// HasAnswered     bool   `json:"hasAnswered,omitempty"`
-	// PointsThisRound *int `json:"pointsThisRound,omitempty"`
 }
-
-type livePlayerList []livePlayer
 
 func handler(ctx context.Context, req struct {
 	Token, Gameno, TableName, Endpoint, Region string
@@ -34,7 +30,7 @@ func handler(ctx context.Context, req struct {
 
 	reg := req.Region
 
-	customResolver := aws.EndpointResolverFunc(func(service, region string) (aws.Endpoint, error) {
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
 		if service == apigatewaymanagementapi.ServiceID && region == reg {
 			ep := aws.Endpoint{
 				PartitionID:   "aws",
@@ -50,7 +46,7 @@ func handler(ctx context.Context, req struct {
 	apigwcfg, err := config.LoadDefaultConfig(ctx,
 		config.WithRegion(reg),
 		// config.WithLogger(logger),
-		config.WithEndpointResolver(customResolver),
+		config.WithEndpointResolverWithOptions(customResolver),
 	)
 	if err != nil {
 		return err

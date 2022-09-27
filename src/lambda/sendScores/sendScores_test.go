@@ -7,7 +7,7 @@ import (
 )
 
 func TestGetStats(t *testing.T) {
-	t.Skip()
+	// t.Skip()
 	if act := getStats(getStatsTest.players, getStatsTest.playersList); !cmp.Equal(act, getStatsTest.expected) {
 		t.Errorf("FAIL - getStats - %s\n act: %+v\n exp: %+v\n",
 			getStatsTest.description, act, getStatsTest.expected)
@@ -15,7 +15,7 @@ func TestGetStats(t *testing.T) {
 }
 
 func TestUpdateScores(t *testing.T) {
-	t.Skip()
+	// t.Skip()
 	act, _ := updateScores(updateScoresTest.players, updateScoresTest.scores)
 	sortByScoreThenName(act)
 	sortByScoreThenName(updateScoresTest.expected)
@@ -26,7 +26,7 @@ func TestUpdateScores(t *testing.T) {
 }
 
 func TestSort(t *testing.T) {
-	t.Skip()
+	// t.Skip()
 	act := sortTest.players
 	sortByScoreThenName(act)
 	if !cmp.Equal(act, sortTest.expected) {

@@ -175,7 +175,7 @@ let make = (~playerGame, ~games, ~send, ~wsError, ~close, ~count, ~setLeaderData
     let pl = {
       action: "leaders",
       gameno: "",
-      data: "hello",
+      data: "",
     }
     send(. Js.Json.stringifyAny(pl))
     Route.push(Leaderboard)
