@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -28,12 +27,9 @@ func panicProtectedUID() (id string) {
 
 func handler(ctx context.Context, ev events.CognitoEventUserPoolsPreTokenGen) (events.CognitoEventUserPoolsPreTokenGen, error) {
 
-	// fmt.Printf("%s: %+v\n", "event", ev)
-	// fmt.Println(uid)
-
 	uid := panicProtectedUID()
 
-	if strings.HasPrefix(uid, "uuid panic") {
+	if uid[0] == 117 { //"u"
 		return ev, errors.New(uid)
 	}
 
