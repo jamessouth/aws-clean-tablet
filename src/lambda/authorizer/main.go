@@ -15,17 +15,22 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 
+	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/lestrrat-go/jwx/v2/jws"
+	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 
+type sink map[jwa.SignatureAlgorithm]interface{}
 
+func (s sink) Key(alg jwa.SignatureAlgorithm, key interface{}) {
+	s[alg] = key
+}
 
-	
-type keySetFetcher func(ctx context.Context, s3svc *s3.Client, s3in s3.GetObjectInput) (jwk.Set, error)
+type keySetFetcher func(ctx context.Context, s3svc *s3.Client, s3in *s3.GetObjectInput) (jwk.Set, error)
 
-func getKeySet(ctx context.Context, s3svc *s3.Client, s3in s3.GetObjectInput) (jwk.Set, error) {
-	obj, err := s3svc.GetObject(ctx, &s3in)
+func getKeySet(ctx context.Context, s3svc *s3.Client, s3in *s3.GetObjectInput) (jwk.Set, error) {
+	obj, err := s3svc.GetObject(ctx, s3in)
 
 	if err != nil {
 		return nil, err
@@ -34,67 +39,55 @@ func getKeySet(ctx context.Context, s3svc *s3.Client, s3in s3.GetObjectInput) (j
 	objOutput := *obj
 	// fmt.Printf("\n%s, %+v\n", "getObj op", objOutput)
 
-
-
 	return jwk.ParseReader(objOutput.Body)
-	
+
 }
-
-
 
 type keyHandler struct {
-	ctx context.Context
-	s3svc *s3.Client
-	s3in *s3.GetObjectInput
-	fetcher keySetFetcher
+	reg, upid string
+	s3svc     *s3.Client
+	s3in      *s3.GetObjectInput
+	fetcher   keySetFetcher
 }
 
-func (h *keyHandler) fetchKeys(ctx context.Context, sink jws.KeySink, sig *jws.Signature, msg *jws.Message) error {
+func (h *keyHandler) FetchKeys(ctx context.Context, sink jws.KeySink, sig *jws.Signature, msg *jws.Message) error {
 
-	
 	alg := sig.ProtectedHeaders().Algorithm()
 	kid := sig.ProtectedHeaders().KeyID()
 
-	
-	key, err := h.fetcher(ctx, h.s3svc, h.s3in)
+	jwkSet, err := h.fetcher(ctx, h.s3svc, h.s3in)
 	if err != nil {
 		return err
 	}
 
-
-
+	var finalKey jwk.Key
 
 	key, keyPresent := jwkSet.LookupKeyID(kid)
 
 	if !keyPresent {
 
+		keyset, err := jwk.Fetch(ctx, "https://cognito-idp."+h.reg+".amazonaws.com/"+h.upid+"/.well-known/jwks.json")
+		if err != nil {
+			return err
+		}
+
+		finalKey, _ = keyset.LookupKeyID(kid)
+
 	} else {
+		finalKey = key
 
 	}
-
-
-
-	sink.Key(alg, key)
+	sink.Key(alg, finalKey)
 	return nil
+
 }
-
-
-
-
-
-
-	
-	 jwt.Parse(jwtRaw, jwt.WithKeyProvider(handler), jwt.WithContext(c))
-
-
-
 
 func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
 
 	// fmt.Printf("%s: %+v\n", "request", req.QueryStringParameters["auth"])
 
 	var (
-		tableName   = os.Getenv("tableName")
+		// tableName   = os.Getenv("tableName")
 		appClientID = os.Getenv("appClientID")
 		userPoolID  = os.Getenv("userPoolID")
 		origin      = os.Getenv("origin")
@@ -150,8 +143,9 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 		// ddbsvc = dynamodb.NewFromConfig(cfg)
 	)
 
-
-	kh := keyHandler{
+	kh := &keyHandler{
+		reg:   region,
+		upid:  userPoolID,
 		s3svc: s3svc,
 		s3in: &s3.GetObjectInput{
 			Bucket:  bucket,
@@ -159,20 +153,43 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 			IfMatch: aws.String(jwksETag),
 		},
 		fetcher: getKeySet,
-
 	}
 
-	err = kh.fetchKeys(ctx, interface {
-		Key(jwa.SignatureAlgorithm, interface{})
-	}, msg.Signatures()[0], msg)
+	ks := make(sink)
 
+	err = kh.FetchKeys(ctx, ks, msg.Signatures()[0], msg)
+	if err != nil {
+		return createPolicy(
+			req.MethodArn,
+			"Deny",
+			"ID",
+			map[string]interface{}{
+				"error": getErrorMsg(err),
+			},
+		), err
+	}
 
-
-	
-
-
-
-
+	parsedToken, err := jwt.Parse(
+		accessToken,
+		jwt.WithContext(ctx),
+		jwt.WithKeyProvider(kh),
+		jwt.WithValidate(true),
+		jwt.WithVerify(true),
+		jwt.WithIssuer("https://cognito-idp."+region+".amazonaws.com/"+userPoolID),
+		jwt.WithClaimValue("client_id", appClientID),
+		jwt.WithClaimValue("token_use", "access"),
+	)
+	if err != nil {
+		return createPolicy(
+			req.MethodArn,
+			"Deny",
+			"ID",
+			map[string]interface{}{
+				"error": getErrorMsg(err),
+			},
+		), err
+	}
+	fmt.Println(parsedToken)
 
 	// gi, err := ddbsvc.GetItem(ctx, &dynamodb.GetItemInput{
 	// 	Key: map[string]types.AttributeValue{
@@ -197,35 +214,6 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 	// if err != nil {
 	// 	callErr(err)
 	// }
-
-	// keyset = jwk.p
-
-	// for _, k := range jwks.Keys {
-	// 	if k.Kid == kid {
-
-	// 	}
-	// }
-
-	// parsedToken, err := jwt.Parse(
-	// 	token,
-	// 	jwt.WithKeySet(keyset),
-	// 	jwt.WithValidate(true),
-	// 	jwt.WithIssuer("https://cognito-idp."+region+".amazonaws.com/"+userPoolID),
-	// 	jwt.WithClaimValue("client_id", appClientID),
-	// 	jwt.WithClaimValue("token_use", "access"),
-	// )
-	// if err != nil {
-	// 	return createPolicy(
-	// 		req.MethodArn,
-	// 		"Deny",
-	// 		"ID",
-	// 		map[string]interface{}{
-	// 			"error": getErrorMsg(err),
-	// 		},
-	// 	), err
-	// }
-
-	// fmt.Println(parsedToken)
 
 	// return createPolicy(
 	// 	req.MethodArn,
