@@ -1,7 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"crypto/md5"
+	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -44,10 +48,9 @@ func getKeySet(ctx context.Context, s3svc *s3.Client, s3in *s3.GetObjectInput) (
 }
 
 type keyHandler struct {
-	reg, upid string
-	s3svc     *s3.Client
-	s3in      *s3.GetObjectInput
-	fetcher   keySetFetcher
+	reg, upid, s3bucket, s3key, s3etag string
+	s3svc                              *s3.Client
+	fetcher                            keySetFetcher
 }
 
 func (h *keyHandler) FetchKeys(ctx context.Context, sink jws.KeySink, sig *jws.Signature, msg *jws.Message) error {
@@ -55,7 +58,11 @@ func (h *keyHandler) FetchKeys(ctx context.Context, sink jws.KeySink, sig *jws.S
 	alg := sig.ProtectedHeaders().Algorithm()
 	kid := sig.ProtectedHeaders().KeyID()
 
-	jwkSet, err := h.fetcher(ctx, h.s3svc, h.s3in)
+	jwkSet, err := h.fetcher(ctx, h.s3svc, &s3.GetObjectInput{
+		Bucket:  aws.String(h.s3bucket),
+		Key:     aws.String(h.s3key),
+		IfMatch: aws.String(h.s3etag),
+	})
 	if err != nil {
 		return err
 	}
@@ -67,6 +74,28 @@ func (h *keyHandler) FetchKeys(ctx context.Context, sink jws.KeySink, sig *jws.S
 	if !keyPresent {
 
 		keyset, err := jwk.Fetch(ctx, "https://cognito-idp."+h.reg+".amazonaws.com/"+h.upid+"/.well-known/jwks.json")
+		if err != nil {
+			return err
+		}
+
+		marshalledKeyset, err := json.Marshal(keyset)
+		if err != nil {
+			return err
+		}
+
+		dig := md5.New()
+		dig.Write(marshalledKeyset)
+
+		md5 := base64.StdEncoding.EncodeToString(dig.Sum(nil))
+
+		_, err = h.s3svc.PutObject(ctx, &s3.PutObjectInput{
+			Bucket:     aws.String(h.s3bucket),
+			Key:        aws.String(h.s3key),
+			Body:       bytes.NewReader(marshalledKeyset),
+			ContentMD5: aws.String(md5),
+		},
+		)
+
 		if err != nil {
 			return err
 		}
@@ -91,10 +120,9 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 		appClientID = os.Getenv("appClientID")
 		userPoolID  = os.Getenv("userPoolID")
 		origin      = os.Getenv("origin")
-
-		bucket   = aws.String(os.Getenv("bucket"))
-		jwksKey  = aws.String(os.Getenv("jwksKey"))
-		jwksETag = os.Getenv("jwksETag")
+		bucket      = os.Getenv("bucket")
+		jwksKey     = os.Getenv("jwksKey")
+		jwksETag    = os.Getenv("jwksETag")
 	)
 
 	if req.Headers["Origin"] != origin {
@@ -144,15 +172,13 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 	)
 
 	kh := &keyHandler{
-		reg:   region,
-		upid:  userPoolID,
-		s3svc: s3svc,
-		s3in: &s3.GetObjectInput{
-			Bucket:  bucket,
-			Key:     jwksKey,
-			IfMatch: aws.String(jwksETag),
-		},
-		fetcher: getKeySet,
+		reg:      region,
+		upid:     userPoolID,
+		s3svc:    s3svc,
+		s3bucket: bucket,
+		s3key:    jwksKey,
+		s3etag:   jwksETag,
+		fetcher:  getKeySet,
 	}
 
 	ks := make(sink)
