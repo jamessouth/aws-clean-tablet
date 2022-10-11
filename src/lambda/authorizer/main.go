@@ -48,9 +48,9 @@ func getKeySet(ctx context.Context, s3svc *s3.Client, s3in *s3.GetObjectInput) (
 }
 
 type keyHandler struct {
-	reg, upid, s3bucket, s3key, s3etag string
-	s3svc                              *s3.Client
-	fetcher                            keySetFetcher
+	reg, upid, s3bucket, s3key string
+	s3svc                      *s3.Client
+	fetcher                    keySetFetcher
 }
 
 func (h *keyHandler) FetchKeys(ctx context.Context, sink jws.KeySink, sig *jws.Signature, msg *jws.Message) error {
@@ -59,9 +59,8 @@ func (h *keyHandler) FetchKeys(ctx context.Context, sink jws.KeySink, sig *jws.S
 	kid := sig.ProtectedHeaders().KeyID()
 
 	jwkSet, err := h.fetcher(ctx, h.s3svc, &s3.GetObjectInput{
-		Bucket:  aws.String(h.s3bucket),
-		Key:     aws.String(h.s3key),
-		IfMatch: aws.String(h.s3etag),
+		Bucket: aws.String(h.s3bucket),
+		Key:    aws.String(h.s3key),
 	})
 	if err != nil {
 		return err
@@ -122,7 +121,6 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 		origin      = os.Getenv("origin")
 		bucket      = os.Getenv("bucket")
 		jwksKey     = os.Getenv("jwksKey")
-		jwksETag    = os.Getenv("jwksETag")
 	)
 
 	if req.Headers["Origin"] != origin {
@@ -177,7 +175,6 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 		s3svc:    s3svc,
 		s3bucket: bucket,
 		s3key:    jwksKey,
-		s3etag:   jwksETag,
 		fetcher:  getKeySet,
 	}
 
@@ -195,7 +192,7 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 		), err
 	}
 
-	parsedToken, err := jwt.Parse(
+	parsedAccessToken, err := jwt.Parse(
 		accessToken,
 		jwt.WithContext(ctx),
 		jwt.WithKeyProvider(kh),
@@ -215,7 +212,7 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 			},
 		), err
 	}
-	fmt.Println(parsedToken)
+	fmt.Println(parsedAccessToken)
 
 	// gi, err := ddbsvc.GetItem(ctx, &dynamodb.GetItemInput{
 	// 	Key: map[string]types.AttributeValue{
@@ -244,9 +241,9 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 	// return createPolicy(
 	// 	req.MethodArn,
 	// 	"Allow",
-	// 	parsedToken.Subject(),
+	// 	parsedAccessToken.Subject(),
 	// 	map[string]interface{}{
-	// 		"username": parsedToken.PrivateClaims()["username"].(string),
+	// 		"username": parsedAccessToken.PrivateClaims()["username"].(string),
 	// 	},
 	// ), nil
 
@@ -294,7 +291,6 @@ func createPolicy(arn, effect, pID string, context map[string]interface{}) (p ev
 		},
 	}
 	p.Context = context
-	p.UsageIdentifierKey = ""
 
 	return
 }
