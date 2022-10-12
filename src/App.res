@@ -40,7 +40,8 @@ let make = () => {
     Js.Nullable.null
   )
 
-  let (token, setToken) = React.Uncurried.useState(_ => None)
+  let (authToken, setAuthToken) = React.Uncurried.useState(_ => None)
+  let (idToken, setIdToken) = React.Uncurried.useState(_ => None)
   let (showName, setShowName) = React.Uncurried.useState(_ => "")
 
   let signin = React.createElement(
@@ -49,7 +50,7 @@ let make = () => {
         Promise.resolve({"default": comp["make"]})
       })
     ),
-    Signin.makeProps(~userpool, ~setCognitoUser, ~setToken, ~cognitoUser, ()),
+    Signin.makeProps(~userpool, ~setCognitoUser, ~setAuthToken, ~cognitoUser, ~setIdToken, ()),
   )
 
   let signup = React.createElement(
@@ -67,14 +68,23 @@ let make = () => {
         Promise.resolve({"default": comp["make"]})
       })
     ),
-    Auth.makeProps(~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~route, ()),
+    Auth.makeProps(
+      ~authToken,
+      ~setAuthToken,
+      ~cognitoUser,
+      ~setCognitoUser,
+      ~route,
+      ~idToken,
+      ~setIdToken,
+      (),
+    ),
   )
 
   <>
     {switch route {
     | Leaderboard => React.null
     | Home | SignIn | SignUp | GetInfo(_) | Confirm(_) | Lobby | Play(_) | Other =>
-      switch token {
+      switch authToken {
       | None =>
         <header className="mb-10 newgmimg:mb-12">
           <h1
@@ -90,7 +100,7 @@ let make = () => {
       | Leaderboard => ""
       | Home | SignIn | SignUp | GetInfo(_) | Confirm(_) | Lobby | Play(_) | Other => "mb-14"
       }}>
-      {switch (route, token) {
+      {switch (route, authToken) {
       | (Home, None) => {
           open Route
           Web.body(Web.document)->Web.setClassName("bodmob bodtab bodbig")
@@ -177,7 +187,7 @@ let make = () => {
         </div>
       }}
     </main>
-    {switch (route, token) {
+    {switch (route, authToken) {
     | (Home, None) =>
       <footer>
         <a

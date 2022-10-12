@@ -7,11 +7,13 @@ external stage: string = "VITE_STAGE"
 %%raw(`import './css/lobby.css'`)
 
 type propShape = {
+  "authToken": option<string>,
+  "setAuthToken": (. option<string> => option<string>) => unit,
   "cognitoUser": Js.Nullable.t<Cognito.usr>,
   "setCognitoUser": (. Js.Nullable.t<Cognito.usr> => Js.Nullable.t<Cognito.usr>) => unit,
-  "setToken": (. option<string> => option<string>) => unit,
-  "token": option<string>,
   "route": Route.t,
+  "idToken": option<string>,
+  "setIdToken": (. option<string> => option<string>) => unit,
 }
 
 @val
@@ -89,7 +91,15 @@ let initialState: Reducer.state = {
   winner: "",
 }
 @react.component
-let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~route) => {
+let make = (
+  ~authToken,
+  ~setAuthToken,
+  ~cognitoUser,
+  ~setCognitoUser,
+  ~route,
+  ~idToken,
+  ~setIdToken,
+) => {
   Js.log2("u345876l", route)
 
   let (ws, setWs) = React.Uncurried.useState(_ => Js.Nullable.null)
@@ -118,17 +128,19 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~route) => {
 
   open Web
   React.useEffect1(() => {
-    switch token {
-    | None => setWs(._ => Js.Nullable.null)
-    | Some(token) =>
+    switch (authToken, idToken) {
+    | (None, None) | (_, None) | (None, _) => setWs(._ => Js.Nullable.null)
+    | (Some(authToken), Some(idToken)) =>
       setWs(._ =>
         Js.Nullable.return(
-          newWs(`wss://${apiid}.execute-api.${region}.amazonaws.com/${stage}?auth=${token}`),
+          newWs(
+            `wss://${apiid}.execute-api.${region}.amazonaws.com/${stage}?authToken=${authToken}&idToken=${idToken}`,
+          ),
         )
       )
     }
     None
-  }, [token])
+  }, [authToken, idToken])
 
   React.useEffect1(() => {
     switch Js.Nullable.isNullable(ws) {
@@ -224,7 +236,8 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~route) => {
         setPlayerName(. _ => "")
 
         resetConnState(.)
-        setToken(. _ => None)
+        setAuthToken(. _ => None)
+        setIdToken(. _ => None)
       })
     }
 

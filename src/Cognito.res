@@ -16,7 +16,8 @@ type userDataInput = {
 }
 type clientMetadata = {key: string}
 type accessToken = {jwtToken: string}
-type userSession = {accessToken: accessToken}
+type idToken = {jwtToken: string}
+type userSession = {accessToken: accessToken, idToken: idToken}
 type usr = {username: string}
 type signupOk = {user: usr}
 type t

@@ -133,9 +133,10 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 
 	region := strings.Split(req.MethodArn, ":")[3]
 
-	accessToken := []byte(req.QueryStringParameters["auth"])
+	accessToken := []byte(req.QueryStringParameters["authToken"])
+	idToken := []byte(req.QueryStringParameters["idToken"])
 
-	msg, err := jws.Parse(accessToken)
+	authMsg, err := jws.Parse(accessToken)
 	if err != nil {
 		fmt.Printf(`failed to parse serialized JWT: %s`, err)
 		return createPolicy(
@@ -146,7 +147,19 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 				"error": getErrorMsg(err),
 			},
 		), err
+	}
 
+	idMsg, err := jws.Parse(idToken)
+	if err != nil {
+		fmt.Printf(`failed to parse serialized JWT: %s`, err)
+		return createPolicy(
+			req.MethodArn,
+			"Deny",
+			"ID",
+			map[string]interface{}{
+				"error": getErrorMsg(err),
+			},
+		), err
 	}
 
 	cfg, err := config.LoadDefaultConfig(ctx,
@@ -169,7 +182,16 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 		// ddbsvc = dynamodb.NewFromConfig(cfg)
 	)
 
-	kh := &keyHandler{
+	authKH := &keyHandler{
+		reg:      region,
+		upid:     userPoolID,
+		s3svc:    s3svc,
+		s3bucket: bucket,
+		s3key:    jwksKey,
+		fetcher:  getKeySet,
+	}
+
+	idKH := &keyHandler{
 		reg:      region,
 		upid:     userPoolID,
 		s3svc:    s3svc,
@@ -180,7 +202,7 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 
 	ks := make(sink)
 
-	err = kh.FetchKeys(ctx, ks, msg.Signatures()[0], msg)
+	err = authKH.FetchKeys(ctx, ks, authMsg.Signatures()[0], authMsg)
 	if err != nil {
 		return createPolicy(
 			req.MethodArn,
@@ -195,7 +217,7 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 	parsedAccessToken, err := jwt.Parse(
 		accessToken,
 		jwt.WithContext(ctx),
-		jwt.WithKeyProvider(kh),
+		jwt.WithKeyProvider(authKH),
 		jwt.WithValidate(true),
 		jwt.WithVerify(true),
 		jwt.WithIssuer("https://cognito-idp."+region+".amazonaws.com/"+userPoolID),
@@ -213,6 +235,40 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 		), err
 	}
 	fmt.Println(parsedAccessToken)
+
+	err = idKH.FetchKeys(ctx, ks, idMsg.Signatures()[0], idMsg)
+	if err != nil {
+		return createPolicy(
+			req.MethodArn,
+			"Deny",
+			"ID",
+			map[string]interface{}{
+				"error": getErrorMsg(err),
+			},
+		), err
+	}
+
+	parsedIdToken, err := jwt.Parse(
+		accessToken,
+		jwt.WithContext(ctx),
+		jwt.WithKeyProvider(idKH),
+		jwt.WithValidate(true),
+		jwt.WithVerify(true),
+		jwt.WithIssuer("https://cognito-idp."+region+".amazonaws.com/"+userPoolID),
+		jwt.WithClaimValue("client_id", appClientID),
+		jwt.WithClaimValue("token_use", "access"),
+	)
+	if err != nil {
+		return createPolicy(
+			req.MethodArn,
+			"Deny",
+			"ID",
+			map[string]interface{}{
+				"error": getErrorMsg(err),
+			},
+		), err
+	}
+	fmt.Println(parsedIdToken)
 
 	// gi, err := ddbsvc.GetItem(ctx, &dynamodb.GetItemInput{
 	// 	Key: map[string]types.AttributeValue{
