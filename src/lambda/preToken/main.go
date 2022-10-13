@@ -47,8 +47,9 @@ func handler(ctx context.Context, ev events.CognitoEventUserPoolsPreTokenGen) (e
 
 	_, err = ddbsvc.PutItem(ctx, &dynamodb.PutItemInput{
 		Item: map[string]types.AttributeValue{
-			"pk": &types.AttributeValueMemberS{Value: "TOKEN#" + ev.Request.UserAttributes["sub"]},
-			"sk": &types.AttributeValueMemberS{Value: uid},
+			"pk":  &types.AttributeValueMemberS{Value: "TOKEN"},
+			"sk":  &types.AttributeValueMemberS{Value: ev.Request.UserAttributes["sub"]},
+			"uid": &types.AttributeValueMemberS{Value: uid},
 		},
 		TableName: aws.String(tableName),
 	})

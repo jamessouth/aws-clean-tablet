@@ -12,8 +12,11 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go/aws"
 
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -115,7 +118,7 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 	// fmt.Printf("%s: %+v\n", "request", req.QueryStringParameters["auth"])
 
 	var (
-		// tableName   = os.Getenv("tableName")
+		tableName   = os.Getenv("tableName")
 		appClientID = os.Getenv("appClientID")
 		userPoolID  = os.Getenv("userPoolID")
 		origin      = os.Getenv("origin")
@@ -179,19 +182,10 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 	var (
 		s3svc = s3.NewFromConfig(cfg)
 
-		// ddbsvc = dynamodb.NewFromConfig(cfg)
+		ddbsvc = dynamodb.NewFromConfig(cfg)
 	)
 
-	authKH := &keyHandler{
-		reg:      region,
-		upid:     userPoolID,
-		s3svc:    s3svc,
-		s3bucket: bucket,
-		s3key:    jwksKey,
-		fetcher:  getKeySet,
-	}
-
-	idKH := &keyHandler{
+	kh := &keyHandler{
 		reg:      region,
 		upid:     userPoolID,
 		s3svc:    s3svc,
@@ -202,7 +196,7 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 
 	ks := make(sink)
 
-	err = authKH.FetchKeys(ctx, ks, authMsg.Signatures()[0], authMsg)
+	err = kh.FetchKeys(ctx, ks, authMsg.Signatures()[0], authMsg)
 	if err != nil {
 		return createPolicy(
 			req.MethodArn,
@@ -217,7 +211,7 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 	parsedAccessToken, err := jwt.Parse(
 		accessToken,
 		jwt.WithContext(ctx),
-		jwt.WithKeyProvider(authKH),
+		jwt.WithKeyProvider(kh),
 		jwt.WithValidate(true),
 		jwt.WithVerify(true),
 		jwt.WithIssuer("https://cognito-idp."+region+".amazonaws.com/"+userPoolID),
@@ -236,7 +230,42 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 	}
 	fmt.Println(parsedAccessToken)
 
-	err = idKH.FetchKeys(ctx, ks, idMsg.Signatures()[0], idMsg)
+	err = kh.FetchKeys(ctx, ks, idMsg.Signatures()[0], idMsg)
+	if err != nil {
+		return createPolicy(
+			req.MethodArn,
+			"Deny",
+			"ID",
+			map[string]interface{}{
+				"error": getErrorMsg(err),
+			},
+		), err
+	}
+
+	gi, err := ddbsvc.GetItem(ctx, &dynamodb.GetItemInput{
+		Key: map[string]types.AttributeValue{
+			"pk": &types.AttributeValueMemberS{Value: "TOKEN"},
+			"sk": &types.AttributeValueMemberS{Value: parsedAccessToken.Subject()},
+		},
+		TableName: aws.String(tableName),
+	})
+	if err != nil {
+		return createPolicy(
+			req.MethodArn,
+			"Deny",
+			"ID",
+			map[string]interface{}{
+				"error": getErrorMsg(err),
+			},
+		), err
+	}
+
+	fmt.Printf("%s: %+v\n", "gi", gi)
+
+	var specialClaim struct {
+		Uid string
+	}
+	err = attributevalue.UnmarshalMap(gi.Item, &specialClaim)
 	if err != nil {
 		return createPolicy(
 			req.MethodArn,
@@ -249,14 +278,15 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 	}
 
 	parsedIdToken, err := jwt.Parse(
-		accessToken,
+		idToken,
 		jwt.WithContext(ctx),
-		jwt.WithKeyProvider(idKH),
+		jwt.WithAudience(appClientID),
+		jwt.WithKeyProvider(kh),
 		jwt.WithValidate(true),
 		jwt.WithVerify(true),
 		jwt.WithIssuer("https://cognito-idp."+region+".amazonaws.com/"+userPoolID),
-		jwt.WithClaimValue("client_id", appClientID),
-		jwt.WithClaimValue("token_use", "access"),
+		jwt.WithClaimValue("q", specialClaim.Uid),
+		jwt.WithClaimValue("token_use", "id"),
 	)
 	if err != nil {
 		return createPolicy(
@@ -270,47 +300,23 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 	}
 	fmt.Println(parsedIdToken)
 
-	// gi, err := ddbsvc.GetItem(ctx, &dynamodb.GetItemInput{
-	// 	Key: map[string]types.AttributeValue{
-	// 		"pk": &types.AttributeValueMemberS{Value: "JWKS"},
-	// 		"sk": &types.AttributeValueMemberS{Value: "keys"},
-	// 	},
-	// 	TableName: aws.String(tableName),
-	// 	// ProjectionExpression: aws.String("keys"),
-	// })
-	// if err != nil {
-	// 	callErr(err)
-	// }
-
-	// fmt.Printf("%s: %+v\n", "gi", gi)
-
-	// var jwks struct {
-	// 	Keys []struct {
-	// 		Kty, Alg, E, N, Use, Kid string
-	// 	}
-	// }
-	// err = attributevalue.UnmarshalMap(gi.Item, &jwks)
-	// if err != nil {
-	// 	callErr(err)
-	// }
+	return createPolicy(
+		req.MethodArn,
+		"Allow",
+		parsedAccessToken.Subject(),
+		map[string]interface{}{
+			"username": parsedAccessToken.PrivateClaims()["username"].(string),
+		},
+	), nil
 
 	// return createPolicy(
 	// 	req.MethodArn,
-	// 	"Allow",
-	// 	parsedAccessToken.Subject(),
+	// 	"Deny",
+	// 	"ID",
 	// 	map[string]interface{}{
-	// 		"username": parsedAccessToken.PrivateClaims()["username"].(string),
+	// 		"error": getErrorMsg(err),
 	// 	},
-	// ), nil
-
-	return createPolicy(
-		req.MethodArn,
-		"Deny",
-		"ID",
-		map[string]interface{}{
-			"error": getErrorMsg(err),
-		},
-	), err
+	// ), err
 
 }
 
