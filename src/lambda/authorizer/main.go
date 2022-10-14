@@ -38,7 +38,6 @@ type keySetFetcher func(ctx context.Context, s3svc *s3.Client, s3in *s3.GetObjec
 
 func getKeySet(ctx context.Context, s3svc *s3.Client, s3in *s3.GetObjectInput) (jwk.Set, error) {
 	obj, err := s3svc.GetObject(ctx, s3in)
-
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +46,6 @@ func getKeySet(ctx context.Context, s3svc *s3.Client, s3in *s3.GetObjectInput) (
 	// fmt.Printf("\n%s, %+v\n", "getObj op", objOutput)
 
 	return jwk.ParseReader(objOutput.Body)
-
 }
 
 type keyHandler struct {
@@ -57,7 +55,6 @@ type keyHandler struct {
 }
 
 func (h *keyHandler) FetchKeys(ctx context.Context, sink jws.KeySink, sig *jws.Signature, msg *jws.Message) error {
-
 	alg := sig.ProtectedHeaders().Algorithm()
 	kid := sig.ProtectedHeaders().KeyID()
 
@@ -70,11 +67,9 @@ func (h *keyHandler) FetchKeys(ctx context.Context, sink jws.KeySink, sig *jws.S
 	}
 
 	var finalKey jwk.Key
-
 	key, keyPresent := jwkSet.LookupKeyID(kid)
 
 	if !keyPresent {
-
 		keyset, err := jwk.Fetch(ctx, "https://cognito-idp."+h.reg+".amazonaws.com/"+h.upid+"/.well-known/jwks.json")
 		if err != nil {
 			return err
@@ -87,7 +82,6 @@ func (h *keyHandler) FetchKeys(ctx context.Context, sink jws.KeySink, sig *jws.S
 
 		dig := md5.New()
 		dig.Write(marshalledKeyset)
-
 		md5 := base64.StdEncoding.EncodeToString(dig.Sum(nil))
 
 		_, err = h.s3svc.PutObject(ctx, &s3.PutObjectInput{
@@ -95,22 +89,18 @@ func (h *keyHandler) FetchKeys(ctx context.Context, sink jws.KeySink, sig *jws.S
 			Key:        aws.String(h.s3key),
 			Body:       bytes.NewReader(marshalledKeyset),
 			ContentMD5: aws.String(md5),
-		},
-		)
-
+		})
 		if err != nil {
 			return err
 		}
 
 		finalKey, _ = keyset.LookupKeyID(kid)
-
 	} else {
 		finalKey = key
-
 	}
+
 	sink.Key(alg, finalKey)
 	return nil
-
 }
 
 func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
@@ -124,6 +114,9 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 		origin      = os.Getenv("origin")
 		bucket      = os.Getenv("bucket")
 		jwksKey     = os.Getenv("jwksKey")
+		region      = strings.Split(req.MethodArn, ":")[3]
+		accessToken = []byte(req.QueryStringParameters["authToken"])
+		idToken     = []byte(req.QueryStringParameters["idToken"])
 	)
 
 	if req.Headers["Origin"] != origin {
@@ -134,78 +127,42 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 		return events.APIGatewayCustomAuthorizerResponse{}, errors.New("header error - request from wrong client")
 	}
 
-	region := strings.Split(req.MethodArn, ":")[3]
-
-	accessToken := []byte(req.QueryStringParameters["authToken"])
-	idToken := []byte(req.QueryStringParameters["idToken"])
-
 	authMsg, err := jws.Parse(accessToken)
 	if err != nil {
 		fmt.Printf(`failed to parse serialized JWT: %s`, err)
-		return createPolicy(
-			req.MethodArn,
-			"Deny",
-			"ID",
-			map[string]interface{}{
-				"error": getErrorMsg(err),
-			},
-		), err
+		return events.APIGatewayCustomAuthorizerResponse{}, err
 	}
 
 	idMsg, err := jws.Parse(idToken)
 	if err != nil {
 		fmt.Printf(`failed to parse serialized JWT: %s`, err)
-		return createPolicy(
-			req.MethodArn,
-			"Deny",
-			"ID",
-			map[string]interface{}{
-				"error": getErrorMsg(err),
-			},
-		), err
+		return events.APIGatewayCustomAuthorizerResponse{}, err
 	}
 
 	cfg, err := config.LoadDefaultConfig(ctx,
 		config.WithRegion(region),
 	)
 	if err != nil {
-		return createPolicy(
-			req.MethodArn,
-			"Deny",
-			"ID",
-			map[string]interface{}{
-				"error": getErrorMsg(err),
-			},
-		), err
+		return events.APIGatewayCustomAuthorizerResponse{}, err
 	}
 
 	var (
-		s3svc = s3.NewFromConfig(cfg)
-
+		s3svc  = s3.NewFromConfig(cfg)
 		ddbsvc = dynamodb.NewFromConfig(cfg)
+		kh     = &keyHandler{
+			reg:      region,
+			upid:     userPoolID,
+			s3svc:    s3svc,
+			s3bucket: bucket,
+			s3key:    jwksKey,
+			fetcher:  getKeySet,
+		}
+		ks = make(sink)
 	)
-
-	kh := &keyHandler{
-		reg:      region,
-		upid:     userPoolID,
-		s3svc:    s3svc,
-		s3bucket: bucket,
-		s3key:    jwksKey,
-		fetcher:  getKeySet,
-	}
-
-	ks := make(sink)
 
 	err = kh.FetchKeys(ctx, ks, authMsg.Signatures()[0], authMsg)
 	if err != nil {
-		return createPolicy(
-			req.MethodArn,
-			"Deny",
-			"ID",
-			map[string]interface{}{
-				"error": getErrorMsg(err),
-			},
-		), err
+		return events.APIGatewayCustomAuthorizerResponse{}, err
 	}
 
 	parsedAccessToken, err := jwt.Parse(
@@ -219,45 +176,27 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 		jwt.WithClaimValue("token_use", "access"),
 	)
 	if err != nil {
-		return createPolicy(
-			req.MethodArn,
-			"Deny",
-			"ID",
-			map[string]interface{}{
-				"error": getErrorMsg(err),
-			},
-		), err
+		return events.APIGatewayCustomAuthorizerResponse{}, err
 	}
+
 	fmt.Println(parsedAccessToken)
+
+	sub := parsedAccessToken.Subject()
 
 	err = kh.FetchKeys(ctx, ks, idMsg.Signatures()[0], idMsg)
 	if err != nil {
-		return createPolicy(
-			req.MethodArn,
-			"Deny",
-			"ID",
-			map[string]interface{}{
-				"error": getErrorMsg(err),
-			},
-		), err
+		deny(req.MethodArn, sub, err)
 	}
 
 	gi, err := ddbsvc.GetItem(ctx, &dynamodb.GetItemInput{
 		Key: map[string]types.AttributeValue{
 			"pk": &types.AttributeValueMemberS{Value: "TOKEN"},
-			"sk": &types.AttributeValueMemberS{Value: parsedAccessToken.Subject()},
+			"sk": &types.AttributeValueMemberS{Value: sub},
 		},
 		TableName: aws.String(tableName),
 	})
 	if err != nil {
-		return createPolicy(
-			req.MethodArn,
-			"Deny",
-			"ID",
-			map[string]interface{}{
-				"error": getErrorMsg(err),
-			},
-		), err
+		deny(req.MethodArn, sub, err)
 	}
 
 	fmt.Printf("%s: %+v\n", "gi", gi)
@@ -267,14 +206,7 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 	}
 	err = attributevalue.UnmarshalMap(gi.Item, &specialClaim)
 	if err != nil {
-		return createPolicy(
-			req.MethodArn,
-			"Deny",
-			"ID",
-			map[string]interface{}{
-				"error": getErrorMsg(err),
-			},
-		), err
+		deny(req.MethodArn, sub, err)
 	}
 
 	parsedIdToken, err := jwt.Parse(
@@ -289,70 +221,41 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 		jwt.WithClaimValue("token_use", "id"),
 	)
 	if err != nil {
-		return createPolicy(
-			req.MethodArn,
-			"Deny",
-			"ID",
-			map[string]interface{}{
-				"error": getErrorMsg(err),
-			},
-		), err
+		deny(req.MethodArn, sub, err)
 	}
+
 	fmt.Println(parsedIdToken)
 
-	return createPolicy(
-		req.MethodArn,
-		"Allow",
-		parsedAccessToken.Subject(),
-		map[string]interface{}{
-			"username": parsedAccessToken.PrivateClaims()["username"].(string),
+	return events.APIGatewayCustomAuthorizerResponse{
+		PrincipalID: sub,
+		PolicyDocument: events.APIGatewayCustomAuthorizerPolicy{
+			Version: "2012-10-17",
+			Statement: []events.IAMPolicyStatement{{
+				Action:   []string{"execute-api:Invoke"},
+				Effect:   "Allow",
+				Resource: []string{req.MethodArn},
+			}},
 		},
-	), nil
-
-	// return createPolicy(
-	// 	req.MethodArn,
-	// 	"Deny",
-	// 	"ID",
-	// 	map[string]interface{}{
-	// 		"error": getErrorMsg(err),
-	// 	},
-	// ), err
-
+		Context: map[string]interface{}{"username": parsedAccessToken.PrivateClaims()["username"].(string)},
+	}, nil
 }
 
 func main() {
 	lambda.Start(handler)
 }
 
-func getErrorMsg(e error) string {
-	clause := " not satisfied"
-	switch e.Error() {
-	case "exp" + clause:
-		return "Token expired"
-	case "iss" + clause:
-		return "Wrong issuer"
-	case "client_id" + clause:
-		return "Wrong app client ID"
-	case "token_use" + clause:
-		return "Wrong token type"
-	default:
-		return e.Error()
-	}
-}
-
-func createPolicy(arn, effect, pID string, context map[string]interface{}) (p events.APIGatewayCustomAuthorizerResponse) {
-	p.PrincipalID = pID
-	p.PolicyDocument = events.APIGatewayCustomAuthorizerPolicy{
-		Version: "2012-10-17",
-		Statement: []events.IAMPolicyStatement{
-			{
-				Effect:   effect,
-				Action:   []string{"execute-api:Invoke"},
-				Resource: []string{arn},
+func deny(arn, pID string, err error) (events.APIGatewayCustomAuthorizerResponse, error) {
+	return events.APIGatewayCustomAuthorizerResponse{
+		PrincipalID: pID,
+		PolicyDocument: events.APIGatewayCustomAuthorizerPolicy{
+			Version: "2012-10-17",
+			Statement: []events.IAMPolicyStatement{
+				{
+					Effect:   "Deny",
+					Action:   []string{"execute-api:Invoke"},
+					Resource: []string{arn},
+				},
 			},
 		},
-	}
-	p.Context = context
-
-	return
+	}, err
 }
