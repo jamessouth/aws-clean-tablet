@@ -11,17 +11,14 @@ import (
 	"os"
 	"strings"
 
+	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
-	"github.com/aws/aws-sdk-go/aws"
-
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-
-	"github.com/aws/aws-lambda-go/events"
-	"github.com/aws/aws-lambda-go/lambda"
-
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/lestrrat-go/jwx/v2/jws"
@@ -214,6 +211,7 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 		jwt.WithContext(ctx),
 		jwt.WithAudience(appClientID),
 		jwt.WithKeyProvider(kh),
+		jwt.WithSubject(sub),
 		jwt.WithValidate(true),
 		jwt.WithVerify(true),
 		jwt.WithIssuer("https://cognito-idp."+region+".amazonaws.com/"+userPoolID),
@@ -236,7 +234,10 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 				Resource: []string{req.MethodArn},
 			}},
 		},
-		Context: map[string]interface{}{"username": parsedAccessToken.PrivateClaims()["username"].(string)},
+		Context: map[string]interface{}{
+			"username":  parsedAccessToken.PrivateClaims()["username"].(string),
+			"tableName": tableName,
+		},
 	}, nil
 }
 

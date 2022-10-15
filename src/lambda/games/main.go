@@ -5,10 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"sort"
-
 	"net/http"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"

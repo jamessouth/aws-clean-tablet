@@ -59,14 +59,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	var (
-		apiid     = os.Getenv("CT_APIID")
-		stage     = os.Getenv("CT_STAGE")
-		tableName = os.Getenv("tableName")
-		endpoint  = "https://" + apiid + ".execute-api." + reg + ".amazonaws.com/" + stage
-		ddbsvc    = dynamodb.NewFromConfig(cfg)
-		auth      = req.RequestContext.Authorizer.(map[string]interface{})
-		id, name  = auth["principalId"].(string), auth["username"].(string)
-		body      struct {
+		apiid = os.Getenv("CT_APIID")
+		stage = os.Getenv("CT_STAGE")
+		// tableName = os.Getenv("tableName")
+		endpoint            = "https://" + apiid + ".execute-api." + reg + ".amazonaws.com/" + stage
+		ddbsvc              = dynamodb.NewFromConfig(cfg)
+		auth                = req.RequestContext.Authorizer.(map[string]interface{})
+		id, name, tableName = auth["principalId"].(string), auth["username"].(string), auth["tableName"].(string)
+		body                struct {
 			Gameno, Data string
 		}
 		gameno  string

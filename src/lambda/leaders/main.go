@@ -6,10 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"sort"
-
 	"net/http"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -82,13 +81,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	reg := strings.Split(req.RequestContext.DomainName, ".")[2]
 
 	var (
-		connID    = req.RequestContext.ConnectionID
-		apiid     = os.Getenv("CT_APIID")
-		stage     = os.Getenv("CT_STAGE")
-		endpoint  = "https://" + apiid + ".execute-api." + reg + ".amazonaws.com/" + stage
-		tableName = aws.String(os.Getenv("tableName"))
+		connID   = req.RequestContext.ConnectionID
+		apiid    = os.Getenv("CT_APIID")
+		stage    = os.Getenv("CT_STAGE")
+		endpoint = "https://" + apiid + ".execute-api." + reg + ".amazonaws.com/" + stage
+		// tableName = aws.String(os.Getenv("tableName"))
 
-		// auth      = req.RequestContext.Authorizer.(map[string]interface{})
+		tableName = req.RequestContext.Authorizer.(map[string]interface{})["tableName"].(string)
 		// id, name  = auth["principalId"].(string), auth["username"].(string)
 	)
 
@@ -126,7 +125,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	)
 
 	leadersResults, err := ddbsvc.Query(ctx, &dynamodb.QueryInput{
-		TableName:              tableName,
+		TableName:              aws.String(tableName),
 		KeyConditionExpression: aws.String("pk = :s"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
 			":s": &types.AttributeValueMemberS{Value: "STAT"},

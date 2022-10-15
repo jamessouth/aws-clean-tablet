@@ -18,11 +18,9 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
-
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-
 	"github.com/aws/smithy-go"
 )
 
@@ -83,7 +81,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	var (
-		tableName = os.Getenv("tableName")
+		// tableName = os.Getenv("tableName")
 		bucket    = os.Getenv("bucket")
 		words     = os.Getenv("words")
 		wordsETag = os.Getenv("wordsETag")
@@ -92,8 +90,9 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		body      struct {
 			Gameno, Data string
 		}
-		ans string
-		id  = req.RequestContext.Authorizer.(map[string]interface{})["principalId"].(string)
+		ans           string
+		auth          = req.RequestContext.Authorizer.(map[string]interface{})
+		id, tableName = auth["principalId"].(string), auth["tableName"].(string)
 	)
 
 	err = json.Unmarshal([]byte(req.Body), &body)
@@ -111,7 +110,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			IfMatch: aws.String(wordsETag),
 			Range:   aws.String(getRandomByte()),
 		})
-
 		if err != nil {
 			return callErr(err)
 		}
@@ -119,13 +117,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		objOutput := *obj
 		// fmt.Printf("\n%s, %+v\n", "getObj op", objOutput)
 
-		eTag := *objOutput.ETag
-		if eTag != wordsETag {
-			fmt.Println("eTags do not match", eTag, wordsETag)
-			ans = ""
-		} else {
-			ans = getWord(objOutput.Body)
-		}
+		ans = getWord(objOutput.Body)
 
 	} else {
 		ans = sanitizedAnswer

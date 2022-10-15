@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -29,10 +28,10 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	var (
-		tableName = os.Getenv("tableName")
-		ddbsvc    = dynamodb.NewFromConfig(cfg)
-		auth      = req.RequestContext.Authorizer.(map[string]interface{})
-		id, name  = auth["principalId"].(string), auth["username"].(string)
+		// tableName = os.Getenv("tableName")
+		ddbsvc              = dynamodb.NewFromConfig(cfg)
+		auth                = req.RequestContext.Authorizer.(map[string]interface{})
+		id, name, tableName = auth["principalId"].(string), auth["username"].(string), auth["tableName"].(string)
 	)
 
 	_, err = ddbsvc.PutItem(ctx, &dynamodb.PutItemInput{
