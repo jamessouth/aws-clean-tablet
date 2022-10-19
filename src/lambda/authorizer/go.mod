@@ -15,6 +15,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.10.0
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.17.1
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.27.11
+	github.com/google/go-cmp v0.5.8
 	github.com/lestrrat-go/jwx/v2 v2.0.6
 )
 
