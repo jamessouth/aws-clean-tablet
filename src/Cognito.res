@@ -15,9 +15,8 @@ type userDataInput = {
   @as("Pool") pool: poolData,
 }
 type clientMetadata = {key: string}
-type accessToken = {jwtToken: string}
 type idToken = {jwtToken: string}
-type userSession = {accessToken: accessToken, idToken: idToken}
+type userSession = {idToken: idToken}
 type usr = {username: string}
 type signupOk = {user: usr}
 type t

@@ -7,13 +7,11 @@ external stage: string = "VITE_STAGE"
 %%raw(`import './css/lobby.css'`)
 
 type propShape = {
-  "authToken": option<string>,
-  "setAuthToken": (. option<string> => option<string>) => unit,
   "cognitoUser": Js.Nullable.t<Cognito.usr>,
   "setCognitoUser": (. Js.Nullable.t<Cognito.usr> => Js.Nullable.t<Cognito.usr>) => unit,
+  "setToken": (. option<string> => option<string>) => unit,
+  "token": option<string>,
   "route": Route.t,
-  "idToken": option<string>,
-  "setIdToken": (. option<string> => option<string>) => unit,
 }
 
 @val
@@ -91,15 +89,7 @@ let initialState: Reducer.state = {
   winner: "",
 }
 @react.component
-let make = (
-  ~authToken,
-  ~setAuthToken,
-  ~cognitoUser,
-  ~setCognitoUser,
-  ~route,
-  ~idToken,
-  ~setIdToken,
-) => {
+let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~route) => {
   Js.log2("u345876l", route)
 
   let (ws, setWs) = React.Uncurried.useState(_ => Js.Nullable.null)
@@ -128,19 +118,17 @@ let make = (
 
   open Web
   React.useEffect1(() => {
-    switch (authToken, idToken) {
-    | (None, None) | (_, None) | (None, _) => setWs(._ => Js.Nullable.null)
-    | (Some(authToken), Some(idToken)) =>
+    switch token {
+    | None => setWs(._ => Js.Nullable.null)
+    | Some(token) =>
       setWs(._ =>
         Js.Nullable.return(
-          newWs(
-            `wss://${apiid}.execute-api.${region}.amazonaws.com/${stage}?authToken=${authToken}&idToken=${idToken}`,
-          ),
+          newWs(`wss://${apiid}.execute-api.${region}.amazonaws.com/${stage}?auth=${token}`),
         )
       )
     }
     None
-  }, [authToken, idToken])
+  }, [token])
 
   React.useEffect1(() => {
     switch Js.Nullable.isNullable(ws) {
@@ -236,8 +224,7 @@ let make = (
         setPlayerName(. _ => "")
 
         resetConnState(.)
-        setAuthToken(. _ => None)
-        setIdToken(. _ => None)
+        setToken(. _ => None)
       })
     }
 

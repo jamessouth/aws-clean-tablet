@@ -1,9 +1,8 @@
 type propShape = {
   "userpool": Cognito.poolData,
   "setCognitoUser": (. Js.Nullable.t<Cognito.usr> => Js.Nullable.t<Cognito.usr>) => unit,
-  "setAuthToken": (. option<string> => option<string>) => unit,
+  "setToken": (. option<string> => option<string>) => unit,
   "cognitoUser": Js.Nullable.t<Cognito.usr>,
-  "setIdToken": (. option<string> => option<string>) => unit,
 }
 
 @val
@@ -18,7 +17,6 @@ external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => 
 let make: (
   ~userpool: Cognito.poolData,
   ~setCognitoUser: (. Js.Nullable.t<Cognito.usr> => Js.Nullable.t<Cognito.usr>) => unit,
-  ~setAuthToken: (. option<string> => option<string>) => unit,
+  ~setToken: (. option<string> => option<string>) => unit,
   ~cognitoUser: Js.Nullable.t<Cognito.usr>,
-  ~setIdToken: (. option<string> => option<string>) => unit,
 ) => React.element

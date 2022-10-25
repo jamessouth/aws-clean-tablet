@@ -1,9 +1,8 @@
 type propShape = {
   "userpool": Cognito.poolData,
   "setCognitoUser": (. Js.Nullable.t<Cognito.usr> => Js.Nullable.t<Cognito.usr>) => unit,
-  "setAuthToken": (. option<string> => option<string>) => unit,
+  "setToken": (. option<string> => option<string>) => unit,
   "cognitoUser": Js.Nullable.t<Cognito.usr>,
-  "setIdToken": (. option<string> => option<string>) => unit,
 }
 
 @val
@@ -18,7 +17,7 @@ let username_max_length = 10
 let password_max_length = 98
 
 @react.component
-let make = (~userpool, ~setCognitoUser, ~setAuthToken, ~cognitoUser, ~setIdToken) => {
+let make = (~userpool, ~setCognitoUser, ~setToken, ~cognitoUser) => {
   let (username, setUsername) = React.Uncurried.useState(_ => "")
   let (password, setPassword) = React.Uncurried.useState(_ => "")
   let (validationError, setValidationError) = React.Uncurried.useState(_ => Some(
@@ -38,8 +37,7 @@ let make = (~userpool, ~setCognitoUser, ~setAuthToken, ~cognitoUser, ~setIdToken
           onSuccess: res => {
             setCognitoError(._ => None)
             Js.log2("signin result:", res)
-            setAuthToken(._ => Some(res.accessToken.jwtToken))
-            setIdToken(._ => Some(res.idToken.jwtToken))
+          setToken(._ => Some(res.idToken.jwtToken))
           },
           onFailure: ex => {
             switch Js.Exn.message(ex) {
