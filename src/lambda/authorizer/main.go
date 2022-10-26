@@ -107,7 +107,7 @@ func (h *keyHandler) FetchKeys(ctx context.Context, sink jws.KeySink, sig *jws.S
 
 func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
 
-	// fmt.Printf("%s: %+v\n", "request", req.QueryStringParameters["auth"])
+	fmt.Printf("%s: %+v\n", "request", req)
 
 	var (
 		tableName          = os.Getenv("tableName")
@@ -122,11 +122,11 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 	)
 
 	if req.Headers["Origin"] != origin {
-		deny(errors.New("header error - request from wrong domain"))
+		deny(errors.New("header error - request is from wrong domain"))
 	}
 
-	if len(req.Headers["User-Agent"]) < 10 {
-		deny(errors.New("header error - request from wrong client"))
+	if len(req.Headers["User-Agent"]) < 12 {
+		deny(errors.New("header error - request from unacceptable client"))
 	}
 
 	msg, err := jws.Parse(token)
