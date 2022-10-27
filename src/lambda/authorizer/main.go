@@ -107,7 +107,7 @@ func (h *keyHandler) FetchKeys(ctx context.Context, sink jws.KeySink, sig *jws.S
 
 func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTypeRequest) (events.APIGatewayCustomAuthorizerResponse, error) {
 
-	fmt.Printf("%s: %+v\n", "request", req)
+	// fmt.Printf("%s: %+v\n", "request", req)
 
 	var (
 		tableName          = os.Getenv("tableName")
@@ -122,28 +122,28 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 	)
 
 	if req.Headers["Origin"] != origin {
-		deny(errors.New("header error - request is from wrong domain"))
+		return deny(errors.New("header error - request from wrong domain"))
 	}
 
 	if len(req.Headers["User-Agent"]) < 12 {
-		deny(errors.New("header error - request from unacceptable client"))
+		return deny(errors.New("header error - request from wrong client"))
 	}
 
 	msg, err := jws.Parse(token)
 	if err != nil {
-		deny(err)
+		return deny(err)
 	}
 
 	err = json.Unmarshal(msg.Payload(), &unsafeTokenPayload)
 	if err != nil {
-		deny(err)
+		return deny(err)
 	}
 
 	cfg, err := config.LoadDefaultConfig(ctx,
 		config.WithRegion(region),
 	)
 	if err != nil {
-		deny(err)
+		return deny(err)
 	}
 
 	var (
@@ -164,7 +164,7 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 
 	err = kh.FetchKeys(ctx, ks, msg.Signatures()[0], msg)
 	if err != nil {
-		deny(err)
+		return deny(err)
 	}
 
 	gi, err := ddbsvc.GetItem(ctx, &dynamodb.GetItemInput{
@@ -175,14 +175,17 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 		TableName: aws.String(tableName),
 	})
 	if err != nil {
-		deny(err)
+		return deny(err)
+	}
+	if len(gi.Item) == 0 {
+		return deny(errors.New("player token not found"))
 	}
 
-	fmt.Printf("%s: %+v\n", "gi", gi)
+	fmt.Printf("%s: %+v\n", "gi", gi.Item)
 
 	err = attributevalue.UnmarshalMap(gi.Item, &specialClaim)
 	if err != nil {
-		deny(err)
+		return deny(err)
 	}
 
 	parsedToken, err := jwt.Parse(
@@ -196,7 +199,7 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 		jwt.WithClaimValue("token_use", "id"),
 	)
 	if err != nil {
-		deny(err)
+		return deny(err)
 	}
 
 	fmt.Println(parsedToken)
