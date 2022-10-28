@@ -7,7 +7,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 	"strings"
 
@@ -167,23 +166,22 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 		return deny(err)
 	}
 
-	gi, err := ddbsvc.GetItem(ctx, &dynamodb.GetItemInput{
+	di, err := ddbsvc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
 		Key: map[string]types.AttributeValue{
 			"pk": &types.AttributeValueMemberS{Value: "TOKEN"},
 			"sk": &types.AttributeValueMemberS{Value: sub},
 		},
-		TableName: aws.String(tableName),
+		TableName:    aws.String(tableName),
+		ReturnValues: types.ReturnValueAllOld,
 	})
 	if err != nil {
 		return deny(err)
 	}
-	if len(gi.Item) == 0 {
+	if len(di.Attributes) == 0 {
 		return deny(errors.New("player token not found"))
 	}
 
-	fmt.Printf("%s: %+v\n", "gi", gi.Item)
-
-	err = attributevalue.UnmarshalMap(gi.Item, &specialClaim)
+	err = attributevalue.UnmarshalMap(di.Attributes, &specialClaim)
 	if err != nil {
 		return deny(err)
 	}
@@ -202,10 +200,8 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 		return deny(err)
 	}
 
-	fmt.Println(parsedToken)
-
 	return events.APIGatewayCustomAuthorizerResponse{
-		PrincipalID: sub,
+		PrincipalID: parsedToken.Subject(),
 		PolicyDocument: events.APIGatewayCustomAuthorizerPolicy{
 			Version: apigwCustomAuthorizerPolicyVersion,
 			Statement: []events.IAMPolicyStatement{{
