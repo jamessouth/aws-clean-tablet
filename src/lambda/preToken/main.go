@@ -54,7 +54,7 @@ func handler(ctx context.Context, ev events.CognitoEventUserPoolsPreTokenGen) (e
 		TableName: aws.String(tableName),
 	})
 	if err != nil {
-		return ev, err
+		return ev, fmt.Errorf("- %w. Please try again", err)
 	}
 
 	ev.Response.ClaimsOverrideDetails.ClaimsToAddOrOverride = map[string]string{

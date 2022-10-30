@@ -9,6 +9,7 @@ import (
 	"errors"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -159,6 +160,13 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 		ks           = make(sink)
 		sub          = unsafeTokenPayload.Sub
 		specialClaim struct{ Uid string }
+		validator    = jwt.ValidatorFunc(func(_ context.Context, t jwt.Token) jwt.ValidationError {
+			ageLimit := 1.0
+			if time.Since(t.IssuedAt()).Seconds() > ageLimit {
+				return jwt.NewValidationError(errors.New("token too old"))
+			}
+			return nil
+		})
 	)
 
 	err = kh.FetchKeys(ctx, ks, msg.Signatures()[0], msg)
@@ -191,10 +199,11 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 		jwt.WithContext(ctx),
 		jwt.WithAudience(appClientID),
 		jwt.WithKeyProvider(kh),
-		jwt.WithSubject(sub),
 		jwt.WithIssuer("https://cognito-idp."+region+".amazonaws.com/"+userPoolID),
 		jwt.WithClaimValue("q", specialClaim.Uid),
 		jwt.WithClaimValue("token_use", "id"),
+		jwt.WithSubject(sub),
+		jwt.WithValidator(validator),
 	)
 	if err != nil {
 		return deny(err)
