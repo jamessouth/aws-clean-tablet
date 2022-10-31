@@ -142,7 +142,7 @@ module Game = {
 }
 
 @react.component
-let make = (~playerGame, ~games, ~send, ~wsError, ~close, ~count, ~setLeaderData) => {
+let make = (~playerGame, ~games, ~send, ~close, ~count, ~setLeaderData) => {
   let onClick = _ => {
     let pl = {
       action: "lobby",
@@ -188,62 +188,55 @@ let make = (~playerGame, ~games, ~send, ~wsError, ~close, ~count, ~setLeaderData
     <Button onClick=signOut className="absolute top-1 right-1 bg-transparent cursor-pointer">
       <img className="block" src="../../assets/signout.png" />
     </Button>
-    {switch wsError !== "" {
-    | true =>
-      <p className="text-center text-stone-100 font-anon text-lg">
-        {React.string("not connected: connection error")}
-      </p>
-    | false =>
-      switch Js.Nullable.toOption(games) {
-      | None => <Loading label="games..." />
-      | Some(gs: Js.Array2.t<Reducer.listGame>) =>
-        <div className="flex flex-col items-center">
-          <div className="relative m-auto <newgmimg:w-11/12 w-max">
-            <img
-              srcSet="../../assets/ekko1x.webp, ../../assets/ekko2x.webp 2x"
-              src="../../assets/ekko1x.webp"
-              alt=""
-              className="block <newgmimg:max-w-full"
-              width="421"
-              height="80"
-            />
-            {switch playerGame == "" {
-            | true =>
-              <Button
-                onClick
-                className="h-full right-0 top-0 w-1/2 bg-transparent text-stone-100 text-2xl font-flow cursor-pointer absolute border-l-2 border-gray-500/50">
-                {React.string("start a new game")}
-              </Button>
-            | false => React.null
-            }}
-          </div>
-          {switch Js.Array2.length(gs) < 1 {
+    {switch Js.Nullable.toOption(games) {
+    | None => <Loading label="games..." />
+    | Some(gs: Js.Array2.t<Reducer.listGame>) =>
+      <div className="flex flex-col items-center">
+        <div className="relative m-auto <newgmimg:w-11/12 w-max">
+          <img
+            srcSet="../../assets/ekko1x.webp, ../../assets/ekko2x.webp 2x"
+            src="../../assets/ekko1x.webp"
+            alt=""
+            className="block <newgmimg:max-w-full"
+            width="421"
+            height="80"
+          />
+          {switch playerGame == "" {
           | true =>
-            <p className="text-stone-100 font-anon text-lg mt-8">
-              {React.string("no games found.")}
-            </p>
-          | false =>
-            <ul
-              className="m-12 newgmimg:mt-14 w-11/12 <md:(flex max-w-lg flex-col) md:(grid grid-cols-2 gap-8) lg:(gap-10 justify-items-center) xl:(grid-cols-3 gap-12 max-w-1688px)">
-              {gs
-              ->Js.Array2.map(game => {
-                let class = "game" ++ Js.String2.sliceToEnd(game.no, ~from=18)
-                <Game
-                  key=game.no
-                  game
-                  inThisGame={playerGame == game.no}
-                  inAGame={playerGame != ""}
-                  count
-                  send
-                  class
-                  onlyGame={Js.Array2.length(gs) == 1}
-                />
-              })
-              ->React.array}
-            </ul>
+            <Button
+              onClick
+              className="h-full right-0 top-0 w-1/2 bg-transparent text-stone-100 text-2xl font-flow cursor-pointer absolute border-l-2 border-gray-500/50">
+              {React.string("start a new game")}
+            </Button>
+          | false => React.null
           }}
         </div>
-      }
+        {switch Js.Array2.length(gs) < 1 {
+        | true =>
+          <p className="text-stone-100 font-anon text-lg mt-8">
+            {React.string("no games found.")}
+          </p>
+        | false =>
+          <ul
+            className="m-12 newgmimg:mt-14 w-11/12 <md:(flex max-w-lg flex-col) md:(grid grid-cols-2 gap-8) lg:(gap-10 justify-items-center) xl:(grid-cols-3 gap-12 max-w-1688px)">
+            {gs
+            ->Js.Array2.map(game => {
+              let class = "game" ++ Js.String2.sliceToEnd(game.no, ~from=18)
+              <Game
+                key=game.no
+                game
+                inThisGame={playerGame == game.no}
+                inAGame={playerGame != ""}
+                count
+                send
+                class
+                onlyGame={Js.Array2.length(gs) == 1}
+              />
+            })
+            ->React.array}
+          </ul>
+        }}
+      </div>
     }}
   </>
 }

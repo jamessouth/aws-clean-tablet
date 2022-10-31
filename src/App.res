@@ -42,7 +42,8 @@ let make = () => {
 
   let (token, setToken) = React.Uncurried.useState(_ => None)
   let (showName, setShowName) = React.Uncurried.useState(_ => "")
-
+  let (wsError, setWsError) = React.Uncurried.useState(_ => "")
+  Js.log2("wserr", wsError)
   let signin = React.createElement(
     Signin.lazy_(() =>
       Signin.import_("./Signin.bs")->Promise.then(comp => {
@@ -67,7 +68,7 @@ let make = () => {
         Promise.resolve({"default": comp["make"]})
       })
     ),
-    Auth.makeProps(~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~route, ()),
+    Auth.makeProps(~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~route, ()),
   )
 
   <>

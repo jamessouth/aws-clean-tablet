@@ -7,10 +7,11 @@ external stage: string = "VITE_STAGE"
 %%raw(`import './css/lobby.css'`)
 
 type propShape = {
+  "token": option<string>,
+  "setToken": (. option<string> => option<string>) => unit,
   "cognitoUser": Js.Nullable.t<Cognito.usr>,
   "setCognitoUser": (. Js.Nullable.t<Cognito.usr> => Js.Nullable.t<Cognito.usr>) => unit,
-  "setToken": (. option<string> => option<string>) => unit,
-  "token": option<string>,
+  "setWsError": (. string => string) => unit,
   "route": Route.t,
 }
 
@@ -89,7 +90,7 @@ let initialState: Reducer.state = {
   winner: "",
 }
 @react.component
-let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~route) => {
+let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~route) => {
   Js.log2("u345876l", route)
 
   let (ws, setWs) = React.Uncurried.useState(_ => Js.Nullable.null)
@@ -99,7 +100,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~route) => {
   let (playerColor, setPlayerColor) = React.Uncurried.useState(_ => "transparent")
   let (count, setCount) = React.Uncurried.useState(_ => "")
   let (wsConnected, setWsConnected) = React.Uncurried.useState(_ => false)
-  let (wsError, setWsError) = React.Uncurried.useState(_ => "")
+
   let (leaderData, setLeaderData) = React.Uncurried.useState(_ => [])
   let (state, dispatch) = React.Uncurried.useReducerWithMapState(
     Reducer.reducer,
@@ -213,7 +214,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~route) => {
         open Cognito
         Js.log4("close", code, reason, wasClean)
         setWsConnected(. _ => false)
-        setWsError(. _ => "")
+        // setWsError(. _ => "")
 
         switch Js.Nullable.isNullable(cognitoUser) {
         | true => ()
@@ -283,7 +284,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~route) => {
 
       | true => {
           body(document)->classList->removeClassList3("bodleadmob", "bodleadtab", "bodleadbig")
-          <Lobby playerGame games send wsError close count setLeaderData />
+          <Lobby playerGame games send close count setLeaderData />
         }
       }
     | Play({play}) =>
