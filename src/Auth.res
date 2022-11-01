@@ -141,7 +141,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
       })
       ws->onError(e => {
         Js.log2("errrr", e)
-        setWsError(. _ => "temp error placehold")
+        setWsError(. _ => "connection error: connection closed")
       })
 
       ws->onMessage(({data}) => {

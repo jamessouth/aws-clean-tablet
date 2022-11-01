@@ -122,14 +122,22 @@ let make = () => {
               className="text-stone-100 col-span-full justify-self-center row-start-7"
               content="have code?"
             />
-            {switch showName == "" {
-            | true => React.null
-            | false =>
-              <p className="text-stone-100 absolute -top-20 w-4/5 bg-blue-gray-800 p-2 font-anon">
-                {React.string(
-                  "The username associated with the email you submitted is:" ++ showName,
-                )}
-              </p>
+            {switch (showName == "", wsError == "") {
+            | (true, true) => React.null
+            | (false, true) =>
+              <Message>
+                {React.string("The username associated with the email you submitted is: ")}
+                <span className="font-bold"> {React.string(showName)} </span>
+              </Message>
+            | (true, false) => <Message> {React.string(wsError)} </Message>
+            | (false, false) =>
+              <>
+                <Message>
+                  {React.string("The username associated with the email you submitted is: ")}
+                  <span className="font-bold"> {React.string(showName)} </span>
+                </Message>
+                <Message> {React.string(wsError)} </Message>
+              </>
             }}
           </nav>
         }

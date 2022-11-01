@@ -1,5 +1,5 @@
 %%raw(`import 'virtual:windi-utilities.css'`)
-// %%raw(`import 'virtual:windi-devtools'`)
+%%raw(`import 'virtual:windi-devtools'`)
 %%raw(`import './css/index.css'`)
 
 switch ReactDOM.querySelector("#root") {

@@ -15,15 +15,15 @@ let make = (~ht="h-72", ~on_Click, ~leg, ~validationError, ~cognitoError, ~child
       {switch (submitClicked, validationError, cognitoError) {
       | (false, _, None) | (true, None, None) => React.null
       | (false, _, Some(error)) | (true, None, Some(error)) | (true, Some(error), _) =>
-        <span
-          className="absolute right-0 -top-24 text-sm text-stone-100 bg-red-600 font-anon w-4/5 leading-4 p-1">
-          {React.string(error)}
-        </span>
+        <Message> {React.string(error)} </Message>
       }}
       {children}
     </fieldset>
     {switch (submitClicked, leg == "Sign in", validationError, cognitoError) {
-    | (false, _, _, _) | (true, false, _, _) | (true, true, Some(_), _) | (true, true, _, Some(_)) => React.null
+    | (false, _, _, _)
+    | (true, false, _, _)
+    | (true, true, Some(_), _)
+    | (true, true, _, Some(_)) => React.null
     | (true, true, None, None) =>
       <div className="absolute left-1/2 transform -translate-x-2/4 bottom-10">
         <Loading label="..." />
