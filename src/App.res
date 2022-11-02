@@ -41,16 +41,27 @@ let make = () => {
   )
 
   let (token, setToken) = React.Uncurried.useState(_ => None)
-  let (showName, setShowName) = React.Uncurried.useState(_ => "")
+  let (retrievedUsername, setRetrievedUsername) = React.Uncurried.useState(_ => "")
   let (wsError, setWsError) = React.Uncurried.useState(_ => "")
+
   Js.log2("wserr", wsError)
+
+  let msg = React.createElement(
+    Message.lazy_(() =>
+      Message.import_("./Message.bs")->Promise.then(comp => {
+        Promise.resolve({"default": comp["make"]})
+      })
+    ),
+    Message.makeProps(~msg=wsError, ()),
+  )
+
   let signin = React.createElement(
     Signin.lazy_(() =>
       Signin.import_("./Signin.bs")->Promise.then(comp => {
         Promise.resolve({"default": comp["make"]})
       })
     ),
-    Signin.makeProps(~userpool, ~setCognitoUser, ~setToken, ~cognitoUser, ()),
+    Signin.makeProps(~userpool, ~setCognitoUser, ~setToken, ~cognitoUser, ~retrievedUsername, ()),
   )
 
   let signup = React.createElement(
@@ -122,22 +133,9 @@ let make = () => {
               className="text-stone-100 col-span-full justify-self-center row-start-7"
               content="have code?"
             />
-            {switch (showName == "", wsError == "") {
-            | (true, true) => React.null
-            | (false, true) =>
-              <Message>
-                {React.string("The username associated with the email you submitted is: ")}
-                <span className="font-bold"> {React.string(showName)} </span>
-              </Message>
-            | (true, false) => <Message> {React.string(wsError)} </Message>
-            | (false, false) =>
-              <>
-                <Message>
-                  {React.string("The username associated with the email you submitted is: ")}
-                  <span className="font-bold"> {React.string(showName)} </span>
-                </Message>
-                <Message> {React.string(wsError)} </Message>
-              </>
+            {switch wsError == "" {
+            | true => React.null
+            | false => <React.Suspense fallback=React.null> msg </React.Suspense>
             }}
           </nav>
         }
@@ -153,7 +151,14 @@ let make = () => {
                 Promise.resolve({"default": comp["make"]})
               })
             ),
-            GetInfo.makeProps(~userpool, ~cognitoUser, ~setCognitoUser, ~setShowName, ~search, ()),
+            GetInfo.makeProps(
+              ~userpool,
+              ~cognitoUser,
+              ~setCognitoUser,
+              ~setRetrievedUsername,
+              ~search,
+              (),
+            ),
           )}
         </React.Suspense>
 

@@ -15,7 +15,7 @@ let make = (~ht="h-72", ~on_Click, ~leg, ~validationError, ~cognitoError, ~child
       {switch (submitClicked, validationError, cognitoError) {
       | (false, _, None) | (true, None, None) => React.null
       | (false, _, Some(error)) | (true, None, Some(error)) | (true, Some(error), _) =>
-        <Message> {React.string(error)} </Message>
+        <Message msg=error />
       }}
       {children}
     </fieldset>

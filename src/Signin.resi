@@ -3,6 +3,7 @@ type propShape = {
   "setCognitoUser": (. Js.Nullable.t<Cognito.usr> => Js.Nullable.t<Cognito.usr>) => unit,
   "setToken": (. option<string> => option<string>) => unit,
   "cognitoUser": Js.Nullable.t<Cognito.usr>,
+  "retrievedUsername": string,
 }
 
 @val
@@ -19,4 +20,5 @@ let make: (
   ~setCognitoUser: (. Js.Nullable.t<Cognito.usr> => Js.Nullable.t<Cognito.usr>) => unit,
   ~setToken: (. option<string> => option<string>) => unit,
   ~cognitoUser: Js.Nullable.t<Cognito.usr>,
+  ~retrievedUsername: string,
 ) => React.element

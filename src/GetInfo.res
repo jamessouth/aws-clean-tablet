@@ -2,7 +2,7 @@ type propShape = {
   "userpool": Cognito.poolData,
   "cognitoUser": Js.Nullable.t<Cognito.usr>,
   "setCognitoUser": (. Js.Nullable.t<Cognito.usr> => Js.Nullable.t<Cognito.usr>) => unit,
-  "setShowName": (. Js.String2.t => Js.String2.t) => unit,
+  "setRetrievedUsername": (. Js.String2.t => Js.String2.t) => unit,
   "search": Route.query,
 }
 
@@ -21,7 +21,7 @@ let username_max_length = 10
 let email_max_length = 99
 
 @react.component
-let make = (~userpool, ~cognitoUser, ~setCognitoUser, ~setShowName, ~search) => {
+let make = (~userpool, ~cognitoUser, ~setCognitoUser, ~setRetrievedUsername, ~search) => {
   let valErrInit = {
     open Route
     switch search {
@@ -59,8 +59,8 @@ let make = (~userpool, ~cognitoUser, ~setCognitoUser, ~setShowName, ~search) => 
               switch Js.String2.endsWith(msg, "error user found.") {
               | true => push(Confirm({search: search}))
               | false => {
-                  push(Home)
-                  setShowName(._ => Js.String2.sliceToEnd(msg, ~from=name_starts_index))
+                  push(SignIn)
+                  setRetrievedUsername(._ => Js.String2.sliceToEnd(msg, ~from=name_starts_index))
                 }
               }
             }
