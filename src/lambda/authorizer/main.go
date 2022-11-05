@@ -161,7 +161,7 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 		sub          = unsafeTokenPayload.Sub
 		specialClaim struct{ Uid string }
 		validator    = jwt.ValidatorFunc(func(_ context.Context, t jwt.Token) jwt.ValidationError {
-			ageLimit := 1.0
+			ageLimit := 10.0
 			if time.Since(t.IssuedAt()).Seconds() > ageLimit {
 				return jwt.NewValidationError(errors.New("token too old"))
 			}
@@ -196,12 +196,19 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 
 	parsedToken, err := jwt.Parse(
 		token,
-		jwt.WithContext(ctx),
 		jwt.WithAudience(appClientID),
-		jwt.WithKeyProvider(kh),
-		jwt.WithIssuer("https://cognito-idp."+region+".amazonaws.com/"+userPoolID),
+		jwt.WithClaimValue("email_verified", true),
 		jwt.WithClaimValue("q", specialClaim.Uid),
 		jwt.WithClaimValue("token_use", "id"),
+		jwt.WithContext(ctx),
+		jwt.WithIssuer("https://cognito-idp."+region+".amazonaws.com/"+userPoolID),
+		jwt.WithKeyProvider(kh),
+		jwt.WithMaxDelta(3600*time.Second, jwt.ExpirationKey, jwt.IssuedAtKey),
+		jwt.WithMinDelta(3600*time.Second, jwt.ExpirationKey, jwt.IssuedAtKey),
+		jwt.WithRequiredClaim("auth_time"),
+		jwt.WithRequiredClaim("cognito:username"),
+		jwt.WithRequiredClaim("email"),
+		jwt.WithRequiredClaim("event_id"),
 		jwt.WithSubject(sub),
 		jwt.WithValidator(validator),
 	)

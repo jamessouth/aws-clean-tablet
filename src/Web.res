@@ -2,7 +2,10 @@ type t
 // type w
 type openEventHandler = unit => unit
 type errorEventHandler = Dom.errorEvent => unit
-type messageEvent = {data: string}//TODO
+type messageEvent = {
+  data: string,
+  origin: string,
+}
 type messageEventHandler = messageEvent => unit
 type closeEvent = {
   code: int,

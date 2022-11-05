@@ -117,6 +117,8 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
     setCount(._ => "")
   }
 
+  let wsorigin = `wss://${apiid}.execute-api.${region}.amazonaws.com`
+
   open Web
   React.useEffect1(() => {
     switch token {
@@ -124,7 +126,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
     | Some(token) =>
       setWs(._ =>
         Js.Nullable.return(
-          newWs(`wss://${apiid}.execute-api.${region}.amazonaws.com/${stage}?auth=${token}`),
+          newWs(`${wsorigin}/${stage}?auth=${token}`),
         )
       )
     }
@@ -141,11 +143,11 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
       })
       ws->onError(e => {
         Js.log2("errrr", e)
-        setWsError(. _ => "connection error: connection closed")
+        setWsError(. _ => "websocket error: connection closed")
       })
 
-      ws->onMessage(({data}) => {
-        Js.log2("msg", data)
+      ws->onMessage(({data, origin}) => {
+        Js.log3("msg", data, origin)
 
         switch getMsgType(data) {
         | InsertConn => {
