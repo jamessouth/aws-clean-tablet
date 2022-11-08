@@ -123,12 +123,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
   React.useEffect1(() => {
     switch token {
     | None => setWs(._ => Js.Nullable.null)
-    | Some(token) =>
-      setWs(._ =>
-        Js.Nullable.return(
-          newWs(`${wsorigin}/${stage}?auth=${token}`),
-        )
-      )
+    | Some(token) => setWs(._ => Js.Nullable.return(newWs(`${wsorigin}/${stage}?auth=${token}`)))
     }
     None
   }, [token])
@@ -151,6 +146,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
 
         switch getMsgType(data) {
         | InsertConn => {
+          //TODO max length dangerous json payload
             let {listGms, name} = parseListGames(data)
             Js.log3("parsedlistgames", listGms, name)
             setPlayerName(. _ => name)
@@ -208,7 +204,21 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
             setLeaderData(. _ => leaders)
           }
 
-        | Other => Js.log2("unknown json data", data)
+        | Other => {
+            Js.log2("unknown json data", data)
+
+            let pl = {
+              action: "lobby",
+              gameno: switch playerGame == "" {
+              | true => "dc"
+              | false => playerGame
+              },
+              data: "disconnect",
+            }
+
+            ws->sendString(Js.Json.stringifyAny(pl))
+            ws->closeCodeReason(4005, "bad data")
+          }
         }
       })
 

@@ -65,7 +65,47 @@ func sanitize(s string) string {
 	}
 
 	return ""
-}
+} //https://go.dev/play/p/NEx2VE0x5Kh
+
+// {
+//     "$schema": "https://json-schema.org/draft/2020-12/schema",
+//     "$id": "awscleantablet/answer",
+//     "title": "answer",
+//     "description": "user answer input validation",
+//     "type": "object",
+//     "minProperties": 3,
+//     "maxProperties": 3,
+//     "properties": {
+//       "action": {
+//         "$id": "#root/action",
+//         "title": "action",
+//         "type": "string",
+//         "const": "answer"
+//       },
+//       "gameno": {
+//         "$id": "#root/gameno",
+//         "title": "gameno",
+//         "type": "string",
+//         "minLength": 19,
+//         "maxLength": 19,
+//         "pattern": "^[0-9]{19}$"
+//       },
+//       "answer": {
+//         "$id": "#root/answer",
+//         "title": "answer",
+//         "type": "string",
+//         "minLength": 2,
+//         "maxLength": 12,
+//         "pattern": "^[A-Za-z ]{2,12}$"
+//       }
+//     },
+//     "required": [
+//       "action",
+//       "gameno",
+//       "answer"
+//     ],
+//     "additionalProperties": false,
+//   }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
