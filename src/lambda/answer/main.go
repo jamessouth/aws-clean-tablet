@@ -65,7 +65,7 @@ func sanitize(s string) string {
 	}
 
 	return ""
-} //https://go.dev/play/p/NEx2VE0x5Kh
+} //https://go.dev/play/p/NEx2VE0x5Kh  https://go.dev/play/p/Icy2lqI2PCf
 
 // {
 //     "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -77,39 +77,43 @@ func sanitize(s string) string {
 //     "maxProperties": 3,
 //     "properties": {
 //       "action": {
-//         "$id": "#root/action",
 //         "title": "action",
 //         "type": "string",
 //         "const": "answer"
 //       },
 //       "gameno": {
-//         "$id": "#root/gameno",
 //         "title": "gameno",
 //         "type": "string",
 //         "minLength": 19,
 //         "maxLength": 19,
 //         "pattern": "^[0-9]{19}$"
 //       },
-//       "answer": {
-//         "$id": "#root/answer",
-//         "title": "answer",
+//       "data": {
+//         "title": "data",
 //         "type": "string",
 //         "minLength": 2,
 //         "maxLength": 12,
-//         "pattern": "^[A-Za-z ]{2,12}$"
+//         "pattern": "^[A-Za-z]{1}[A-Za-z ]{0,10}[A-Za-z]{1}$"
 //       }
 //     },
 //     "required": [
 //       "action",
 //       "gameno",
-//       "answer"
+//       "data"
 //     ],
 //     "additionalProperties": false,
 //   }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
-	fmt.Println("answer", req.Body)
+	bod := req.Body
+
+	fmt.Println("answer", bod)
+
+
+	if strings.Count(bod, `"gameno"`) != 1 || strings.Count(bod, `"data"`) != 1 {
+		return callErr(errors.New("improper json input"))
+	}
 
 	reg := strings.Split(req.RequestContext.DomainName, ".")[2]
 
@@ -135,7 +139,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		id, tableName = auth["principalId"].(string), auth["tableName"].(string)
 	)
 
-	err = json.Unmarshal([]byte(req.Body), &body)
+	err = json.Unmarshal([]byte(bod, &body)
 	if err != nil {
 		return callErr(err)
 	}
