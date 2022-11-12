@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetRandomByte(t *testing.T) {
@@ -22,12 +24,25 @@ func TestGetWord(t *testing.T) {
 	}
 }
 
-func TestSanitize(t *testing.T) {
+func TestCheckInput(t *testing.T) {
 	// t.Skip()
 	for _, test := range bunchOfTests2 {
-		if act := sanitize(test.input); act != test.expected {
-			t.Errorf("FAIL - Sanitize - %s\n act: %+v\n exp: %+v\n",
+		if act := checkInput(test.input, test.re); act != test.expected {
+			t.Errorf("FAIL - CheckInput - %s\n act: %+v\n exp: %+v\n",
 				test.description, act, test.expected)
 		}
 	}
+}
+
+func TestCheckKeys(t *testing.T) {
+	// t.Skip()
+	for _, test := range bunchOfTests3 {
+		err := checkKeys(test.input)
+		assert.EqualErrorf(t, err, test.expected.Error(), "FAIL - CheckKeys - %s\n err: %+v\n exp: %s\n", test.description, err, test.expected.Error())
+	}
+	for _, test := range nils {
+		err := checkKeys(test.input)
+		assert.Nilf(t, err, "FAIL - CheckKeys - %s\n err: %+v\n exp: %v\n", test.description, err, test.expected)
+	}
+
 }

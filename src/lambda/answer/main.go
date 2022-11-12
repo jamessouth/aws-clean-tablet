@@ -30,6 +30,11 @@ const (
 	highByte  int  = 1519766 //file size - 26
 )
 
+var (
+	answerRE = regexp.MustCompile(`(?i)^[a-z]{1}[a-z ]{0,10}[a-z]{1}$`)
+	gamenoRE = regexp.MustCompile(`^\d{19}$`)
+)
+
 func getRandomByte() string {
 	t := time.Now().UnixNano()
 	rand.Seed(t)
@@ -52,57 +57,21 @@ func getWord(b io.ReadCloser) string {
 	return string(words[1])
 }
 
-func sanitize(s string) string {
-	re := regexp.MustCompile(`(?i)^[a-z ]{2,12}$`)
-	re2 := regexp.MustCompile(`^\s|\s$`)
-
+func checkInput(s string, re *regexp.Regexp) string {
 	if re.MatchString(s) {
-		if !re2.MatchString(s) {
-			return s
-		} else {
-			return ""
-		}
+		return s
 	}
 
 	return ""
-} //https://go.dev/play/p/NEx2VE0x5Kh  https://go.dev/play/p/Icy2lqI2PCf
+}
 
-// {
-//     "$schema": "https://json-schema.org/draft/2020-12/schema",
-//     "$id": "awscleantablet/answer",
-//     "title": "answer",
-//     "description": "user answer input validation",
-//     "type": "object",
-//     "minProperties": 3,
-//     "maxProperties": 3,
-//     "properties": {
-//       "action": {
-//         "title": "action",
-//         "type": "string",
-//         "const": "answer"
-//       },
-//       "gameno": {
-//         "title": "gameno",
-//         "type": "string",
-//         "minLength": 19,
-//         "maxLength": 19,
-//         "pattern": "^[0-9]{19}$"
-//       },
-//       "data": {
-//         "title": "data",
-//         "type": "string",
-//         "minLength": 2,
-//         "maxLength": 12,
-//         "pattern": "^[A-Za-z]{1}[A-Za-z ]{0,10}[A-Za-z]{1}$"
-//       }
-//     },
-//     "required": [
-//       "action",
-//       "gameno",
-//       "data"
-//     ],
-//     "additionalProperties": false,
-//   }
+func checkKeys(s string) error {
+	if strings.Count(s, "gameno") != 1 || strings.Count(s, "aW5mb3Jt") != 1 {
+		return errors.New("improper json input - duplicate or missing key")
+	}
+
+	return nil
+}
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
@@ -110,9 +79,9 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	fmt.Println("answer", bod)
 
-
-	if strings.Count(bod, `"gameno"`) != 1 || strings.Count(bod, `"data"`) != 1 {
-		return callErr(errors.New("improper json input"))
+	err := checkKeys(bod)
+	if err != nil {
+		return callErr(err)
 	}
 
 	reg := strings.Split(req.RequestContext.DomainName, ".")[2]
@@ -132,22 +101,25 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		ddbsvc    = dynamodb.NewFromConfig(cfg)
 		s3svc     = s3.NewFromConfig(cfg)
 		body      struct {
-			Gameno, Data string
+			Gameno, AW5mb3Jt string
 		}
 		ans           string
 		auth          = req.RequestContext.Authorizer.(map[string]interface{})
 		id, tableName = auth["principalId"].(string), auth["tableName"].(string)
 	)
 
-	err = json.Unmarshal([]byte(bod, &body)
+	err = json.Unmarshal([]byte(bod), &body)
 	if err != nil {
 		return callErr(err)
 	}
 
-	sanitizedAnswer := sanitize(body.Data)
+	checkedGameno := checkInput(body.Gameno, gamenoRE)
+	if checkedGameno == "" {
+		return callErr(errors.New("improper json input - wrong gameno"))
+	}
 
-	if sanitizedAnswer == "" {
-
+	checkedAnswer := checkInput(body.AW5mb3Jt, answerRE)
+	if checkedAnswer == "" {
 		obj, err := s3svc.GetObject(ctx, &s3.GetObjectInput{
 			Bucket:  aws.String(bucket),
 			Key:     aws.String(words),
@@ -162,9 +134,8 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		// fmt.Printf("\n%s, %+v\n", "getObj op", objOutput)
 
 		ans = getWord(objOutput.Body)
-
 	} else {
-		ans = sanitizedAnswer
+		ans = checkedAnswer
 	}
 
 	//condition on player name??
@@ -172,7 +143,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 		Key: map[string]types.AttributeValue{
 			"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
-			"sk": &types.AttributeValueMemberS{Value: body.Gameno},
+			"sk": &types.AttributeValueMemberS{Value: checkedGameno},
 		},
 		TableName: aws.String(tableName),
 		ExpressionAttributeNames: map[string]string{

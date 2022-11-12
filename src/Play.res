@@ -38,7 +38,7 @@ let make = (
     let pl: Lobby.apigwPayload = {
       action: "answer",
       gameno: sk,
-      data: answer
+      aW5mb3Jt: answer
       ->Js.String2.slice(~from=0, ~to_=answer_max_length)
       ->Js.String2.replaceByRe(%re("/\d/g"), "")
       ->Js.String2.replaceByRe(%re("/[!-/:-@\[-`{-~]/g"), "")

@@ -1,7 +1,7 @@
 type apigwPayload = {
   action: string,
   gameno: string,
-  data: string,
+  aW5mb3Jt: string,
 }
 
 module Game = {
