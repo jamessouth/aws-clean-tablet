@@ -128,6 +128,14 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
     None
   }, [token])
 
+
+
+// const json = '{"result":true, "count":42, "count":23523}';
+// const found = json.match(/count/g).length;
+
+
+
+
   React.useEffect1(() => {
     switch Js.Nullable.isNullable(ws) {
     | true => ()
@@ -141,12 +149,31 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
         setWsError(. _ => "websocket error: connection closed")
       })
 
+      //TODO log errors to back end
+
       ws->onMessage(({data, origin}) => {
+
+        let data = switch Js.String2.length(data) > 5000 {
+        | true => Js.String2.slice(data, ~from=0, ~to_=5000)
+        | false => data
+        }
+
+      switch Js.String2.match_(data, %re(`/(\"\w+\"\:).+\1/g`)) {
+        | None => ()
+        | Some(_) => Js.log("dupe keys")
+        }
+
+        switch origin == wsorigin {
+        | true => ()
+        | false => Js.log("wrong origin")
+        }
+
+
         Js.log3("msg", data, origin)
 
         switch getMsgType(data) {
         | InsertConn => {
-          //TODO max length dangerous json payload
+         
             let {listGms, name} = parseListGames(data)
             Js.log3("parsedlistgames", listGms, name)
             setPlayerName(. _ => name)
@@ -207,16 +234,21 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
         | Other => {
             Js.log2("unknown json data", data)
 
-            let pl = {
+            let pl: Lobby.apigwPayload = {
               action: "lobby",
               gameno: switch playerGame == "" {
               | true => "dc"
               | false => playerGame
               },
-              data: "disconnect",
+              aW5mb3Jt: "disconnect",
             }
 
-            ws->sendString(Js.Json.stringifyAny(pl))
+            switch Js.Json.stringifyAny(pl) {
+            | None => ()
+            | Some(s) => ws->sendString(s)
+            }
+
+           
             ws->closeCodeReason(4005, "bad data")
           }
         }

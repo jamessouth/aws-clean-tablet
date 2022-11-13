@@ -70,7 +70,7 @@ let make = (
         let pl: Lobby.apigwPayload = {
           action: "end",
           gameno: sk,
-          data: endtoken,
+          aW5mb3Jt: endtoken,
         }
 
         send(. Js.Json.stringifyAny(pl))

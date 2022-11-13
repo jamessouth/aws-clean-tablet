@@ -20,7 +20,7 @@ module Game = {
       let pl = {
         action: "lobby",
         gameno: no,
-        data: switch inThisGame {
+        aW5mb3Jt: switch inThisGame {
         | true => "leave"
         | false => "join"
         },
@@ -37,7 +37,7 @@ module Game = {
       let pl = {
         action: "lobby",
         gameno: no,
-        data: switch ready {
+        aW5mb3Jt: switch ready {
         | true => "ready"
         | false => "unready"
         },
@@ -147,7 +147,7 @@ let make = (~playerGame, ~games, ~send, ~close, ~count, ~setLeaderData) => {
     let pl = {
       action: "lobby",
       gameno: "new",
-      data: "join",
+      aW5mb3Jt: "join",
     }
 
     send(. Js.Json.stringifyAny(pl))
@@ -162,7 +162,7 @@ let make = (~playerGame, ~games, ~send, ~close, ~count, ~setLeaderData) => {
       | true => "dc"
       | false => playerGame
       },
-      data: "disconnect",
+      aW5mb3Jt: "disconnect",
     }
 
     send(. Js.Json.stringifyAny(pl))
@@ -175,7 +175,7 @@ let make = (~playerGame, ~games, ~send, ~close, ~count, ~setLeaderData) => {
     let pl = {
       action: "leaders",
       gameno: "",
-      data: "",
+      aW5mb3Jt: "",
     }
     send(. Js.Json.stringifyAny(pl))
     Route.push(Leaderboard)
