@@ -118,6 +118,7 @@ var bunchOfTests2 = []struct {
 }
 
 var errKey = errors.New("improper json input - duplicate or missing key")
+var errLen = errors.New("improper json input - too long")
 
 var bunchOfTests3 = []struct {
 	input, description string
@@ -173,5 +174,36 @@ var nils = []struct {
 		}`,
 		expected:    nil,
 		description: "ok",
+	},
+}
+
+var nils2 = []struct {
+	input, description string
+	expected           error
+}{
+	{
+		input: `{
+		   "gameno": "ggg",
+		   "aW5mb3Jt": "hhh",
+		}`,
+		expected:    nil,
+		description: "ok",
+	},
+}
+
+var lens = []struct {
+	input, description string
+	expected           error
+}{
+	{
+		input: `{
+		   "gameno": "ggg",
+		   "aW5mb3Jt": "hhh",
+		   "aW5mb3Jt": "hhh",
+		   "aW5mb3Jt": "hhh",
+		   "aW5mb3Jt": "hhh",
+		}`,
+		expected:    errLen,
+		description: "too long",
 	},
 }

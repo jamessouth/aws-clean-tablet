@@ -120,6 +120,29 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
   let wsorigin = `wss://${apiid}.execute-api.${region}.amazonaws.com`
 
   open Web
+  let logAndDisconnect = (~msg: string, ~data: string, ~code: int) => {
+    switch Js.Json.stringifyAny({
+      Lobby.action: "logging",
+      gameno: msg,
+      aW5mb3Jt: data,
+    }) {
+    | None => ()
+    | Some(s) => ws->sendString(s)
+    }
+    switch Js.Json.stringifyAny({
+      Lobby.action: "lobby",
+      gameno: switch playerGame == "" {
+      | true => "dc"
+      | false => playerGame
+      },
+      aW5mb3Jt: "disconnect",
+    }) {
+    | None => ()
+    | Some(s) => ws->sendString(s)
+    }
+    ws->closeCodeReason(code, msg)
+  }
+
   React.useEffect1(() => {
     switch token {
     | None => setWs(._ => Js.Nullable.null)
@@ -127,14 +150,6 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
     }
     None
   }, [token])
-
-
-
-// const json = '{"result":true, "count":42, "count":23523}';
-// const found = json.match(/count/g).length;
-
-
-
 
   React.useEffect1(() => {
     switch Js.Nullable.isNullable(ws) {
@@ -152,28 +167,31 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
       //TODO log errors to back end
 
       ws->onMessage(({data, origin}) => {
+        switch Js.String2.length(data) > 3000 {
+        | true =>
+          logAndDisconnect(
+            ~msg="excessive json data",
+            ~data=Js.String2.slice(data, ~from=0, ~to_=3000),
+            ~code=4004,
+          )
 
-        let data = switch Js.String2.length(data) > 5000 {
-        | true => Js.String2.slice(data, ~from=0, ~to_=5000)
-        | false => data
+        | false => ()
         }
 
-      switch Js.String2.match_(data, %re(`/(\"\w+\"\:).+\1/g`)) {
+        switch Js.String2.match_(data, %re(`/(\"\w+\"\:).+\1/g`)) {
         | None => ()
-        | Some(_) => Js.log("dupe keys")
+        | Some(_) => logAndDisconnect(~msg="duplicate keys", ~data, ~code=4003)
         }
 
         switch origin == wsorigin {
         | true => ()
-        | false => Js.log("wrong origin")
+        | false => logAndDisconnect(~msg="wrong origin", ~data=origin, ~code=4002)
         }
-
 
         Js.log3("msg", data, origin)
 
         switch getMsgType(data) {
         | InsertConn => {
-         
             let {listGms, name} = parseListGames(data)
             Js.log3("parsedlistgames", listGms, name)
             setPlayerName(. _ => name)
@@ -234,22 +252,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
         | Other => {
             Js.log2("unknown json data", data)
 
-            let pl: Lobby.apigwPayload = {
-              action: "lobby",
-              gameno: switch playerGame == "" {
-              | true => "dc"
-              | false => playerGame
-              },
-              aW5mb3Jt: "disconnect",
-            }
-
-            switch Js.Json.stringifyAny(pl) {
-            | None => ()
-            | Some(s) => ws->sendString(s)
-            }
-
-           
-            ws->closeCodeReason(4005, "bad data")
+            logAndDisconnect(~msg="unknown json data", ~data, ~code=4005)
           }
         }
       })

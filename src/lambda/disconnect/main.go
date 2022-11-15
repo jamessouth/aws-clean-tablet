@@ -11,7 +11,7 @@ import (
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
-	fmt.Printf("%s: %+v\n", "Disconnected: ", req)
+	fmt.Printf("%s: %+v\n", "Disconnected", req)
 
 	return events.APIGatewayProxyResponse{
 		StatusCode:        http.StatusOK,

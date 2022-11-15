@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -9,9 +10,31 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
+func checkLength(s string) error {
+	if len(s) > 3200 {
+		return errors.New("improper json input - too long")
+	}
+
+	return nil
+}
+
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
-	fmt.Printf("%s: %s\n", "Front end error: ", req.Body)
+	bod := req.Body
+
+	err := checkLength(bod)
+	if err != nil {
+		fmt.Println(err)
+		return events.APIGatewayProxyResponse{
+			StatusCode:        http.StatusBadRequest,
+			Headers:           map[string]string{"Content-Type": "application/json"},
+			MultiValueHeaders: map[string][]string{},
+			Body:              "",
+			IsBase64Encoded:   false,
+		}, err
+	}
+
+	fmt.Printf("%s: %s\n", "Front end error", bod)
 
 	return events.APIGatewayProxyResponse{
 		StatusCode:        http.StatusOK,

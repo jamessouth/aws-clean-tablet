@@ -73,13 +73,26 @@ func checkKeys(s string) error {
 	return nil
 }
 
+func checkLength(s string) error {
+	if len(s) > 100 {
+		return errors.New("improper json input - too long")
+	}
+
+	return nil
+}
+
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
 	bod := req.Body
 
-	fmt.Println("answer", bod)
+	err := checkLength(bod)
+	if err != nil {
+		return callErr(err)
+	}
 
-	err := checkKeys(bod)
+	fmt.Println("answer", bod, len(bod))
+
+	err = checkKeys(bod)
 	if err != nil {
 		return callErr(err)
 	}

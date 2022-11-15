@@ -44,5 +44,16 @@ func TestCheckKeys(t *testing.T) {
 		err := checkKeys(test.input)
 		assert.Nilf(t, err, "FAIL - CheckKeys - %s\n err: %+v\n exp: %v\n", test.description, err, test.expected)
 	}
+}
 
+func TestCheckLength(t *testing.T) {
+	// t.Skip()
+	for _, test := range lens {
+		err := checkLength(test.input)
+		assert.EqualErrorf(t, err, test.expected.Error(), "FAIL - CheckLength - %s\n err: %+v\n exp: %s\n", test.description, err, test.expected.Error())
+	}
+	for _, test := range nils2 {
+		err := checkLength(test.input)
+		assert.Nilf(t, err, "FAIL - CheckLength - %s\n err: %+v\n exp: %v\n", test.description, err, test.expected)
+	}
 }
