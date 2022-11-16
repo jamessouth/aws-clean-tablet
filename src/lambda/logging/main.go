@@ -18,6 +18,16 @@ func checkLength(s string) error {
 	return nil
 }
 
+func getReturnValue(status int) events.APIGatewayProxyResponse {
+	return events.APIGatewayProxyResponse{
+		StatusCode:        status,
+		Headers:           map[string]string{"Content-Type": "application/json"},
+		MultiValueHeaders: map[string][]string{},
+		Body:              "",
+		IsBase64Encoded:   false,
+	}
+}
+
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
 	bod := req.Body
@@ -25,24 +35,12 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	err := checkLength(bod)
 	if err != nil {
 		fmt.Println(err)
-		return events.APIGatewayProxyResponse{
-			StatusCode:        http.StatusBadRequest,
-			Headers:           map[string]string{"Content-Type": "application/json"},
-			MultiValueHeaders: map[string][]string{},
-			Body:              "",
-			IsBase64Encoded:   false,
-		}, err
+		return getReturnValue(http.StatusBadRequest), err
 	}
 
 	fmt.Printf("%s: %s\n", "Front end error", bod)
 
-	return events.APIGatewayProxyResponse{
-		StatusCode:        http.StatusOK,
-		Headers:           map[string]string{"Content-Type": "application/json"},
-		MultiValueHeaders: map[string][]string{},
-		Body:              "",
-		IsBase64Encoded:   false,
-	}, nil
+	return getReturnValue(http.StatusOK), nil
 }
 
 func main() {

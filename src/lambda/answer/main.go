@@ -190,7 +190,6 @@ func main() {
 }
 
 func callErr(err error) (events.APIGatewayProxyResponse, error) {
-
 	var intServErr *types.InternalServerError
 	if errors.As(err, &intServErr) {
 		fmt.Printf("get item error, %v",
@@ -211,5 +210,4 @@ func callErr(err error) (events.APIGatewayProxyResponse, error) {
 		Body:              "",
 		IsBase64Encoded:   false,
 	}, err
-
 }

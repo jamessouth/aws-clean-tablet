@@ -164,9 +164,12 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
         setWsError(. _ => "websocket error: connection closed")
       })
 
-      //TODO log errors to back end
-
       ws->onMessage(({data, origin}) => {
+        switch origin == wsorigin {
+        | true => ()
+        | false => logAndDisconnect(~msg="wrong origin", ~data=origin, ~code=4002)
+        }
+
         switch Js.String2.length(data) > 3000 {
         | true =>
           logAndDisconnect(
@@ -181,11 +184,6 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
         switch Js.String2.match_(data, %re(`/(\"\w+\"\:).+\1/g`)) {
         | None => ()
         | Some(_) => logAndDisconnect(~msg="duplicate keys", ~data, ~code=4003)
-        }
-
-        switch origin == wsorigin {
-        | true => ()
-        | false => logAndDisconnect(~msg="wrong origin", ~data=origin, ~code=4002)
         }
 
         Js.log3("msg", data, origin)

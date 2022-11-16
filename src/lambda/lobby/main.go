@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -32,6 +33,16 @@ type listPlayer struct {
 	Ready  bool   `dynamodbav:"ready"`
 }
 
+const (
+	maxPlayersPerGame string = "8"
+	gameNoLength      int    = 19
+)
+
+var (
+	answerRE = regexp.MustCompile(`(?i)^[a-z]{1}[a-z ]{0,10}[a-z]{1}$`)
+	gamenoRE = regexp.MustCompile(`^\d{19}$`)
+)
+
 func getReturnValue(status int) events.APIGatewayProxyResponse {
 	return events.APIGatewayProxyResponse{
 		StatusCode:        status,
@@ -42,12 +53,45 @@ func getReturnValue(status int) events.APIGatewayProxyResponse {
 	}
 }
 
-const (
-	maxPlayersPerGame string = "8"
-	gameNoLength      int    = 19
-)
+func checkLength(s string) error {
+	if len(s) > 200 {
+		return errors.New("improper json input - too long")
+	}
+
+	return nil
+}
+
+func checkKeys(s string) error {
+	if strings.Count(s, "gameno") != 1 || strings.Count(s, "aW5mb3Jt") != 1 {
+		return errors.New("improper json input - duplicate or missing key")
+	}
+
+	return nil
+}
+
+func checkInput(s string, re *regexp.Regexp) string {
+	if re.MatchString(s) {
+		return s
+	}
+
+	return ""
+}
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
+
+	bod := req.Body
+
+	err := checkLength(bod)
+	if err != nil {
+		callErr(err)
+	}
+
+	fmt.Println("lobby", bod, len(bod))
+
+	err = checkKeys(bod)
+	if err != nil {
+		callErr(err)
+	}
 
 	reg := strings.Split(req.RequestContext.DomainName, ".")[2]
 
@@ -101,7 +145,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	var apigwsvc = apigatewaymanagementapi.NewFromConfig(apigwcfg)
 
-	err = json.Unmarshal([]byte(req.Body), &body)
+	err = json.Unmarshal([]byte(bod), &body)
 	if err != nil {
 		fmt.Println("unmarshal err")
 	}
