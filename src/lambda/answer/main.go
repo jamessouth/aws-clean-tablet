@@ -30,11 +30,6 @@ const (
 	highByte  int  = 1519766 //file size - 26
 )
 
-var (
-	answerRE = regexp.MustCompile(`(?i)^[a-z]{1}[a-z ]{0,10}[a-z]{1}$`)
-	gamenoRE = regexp.MustCompile(`^\d{19}$`)
-)
-
 func getRandomByte() string {
 	t := time.Now().UnixNano()
 	rand.Seed(t)
@@ -57,42 +52,46 @@ func getWord(b io.ReadCloser) string {
 	return string(words[1])
 }
 
-func checkInput(s string, re *regexp.Regexp) string {
-	if re.MatchString(s) {
-		return s
+func checkInput(s string) (string, string, error) {
+	var (
+		maxLength       = 99
+		gamenoRE        = regexp.MustCompile(`^\d{19}$`)
+		aW5mb3JtRE      = regexp.MustCompile(`(?i)^[a-z]{1}[a-z ]{0,10}[a-z]{1}$`)
+		body            struct{ Gameno, AW5mb3Jt string }
+		checkedAW5mb3Jt string
+	)
+
+	if len(s) > maxLength {
+		return "", "", errors.New("improper json input - too long")
 	}
 
-	return ""
-}
-
-func checkKeys(s string) error {
 	if strings.Count(s, "gameno") != 1 || strings.Count(s, "aW5mb3Jt") != 1 {
-		return errors.New("improper json input - duplicate or missing key")
+		return "", "", errors.New("improper json input - duplicate/missing key")
 	}
 
-	return nil
-}
-
-func checkLength(s string) error {
-	if len(s) > 100 {
-		return errors.New("improper json input - too long")
+	err := json.Unmarshal([]byte(s), &body)
+	if err != nil {
+		return "", "", err
 	}
 
-	return nil
+	if !gamenoRE.MatchString(body.Gameno) {
+		return "", "", errors.New("improper json input - bad gameno")
+	}
+
+	if aW5mb3JtRE.MatchString(body.AW5mb3Jt) {
+		checkedAW5mb3Jt = body.AW5mb3Jt
+	}
+
+	return body.Gameno, checkedAW5mb3Jt, nil
 }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
 	bod := req.Body
 
-	err := checkLength(bod)
-	if err != nil {
-		return callErr(err)
-	}
-
 	fmt.Println("answer", bod, len(bod))
 
-	err = checkKeys(bod)
+	checkedGameno, checkedAW5mb3Jt, err := checkInput(bod)
 	if err != nil {
 		return callErr(err)
 	}
@@ -113,26 +112,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		wordsETag = os.Getenv("wordsETag")
 		ddbsvc    = dynamodb.NewFromConfig(cfg)
 		s3svc     = s3.NewFromConfig(cfg)
-		body      struct {
-			Gameno, AW5mb3Jt string
-		}
+
 		ans           string
 		auth          = req.RequestContext.Authorizer.(map[string]interface{})
 		id, tableName = auth["principalId"].(string), auth["tableName"].(string)
 	)
 
-	err = json.Unmarshal([]byte(bod), &body)
-	if err != nil {
-		return callErr(err)
-	}
-
-	checkedGameno := checkInput(body.Gameno, gamenoRE)
-	if checkedGameno == "" {
-		return callErr(errors.New("improper json input - wrong gameno"))
-	}
-
-	checkedAnswer := checkInput(body.AW5mb3Jt, answerRE)
-	if checkedAnswer == "" {
+	if checkedAW5mb3Jt == "" {
 		obj, err := s3svc.GetObject(ctx, &s3.GetObjectInput{
 			Bucket:  aws.String(bucket),
 			Key:     aws.String(words),
@@ -148,7 +134,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 		ans = getWord(objOutput.Body)
 	} else {
-		ans = checkedAnswer
+		ans = checkedAW5mb3Jt
 	}
 
 	//condition on player name??

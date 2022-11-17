@@ -2,9 +2,7 @@ package main
 
 import (
 	"bytes"
-	"errors"
 	"io"
-	"regexp"
 )
 
 var bunchOfTests = []struct {
@@ -34,176 +32,168 @@ var bunchOfTests = []struct {
 }
 
 var bunchOfTests2 = []struct {
-	input, expected, description string
-	re                           *regexp.Regexp
-}{
-	{
-		input:       "j",
-		re:          answerRE,
-		expected:    "",
-		description: "too short",
-	},
-	{
-		input:       "jjjjjjjjjjjjj",
-		re:          answerRE,
-		expected:    "",
-		description: "too long",
-	},
-	{
-		input:       "bgt5gb",
-		re:          answerRE,
-		expected:    "",
-		description: "number",
-	},
-	{
-		input:       "\nbhbhvg",
-		re:          answerRE,
-		expected:    "",
-		description: "newline",
-	},
-	{
-		input:       "bhbhvg\t",
-		re:          answerRE,
-		expected:    "",
-		description: "tab",
-	},
-	{
-		input:       "m*.kjns",
-		re:          answerRE,
-		expected:    "",
-		description: "symbols",
-	},
-	{
-		input:       "  j",
-		re:          answerRE,
-		expected:    "",
-		description: "begins with spaces",
-	},
-	{
-		input:       "mkjns  ",
-		re:          answerRE,
-		expected:    "",
-		description: "ends with spaces",
-	},
-	{
-		input:       "bhb hv g",
-		re:          answerRE,
-		expected:    "bhb hv g",
-		description: "ok",
-	},
-	{
-		input:       "bhb hv g",
-		re:          gamenoRE,
-		expected:    "",
-		description: "letters",
-	},
-	{
-		input:       "987987987987987987",
-		re:          gamenoRE,
-		expected:    "",
-		description: "too short",
-	},
-	{
-		input:       "98765432198765432194",
-		re:          gamenoRE,
-		expected:    "",
-		description: "too long",
-	},
-	{
-		input:       "1546879451598456357",
-		re:          gamenoRE,
-		expected:    "1546879451598456357",
-		description: "ok",
-	},
-}
-
-var errKey = errors.New("improper json input - duplicate or missing key")
-var errLen = errors.New("improper json input - too long")
-
-var bunchOfTests3 = []struct {
-	input, description string
-	expected           error
+	input, expected1, expected2, description string
+	expected3                                error
 }{
 	{
 		input: `{
-		   "aW5mb3Jt": "ggg",
-		}`,
-		expected:    errKey,
-		description: "missing gameno key",
+			"gameno": "9156849584651978018",
+			"aW5mb3Jt": "",
+		 }`,
+		expected1:   "9156849584651978018",
+		expected2:   "",
+		expected3:   nil,
+		description: "aW5mb3Jt too short",
 	},
-	{
-		input: `{
-		   "gameno": "ggg",
-		}`,
-		expected:    errKey,
-		description: "missing aW5mb3Jt key",
-	},
-	{
-		input:       `{}`,
-		expected:    errKey,
-		description: "containing no keys",
-	},
-	{
-		input: `{
-		   "gameno": "ggg",
-		   "gameno": "gggvvv",
-		   "aW5mb3Jt": "hhh",
-		}`,
-		expected:    errKey,
-		description: "duplicate gameno key",
-	},
-	{
-		input: `{
-		   "gameno": "gggvvv",
-		   "aW5mb3Jt": "hhh",
-		   "aW5mb3Jt": "hhddh",
-		}`,
-		expected:    errKey,
-		description: "duplicate aW5mb3Jt key",
-	},
+	// {
+	// 	input:       "jjjjjjjjjjjjj",
+	// 	expected:    "",
+	// 	description: "too long",
+	// },
+	// {
+	// 	input:       "bgt5gb",
+	// 	expected:    "",
+	// 	description: "number",
+	// },
+	// {
+	// 	input:       "\nbhbhvg",
+	// 	expected:    "",
+	// 	description: "newline",
+	// },
+	// {
+	// 	input:       "bhbhvg\t",
+	// 	expected:    "",
+	// 	description: "tab",
+	// },
+	// {
+	// 	input:       "m*.kjns",
+	// 	expected:    "",
+	// 	description: "symbols",
+	// },
+	// {
+	// 	input:       "  j",
+	// 	expected:    "",
+	// 	description: "begins with spaces",
+	// },
+	// {
+	// 	input:       "mkjns  ",
+	// 	expected:    "",
+	// 	description: "ends with spaces",
+	// },
+	// {
+	// 	input:       "bhb hv g",
+	// 	expected:    "bhb hv g",
+	// 	description: "ok",
+	// },
+	// {
+	// 	input:       "bhb hv g",
+	// 	expected:    "",
+	// 	description: "letters",
+	// },
+	// {
+	// 	input:       "987987987987987987",
+	// 	expected:    "",
+	// 	description: "too short",
+	// },
+	// {
+	// 	input:       "98765432198765432194",
+	// 	expected:    "",
+	// 	description: "too long",
+	// },
+	// {
+	// 	input:       "1546879451598456357",
+	// 	expected:    "1546879451598456357",
+	// 	description: "ok",
+	// },
 }
 
-var nils = []struct {
-	input, description string
-	expected           error
-}{
-	{
-		input: `{
-		   "gameno": "ggg",
-		   "aW5mb3Jt": "hhh",
-		}`,
-		expected:    nil,
-		description: "ok",
-	},
-}
+// var errKey = errors.New("improper json input - duplicate or missing key")
+// var errLen = errors.New("improper json input - too long")
 
-var nils2 = []struct {
-	input, description string
-	expected           error
-}{
-	{
-		input: `{
-		   "gameno": "ggg",
-		   "aW5mb3Jt": "hhh",
-		}`,
-		expected:    nil,
-		description: "ok",
-	},
-}
+// var bunchOfTests3 = []struct {
+// 	input, description string
+// 	expected           error
+// }{
+// 	{
+// 		input: `{
+// 		   "aW5mb3Jt": "ggg",
+// 		}`,
+// 		expected:    errKey,
+// 		description: "missing gameno key",
+// 	},
+// 	{
+// 		input: `{
+// 		   "gameno": "ggg",
+// 		}`,
+// 		expected:    errKey,
+// 		description: "missing aW5mb3Jt key",
+// 	},
+// 	{
+// 		input:       `{}`,
+// 		expected:    errKey,
+// 		description: "containing no keys",
+// 	},
+// 	{
+// 		input: `{
+// 		   "gameno": "ggg",
+// 		   "gameno": "gggvvv",
+// 		   "aW5mb3Jt": "hhh",
+// 		}`,
+// 		expected:    errKey,
+// 		description: "duplicate gameno key",
+// 	},
+// 	{
+// 		input: `{
+// 		   "gameno": "gggvvv",
+// 		   "aW5mb3Jt": "hhh",
+// 		   "aW5mb3Jt": "hhddh",
+// 		}`,
+// 		expected:    errKey,
+// 		description: "duplicate aW5mb3Jt key",
+// 	},
+// }
 
-var lens = []struct {
-	input, description string
-	expected           error
-}{
-	{
-		input: `{
-		   "gameno": "ggg",
-		   "aW5mb3Jt": "hhh",
-		   "aW5mb3Jt": "hhh",
-		   "aW5mb3Jt": "hhh",
-		   "aW5mb3Jt": "hhh",
-		}`,
-		expected:    errLen,
-		description: "too long",
-	},
-}
+// var nils = []struct {
+// 	input, description string
+// 	expected           error
+// }{
+// 	{
+// 		input: `{
+// 		   "gameno": "ggg",
+// 		   "aW5mb3Jt": "hhh",
+// 		}`,
+// 		expected:    nil,
+// 		description: "ok",
+// 	},
+// }
+
+// var nils2 = []struct {
+// 	input, description string
+// 	expected           error
+// }{
+// 	{
+// 		input: `{
+// 		   "gameno": "ggg",
+// 		   "aW5mb3Jt": "hhh",
+// 		}`,
+// 		expected:    nil,
+// 		description: "ok",
+// 	},
+// }
+
+// var lens = []struct {
+// 	input, description string
+// 	expected           error
+// }{
+// 	{
+// 		input: `{
+// 		   "gameno": "ggg",
+// 		   "aW5mb3Jt": "hhh",
+// 		   "aW5mb3Jt": "hhh",
+// 		   "aW5mb3Jt": "hhh",
+// 		   "aW5mb3Jt": "hhh",
+// 		}`,
+// 		expected:    errLen,
+// 		description: "too long",
+// 	},
+// }
