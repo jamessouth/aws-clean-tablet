@@ -5,7 +5,7 @@ import (
 	"io"
 )
 
-var bunchOfTests = []struct {
+var getWordTests = []struct {
 	input                 io.ReadCloser
 	expected, description string
 }{
@@ -31,169 +31,215 @@ var bunchOfTests = []struct {
 	},
 }
 
-var bunchOfTests2 = []struct {
-	input, expected1, expected2, description string
-	expected3                                error
+var noErrorTests = []struct {
+	input, exp1, exp2, description string
 }{
 	{
 		input: `{
 			"gameno": "9156849584651978018",
-			"aW5mb3Jt": "",
+			"aW5mb3Jt": ""
 		 }`,
-		expected1:   "9156849584651978018",
-		expected2:   "",
-		expected3:   nil,
+		exp1:        "9156849584651978018",
+		exp2:        "",
 		description: "aW5mb3Jt too short",
 	},
-	// {
-	// 	input:       "jjjjjjjjjjjjj",
-	// 	expected:    "",
-	// 	description: "too long",
-	// },
-	// {
-	// 	input:       "bgt5gb",
-	// 	expected:    "",
-	// 	description: "number",
-	// },
-	// {
-	// 	input:       "\nbhbhvg",
-	// 	expected:    "",
-	// 	description: "newline",
-	// },
-	// {
-	// 	input:       "bhbhvg\t",
-	// 	expected:    "",
-	// 	description: "tab",
-	// },
-	// {
-	// 	input:       "m*.kjns",
-	// 	expected:    "",
-	// 	description: "symbols",
-	// },
-	// {
-	// 	input:       "  j",
-	// 	expected:    "",
-	// 	description: "begins with spaces",
-	// },
-	// {
-	// 	input:       "mkjns  ",
-	// 	expected:    "",
-	// 	description: "ends with spaces",
-	// },
-	// {
-	// 	input:       "bhb hv g",
-	// 	expected:    "bhb hv g",
-	// 	description: "ok",
-	// },
-	// {
-	// 	input:       "bhb hv g",
-	// 	expected:    "",
-	// 	description: "letters",
-	// },
-	// {
-	// 	input:       "987987987987987987",
-	// 	expected:    "",
-	// 	description: "too short",
-	// },
-	// {
-	// 	input:       "98765432198765432194",
-	// 	expected:    "",
-	// 	description: "too long",
-	// },
-	// {
-	// 	input:       "1546879451598456357",
-	// 	expected:    "1546879451598456357",
-	// 	description: "ok",
-	// },
+	{
+		input: `{
+			"gameno": "9156849584651978018",
+			"aW5mb3Jt": "iuiuhiuhiuhiuiuiuhiu"
+		 }`,
+		exp1:        "9156849584651978018",
+		exp2:        "",
+		description: "aW5mb3Jt too long",
+	},
+	{
+		input: `{
+			"gameno": "9156849584651978018",
+			"aW5mb3Jt": "iuiu5uhiu"
+		 }`,
+		exp1:        "9156849584651978018",
+		exp2:        "",
+		description: "aW5mb3Jt has number",
+	},
+	{
+		input: `{
+			"gameno": "9156849584651978018",
+			"aW5mb3Jt": "iuiu\nuhiu"
+		 }`,
+		exp1:        "9156849584651978018",
+		exp2:        "",
+		description: "aW5mb3Jt has newline",
+	},
+	{
+		input: `{
+			"gameno": "9156849584651978018",
+			"aW5mb3Jt": "iuiu\tuhiu"
+		 }`,
+		exp1:        "9156849584651978018",
+		exp2:        "",
+		description: "aW5mb3Jt has tab",
+	},
+	{
+		input: `{
+			"gameno": "9156849584651978018",
+			"aW5mb3Jt": "iuiu<uhiu"
+		 }`,
+		exp1:        "9156849584651978018",
+		exp2:        "",
+		description: "aW5mb3Jt has symbols",
+	},
+	{
+		input: `{
+			"gameno": "9156849584651978018",
+			"aW5mb3Jt": " iuiuuhiu"
+		 }`,
+		exp1:        "9156849584651978018",
+		exp2:        "",
+		description: "aW5mb3Jt begins with spaces",
+	},
+	{
+		input: `{
+			"gameno": "9156849584651978018",
+			"aW5mb3Jt": "iuiuuhiu "
+		 }`,
+		exp1:        "9156849584651978018",
+		exp2:        "",
+		description: "aW5mb3Jt ends with spaces",
+	},
+	{
+		input: `{
+			"gameno": "9156849584651978018",
+			"aW5mb3Jt": "iuiuuhiu"
+		 }`,
+		exp1:        "9156849584651978018",
+		exp2:        "iuiuuhiu",
+		description: "ok",
+	},
 }
 
-// var errKey = errors.New("improper json input - duplicate or missing key")
-// var errLen = errors.New("improper json input - too long")
+var jsonTests = []struct {
+	input, exp1, exp2, description string
+}{
+	{
+		input: `{
+			"gameno": "9156849584651978018",
+			"aW5mb3Jt": "iuiuuhiu"
+		 }]]]]]`,
+		exp1:        "",
+		exp2:        "",
+		description: "malformed input",
+	},
+}
 
-// var bunchOfTests3 = []struct {
-// 	input, description string
-// 	expected           error
-// }{
-// 	{
-// 		input: `{
-// 		   "aW5mb3Jt": "ggg",
-// 		}`,
-// 		expected:    errKey,
-// 		description: "missing gameno key",
-// 	},
-// 	{
-// 		input: `{
-// 		   "gameno": "ggg",
-// 		}`,
-// 		expected:    errKey,
-// 		description: "missing aW5mb3Jt key",
-// 	},
-// 	{
-// 		input:       `{}`,
-// 		expected:    errKey,
-// 		description: "containing no keys",
-// 	},
-// 	{
-// 		input: `{
-// 		   "gameno": "ggg",
-// 		   "gameno": "gggvvv",
-// 		   "aW5mb3Jt": "hhh",
-// 		}`,
-// 		expected:    errKey,
-// 		description: "duplicate gameno key",
-// 	},
-// 	{
-// 		input: `{
-// 		   "gameno": "gggvvv",
-// 		   "aW5mb3Jt": "hhh",
-// 		   "aW5mb3Jt": "hhddh",
-// 		}`,
-// 		expected:    errKey,
-// 		description: "duplicate aW5mb3Jt key",
-// 	},
-// }
-
-// var nils = []struct {
-// 	input, description string
-// 	expected           error
-// }{
-// 	{
-// 		input: `{
-// 		   "gameno": "ggg",
-// 		   "aW5mb3Jt": "hhh",
-// 		}`,
-// 		expected:    nil,
-// 		description: "ok",
-// 	},
-// }
-
-// var nils2 = []struct {
-// 	input, description string
-// 	expected           error
-// }{
-// 	{
-// 		input: `{
-// 		   "gameno": "ggg",
-// 		   "aW5mb3Jt": "hhh",
-// 		}`,
-// 		expected:    nil,
-// 		description: "ok",
-// 	},
-// }
-
-// var lens = []struct {
-// 	input, description string
-// 	expected           error
-// }{
-// 	{
-// 		input: `{
-// 		   "gameno": "ggg",
-// 		   "aW5mb3Jt": "hhh",
-// 		   "aW5mb3Jt": "hhh",
-// 		   "aW5mb3Jt": "hhh",
-// 		   "aW5mb3Jt": "hhh",
-// 		}`,
-// 		expected:    errLen,
-// 		description: "too long",
-// 	},
-// }
+var errorTests = []struct {
+	input, exp1, exp2, msg, description string
+}{
+	{
+		input: `{
+			"gameno": "9156855555555555555555555555555555549584651018",
+			"aW5mhb3Jt": "iuiuu55555555555555555555555555555555555555555hiu",
+			"aW5mkb3Jt": "iuiuu55555555555555555555555555555555555555555hiu",
+			"aW5m3b3Jt": "iuiuu55555555555555555555555555555555555555555hiu"
+		 }`,
+		exp1:        "",
+		exp2:        "",
+		msg:         "improper json input - too long",
+		description: "input too long",
+	},
+	{
+		input: `{
+			"aW5mb3Jt": "iuiuuhiu"
+		 }`,
+		exp1:        "",
+		exp2:        "",
+		msg:         "improper json input - duplicate/missing key",
+		description: "missing gameno key",
+	},
+	{
+		input: `{
+			"gameno": "9156849584651978018"
+		 }`,
+		exp1:        "",
+		exp2:        "",
+		msg:         "improper json input - duplicate/missing key",
+		description: "missing aW5mb3Jt key",
+	},
+	{
+		input:       `{ }`,
+		exp1:        "",
+		exp2:        "",
+		msg:         "improper json input - duplicate/missing key",
+		description: "containing no keys",
+	},
+	{
+		input: `{ 
+			"gameno": "9156849584651018",
+			"gameno": "9156849584651018",
+		"aW5mb3Jt": "iuiuuhiu"}`,
+		exp1:        "",
+		exp2:        "",
+		msg:         "improper json input - duplicate/missing key",
+		description: "duplicate gameno key",
+	},
+	{
+		input: `{ 
+			"gameno": "9156849584651018",
+		"aW5mb3Jt": "iuiuuhiu",
+		"aW5mb3Jt": "iuiuuhiu"
+		}`,
+		exp1:        "",
+		exp2:        "",
+		msg:         "improper json input - duplicate/missing key",
+		description: "duplicate aW5mb3Jt key",
+	},
+	{
+		input: `{
+			"gameno": "9156849584651018",
+			"aW5mb3Jt": "iuiuuhiu"
+		 }`,
+		exp1:        "",
+		exp2:        "",
+		msg:         "improper json input - bad gameno",
+		description: "gameno too short",
+	},
+	{
+		input: `{
+			"gameno": "91568495846519p8018",
+			"aW5mb3Jt": "iuiuuhiu"
+			}`,
+		exp1:        "",
+		exp2:        "",
+		msg:         "improper json input - bad gameno",
+		description: "gameno has letters",
+	},
+	{
+		input: `{
+			"gameno": "91568495846519>8018",
+			"aW5mb3Jt": "iuiuuhiu"
+			}`,
+		exp1:        "",
+		exp2:        "",
+		msg:         "improper json input - bad gameno",
+		description: "gameno has symbol",
+	},
+	{
+		input: `{
+			"gameno": "91568495846519 8018",
+			"aW5mb3Jt": "iuiuuhiu"
+			}`,
+		exp1:        "",
+		exp2:        "",
+		msg:         "improper json input - bad gameno",
+		description: "gameno has space",
+	},
+	{
+		input: `{
+			"gameno": "915684958465199878018",
+			"aW5mb3Jt": "iuiuuhiu"
+		 }`,
+		exp1:        "",
+		exp2:        "",
+		msg:         "improper json input - bad gameno",
+		description: "gameno too long",
+	},
+}
