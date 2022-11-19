@@ -146,7 +146,7 @@ let make = (~playerGame, ~games, ~send, ~close, ~count, ~setLeaderData) => {
   let onClick = _ => {
     let pl = {
       action: "lobby",
-      gameno: "new",
+      gameno: "newgame",
       aW5mb3Jt: "join",
     }
 
@@ -159,7 +159,7 @@ let make = (~playerGame, ~games, ~send, ~close, ~count, ~setLeaderData) => {
     let pl = {
       action: "lobby",
       gameno: switch playerGame == "" {
-      | true => "dc"
+      | true => "discon"
       | false => playerGame
       },
       aW5mb3Jt: "disconnect",

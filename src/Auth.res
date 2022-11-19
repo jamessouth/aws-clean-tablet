@@ -132,7 +132,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
     switch Js.Json.stringifyAny({
       Lobby.action: "lobby",
       gameno: switch playerGame == "" {
-      | true => "dc"
+      | true => "discon"
       | false => playerGame
       },
       aW5mb3Jt: "disconnect",

@@ -33,15 +33,7 @@ type listPlayer struct {
 	Ready  bool   `dynamodbav:"ready"`
 }
 
-const (
-	maxPlayersPerGame string = "8"
-	gameNoLength      int    = 19
-)
-
-var (
-	answerRE = regexp.MustCompile(`(?i)^[a-z]{1}[a-z ]{0,10}[a-z]{1}$`)
-	gamenoRE = regexp.MustCompile(`^\d{19}$`)
-)
+const maxPlayersPerGame string = "8"
 
 func getReturnValue(status int) events.APIGatewayProxyResponse {
 	return events.APIGatewayProxyResponse{
@@ -53,44 +45,56 @@ func getReturnValue(status int) events.APIGatewayProxyResponse {
 	}
 }
 
-func checkLength(s string) error {
-	if len(s) > 200 {
-		return errors.New("improper json input - too long")
+func checkInput(s string) (string, string, error) {
+	var (
+		maxLength                      = 200
+		gamenoRE                       = regexp.MustCompile(`^\d{19}$`)
+		aW5mb3JtRE                     = regexp.MustCompile(`(?i)^[a-z]{1}[a-z ]{0,10}[a-z]{1}$`)
+		body                           struct{ Gameno, AW5mb3Jt string }
+		checkedAW5mb3Jt, checkedGameno string
+	)
+
+	if len(s) > maxLength {
+		return "", "", errors.New("improper json input - too long")
 	}
 
-	return nil
-}
-
-func checkKeys(s string) error {
 	if strings.Count(s, "gameno") != 1 || strings.Count(s, "aW5mb3Jt") != 1 {
-		return errors.New("improper json input - duplicate or missing key")
+		return "", "", errors.New("improper json input - duplicate/missing key")
 	}
 
-	return nil
-}
-
-func checkInput(s string, re *regexp.Regexp) string {
-	if re.MatchString(s) {
-		return s
+	err := json.Unmarshal([]byte(s), &body)
+	if err != nil {
+		return "", "", err
 	}
 
-	return ""
+	if !gamenoRE.MatchString(body.Gameno) {
+		return "", "", errors.New("improper json input - bad gameno")
+	}
+
+	if aW5mb3JtRE.MatchString(body.AW5mb3Jt) {
+		checkedAW5mb3Jt = body.AW5mb3Jt
+	}
+
+	if body.Gameno == "newgame" {
+		checkedGameno = fmt.Sprintf("%d", time.Now().UnixNano())
+	} else if body.Gameno == "discon" {
+		checkedGameno = body.Gameno
+	} else {
+		checkedGameno = body.Gameno
+	}
+
+	return checkedGameno, checkedAW5mb3Jt, nil
 }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
 	bod := req.Body
 
-	err := checkLength(bod)
-	if err != nil {
-		callErr(err)
-	}
-
 	fmt.Println("lobby", bod, len(bod))
 
-	err = checkKeys(bod)
+	checkedGameno, checkedAW5mb3Jt, err := checkInput(bod)
 	if err != nil {
-		callErr(err)
+		return callErr(err)
 	}
 
 	reg := strings.Split(req.RequestContext.DomainName, ".")[2]
@@ -110,10 +114,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		ddbsvc              = dynamodb.NewFromConfig(cfg)
 		auth                = req.RequestContext.Authorizer.(map[string]interface{})
 		id, name, tableName = auth["principalId"].(string), auth["username"].(string), auth["tableName"].(string)
-		body                struct {
-			Gameno, Data string
-		}
-		gameno  string
+
 		connKey = map[string]types.AttributeValue{
 			"pk": &types.AttributeValueMemberS{Value: "CONNECT"},
 			"sk": &types.AttributeValueMemberS{Value: id},
@@ -140,34 +141,17 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		config.WithEndpointResolverWithOptions(customResolver),
 	)
 	if err != nil {
-		callErr(err)
+		return callErr(err)
 	}
 
 	var apigwsvc = apigatewaymanagementapi.NewFromConfig(apigwcfg)
-
-	err = json.Unmarshal([]byte(bod), &body)
-	if err != nil {
-		fmt.Println("unmarshal err")
-	}
-
-	if body.Gameno == "new" {
-		gameno = fmt.Sprintf("%d", time.Now().UnixNano())
-	} else if body.Gameno == "dc" {
-		gameno = body.Gameno
-	} else if _, err = strconv.ParseInt(body.Gameno, 10, 64); err != nil {
-		return getReturnValue(http.StatusBadRequest), err
-	} else if len(body.Gameno) != gameNoLength {
-		return getReturnValue(http.StatusBadRequest), errors.New("invalid game number")
-	} else {
-		gameno = body.Gameno
-	}
 
 	gameItemKey, err := attributevalue.MarshalMap(struct {
 		Pk string `dynamodbav:"pk"`
 		Sk string `dynamodbav:"sk"`
 	}{
 		Pk: "LISTGAME",
-		Sk: gameno,
+		Sk: checkedGameno,
 	})
 	if err != nil {
 		panic(fmt.Sprintf("failed to marshal gik Record, %v", err))
@@ -188,7 +172,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		ReturnValues:     types.ReturnValueAllNew,
 	}
 
-	if body.Data == "join" {
+	if checkedAW5mb3Jt == "join" {
 
 		player := listPlayer{
 			Name:   name,
@@ -218,7 +202,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 				"#E": "endtoken",
 			},
 			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":g": &types.AttributeValueMemberS{Value: gameno},
+				":g": &types.AttributeValueMemberS{Value: checkedGameno},
 				":e": &types.AttributeValueMemberS{Value: ""},
 				":z": &types.AttributeValueMemberN{Value: "0"},
 				":f": &types.AttributeValueMemberBOOL{Value: false},
@@ -251,7 +235,9 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 				},
 			},
 		})
-		callErr(err)
+		if err != nil {
+			return callErr(err)
+		}
 
 		_, err = ddbsvc.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{
 			TransactItems: []types.TransactWriteItem{
@@ -276,9 +262,11 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 				},
 			},
 		})
-		callErr(err)
+		if err != nil {
+			return callErr(err)
+		}
 
-	} else if body.Data == "leave" {
+	} else if checkedAW5mb3Jt == "leave" {
 
 		_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 			Key:       connKey,
@@ -291,14 +279,21 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			},
 			UpdateExpression: aws.String("SET #G = :g"),
 		})
-		callErr(err)
+		if err != nil {
+			return callErr(err)
+		}
 
 		ui2, err := ddbsvc.UpdateItem(ctx, &removePlayerInput)
-		callErr(err)
+		if err != nil {
+			return callErr(err)
+		}
 
-		getReadyStartGame(ui2.Attributes, gameItemKey, tableName, ctx, ddbsvc, apigwsvc, req.RequestContext.RequestTimeEpoch, ebsvc)
+		err = getReadyStartGame(ui2.Attributes, gameItemKey, tableName, ctx, ddbsvc, apigwsvc, req.RequestContext.RequestTimeEpoch, ebsvc)
+		if err != nil {
+			return callErr(err)
+		}
 
-	} else if body.Data == "ready" {
+	} else if checkedAW5mb3Jt == "ready" {
 
 		ui2, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 			Key:       gameItemKey,
@@ -314,12 +309,16 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			UpdateExpression: aws.String("SET #P.#I.#R = :t"),
 			ReturnValues:     types.ReturnValueAllNew,
 		})
+		if err != nil {
+			return callErr(err)
+		}
 
-		callErr(err)
+		err = getReadyStartGame(ui2.Attributes, gameItemKey, tableName, ctx, ddbsvc, apigwsvc, req.RequestContext.RequestTimeEpoch, ebsvc)
+		if err != nil {
+			return callErr(err)
+		}
 
-		getReadyStartGame(ui2.Attributes, gameItemKey, tableName, ctx, ddbsvc, apigwsvc, req.RequestContext.RequestTimeEpoch, ebsvc)
-
-	} else if body.Data == "unready" {
+	} else if checkedAW5mb3Jt == "unready" {
 
 		_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 			Key:       gameItemKey,
@@ -336,16 +335,23 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			},
 			UpdateExpression: aws.String("SET #P.#I.#R = :f, #T = :t"),
 		})
-		callErr(err)
+		if err != nil {
+			return callErr(err)
+		}
 
-	} else if body.Data == "disconnect" {
-		if gameno != "dc" {
+	} else if checkedAW5mb3Jt == "disconnect" {
+		if checkedGameno != "discon" {
 
 			ui2, err := ddbsvc.UpdateItem(ctx, &removePlayerInput)
 
-			callErr(err)
+			if err != nil {
+				return callErr(err)
+			}
 
-			getReadyStartGame(ui2.Attributes, gameItemKey, tableName, ctx, ddbsvc, apigwsvc, req.RequestContext.RequestTimeEpoch, ebsvc)
+			err = getReadyStartGame(ui2.Attributes, gameItemKey, tableName, ctx, ddbsvc, apigwsvc, req.RequestContext.RequestTimeEpoch, ebsvc)
+			if err != nil {
+				return callErr(err)
+			}
 
 		}
 
@@ -353,7 +359,9 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			Key:       connKey,
 			TableName: aws.String(tableName),
 		})
-		callErr(err)
+		if err != nil {
+			return callErr(err)
+		}
 
 	} else {
 		fmt.Println("other lobby")
@@ -366,35 +374,36 @@ func main() {
 	lambda.Start(handler)
 }
 
-func getTimer(gik map[string]types.AttributeValue, tn string, ctx context.Context, ddbsvc *dynamodb.Client, reqTime int64) bool {
+func getTimer(gik map[string]types.AttributeValue, tn string, ctx context.Context, ddbsvc *dynamodb.Client, reqTime int64) (bool, error) {
 	gi, err := ddbsvc.GetItem(ctx, &dynamodb.GetItemInput{
 		Key:                  gik,
 		TableName:            aws.String(tn),
 		ProjectionExpression: aws.String("timerCxld, timerID"),
 	})
 	if err != nil {
-		callErr(err)
+		return false, err
 	}
 
 	fmt.Printf("%s: %+v\n", "gi", gi)
+
 	if len(gi.Item) == 0 {
-		return false
+		return false, nil
 	}
 
 	var timerData struct {
 		TimerID   int64
 		TimerCxld bool
 	}
+
 	err = attributevalue.UnmarshalMap(gi.Item, &timerData)
 	if err != nil {
-		callErr(err)
+		return false, err
 	}
 
-	return reqTime == timerData.TimerID && !timerData.TimerCxld
-
+	return reqTime == timerData.TimerID && !timerData.TimerCxld, nil
 }
 
-func getReadyStartGame(rv, gik map[string]types.AttributeValue, tn string, ctx context.Context, ddbsvc *dynamodb.Client, apigwsvc *apigatewaymanagementapi.Client, reqTime int64, ebsvc *eventbridge.Client) {
+func getReadyStartGame(rv, gik map[string]types.AttributeValue, tn string, ctx context.Context, ddbsvc *dynamodb.Client, apigwsvc *apigatewaymanagementapi.Client, reqTime int64, ebsvc *eventbridge.Client) error {
 	var (
 		minPlayers = 3
 		gm         struct {
@@ -404,11 +413,11 @@ func getReadyStartGame(rv, gik map[string]types.AttributeValue, tn string, ctx c
 	)
 	err := attributevalue.UnmarshalMap(rv, &gm)
 	if err != nil {
-		fmt.Println("unmarshal err", err)
+		return err
 	}
 
 	if len(gm.Players) < minPlayers {
-		return
+		return nil
 	}
 
 	readyCount := 0
@@ -430,7 +439,9 @@ func getReadyStartGame(rv, gik map[string]types.AttributeValue, tn string, ctx c
 					},
 					UpdateExpression: aws.String("SET #T = :f, #I = :r"),
 				})
-				callErr(err)
+				if err != nil {
+					return err
+				}
 
 				fmt.Println("cxld kick off of ticker", reqTime)
 				var count byte = 54 // 6
@@ -444,7 +455,11 @@ func getReadyStartGame(rv, gik map[string]types.AttributeValue, tn string, ctx c
 				for {
 					select {
 					case <-done:
-						if getTimer(gik, tn, ctx, ddbsvc, reqTime) {
+						timeToGo, err := getTimer(gik, tn, ctx, ddbsvc, reqTime)
+						if err != nil {
+							return err
+						}
+						if timeToGo {
 							//kick off game
 							fmt.Println("starting game...", reqTime)
 
@@ -453,7 +468,9 @@ func getReadyStartGame(rv, gik map[string]types.AttributeValue, tn string, ctx c
 
 								_, err := apigwsvc.PostToConnection(ctx, &conn)
 
-								callErr(err)
+								if err != nil {
+									return err
+								}
 
 							}
 
@@ -466,22 +483,28 @@ func getReadyStartGame(rv, gik map[string]types.AttributeValue, tn string, ctx c
 									},
 								},
 							})
-							callErr(err)
+							if err != nil {
+								return err
+							}
 
 							putResults := *po
 
 							ev := putResults.Entries[0]
 
 							if putResults.FailedEntryCount > 0 {
-								fmt.Printf("put event failed with msg %s, error code: %s.", *ev.ErrorMessage, *ev.ErrorCode)
-							} else {
-								fmt.Printf("put event ID %s succeeded!", *ev.EventId)
+								return fmt.Errorf("put event failed with msg %s, error code: %s", *ev.ErrorMessage, *ev.ErrorCode)
 							}
 
 						}
-						return
+						return nil
 					case <-ticker.C:
-						if getTimer(gik, tn, ctx, ddbsvc, reqTime) {
+
+						timeToGo, err := getTimer(gik, tn, ctx, ddbsvc, reqTime)
+						if err != nil {
+							return err
+						}
+						if timeToGo {
+
 							count -= 1
 
 							for _, p := range gm.Players {
@@ -490,7 +513,7 @@ func getReadyStartGame(rv, gik map[string]types.AttributeValue, tn string, ctx c
 
 								_, err := apigwsvc.PostToConnection(ctx, &conn)
 								if err != nil {
-									callErr(err)
+									return err
 								}
 
 							}
@@ -502,7 +525,7 @@ func getReadyStartGame(rv, gik map[string]types.AttributeValue, tn string, ctx c
 
 								_, err := apigwsvc.PostToConnection(ctx, &conn)
 								if err != nil {
-									callErr(err)
+									return err
 								}
 
 							}
@@ -513,31 +536,38 @@ func getReadyStartGame(rv, gik map[string]types.AttributeValue, tn string, ctx c
 
 			}
 		} else {
-			return
+			return nil
 		}
 	}
+
+	return nil
 }
 
-func callErr(err error) {
-	if err != nil {
-		var transCxldErr *types.TransactionCanceledException
-		if errors.As(err, &transCxldErr) {
-			fmt.Printf("put item error777, %v\n",
-				transCxldErr.CancellationReasons)
-		}
-
-		var intServErr *types.InternalServerError
-		if errors.As(err, &intServErr) {
-			fmt.Printf("get item error, %v",
-				intServErr.ErrorMessage())
-		}
-
-		// To get any API error
-		var apiErr smithy.APIError
-		if errors.As(err, &apiErr) {
-			fmt.Printf("db error, Code: %v, Message: %v",
-				apiErr.ErrorCode(), apiErr.ErrorMessage())
-		}
-
+func callErr(err error) (events.APIGatewayProxyResponse, error) {
+	var transCxldErr *types.TransactionCanceledException
+	if errors.As(err, &transCxldErr) {
+		fmt.Printf("put item error777, %v\n",
+			transCxldErr.CancellationReasons)
 	}
+
+	var intServErr *types.InternalServerError
+	if errors.As(err, &intServErr) {
+		fmt.Printf("get item error, %v",
+			intServErr.ErrorMessage())
+	}
+
+	// To get any API error
+	var apiErr smithy.APIError
+	if errors.As(err, &apiErr) {
+		fmt.Printf("db error, Code: %v, Message: %v",
+			apiErr.ErrorCode(), apiErr.ErrorMessage())
+	}
+
+	return events.APIGatewayProxyResponse{
+		StatusCode:        http.StatusBadRequest,
+		Headers:           map[string]string{"Content-Type": "application/json"},
+		MultiValueHeaders: map[string][]string{},
+		Body:              "",
+		IsBase64Encoded:   false,
+	}, err
 }

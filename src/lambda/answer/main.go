@@ -157,7 +157,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		},
 		UpdateExpression: aws.String("SET #P.#I.#A = :a ADD #C :o"),
 	})
-
 	if err != nil {
 		return callErr(err)
 	}
