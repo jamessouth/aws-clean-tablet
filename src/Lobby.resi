@@ -1,7 +1,7 @@
-type apigwPayload = {
+type lobbyPayload = {
   action: string,
   gameno: string,
-  aW5mb3Jt: string,
+  command: string,
 }
 
 @react.component

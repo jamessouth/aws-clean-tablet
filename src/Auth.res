@@ -135,7 +135,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
       | true => "discon"
       | false => playerGame
       },
-      aW5mb3Jt: "disconnect",
+      command: fromLobbyCommandToString(Disconnect),
     }) {
     | None => ()
     | Some(s) => ws->sendString(s)

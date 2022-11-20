@@ -1,7 +1,26 @@
-type apigwPayload = {
+type lobbyCommand =
+  | Disconnect
+  | Join
+  | Leave
+  | Ready
+  | Unready
+
+
+
+let fromLobbyCommandToString = lc =>
+  switch lc {
+  | Disconnect => "disconnect"
+  | Join => "join"
+  | Leave => "leave"
+  | Ready => "ready"
+  | Unready => "unready"
+  }
+
+
+type lobbyPayload = {
   action: string,
   gameno: string,
-  aW5mb3Jt: string,
+  command: string,
 }
 
 module Game = {
@@ -20,9 +39,9 @@ module Game = {
       let pl = {
         action: "lobby",
         gameno: no,
-        aW5mb3Jt: switch inThisGame {
-        | true => "leave"
-        | false => "join"
+        command: switch inThisGame {
+        | true => fromLobbyCommandToString(Leave)
+        | false => fromLobbyCommandToString(Join)
         },
       }
 
@@ -37,9 +56,9 @@ module Game = {
       let pl = {
         action: "lobby",
         gameno: no,
-        aW5mb3Jt: switch ready {
-        | true => "ready"
-        | false => "unready"
+        command: switch ready {
+        | true => fromLobbyCommandToString(Ready)
+        | false => fromLobbyCommandToString(Unready)
         },
       }
 
@@ -147,7 +166,7 @@ let make = (~playerGame, ~games, ~send, ~close, ~count, ~setLeaderData) => {
     let pl = {
       action: "lobby",
       gameno: "newgame",
-      aW5mb3Jt: "join",
+      command: fromLobbyCommandToString(Join),
     }
 
     send(. Js.Json.stringifyAny(pl))
@@ -162,7 +181,7 @@ let make = (~playerGame, ~games, ~send, ~close, ~count, ~setLeaderData) => {
       | true => "discon"
       | false => playerGame
       },
-      aW5mb3Jt: "disconnect",
+      command: fromLobbyCommandToString(Disconnect),
     }
 
     send(. Js.Json.stringifyAny(pl))

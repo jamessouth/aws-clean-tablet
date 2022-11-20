@@ -1,3 +1,9 @@
+type answerPayload = {
+  action: string,
+  gameno: string,
+  aW5mb3Jt: string,
+}
+
 @react.component
 let make: (
   ~players: array<Reducer.livePlayer>,

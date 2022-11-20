@@ -27,13 +27,13 @@ import (
 
 // export CGO_ENABLED=0 | go build -o main main.go | zip main.zip main | aws lambda update-function-code --function-name ct-lobby --zip-file fileb://main.zip
 
+const maxPlayersPerGame string = "8"
+
 type listPlayer struct {
 	Name   string `dynamodbav:"name"`
 	ConnID string `dynamodbav:"connid"`
 	Ready  bool   `dynamodbav:"ready"`
 }
-
-const maxPlayersPerGame string = "8"
 
 func getReturnValue(status int) events.APIGatewayProxyResponse {
 	return events.APIGatewayProxyResponse{
@@ -47,11 +47,10 @@ func getReturnValue(status int) events.APIGatewayProxyResponse {
 
 func checkInput(s string) (string, string, error) {
 	var (
-		maxLength                      = 200
-		gamenoRE                       = regexp.MustCompile(`^\d{19}$`)
-		aW5mb3JtRE                     = regexp.MustCompile(`(?i)^[a-z]{1}[a-z ]{0,10}[a-z]{1}$`)
-		body                           struct{ Gameno, AW5mb3Jt string }
-		checkedAW5mb3Jt, checkedGameno string
+		maxLength  = 99
+		gamenoRE   = regexp.MustCompile(`^\d{19}$|^discon$|^newgame$`)
+		aW5mb3JtRE = regexp.MustCompile(`^disconnect$|^join$|^leave$|^ready$|^unready$`)
+		body       struct{ Gameno, AW5mb3Jt string }
 	)
 
 	if len(s) > maxLength {
@@ -71,19 +70,11 @@ func checkInput(s string) (string, string, error) {
 		return "", "", errors.New("improper json input - bad gameno")
 	}
 
-	if aW5mb3JtRE.MatchString(body.AW5mb3Jt) {
-		checkedAW5mb3Jt = body.AW5mb3Jt
+	if !aW5mb3JtRE.MatchString(body.AW5mb3Jt) {
+		return "", "", errors.New("improper json input - bad aW5mb3Jt")
 	}
 
-	if body.Gameno == "newgame" {
-		checkedGameno = fmt.Sprintf("%d", time.Now().UnixNano())
-	} else if body.Gameno == "discon" {
-		checkedGameno = body.Gameno
-	} else {
-		checkedGameno = body.Gameno
-	}
-
-	return checkedGameno, checkedAW5mb3Jt, nil
+	return body.Gameno, body.AW5mb3Jt, nil
 }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -103,19 +94,17 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		config.WithRegion(reg),
 	)
 	if err != nil {
-		fmt.Println("cfg err")
+		return callErr(err)
 	}
 
 	var (
-		apiid = os.Getenv("CT_APIID")
-		stage = os.Getenv("CT_STAGE")
-		// tableName = os.Getenv("tableName")
+		apiid               = os.Getenv("CT_APIID")
+		stage               = os.Getenv("CT_STAGE")
 		endpoint            = "https://" + apiid + ".execute-api." + reg + ".amazonaws.com/" + stage
 		ddbsvc              = dynamodb.NewFromConfig(cfg)
 		auth                = req.RequestContext.Authorizer.(map[string]interface{})
 		id, name, tableName = auth["principalId"].(string), auth["username"].(string), auth["tableName"].(string)
-
-		connKey = map[string]types.AttributeValue{
+		connKey             = map[string]types.AttributeValue{
 			"pk": &types.AttributeValueMemberS{Value: "CONNECT"},
 			"sk": &types.AttributeValueMemberS{Value: id},
 		}
@@ -132,12 +121,13 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 			return ep, nil
 		}
+
 		return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested")
 	})
 
 	apigwcfg, err := config.LoadDefaultConfig(ctx,
-		config.WithRegion(reg),
 		// config.WithLogger(logger),
+		config.WithRegion(reg),
 		config.WithEndpointResolverWithOptions(customResolver),
 	)
 	if err != nil {
@@ -145,6 +135,10 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	var apigwsvc = apigatewaymanagementapi.NewFromConfig(apigwcfg)
+
+	if checkedGameno == "newgame" {
+		checkedGameno = fmt.Sprintf("%d", time.Now().UnixNano())
+	}
 
 	gameItemKey, err := attributevalue.MarshalMap(struct {
 		Pk string `dynamodbav:"pk"`
@@ -154,7 +148,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		Sk: checkedGameno,
 	})
 	if err != nil {
-		panic(fmt.Sprintf("failed to marshal gik Record, %v", err))
+		return callErr(err)
 	}
 
 	removePlayerInput := dynamodb.UpdateItemInput{
@@ -184,12 +178,12 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			id: player,
 		})
 		if err != nil {
-			panic(fmt.Sprintf("failed to marshal map Record 22, %v", err))
+			return callErr(err)
 		}
 
 		marshalledPlayer, err := attributevalue.Marshal(player)
 		if err != nil {
-			panic(fmt.Sprintf("failed to marshal indiv Record 22, %v", err))
+			return callErr(err)
 		}
 
 		updateConnInput := types.Update{

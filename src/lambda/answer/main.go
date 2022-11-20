@@ -106,13 +106,11 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	var (
-		// tableName = os.Getenv("tableName")
-		bucket    = os.Getenv("bucket")
-		words     = os.Getenv("words")
-		wordsETag = os.Getenv("wordsETag")
-		ddbsvc    = dynamodb.NewFromConfig(cfg)
-		s3svc     = s3.NewFromConfig(cfg)
-
+		bucket        = os.Getenv("bucket")
+		words         = os.Getenv("words")
+		wordsETag     = os.Getenv("wordsETag")
+		ddbsvc        = dynamodb.NewFromConfig(cfg)
+		s3svc         = s3.NewFromConfig(cfg)
 		ans           string
 		auth          = req.RequestContext.Authorizer.(map[string]interface{})
 		id, tableName = auth["principalId"].(string), auth["tableName"].(string)

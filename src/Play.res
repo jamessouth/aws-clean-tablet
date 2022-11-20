@@ -1,3 +1,9 @@
+type answerPayload = {
+  action: string,
+  gameno: string,
+  aW5mb3Jt: string,
+}
+
 let answer_max_length = 12
 
 @react.component
@@ -35,7 +41,7 @@ let make = (
   Js.log3("play", players, hasRendered)
 
   let sendAnswer = _ => {
-    let pl: Lobby.apigwPayload = {
+    let pl = {
       action: "answer",
       gameno: sk,
       aW5mb3Jt: answer
