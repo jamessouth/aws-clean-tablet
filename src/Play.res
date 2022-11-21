@@ -42,8 +42,8 @@ let make = (
 
   let sendAnswer = _ => {
     let pl = {
-      action: "answer",
-      gameno: sk,
+      action: Lobby.apigwActionToString(Answer),
+      gameno: Lobby.lobbyGamenoToString(Gameno({no: sk})),
       aW5mb3Jt: answer
       ->Js.String2.slice(~from=0, ~to_=answer_max_length)
       ->Js.String2.replaceByRe(%re("/\d/g"), "")
@@ -73,13 +73,14 @@ let make = (
   let onEndClick = (. sendPayload) => {
     switch sendPayload {
     | true => {
-        let pl: Lobby.apigwPayload = {
-          action: "end",
-          gameno: sk,
-          aW5mb3Jt: endtoken,
-        }
+      open Lobby
+        let pl = payloadToObj({
+          act: End,
+          gn: Gameno({no: sk}),
+          cmd: Endtoken({et: endtoken}),
+        })
 
-        send(. Js.Json.stringifyAny(pl))
+        send(. pl)
       }
 
     | false => ()

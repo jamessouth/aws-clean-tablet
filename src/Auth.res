@@ -122,21 +122,29 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
   open Web
   let logAndDisconnect = (~msg: string, ~data: string, ~code: int) => {
     switch Js.Json.stringifyAny({
-      Lobby.action: "logging",
+      Play.action: "logging",
       gameno: msg,
       aW5mb3Jt: data,
     }) {
     | None => ()
     | Some(s) => ws->sendString(s)
     }
-    switch Js.Json.stringifyAny({
-      Lobby.action: "lobby",
-      gameno: switch playerGame == "" {
-      | true => "discon"
-      | false => playerGame
-      },
-      command: fromLobbyCommandToString(Disconnect),
-    }) {
+
+    let pl = switch playerGame == "" {
+    | true => Lobby.payloadToObj({
+      act: Lobby,
+      gn: Discon,
+      cmd: Disconnect,
+    })
+    | false => Lobby.payloadToObj({
+      act: Lobby,
+      gn: Gameno({no: playerGame}),
+      cmd: Disconnect,
+    })
+    }
+
+
+    switch pl {
     | None => ()
     | Some(s) => ws->sendString(s)
     }

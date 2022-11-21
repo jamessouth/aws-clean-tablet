@@ -101,6 +101,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 			return ep, nil
 		}
+
 		return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested")
 	})
 

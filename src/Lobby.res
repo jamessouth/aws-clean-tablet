@@ -1,27 +1,70 @@
+type apigwAction = 
+| Answer
+| End
+ | Leaders
+  | Lobby
+
+type lobbyGameno =
+  | Gameno({no: string})
+  | Discon
+  | Newgame
+  | None
+
 type lobbyCommand =
   | Disconnect
+  | Endtoken({et: string})
   | Join
   | Leave
+  | None
   | Ready
   | Unready
 
-
-
-let fromLobbyCommandToString = lc =>
-  switch lc {
-  | Disconnect => "disconnect"
-  | Join => "join"
-  | Leave => "leave"
-  | Ready => "ready"
-  | Unready => "unready"
-  }
-
-
 type lobbyPayload = {
+  act: apigwAction,
+  gn: lobbyGameno,
+  cmd: lobbyCommand,
+}
+
+type payloadOutput = {
   action: string,
   gameno: string,
   command: string,
 }
+
+
+
+let apigwActionToString = a =>
+  switch a {
+  | Answer => "answer"
+  | End => "end"
+  | Leaders => "leaders"
+  | Lobby => "lobby"
+  }
+
+let lobbyGamenoToString = gn =>
+  switch gn {
+  | Gameno({no}) => no
+  | Discon => "discon"
+  | Newgame => "newgame"
+  | None => ""
+  }
+
+let lobbyCommandToString = lc =>
+  switch lc {
+  | Disconnect => "disconnect"
+  | Endtoken({et}) => et
+  | Join => "join"
+  | Leave => "leave"
+  | Ready => "ready"
+  | Unready => "unready"
+  | None => ""
+  }
+
+let payloadToObj = pl => Js.Json.stringifyAny({
+  action: apigwActionToString(pl.act),
+  gameno: lobbyGamenoToString(pl.gn),
+  command: lobbyCommandToString(pl.cmd),
+})
 
 module Game = {
   let btnStyle = " cursor-pointer text-base font-bold text-stone-100 font-anon w-1/2 bottom-0 h-8 absolute bg-stone-700 bg-opacity-70 filter disabled:(cursor-not-allowed contrast-25)"
@@ -36,16 +79,22 @@ module Game = {
     let {no, timerCxld, players}: Reducer.listGame = game
 
     let onClickJoin = _ => {
-      let pl = {
-        action: "lobby",
-        gameno: no,
-        command: switch inThisGame {
-        | true => fromLobbyCommandToString(Leave)
-        | false => fromLobbyCommandToString(Join)
-        },
+      let pl = switch inThisGame {
+      | true =>
+        payloadToObj({
+          act: Lobby,
+          gn: Gameno({no: no}),
+          cmd: Leave,
+        })
+      | false =>
+        payloadToObj({
+          act: Lobby,
+          gn: Gameno({no: no}),
+          cmd: Join,
+        })
       }
 
-      send(. Js.Json.stringifyAny(pl))
+      send(. pl)
       switch inThisGame {
       | true => setReady(._ => true)
       | false => ()
@@ -53,16 +102,22 @@ module Game = {
     }
 
     let onClickReady = _ => {
-      let pl = {
-        action: "lobby",
-        gameno: no,
-        command: switch ready {
-        | true => fromLobbyCommandToString(Ready)
-        | false => fromLobbyCommandToString(Unready)
-        },
+      let pl = switch ready {
+      | true =>
+        payloadToObj({
+          act: Lobby,
+          gn: Gameno({no: no}),
+          cmd: Ready,
+        })
+      | false =>
+        payloadToObj({
+          act: Lobby,
+          gn: Gameno({no: no}),
+          cmd: Unready,
+        })
       }
 
-      send(. Js.Json.stringifyAny(pl))
+      send(. pl)
       setReady(._ => !ready)
     }
 
@@ -163,40 +218,46 @@ module Game = {
 @react.component
 let make = (~playerGame, ~games, ~send, ~close, ~count, ~setLeaderData) => {
   let onClick = _ => {
-    let pl = {
-      action: "lobby",
-      gameno: "newgame",
-      command: fromLobbyCommandToString(Join),
-    }
+    let pl = payloadToObj({
+      act: Lobby,
+      gn: Newgame,
+      cmd: Join,
+    })
 
-    send(. Js.Json.stringifyAny(pl))
+    send(. pl)
   }
 
   let signOut = _ => {
     Js.log("sign out click")
 
-    let pl = {
-      action: "lobby",
-      gameno: switch playerGame == "" {
-      | true => "discon"
-      | false => playerGame
-      },
-      command: fromLobbyCommandToString(Disconnect),
+    let pl = switch playerGame == "" {
+    | true =>
+      payloadToObj({
+        act: Lobby,
+        gn: Discon,
+        cmd: Disconnect,
+      })
+    | false =>
+      payloadToObj({
+        act: Lobby,
+        gn: Gameno({no: playerGame}),
+        cmd: Disconnect,
+      })
     }
 
-    send(. Js.Json.stringifyAny(pl))
+    send(. pl)
     close(. 1000, "user sign-out")
   }
 
   let leaderboard = _ => {
     setLeaderData(._ => [])
 
-    let pl = {
-      action: "leaders",
-      gameno: "",
-      aW5mb3Jt: "",
-    }
-    send(. Js.Json.stringifyAny(pl))
+    let pl = payloadToObj({
+        act: Leaders,
+        gn: None,
+        cmd: None,
+      })
+    send(. pl)
     Route.push(Leaderboard)
   }
 
