@@ -1,9 +1,3 @@
-type answerPayload = {
-  action: string,
-  gameno: string,
-  aW5mb3Jt: string,
-}
-
 let answer_max_length = 12
 
 @react.component
@@ -41,17 +35,20 @@ let make = (
   Js.log3("play", players, hasRendered)
 
   let sendAnswer = _ => {
-    let pl = {
-      action: Lobby.apigwActionToString(Answer),
-      gameno: Lobby.lobbyGamenoToString(Gameno({no: sk})),
-      aW5mb3Jt: answer
+    let ans =
+      answer
       ->Js.String2.slice(~from=0, ~to_=answer_max_length)
       ->Js.String2.replaceByRe(%re("/\d/g"), "")
       ->Js.String2.replaceByRe(%re("/[!-/:-@\[-`{-~]/g"), "")
-      ->Js.String2.trim(_),
-    }
+      ->Js.String2.trim(_)
 
-    send(. Js.Json.stringifyAny(pl))
+    send(.
+      Lobby.payloadToObj({
+        act: Answer,
+        gn: Gameno({no: sk}),
+        cmd: Custom({cv: ans}),
+      }),
+    )
     setAnswered(._ => true)
     setAnswer(._ => "")
   }
@@ -72,16 +69,14 @@ let make = (
 
   let onEndClick = (. sendPayload) => {
     switch sendPayload {
-    | true => {
-      open Lobby
-        let pl = payloadToObj({
+    | true =>
+      send(.
+        Lobby.payloadToObj({
           act: End,
           gn: Gameno({no: sk}),
-          cmd: Endtoken({et: endtoken}),
-        })
-
-        send(. pl)
-      }
+          cmd: Custom({cv: endtoken}),
+        }),
+      )
 
     | false => ()
     }

@@ -1,21 +1,23 @@
-type apigwAction = 
-| Answer
-| End
- | Leaders
+let players_min_threshold = 3
+let players_max_threshold = 7
+
+type apigwAction =
+  | Answer
+  | End
+  | Leaders
   | Lobby
+  | Logging
 
 type lobbyGameno =
   | Gameno({no: string})
   | Discon
   | Newgame
-  | None
 
 type lobbyCommand =
+  | Custom({cv: string})
   | Disconnect
-  | Endtoken({et: string})
   | Join
   | Leave
-  | None
   | Ready
   | Unready
 
@@ -27,11 +29,10 @@ type lobbyPayload = {
 
 type payloadOutput = {
   action: string,
-  gameno: string,
-  command: string,
+  gameno?: string,
+  aW5mb3Jt?: string,
+  command?: string,
 }
-
-
 
 let apigwActionToString = a =>
   switch a {
@@ -39,6 +40,7 @@ let apigwActionToString = a =>
   | End => "end"
   | Leaders => "leaders"
   | Lobby => "lobby"
+  | Logging => "logging"
   }
 
 let lobbyGamenoToString = gn =>
@@ -46,25 +48,38 @@ let lobbyGamenoToString = gn =>
   | Gameno({no}) => no
   | Discon => "discon"
   | Newgame => "newgame"
-  | None => ""
   }
 
 let lobbyCommandToString = lc =>
   switch lc {
+  | Custom({cv}) => cv
   | Disconnect => "disconnect"
-  | Endtoken({et}) => et
   | Join => "join"
   | Leave => "leave"
   | Ready => "ready"
   | Unready => "unready"
-  | None => ""
   }
 
-let payloadToObj = pl => Js.Json.stringifyAny({
-  action: apigwActionToString(pl.act),
-  gameno: lobbyGamenoToString(pl.gn),
-  command: lobbyCommandToString(pl.cmd),
-})
+let payloadToObj = pl => {
+  switch pl.act {
+  | Answer =>
+    Js.Json.stringifyAny({
+      action: apigwActionToString(pl.act),
+      gameno: lobbyGamenoToString(pl.gn),
+      aW5mb3Jt: lobbyCommandToString(pl.cmd),
+    })
+  | Leaders =>
+    Js.Json.stringifyAny({
+      action: apigwActionToString(pl.act),
+    })
+  | End | Lobby | Logging =>
+    Js.Json.stringifyAny({
+      action: apigwActionToString(pl.act),
+      gameno: lobbyGamenoToString(pl.gn),
+      command: lobbyCommandToString(pl.cmd),
+    })
+  }
+}
 
 module Game = {
   let btnStyle = " cursor-pointer text-base font-bold text-stone-100 font-anon w-1/2 bottom-0 h-8 absolute bg-stone-700 bg-opacity-70 filter disabled:(cursor-not-allowed contrast-25)"
@@ -79,45 +94,48 @@ module Game = {
     let {no, timerCxld, players}: Reducer.listGame = game
 
     let onClickJoin = _ => {
-      let pl = switch inThisGame {
-      | true =>
-        payloadToObj({
-          act: Lobby,
-          gn: Gameno({no: no}),
-          cmd: Leave,
-        })
-      | false =>
-        payloadToObj({
-          act: Lobby,
-          gn: Gameno({no: no}),
-          cmd: Join,
-        })
-      }
-
-      send(. pl)
       switch inThisGame {
-      | true => setReady(._ => true)
-      | false => ()
+      | true =>
+        send(.
+          payloadToObj({
+            act: Lobby,
+            gn: Gameno({no: no}),
+            cmd: Leave,
+          }),
+        )
+        setReady(._ => true)
+
+      | false =>
+        send(.
+          payloadToObj({
+            act: Lobby,
+            gn: Gameno({no: no}),
+            cmd: Join,
+          }),
+        )
+        ()
       }
     }
 
     let onClickReady = _ => {
-      let pl = switch ready {
+      switch ready {
       | true =>
-        payloadToObj({
-          act: Lobby,
-          gn: Gameno({no: no}),
-          cmd: Ready,
-        })
+        send(.
+          payloadToObj({
+            act: Lobby,
+            gn: Gameno({no: no}),
+            cmd: Ready,
+          }),
+        )
       | false =>
-        payloadToObj({
-          act: Lobby,
-          gn: Gameno({no: no}),
-          cmd: Unready,
-        })
+        send(.
+          payloadToObj({
+            act: Lobby,
+            gn: Gameno({no: no}),
+            cmd: Unready,
+          }),
+        )
       }
-
-      send(. pl)
       setReady(._ => !ready)
     }
 
@@ -127,11 +145,13 @@ module Game = {
       | (true, _) => {
           //in this game
           setDisabledJoin(._ => false)
-          if size < 3 {
-            setDisabledReady(._ => true)
-          } else {
-            setDisabledReady(._ => false)
-          }
+          setDisabledReady(._ =>
+            if size < players_min_threshold {
+              true
+            } else {
+              false
+            }
+          )
         }
 
       | (false, true) => {
@@ -143,11 +163,13 @@ module Game = {
       | (_, false) => {
           //not in a game
           setDisabledReady(._ => true)
-          if size > 7 {
-            setDisabledJoin(._ => true)
-          } else {
-            setDisabledJoin(._ => false)
-          }
+          setDisabledJoin(._ =>
+            if size > players_max_threshold {
+              true
+            } else {
+              false
+            }
+          )
         }
       }
       None
@@ -217,47 +239,49 @@ module Game = {
 
 @react.component
 let make = (~playerGame, ~games, ~send, ~close, ~count, ~setLeaderData) => {
-  let onClick = _ => {
-    let pl = payloadToObj({
-      act: Lobby,
-      gn: Newgame,
-      cmd: Join,
-    })
-
-    send(. pl)
-  }
+  let onClick = _ =>
+    send(.
+      payloadToObj({
+        act: Lobby,
+        gn: Newgame,
+        cmd: Join,
+      }),
+    )
 
   let signOut = _ => {
     Js.log("sign out click")
 
-    let pl = switch playerGame == "" {
+    switch playerGame == "" {
     | true =>
-      payloadToObj({
-        act: Lobby,
-        gn: Discon,
-        cmd: Disconnect,
-      })
+      send(.
+        payloadToObj({
+          act: Lobby,
+          gn: Discon,
+          cmd: Disconnect,
+        }),
+      )
     | false =>
-      payloadToObj({
-        act: Lobby,
-        gn: Gameno({no: playerGame}),
-        cmd: Disconnect,
-      })
+      send(.
+        payloadToObj({
+          act: Lobby,
+          gn: Gameno({no: playerGame}),
+          cmd: Disconnect,
+        }),
+      )
     }
 
-    send(. pl)
     close(. 1000, "user sign-out")
   }
 
   let leaderboard = _ => {
     setLeaderData(._ => [])
-
-    let pl = payloadToObj({
+    send(.
+      payloadToObj({
         act: Leaders,
-        gn: None,
-        cmd: None,
-      })
-    send(. pl)
+        gn: Discon,
+        cmd: Join,
+      }),
+    )
     Route.push(Leaderboard)
   }
 

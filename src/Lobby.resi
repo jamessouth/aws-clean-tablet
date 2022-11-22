@@ -1,21 +1,20 @@
-type apigwAction = 
-| Answer
-| End
- | Leaders
+type apigwAction =
+  | Answer
+  | End
+  | Leaders
   | Lobby
+  | Logging
 
 type lobbyGameno =
   | Gameno({no: string})
   | Discon
   | Newgame
-  | None
 
 type lobbyCommand =
+  | Custom({cv: string})
   | Disconnect
-  | Endtoken({et: string})
   | Join
   | Leave
-  | None
   | Ready
   | Unready
 
@@ -25,9 +24,13 @@ type lobbyPayload = {
   cmd: lobbyCommand,
 }
 
+type payloadOutput = {
+  action: string,
+  gameno?: string,
+  aW5mb3Jt?: string,
+  command?: string,
+}
 
-let apigwActionToString: apigwAction => string
-let lobbyGamenoToString: lobbyGameno => string
 let payloadToObj: lobbyPayload => option<string>
 
 @react.component
