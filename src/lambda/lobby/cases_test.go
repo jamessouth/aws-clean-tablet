@@ -7,7 +7,25 @@ var noErrorTests = []struct {
 	{
 		input: `{
 			"gameno": "9156849584651978018",
-			"aW5mb3Jt": "join"
+			"command": "disconnect"
+		 }`,
+		exp1:        "9156849584651978018",
+		exp2:        "disconnect",
+		description: "ok",
+	},
+	{
+		input: `{
+			"gameno": "discon",
+			"command": "disconnect"
+		 }`,
+		exp1:        "discon",
+		exp2:        "disconnect",
+		description: "ok",
+	},
+	{
+		input: `{
+			"gameno": "9156849584651978018",
+			"command": "join"
 		 }`,
 		exp1:        "9156849584651978018",
 		exp2:        "join",
@@ -15,11 +33,38 @@ var noErrorTests = []struct {
 	},
 	{
 		input: `{
+			"gameno": "newgame",
+			"command": "join"
+		 }`,
+		exp1:        "newgame",
+		exp2:        "join",
+		description: "ok",
+	},
+	{
+		input: `{
 			"gameno": "9156849584651978018",
-			"aW5mb3Jt": "join"
+			"command": "leave"
 		 }`,
 		exp1:        "9156849584651978018",
-		exp2:        "join",
+		exp2:        "leave",
+		description: "ok",
+	},
+	{
+		input: `{
+			"gameno": "9156849584651978018",
+			"command": "ready"
+		 }`,
+		exp1:        "9156849584651978018",
+		exp2:        "ready",
+		description: "ok",
+	},
+	{
+		input: `{
+			"gameno": "9156849584651978018",
+			"command": "unready"
+		 }`,
+		exp1:        "9156849584651978018",
+		exp2:        "unready",
 		description: "ok",
 	},
 }
@@ -30,7 +75,7 @@ var jsonTests = []struct {
 	{
 		input: `{
 			"gameno": "9156849584651978018",
-			"aW5mb3Jt": "iuiuuhiu"
+			"command": "iuiuuhiu"
 		 }]]]]]`,
 		description: "malformed input",
 	},
@@ -51,7 +96,7 @@ var errorTests = []struct {
 	},
 	{
 		input: `{
-			"aW5mb3Jt": "iuiuuhiu"
+			"command": "iuiuuhiu"
 		 }`,
 		msg:         "improper json input - duplicate/missing key",
 		description: "missing gameno key",
@@ -61,7 +106,7 @@ var errorTests = []struct {
 			"gameno": "9156849584651978018"
 		 }`,
 		msg:         "improper json input - duplicate/missing key",
-		description: "missing aW5mb3Jt key",
+		description: "missing command key",
 	},
 	{
 		input:       `{ }`,
@@ -72,23 +117,23 @@ var errorTests = []struct {
 		input: `{ 
 			"gameno": "9156849584651018",
 			"gameno": "9156849584651018",
-		"aW5mb3Jt": "iuiuuhiu"}`,
+		"command": "iuiuuhiu"}`,
 		msg:         "improper json input - duplicate/missing key",
 		description: "duplicate gameno key",
 	},
 	{
 		input: `{ 
 			"gameno": "9156849584651018",
-		"aW5mb3Jt": "iuiuuhiu",
-		"aW5mb3Jt": "iuiuuhiu"
+		"command": "iuiuuhiu",
+		"command": "iuiuuhiu"
 		}`,
 		msg:         "improper json input - duplicate/missing key",
-		description: "duplicate aW5mb3Jt key",
+		description: "duplicate command key",
 	},
 	{
 		input: `{
 			"gameno": "9156849584651018",
-			"aW5mb3Jt": "iuiuuhiu"
+			"command": "iuiuuhiu"
 		 }`,
 		msg:         "improper json input - bad gameno",
 		description: "gameno too short",
@@ -96,7 +141,7 @@ var errorTests = []struct {
 	{
 		input: `{
 			"gameno": "91568495846519p8018",
-			"aW5mb3Jt": "iuiuuhiu"
+			"command": "iuiuuhiu"
 			}`,
 		msg:         "improper json input - bad gameno",
 		description: "gameno has letters",
@@ -104,7 +149,7 @@ var errorTests = []struct {
 	{
 		input: `{
 			"gameno": "91568495846519>8018",
-			"aW5mb3Jt": "iuiuuhiu"
+			"command": "iuiuuhiu"
 			}`,
 		msg:         "improper json input - bad gameno",
 		description: "gameno has symbol",
@@ -112,7 +157,7 @@ var errorTests = []struct {
 	{
 		input: `{
 			"gameno": "91568495846519 8018",
-			"aW5mb3Jt": "iuiuuhiu"
+			"command": "iuiuuhiu"
 			}`,
 		msg:         "improper json input - bad gameno",
 		description: "gameno has space",
@@ -120,7 +165,7 @@ var errorTests = []struct {
 	{
 		input: `{
 			"gameno": "915684958465199878018",
-			"aW5mb3Jt": "iuiuuhiu"
+			"command": "iuiuuhiu"
 		 }`,
 		msg:         "improper json input - bad gameno",
 		description: "gameno too long",
@@ -128,7 +173,7 @@ var errorTests = []struct {
 	{
 		input: `{
 			"gameno": "disco",
-			"aW5mb3Jt": "iuiuuhiu"
+			"command": "iuiuuhiu"
 		 }`,
 		msg:         "improper json input - bad gameno",
 		description: "gameno not 'discon' exactly",
@@ -136,7 +181,7 @@ var errorTests = []struct {
 	{
 		input: `{
 			"gameno": "discoN",
-			"aW5mb3Jt": "iuiuuhiu"
+			"command": "iuiuuhiu"
 		 }`,
 		msg:         "improper json input - bad gameno",
 		description: "gameno not 'discon' exactly",
@@ -144,7 +189,7 @@ var errorTests = []struct {
 	{
 		input: `{
 			"gameno": "discon ",
-			"aW5mb3Jt": "iuiuuhiu"
+			"command": "iuiuuhiu"
 		 }`,
 		msg:         "improper json input - bad gameno",
 		description: "gameno not 'discon' exactly",
@@ -152,7 +197,7 @@ var errorTests = []struct {
 	{
 		input: `{
 			"gameno": "newgamee",
-			"aW5mb3Jt": "iuiuuhiu"
+			"command": "iuiuuhiu"
 		 }`,
 		msg:         "improper json input - bad gameno",
 		description: "gameno not 'newgame' exactly",
@@ -160,7 +205,7 @@ var errorTests = []struct {
 	{
 		input: `{
 			"gameno": "Newgame",
-			"aW5mb3Jt": "iuiuuhiu"
+			"command": "iuiuuhiu"
 		 }`,
 		msg:         "improper json input - bad gameno",
 		description: "gameno not 'newgame' exactly",
@@ -168,9 +213,57 @@ var errorTests = []struct {
 	{
 		input: `{
 			"gameno": " newgame",
-			"aW5mb3Jt": "iuiuuhiu"
+			"command": "iuiuuhiu"
 		 }`,
 		msg:         "improper json input - bad gameno",
 		description: "gameno not 'newgame' exactly",
+	},
+	{
+		input: `{
+			"gameno": "9156849584651978018",
+			"command": "disconnec"
+		 }`,
+		msg:         "improper json input - bad command",
+		description: "command not 'disconnect|join|leave|ready|unready' exactly",
+	},
+	{
+		input: `{
+			"gameno": "9156849584651978018",
+			"command": "join "
+		 }`,
+		msg:         "improper json input - bad command",
+		description: "command not 'disconnect|join|leave|ready|unready' exactly",
+	},
+	{
+		input: `{
+			"gameno": "9156849584651978018",
+			"command": " leave"
+		 }`,
+		msg:         "improper json input - bad command",
+		description: "command not 'disconnect|join|leave|ready|unready' exactly",
+	},
+	{
+		input: `{
+			"gameno": "9156849584651978018",
+			"command": "reaDy"
+		 }`,
+		msg:         "improper json input - bad command",
+		description: "command not 'disconnect|join|leave|ready|unready' exactly",
+	},
+	{
+		input: `{
+			"gameno": "9156849584651978018",
+			"command": "Unready"
+		 }`,
+		msg:         "improper json input - bad command",
+		description: "command not 'disconnect|join|leave|ready|unready' exactly",
+	},
+	{
+		input: `{
+			"gameno": "newgame",
+			"command": "disconnect"
+			}`,
+		msg:         "improper json input - disconnect/newgame mismatch",
+		description: "cannot disconnect from game while requesting that it be created",
 	},
 }

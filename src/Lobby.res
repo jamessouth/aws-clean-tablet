@@ -90,52 +90,43 @@ module Game = {
     let (ready, setReady) = React.Uncurried.useState(_ => true)
     let (disabledJoin, setDisabledJoin) = React.Uncurried.useState(_ => false)
     let (disabledReady, setDisabledReady) = React.Uncurried.useState(_ => true)
-
     let {no, timerCxld, players}: Reducer.listGame = game
 
     let onClickJoin = _ => {
-      switch inThisGame {
+      let pl = switch inThisGame {
       | true =>
-        send(.
-          payloadToObj({
-            act: Lobby,
-            gn: Gameno({no: no}),
-            cmd: Leave,
-          }),
-        )
         setReady(._ => true)
-
+        payloadToObj({
+          act: Lobby,
+          gn: Gameno({no: no}),
+          cmd: Leave,
+        })
       | false =>
-        send(.
-          payloadToObj({
-            act: Lobby,
-            gn: Gameno({no: no}),
-            cmd: Join,
-          }),
-        )
-        ()
+        payloadToObj({
+          act: Lobby,
+          gn: Gameno({no: no}),
+          cmd: Join,
+        })
       }
+      send(. pl)
     }
 
     let onClickReady = _ => {
-      switch ready {
+      let pl = switch ready {
       | true =>
-        send(.
-          payloadToObj({
-            act: Lobby,
-            gn: Gameno({no: no}),
-            cmd: Ready,
-          }),
-        )
+        payloadToObj({
+          act: Lobby,
+          gn: Gameno({no: no}),
+          cmd: Ready,
+        })
       | false =>
-        send(.
-          payloadToObj({
-            act: Lobby,
-            gn: Gameno({no: no}),
-            cmd: Unready,
-          }),
-        )
+        payloadToObj({
+          act: Lobby,
+          gn: Gameno({no: no}),
+          cmd: Unready,
+        })
       }
+      send(. pl)
       setReady(._ => !ready)
     }
 
@@ -251,25 +242,21 @@ let make = (~playerGame, ~games, ~send, ~close, ~count, ~setLeaderData) => {
   let signOut = _ => {
     Js.log("sign out click")
 
-    switch playerGame == "" {
+    let pl = switch playerGame == "" {
     | true =>
-      send(.
-        payloadToObj({
-          act: Lobby,
-          gn: Discon,
-          cmd: Disconnect,
-        }),
-      )
+      payloadToObj({
+        act: Lobby,
+        gn: Discon,
+        cmd: Disconnect,
+      })
     | false =>
-      send(.
-        payloadToObj({
-          act: Lobby,
-          gn: Gameno({no: playerGame}),
-          cmd: Disconnect,
-        }),
-      )
+      payloadToObj({
+        act: Lobby,
+        gn: Gameno({no: playerGame}),
+        cmd: Disconnect,
+      })
     }
-
+    send(. pl)
     close(. 1000, "user sign-out")
   }
 

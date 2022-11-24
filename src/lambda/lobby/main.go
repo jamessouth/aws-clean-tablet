@@ -47,17 +47,17 @@ func getReturnValue(status int) events.APIGatewayProxyResponse {
 
 func checkInput(s string) (string, string, error) {
 	var (
-		maxLength  = 99
-		gamenoRE   = regexp.MustCompile(`^\d{19}$|^discon$|^newgame$`)
-		aW5mb3JtRE = regexp.MustCompile(`^disconnect$|^join$|^leave$|^ready$|^unready$`)
-		body       struct{ Gameno, AW5mb3Jt string }
+		maxLength = 99
+		gamenoRE  = regexp.MustCompile(`^\d{19}$|^discon$|^newgame$`)
+		commandRE = regexp.MustCompile(`^disconnect$|^join$|^leave$|^ready$|^unready$`)
+		body      struct{ Gameno, Command string }
 	)
 
 	if len(s) > maxLength {
 		return "", "", errors.New("improper json input - too long")
 	}
 
-	if strings.Count(s, "gameno") != 1 || strings.Count(s, "aW5mb3Jt") != 1 {
+	if strings.Count(s, "gameno") != 1 || strings.Count(s, "command") != 1 {
 		return "", "", errors.New("improper json input - duplicate/missing key")
 	}
 
@@ -66,15 +66,21 @@ func checkInput(s string) (string, string, error) {
 		return "", "", err
 	}
 
-	if !gamenoRE.MatchString(body.Gameno) {
+	var gameno, command = body.Gameno, body.Command
+
+	if !gamenoRE.MatchString(gameno) {
 		return "", "", errors.New("improper json input - bad gameno")
 	}
 
-	if !aW5mb3JtRE.MatchString(body.AW5mb3Jt) {
-		return "", "", errors.New("improper json input - bad aW5mb3Jt")
+	if !commandRE.MatchString(command) {
+		return "", "", errors.New("improper json input - bad command")
 	}
 
-	return body.Gameno, body.AW5mb3Jt, nil
+	if command == "disconnect" && gameno == "newgame" {
+		return "", "", errors.New("improper json input - disconnect/newgame mismatch")
+	}
+
+	return body.Gameno, body.Command, nil
 }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -83,7 +89,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	fmt.Println("lobby", bod, len(bod))
 
-	checkedGameno, checkedAW5mb3Jt, err := checkInput(bod)
+	checkedGameno, checkedCommand, err := checkInput(bod)
 	if err != nil {
 		return callErr(err)
 	}
@@ -166,7 +172,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		ReturnValues:     types.ReturnValueAllNew,
 	}
 
-	if checkedAW5mb3Jt == "join" {
+	if checkedCommand == "join" {
 
 		player := listPlayer{
 			Name:   name,
@@ -260,7 +266,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			return callErr(err)
 		}
 
-	} else if checkedAW5mb3Jt == "leave" {
+	} else if checkedCommand == "leave" {
 
 		_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 			Key:       connKey,
@@ -287,7 +293,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			return callErr(err)
 		}
 
-	} else if checkedAW5mb3Jt == "ready" {
+	} else if checkedCommand == "ready" {
 
 		ui2, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 			Key:       gameItemKey,
@@ -312,7 +318,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			return callErr(err)
 		}
 
-	} else if checkedAW5mb3Jt == "unready" {
+	} else if checkedCommand == "unready" {
 
 		_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 			Key:       gameItemKey,
@@ -333,7 +339,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			return callErr(err)
 		}
 
-	} else if checkedAW5mb3Jt == "disconnect" {
+	} else if checkedCommand == "disconnect" {
 		if checkedGameno != "discon" {
 
 			ui2, err := ddbsvc.UpdateItem(ctx, &removePlayerInput)
