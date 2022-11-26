@@ -266,4 +266,60 @@ var errorTests = []struct {
 		msg:         "improper json input - disconnect/newgame mismatch",
 		description: "cannot disconnect from game while requesting that it be created",
 	},
+	{
+		input: `{
+			"gameno": "discon",
+			"command": "join"
+			}`,
+		msg:         "improper json input - join/discon mismatch",
+		description: "cannot join and disconnect at same time",
+	},
+	{
+		input: `{
+			"gameno": "discon",
+			"command": "leave"
+			}`,
+		msg:         "improper json input - leave/(discon|newgame) mismatch",
+		description: "can only leave existing game",
+	},
+	{
+		input: `{
+			"gameno": "newgame",
+			"command": "leave"
+			}`,
+		msg:         "improper json input - leave/(discon|newgame) mismatch",
+		description: "can only leave existing game",
+	},
+	{
+		input: `{
+			"gameno": "discon",
+			"command": "ready"
+			}`,
+		msg:         "improper json input - ready/(discon|newgame) mismatch",
+		description: "can only ready existing game",
+	},
+	{
+		input: `{
+			"gameno": "newgame",
+			"command": "ready"
+			}`,
+		msg:         "improper json input - ready/(discon|newgame) mismatch",
+		description: "can only ready existing game",
+	},
+	{
+		input: `{
+			"gameno": "discon",
+			"command": "unready"
+			}`,
+		msg:         "improper json input - unready/(discon|newgame) mismatch",
+		description: "can only unready existing game",
+	},
+	{
+		input: `{
+			"gameno": "newgame",
+			"command": "unready"
+			}`,
+		msg:         "improper json input - unready/(discon|newgame) mismatch",
+		description: "can only unready existing game",
+	},
 }

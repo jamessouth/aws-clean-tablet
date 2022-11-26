@@ -265,8 +265,8 @@ let make = (~playerGame, ~games, ~send, ~close, ~count, ~setLeaderData) => {
     send(.
       payloadToObj({
         act: Leaders,
-        gn: Discon,
-        cmd: Join,
+        gn: Discon,//placeholder
+        cmd: Join,//placeholder
       }),
     )
     Route.push(Leaderboard)

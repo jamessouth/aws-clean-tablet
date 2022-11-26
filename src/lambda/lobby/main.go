@@ -68,16 +68,21 @@ func checkInput(s string) (string, string, error) {
 
 	var gameno, command = body.Gameno, body.Command
 
-	if !gamenoRE.MatchString(gameno) {
+	switch {
+	case !gamenoRE.MatchString(gameno):
 		return "", "", errors.New("improper json input - bad gameno")
-	}
-
-	if !commandRE.MatchString(command) {
+	case !commandRE.MatchString(command):
 		return "", "", errors.New("improper json input - bad command")
-	}
-
-	if command == "disconnect" && gameno == "newgame" {
+	case command == "disconnect" && gameno == "newgame":
 		return "", "", errors.New("improper json input - disconnect/newgame mismatch")
+	case command == "join" && gameno == "discon":
+		return "", "", errors.New("improper json input - join/discon mismatch")
+	case command == "leave" && (gameno == "discon" || gameno == "newgame"):
+		return "", "", errors.New("improper json input - leave/(discon|newgame) mismatch")
+	case command == "ready" && (gameno == "discon" || gameno == "newgame"):
+		return "", "", errors.New("improper json input - ready/(discon|newgame) mismatch")
+	case command == "unready" && (gameno == "discon" || gameno == "newgame"):
+		return "", "", errors.New("improper json input - unready/(discon|newgame) mismatch")
 	}
 
 	return body.Gameno, body.Command, nil
