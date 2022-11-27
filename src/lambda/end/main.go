@@ -19,17 +19,17 @@ import (
 
 func checkInput(s string) (string, string, error) {
 	var (
-		maxLength = 750
-		gamenoRE  = regexp.MustCompile(`^\d{19}$`)
-		commandRE = regexp.MustCompile(`^.{648}$`)
-		body      struct{ Gameno, Command string }
+		maxLength  = 750
+		gamenoRE   = regexp.MustCompile(`^\d{19}$`)
+		endtokenRE = regexp.MustCompile(`^.{648}$`)
+		body       struct{ Gameno, Endtoken string }
 	)
 
 	if len(s) > maxLength {
 		return "", "", errors.New("improper json input - too long")
 	}
 
-	if strings.Count(s, "gameno") != 1 || strings.Count(s, "command") != 1 {
+	if strings.Count(s, "gameno") != 1 || strings.Count(s, "endtoken") != 1 {
 		return "", "", errors.New("improper json input - duplicate/missing key")
 	}
 
@@ -42,11 +42,11 @@ func checkInput(s string) (string, string, error) {
 		return "", "", errors.New("improper json input - bad gameno")
 	}
 
-	if !commandRE.MatchString(body.Command) {
-		return "", "", errors.New("improper json input - bad command")
+	if !endtokenRE.MatchString(body.Endtoken) {
+		return "", "", errors.New("improper json input - bad endtoken")
 	}
 
-	return body.Gameno, body.Command, nil
+	return body.Gameno, body.Endtoken, nil
 }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -54,8 +54,8 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	bod := req.Body
 
 	fmt.Println("answer", bod, len(bod))
-
-	checkedGameno, checkedCommand, err := checkInput(bod)
+	// checkedGameno
+	_, checkedEndtoken, err := checkInput(bod)
 	if err != nil {
 		callErr(err)
 	}
@@ -73,7 +73,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	stsi := sfn.SendTaskSuccessInput{
 		Output:    aws.String("\"\""),
-		TaskToken: aws.String(checkedCommand),
+		TaskToken: aws.String(checkedEndtoken),
 	}
 
 	_, err = sfnsvc.SendTaskSuccess(ctx, &stsi)

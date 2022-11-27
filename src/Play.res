@@ -6,7 +6,7 @@ let make = (
   ~sk,
   ~showAnswers,
   ~winner,
-  ~isWinner,
+  ~isGameOver,
   ~oldWord,
   ~word,
   ~playerColor,
@@ -115,12 +115,12 @@ let make = (
       oldWord
       showAnswers
       winner
-      isWinner
+      isGameOver
       onEndClick
       playerName
       noplrs={Js.Array2.length(players)}
     />
-    {switch isWinner {
+    {switch isGameOver {
     | true => React.null
     | false =>
       <>

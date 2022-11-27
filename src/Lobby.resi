@@ -29,6 +29,8 @@ type payloadOutput = {
   gameno?: string,
   aW5mb3Jt?: string,
   command?: string,
+  endtoken?: string,
+  log?: string,
 }
 
 let payloadToObj: lobbyPayload => option<string>

@@ -89,6 +89,14 @@ let initialState: Reducer.state = {
   showAnswers: false,
   winner: "",
 }
+
+let normalClose = 1000
+let wrongOrigin = 4002
+let duplicateKeys = 4003
+let excessiveJson = 4004
+let unknownJson = 4005
+let jsonLimit = 3000
+
 @react.component
 let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~route) => {
   Js.log2("u345876l", route)
@@ -176,15 +184,15 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
       ws->onMessage(({data, origin}) => {
         switch origin == wsorigin {
         | true => ()
-        | false => logAndDisconnect(~msg="wrong origin", ~data=origin, ~code=4002)
+        | false => logAndDisconnect(~msg="wrong origin", ~data=origin, ~code=wrongOrigin)
         }
 
-        switch Js.String2.length(data) > 3000 {
+        switch Js.String2.length(data) > jsonLimit {
         | true =>
           logAndDisconnect(
             ~msg="excessive json data",
-            ~data=Js.String2.slice(data, ~from=0, ~to_=3000),
-            ~code=4004,
+            ~data=Js.String2.slice(data, ~from=0, ~to_=jsonLimit),
+            ~code=excessiveJson,
           )
 
         | false => ()
@@ -192,7 +200,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
 
         switch Js.String2.match_(data, %re(`/(\"\w+\"\:).+\1/g`)) {
         | None => ()
-        | Some(_) => logAndDisconnect(~msg="duplicate keys", ~data, ~code=4003)
+        | Some(_) => logAndDisconnect(~msg="duplicate keys", ~data, ~code=duplicateKeys)
         }
 
         Js.log3("msg", data, origin)
@@ -259,7 +267,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
         | Other => {
             Js.log2("unknown json data", data)
 
-            logAndDisconnect(~msg="unknown json data", ~data, ~code=4005)
+            logAndDisconnect(~msg="unknown json data", ~data, ~code=unknownJson)
           }
         }
       })
@@ -287,7 +295,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
       Js.log("cleanup")
       switch Js.Nullable.isNullable(ws) {
       | true => ()
-      | false => ws->closeCode(1000)
+      | false => ws->closeCode(normalClose)
       }
     }
     Some(cleanup)
@@ -351,7 +359,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
             sk
             showAnswers
             winner
-            isWinner={winner != ""}
+            isGameOver={winner != ""}
             oldWord
             word
             playerColor

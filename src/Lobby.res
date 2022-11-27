@@ -32,6 +32,8 @@ type payloadOutput = {
   gameno?: string,
   aW5mb3Jt?: string,
   command?: string,
+  endtoken?: string,
+  log?: string,
 }
 
 let apigwActionToString = a =>
@@ -68,15 +70,27 @@ let payloadToObj = pl => {
       gameno: lobbyGamenoToString(pl.gn),
       aW5mb3Jt: lobbyCommandToString(pl.cmd),
     })
+  | End =>
+    Js.Json.stringifyAny({
+      action: apigwActionToString(pl.act),
+      gameno: lobbyGamenoToString(pl.gn),
+      endtoken: lobbyCommandToString(pl.cmd),
+    })
   | Leaders =>
     Js.Json.stringifyAny({
       action: apigwActionToString(pl.act),
     })
-  | End | Lobby | Logging =>
+  | Lobby =>
     Js.Json.stringifyAny({
       action: apigwActionToString(pl.act),
       gameno: lobbyGamenoToString(pl.gn),
       command: lobbyCommandToString(pl.cmd),
+    })
+  | Logging =>
+    Js.Json.stringifyAny({
+      action: apigwActionToString(pl.act),
+      gameno: lobbyGamenoToString(pl.gn),
+      log: lobbyCommandToString(pl.cmd),
     })
   }
 }
@@ -265,8 +279,8 @@ let make = (~playerGame, ~games, ~send, ~close, ~count, ~setLeaderData) => {
     send(.
       payloadToObj({
         act: Leaders,
-        gn: Discon,//placeholder
-        cmd: Join,//placeholder
+        gn: Discon, //placeholder
+        cmd: Join, //placeholder
       }),
     )
     Route.push(Leaderboard)
