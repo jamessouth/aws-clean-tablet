@@ -23,6 +23,12 @@ import (
 	"github.com/aws/smithy-go"
 )
 
+const (
+	connect  string = "CONNECT"
+	listGame string = "LISTGAME"
+	liveGame string = "LIVEGAME"
+)
+
 type listPlayer struct {
 	Name  string `json:"name" dynamodbav:"name"`
 	Ready bool   `json:"ready" dynamodbav:"ready"`
@@ -63,6 +69,12 @@ type players struct {
 	Winner      string       `json:"winner"`
 }
 
+type output struct {
+	Scores   map[string]int        `json:"scores"`
+	Players  map[string]livePlayer `json:"players"`
+	Lastword bool                  `json:"lastword"`
+}
+
 func getSlice[Key string, Val listPlayer | livePlayer](m map[Key]Val) (res []Val) {
 	res = []Val{}
 
@@ -96,12 +108,6 @@ func (p listGamePayload) MarshalJSON() ([]byte, error) {
 	}
 
 	return []byte(fmt.Sprintf("{%q:%s}", p.Tag, m)), nil
-}
-
-type output struct {
-	Scores   map[string]int        `json:"scores"`
-	Players  map[string]livePlayer `json:"players"`
-	Lastword bool                  `json:"lastword"`
 }
 
 func prep(players []livePlayer) ([]livePlayer, map[string]int) {
@@ -329,7 +335,6 @@ func getReturnValue(status int) events.APIGatewayProxyResponse {
 //   ]
 
 func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayProxyResponse, error) {
-
 	for _, rec := range req.Records {
 
 		fmt.Printf("%s: %+v\n", "reccc", rec)
@@ -365,12 +370,13 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 				return ep, nil
 			}
+
 			return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested")
 		})
 
 		apigwcfg, err := config.LoadDefaultConfig(ctx,
-			config.WithRegion(rec.AWSRegion),
 			// config.WithLogger(logger),
+			config.WithRegion(rec.AWSRegion),
 			config.WithEndpointResolverWithOptions(customResolver),
 		)
 		if err != nil {
@@ -378,8 +384,8 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 		}
 
 		cfg, err := config.LoadDefaultConfig(ctx,
-			config.WithRegion(rec.AWSRegion),
 			// config.WithLogger(logger),
+			config.WithRegion(rec.AWSRegion),
 		)
 		if err != nil {
 			return callErr(err)
@@ -392,7 +398,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			recType  = item["pk"].(*types.AttributeValueMemberS).Value
 		)
 
-		if recType == "CONNECT" {
+		if recType == connect {
 
 			var connRecord struct {
 				Pk, Sk, Game, Name, Color, ConnID, Endtoken string
@@ -401,6 +407,10 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			err = attributevalue.UnmarshalMap(item, &connRecord)
 			if err != nil {
 				return callErr(err)
+			}
+
+			if connRecord.Endtoken != "" {
+				connRecord.Endtoken = "a"
 			}
 
 			fmt.Printf("%s%+v\n", "connrecord ", connRecord)
@@ -414,7 +424,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 					ScanIndexForward:       aws.Bool(false),
 					KeyConditionExpression: aws.String("pk = :g"),
 					ExpressionAttributeValues: map[string]types.AttributeValue{
-						":g": &types.AttributeValueMemberS{Value: "LISTGAME"},
+						":g": &types.AttributeValueMemberS{Value: listGame},
 					},
 				})
 				if err != nil {
@@ -466,7 +476,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				return callErr(err)
 			}
 
-		} else if recType == "LISTGAME" {
+		} else if recType == listGame {
 
 			var listGameRecord backListGame
 			err = attributevalue.UnmarshalMap(item, &listGameRecord)
@@ -490,7 +500,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				KeyConditionExpression: aws.String("pk = :c"),
 				FilterExpression:       aws.String("#P = :f"),
 				ExpressionAttributeValues: map[string]types.AttributeValue{
-					":c": &types.AttributeValueMemberS{Value: "CONNECT"},
+					":c": &types.AttributeValueMemberS{Value: connect},
 					":f": &types.AttributeValueMemberBOOL{Value: false},
 				},
 				ExpressionAttributeNames: map[string]string{
@@ -538,7 +548,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			}
 
-		} else if recType == "LIVEGAME" {
+		} else if recType == liveGame {
 
 			var gameRecord struct {
 				Sk, Token    string
@@ -596,7 +606,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 					ui, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 						Key: map[string]types.AttributeValue{
-							"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
+							"pk": &types.AttributeValueMemberS{Value: liveGame},
 							"sk": &types.AttributeValueMemberS{Value: gameRecord.Sk},
 						},
 						TableName: aws.String(tableName),
