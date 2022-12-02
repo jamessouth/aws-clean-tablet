@@ -24,9 +24,12 @@ import (
 )
 
 const (
-	connect  string = "CONNECT"
-	listGame string = "LISTGAME"
-	liveGame string = "LIVEGAME"
+	connect        string = "CONNECT"
+	listGame       string = "LISTGAME"
+	liveGame       string = "LIVEGAME"
+	modifyListGame string = "mdLstGm"
+	addListGame    string = "addGame"
+	removeListGame string = "rmvGame"
 )
 
 type listPlayer struct {
@@ -195,9 +198,39 @@ func sortByScoreThenName(players []livePlayer) []livePlayer {
 	return players
 }
 
-func send(ctx context.Context, apigwsvc *apigatewaymanagementapi.Client, payload []byte, pls []livePlayer) error {
-	for _, v := range pls {
+func send(ctx context.Context, reg string, payload []byte, pls ...livePlayer) error {
+	var (
+		apiid    = os.Getenv("CT_APIID")
+		stage    = os.Getenv("CT_STAGE")
+		endpoint = "https://" + apiid + ".execute-api." + reg + ".amazonaws.com/" + stage
+	)
 
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+		if service == apigatewaymanagementapi.ServiceID && region == reg {
+			ep := aws.Endpoint{
+				PartitionID:   "aws",
+				URL:           endpoint,
+				SigningRegion: reg,
+			}
+
+			return ep, nil
+		}
+
+		return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested")
+	})
+
+	apigwcfg, err := config.LoadDefaultConfig(ctx,
+		// config.WithLogger(logger),
+		config.WithRegion(reg),
+		config.WithEndpointResolverWithOptions(customResolver),
+	)
+	if err != nil {
+		return err
+	}
+
+	apigwsvc := apigatewaymanagementapi.NewFromConfig(apigwcfg)
+
+	for _, v := range pls {
 		conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.ConnID), Data: payload}
 
 		_, err := apigwsvc.PostToConnection(ctx, &conn)
@@ -341,7 +374,10 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 		tableName := strings.Split(rec.EventSourceArn, "/")[1]
 
-		var rawItem map[string]events.DynamoDBAttributeValue
+		var (
+			rawItem map[string]events.DynamoDBAttributeValue
+			reg     = rec.AWSRegion
+		)
 
 		if rec.EventName == dynamodbstreams.OperationTypeRemove {
 			rawItem = rec.Change.OldImage
@@ -354,48 +390,18 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			return callErr(err)
 		}
 
-		var (
-			apiid    = os.Getenv("CT_APIID")
-			stage    = os.Getenv("CT_STAGE")
-			endpoint = "https://" + apiid + ".execute-api." + rec.AWSRegion + ".amazonaws.com/" + stage
-		)
-
-		customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-			if service == apigatewaymanagementapi.ServiceID && region == rec.AWSRegion {
-				ep := aws.Endpoint{
-					PartitionID:   "aws",
-					URL:           endpoint,
-					SigningRegion: rec.AWSRegion,
-				}
-
-				return ep, nil
-			}
-
-			return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested")
-		})
-
-		apigwcfg, err := config.LoadDefaultConfig(ctx,
-			// config.WithLogger(logger),
-			config.WithRegion(rec.AWSRegion),
-			config.WithEndpointResolverWithOptions(customResolver),
-		)
-		if err != nil {
-			return callErr(err)
-		}
-
 		cfg, err := config.LoadDefaultConfig(ctx,
 			// config.WithLogger(logger),
-			config.WithRegion(rec.AWSRegion),
+			config.WithRegion(reg),
 		)
 		if err != nil {
 			return callErr(err)
 		}
 
 		var (
-			apigwsvc = apigatewaymanagementapi.NewFromConfig(apigwcfg)
-			ddbsvc   = dynamodb.NewFromConfig(cfg)
-			sfnsvc   = sfn.NewFromConfig(cfg)
-			recType  = item["pk"].(*types.AttributeValueMemberS).Value
+			ddbsvc  = dynamodb.NewFromConfig(cfg)
+			sfnsvc  = sfn.NewFromConfig(cfg)
+			recType = item["pk"].(*types.AttributeValueMemberS).Value
 		)
 
 		if recType == connect {
@@ -469,9 +475,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				continue
 			}
 
-			conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(connRecord.ConnID), Data: payload}
-
-			_, err = apigwsvc.PostToConnection(ctx, &conn)
+			err = send(ctx, reg, payload, livePlayer{ConnID: connRecord.ConnID})
 			if err != nil {
 				return callErr(err)
 			}
@@ -492,7 +496,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 					TimerCxld: listGameRecord.TimerCxld,
 					Players:   sortByName(getSlice(listGameRecord.Players)),
 				},
-				Tag: "mdLstGm",
+				Tag: modifyListGame,
 			}
 
 			queryParams := dynamodb.QueryInput{
@@ -510,12 +514,12 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 			switch rec.EventName {
 			case dynamodbstreams.OperationTypeInsert:
-				gp.Tag = "addGame"
+				gp.Tag = addListGame
 			case dynamodbstreams.OperationTypeModify:
 			default:
 				fmt.Printf("%s: %+v\n", "remove list game oi", rec.Change.OldImage)
 				gp.Game.Players = nil
-				gp.Tag = "rmvGame"
+				gp.Tag = removeListGame
 				queryParams.FilterExpression = nil
 				queryParams.ExpressionAttributeNames = nil
 				delete(queryParams.ExpressionAttributeValues, ":f")
@@ -531,21 +535,15 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				return callErr(err)
 			}
 
-			var conns []struct{ ConnID string }
+			var conns []livePlayer
 			err = attributevalue.UnmarshalListOfMaps(connResults.Items, &conns)
 			if err != nil {
 				return callErr(err)
 			}
 
-			for _, v := range conns {
-
-				conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(v.ConnID), Data: payload}
-
-				_, err := apigwsvc.PostToConnection(ctx, &conn)
-				if err != nil {
-					return callErr(err)
-				}
-
+			err = send(ctx, reg, payload, conns...)
+			if err != nil {
+				return callErr(err)
 			}
 
 		} else if recType == liveGame {
@@ -577,7 +575,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 					return callErr(err)
 				}
 
-				err = send(ctx, apigwsvc, payload, pls)
+				err = send(ctx, reg, payload, pls...)
 				if err != nil {
 					return callErr(err)
 				}
@@ -599,7 +597,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 						return callErr(err)
 					}
 
-					err = send(ctx, apigwsvc, payload, pls)
+					err = send(ctx, reg, payload, pls...)
 					if err != nil {
 						return callErr(err)
 					}
@@ -666,7 +664,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 						return callErr(err)
 					}
 
-					err = send(ctx, apigwsvc, payload, pls)
+					err = send(ctx, reg, payload, pls...)
 					if err != nil {
 						return callErr(err)
 					}
