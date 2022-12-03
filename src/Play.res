@@ -73,8 +73,8 @@ let make = (
       send(.
         Lobby.payloadToObj({
           act: End,
-          gn: Gameno({no: sk}),
-          cmd: Custom({cv: endtoken}),
+          gn: Discon, //placeholder
+          cmd: Join, //placeholder
         }),
       )
 
@@ -118,6 +118,7 @@ let make = (
       isGameOver
       onEndClick
       playerName
+      endtoken
       noplrs={Js.Array2.length(players)}
     />
     {switch isGameOver {

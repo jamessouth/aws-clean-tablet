@@ -32,7 +32,6 @@ type payloadOutput = {
   gameno?: string,
   aW5mb3Jt?: string,
   command?: string,
-  endtoken?: string,
   log?: string,
 }
 
@@ -70,13 +69,7 @@ let payloadToObj = pl => {
       gameno: lobbyGamenoToString(pl.gn),
       aW5mb3Jt: lobbyCommandToString(pl.cmd),
     })
-  | End =>
-    Js.Json.stringifyAny({
-      action: apigwActionToString(pl.act),
-      gameno: lobbyGamenoToString(pl.gn),
-      endtoken: lobbyCommandToString(pl.cmd),
-    })
-  | Leaders =>
+  | End | Leaders =>
     Js.Json.stringifyAny({
       action: apigwActionToString(pl.act),
     })
@@ -99,7 +92,7 @@ module Game = {
   let btnStyle = " cursor-pointer text-base font-bold text-stone-100 font-anon w-1/2 bottom-0 h-8 absolute bg-stone-700 bg-opacity-70 filter disabled:(cursor-not-allowed contrast-25)"
 
   @react.component
-  let make = (~game, ~inThisGame, ~inAGame, ~count, ~send, ~class, ~onlyGame) => {
+  let make = (~game, ~inThisGame, ~inAGame, ~count, ~send, ~class, ~isOnlyGame) => {
     let liStyle = `<md:mb-16 grid grid-cols-2 grid-rows-6 relative text-xl bg-bottom bg-no-repeat h-200px text-center font-bold text-dark-800 font-anon pb-8 ${class} lg:(max-w-lg w-full)`
     let (ready, setReady) = React.Uncurried.useState(_ => true)
     let (disabledJoin, setDisabledJoin) = React.Uncurried.useState(_ => false)
@@ -189,7 +182,7 @@ module Game = {
     }, (inThisGame, count, no))
 
     <li
-      className={switch (inThisGame, onlyGame) {
+      className={switch (inThisGame, isOnlyGame) {
       | (true, false) => "shadow-lg shadow-stone-100 " ++ liStyle
       | (false, true) | (true, true) | (false, false) => liStyle
       }}>
@@ -335,7 +328,7 @@ let make = (~playerGame, ~games, ~send, ~close, ~count, ~setLeaderData) => {
                 count
                 send
                 class
-                onlyGame={Js.Array2.length(gs) == 1}
+                isOnlyGame={Js.Array2.length(gs) == 1}
               />
             })
             ->React.array}

@@ -25,9 +25,10 @@ import (
 )
 
 const (
-	newline   byte = 10
-	byteRange int  = 25      //get 26 bytes, enough for a 12-letter word no matter what comes before or after
-	highByte  int  = 1519766 //file size - 26
+	newline   byte   = 10
+	byteRange int    = 25      //get 26 bytes, enough for a 12-letter word no matter what comes before or after
+	highByte  int    = 1519766 //file size - 26
+	liveGame  string = "LIVEGAME"
 )
 
 func getRandomByte() string {
@@ -89,12 +90,12 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	bod := req.Body
 
-	fmt.Println("answer", bod, len(bod))
-
 	checkedGameno, checkedAW5mb3Jt, err := checkInput(bod)
 	if err != nil {
 		return callErr(err)
 	}
+
+	fmt.Println("answer", bod, len(bod))
 
 	reg := strings.Split(req.RequestContext.DomainName, ".")[2]
 
@@ -139,7 +140,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 		Key: map[string]types.AttributeValue{
-			"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
+			"pk": &types.AttributeValueMemberS{Value: liveGame},
 			"sk": &types.AttributeValueMemberS{Value: checkedGameno},
 		},
 		TableName: aws.String(tableName),

@@ -2,78 +2,82 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
-	"regexp"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go-v2/service/sfn"
 	"github.com/aws/smithy-go"
 )
 
-func checkInput(s string) (string, string, error) {
-	var (
-		maxLength  = 750
-		gamenoRE   = regexp.MustCompile(`^\d{19}$`)
-		endtokenRE = regexp.MustCompile(`^.{648}$`)
-		body       struct{ Gameno, Endtoken string }
-	)
-
-	if len(s) > maxLength {
-		return "", "", errors.New("improper json input - too long")
-	}
-
-	if strings.Count(s, "gameno") != 1 || strings.Count(s, "endtoken") != 1 {
-		return "", "", errors.New("improper json input - duplicate/missing key")
-	}
-
-	err := json.Unmarshal([]byte(s), &body)
-	if err != nil {
-		return "", "", err
-	}
-
-	if !gamenoRE.MatchString(body.Gameno) {
-		return "", "", errors.New("improper json input - bad gameno")
-	}
-
-	if !endtokenRE.MatchString(body.Endtoken) {
-		return "", "", errors.New("improper json input - bad endtoken")
-	}
-
-	return body.Gameno, body.Endtoken, nil
-}
+const (
+	connect string = "CONNECT"
+)
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
+	var (
+		bod = req.Body
+		reg = strings.Split(req.RequestContext.DomainName, ".")[2]
+	)
 
-	bod := req.Body
-
-	fmt.Println("answer", bod, len(bod))
-	// checkedGameno
-	_, checkedEndtoken, err := checkInput(bod)
-	if err != nil {
-		callErr(err)
+	if len(bod) > 75 { //TODO replace with observed value
+		callErr(errors.New("improper json input - too long"))
 	}
 
-	reg := strings.Split(req.RequestContext.DomainName, ".")[2]
+	fmt.Println("end", bod, len(bod))
 
 	cfg, err := config.LoadDefaultConfig(ctx,
 		config.WithRegion(reg),
 	)
 	if err != nil {
-		fmt.Println("cfg err")
+		callErr(err)
 	}
 
-	sfnsvc := sfn.NewFromConfig(cfg)
+	var (
+		ddbsvc        = dynamodb.NewFromConfig(cfg)
+		sfnsvc        = sfn.NewFromConfig(cfg)
+		auth          = req.RequestContext.Authorizer.(map[string]interface{})
+		id, tableName = auth["principalId"].(string), auth["tableName"].(string)
+		et            struct {
+			Endtoken string
+		}
+	)
+
+	ui, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		Key: map[string]types.AttributeValue{
+			"pk": &types.AttributeValueMemberS{Value: connect},
+			"sk": &types.AttributeValueMemberS{Value: id},
+		},
+		TableName: aws.String(tableName),
+		ExpressionAttributeNames: map[string]string{
+			"#T": "endtoken",
+		},
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":t": &types.AttributeValueMemberS{Value: ""},
+		},
+		UpdateExpression: aws.String("SET #T = :t"),
+		ReturnValues:     types.ReturnValueAllOld,
+	})
+	if err != nil {
+		callErr(err)
+	}
+
+	err = attributevalue.UnmarshalMap(ui.Attributes, &et)
+	if err != nil {
+		callErr(err)
+	}
 
 	stsi := sfn.SendTaskSuccessInput{
 		Output:    aws.String("\"\""),
-		TaskToken: aws.String(checkedEndtoken),
+		TaskToken: aws.String(et.Endtoken),
 	}
 
 	_, err = sfnsvc.SendTaskSuccess(ctx, &stsi)
