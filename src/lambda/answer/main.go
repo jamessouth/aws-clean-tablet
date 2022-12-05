@@ -87,8 +87,10 @@ func checkInput(s string) (string, string, error) {
 }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
-
-	bod := req.Body
+	var (
+		bod    = req.Body
+		region = strings.Split(req.RequestContext.DomainName, ".")[2]
+	)
 
 	checkedGameno, checkedAW5mb3Jt, err := checkInput(bod)
 	if err != nil {
@@ -97,10 +99,8 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	fmt.Println("answer", bod, len(bod))
 
-	reg := strings.Split(req.RequestContext.DomainName, ".")[2]
-
 	cfg, err := config.LoadDefaultConfig(ctx,
-		config.WithRegion(reg),
+		config.WithRegion(region),
 	)
 	if err != nil {
 		return callErr(err)

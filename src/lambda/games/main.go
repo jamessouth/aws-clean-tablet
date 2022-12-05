@@ -24,12 +24,13 @@ import (
 )
 
 const (
-	connect        string = "CONNECT"
-	listGame       string = "LISTGAME"
-	liveGame       string = "LIVEGAME"
-	modifyListGame string = "mdLstGm"
-	addListGame    string = "addGame"
-	removeListGame string = "rmvGame"
+	connect                      string = "CONNECT"
+	listGame                     string = "LISTGAME"
+	liveGame                     string = "LIVEGAME"
+	modifyListGame               string = "mdLstGm"
+	addListGame                  string = "addGame"
+	removeListGame               string = "rmvGame"
+	maxAllowableStreamRecordSize int64  = 2500
 )
 
 type listPlayer struct {
@@ -369,14 +370,20 @@ func getReturnValue(status int) events.APIGatewayProxyResponse {
 
 func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayProxyResponse, error) {
 	for _, rec := range req.Records {
+		if rec.Change.SizeBytes > maxAllowableStreamRecordSize {
+			err := fmt.Errorf("too big!\nsize: %+v\nevent name: %+v\ntime: %+v\nkeys: %+v\nseq no: %+v", rec.Change.SizeBytes, rec.EventName, rec.Change.ApproximateCreationDateTime, rec.Change.Keys, rec.Change.SequenceNumber)
+
+			fmt.Println(err.Error())
+
+			return callErr(err)
+		}
 
 		fmt.Printf("%s: %+v\n", "reccc", rec)
 
-		tableName := strings.Split(rec.EventSourceArn, "/")[1]
-
 		var (
-			rawItem map[string]events.DynamoDBAttributeValue
-			reg     = rec.AWSRegion
+			tableName = strings.Split(rec.EventSourceArn, "/")[1]
+			region    = rec.AWSRegion
+			rawItem   map[string]events.DynamoDBAttributeValue
 		)
 
 		if rec.EventName == dynamodbstreams.OperationTypeRemove {
@@ -392,7 +399,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 
 		cfg, err := config.LoadDefaultConfig(ctx,
 			// config.WithLogger(logger),
-			config.WithRegion(reg),
+			config.WithRegion(region),
 		)
 		if err != nil {
 			return callErr(err)
@@ -475,7 +482,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				continue
 			}
 
-			err = send(ctx, reg, payload, livePlayer{ConnID: connRecord.ConnID})
+			err = send(ctx, region, payload, livePlayer{ConnID: connRecord.ConnID})
 			if err != nil {
 				return callErr(err)
 			}
@@ -541,7 +548,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 				return callErr(err)
 			}
 
-			err = send(ctx, reg, payload, conns...)
+			err = send(ctx, region, payload, conns...)
 			if err != nil {
 				return callErr(err)
 			}
@@ -575,7 +582,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 					return callErr(err)
 				}
 
-				err = send(ctx, reg, payload, pls...)
+				err = send(ctx, region, payload, pls...)
 				if err != nil {
 					return callErr(err)
 				}
@@ -597,7 +604,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 						return callErr(err)
 					}
 
-					err = send(ctx, reg, payload, pls...)
+					err = send(ctx, region, payload, pls...)
 					if err != nil {
 						return callErr(err)
 					}
@@ -664,7 +671,7 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 						return callErr(err)
 					}
 
-					err = send(ctx, reg, payload, pls...)
+					err = send(ctx, region, payload, pls...)
 					if err != nil {
 						return callErr(err)
 					}

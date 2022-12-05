@@ -11,6 +11,8 @@ import (
 
 func handler(req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 	if len(req.Body) > 99 {
+		fmt.Printf("%s: %+v\n", "body", req.Body[:99])
+
 		return events.APIGatewayProxyResponse{
 			StatusCode:        http.StatusBadRequest,
 			Headers:           map[string]string{"Content-Type": "application/json"},

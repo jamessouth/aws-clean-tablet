@@ -25,7 +25,10 @@ import (
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 
-const apigwCustomAuthorizerPolicyVersion string = "2012-10-17"
+const (
+	apigwCustomAuthorizerPolicyVersion string = "2012-10-17"
+	token_                             string = "TOKEN"
+)
 
 type sink map[jwa.SignatureAlgorithm]interface{}
 
@@ -109,6 +112,18 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 
 	// fmt.Printf("%s: %+v\n", "request", req)
 
+	if len(req.QueryStringParameters) != 1 {
+		return deny(errors.New("input error - wrong number of query string parameters"))
+	}
+
+	if _, ok := req.QueryStringParameters["auth"]; !ok {
+		return deny(errors.New("input error -no auth query string parameter"))
+	}
+
+	if len(req.QueryStringParameters["auth"]) > 999 {
+		return deny(errors.New("input error - auth query string parameter too long"))
+	}
+
 	var (
 		tableName          = os.Getenv("tableName")
 		appClientID        = os.Getenv("appClientID")
@@ -176,7 +191,7 @@ func handler(ctx context.Context, req events.APIGatewayCustomAuthorizerRequestTy
 
 	di, err := ddbsvc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
 		Key: map[string]types.AttributeValue{
-			"pk": &types.AttributeValueMemberS{Value: "TOKEN"},
+			"pk": &types.AttributeValueMemberS{Value: token_},
 			"sk": &types.AttributeValueMemberS{Value: sub},
 		},
 		TableName:    aws.String(tableName),

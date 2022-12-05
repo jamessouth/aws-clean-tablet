@@ -16,19 +16,28 @@ import (
 	"github.com/aws/smithy-go"
 )
 
-func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
+const connect string = "CONNECT"
 
-	reg := strings.Split(req.RequestContext.DomainName, ".")[2]
+func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
+	var (
+		bod    = req.Body
+		region = strings.Split(req.RequestContext.DomainName, ".")[2]
+	)
+
+	if len(bod) > 75 { //TODO replace with observed value
+		return callErr(errors.New("improper json input - too long"))
+	}
+
+	fmt.Println("end", bod, len(bod))
 
 	cfg, err := config.LoadDefaultConfig(ctx,
-		config.WithRegion(reg),
+		config.WithRegion(region),
 	)
 	if err != nil {
 		return callErr(err)
 	}
 
 	var (
-		// tableName = os.Getenv("tableName")
 		ddbsvc              = dynamodb.NewFromConfig(cfg)
 		auth                = req.RequestContext.Authorizer.(map[string]interface{})
 		id, name, tableName = auth["principalId"].(string), auth["username"].(string), auth["tableName"].(string)
@@ -36,7 +45,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	_, err = ddbsvc.PutItem(ctx, &dynamodb.PutItemInput{
 		Item: map[string]types.AttributeValue{
-			"pk":      &types.AttributeValueMemberS{Value: "CONNECT"},
+			"pk":      &types.AttributeValueMemberS{Value: connect},
 			"sk":      &types.AttributeValueMemberS{Value: id},
 			"game":    &types.AttributeValueMemberS{Value: ""},
 			"name":    &types.AttributeValueMemberS{Value: name},
