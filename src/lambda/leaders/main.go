@@ -22,6 +22,8 @@ import (
 	"github.com/aws/smithy-go"
 )
 
+const stat_ string = "STAT"
+
 type stat struct {
 	Name   string  `json:"name"`
 	Wins   int     `json:"wins"`
@@ -54,10 +56,10 @@ func (stats stats) calcStats() stats {
 		s.WinPct = math.Round((w/g)*100) / 100
 		s.PPG = math.Round((p/g)*100) / 100
 
-		if math.IsNaN(s.WinPct) || math.IsInf(s.WinPct, 1) {
+		if math.IsNaN(s.WinPct) || math.IsInf(s.WinPct, 0) {
 			s.WinPct = 0
 		}
-		if math.IsNaN(s.PPG) || math.IsInf(s.PPG, 1) {
+		if math.IsNaN(s.PPG) || math.IsInf(s.PPG, 0) {
 			s.PPG = 0
 		}
 
@@ -78,25 +80,30 @@ func getReturnValue(status int) events.APIGatewayProxyResponse {
 }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
-	reg := strings.Split(req.RequestContext.DomainName, ".")[2]
+	bod := req.Body
+
+	if len(bod) > 75 { //TODO replace with observed value
+		return callErr(errors.New("improper json input - too long"))
+	}
+
+	fmt.Println("leaders", bod, len(bod))
 
 	var (
-		connID   = req.RequestContext.ConnectionID
-		apiid    = os.Getenv("CT_APIID")
-		stage    = os.Getenv("CT_STAGE")
-		endpoint = "https://" + apiid + ".execute-api." + reg + ".amazonaws.com/" + stage
-		// tableName = aws.String(os.Getenv("tableName"))
-
+		region    = strings.Split(req.RequestContext.DomainName, ".")[2]
+		connID    = req.RequestContext.ConnectionID
+		apiid     = os.Getenv("CT_APIID")
+		stage     = os.Getenv("CT_STAGE")
+		endpoint  = "https://" + apiid + ".execute-api." + region + ".amazonaws.com/" + stage
 		tableName = req.RequestContext.Authorizer.(map[string]interface{})["tableName"].(string)
 		// id, name  = auth["principalId"].(string), auth["username"].(string)
 	)
 
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-		if service == apigatewaymanagementapi.ServiceID && region == reg {
+	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, awsRegion string, options ...interface{}) (aws.Endpoint, error) {
+		if service == apigatewaymanagementapi.ServiceID && awsRegion == region {
 			ep := aws.Endpoint{
 				PartitionID:   "aws",
 				URL:           endpoint,
-				SigningRegion: reg,
+				SigningRegion: awsRegion,
 			}
 
 			return ep, nil
@@ -106,7 +113,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	})
 
 	apigwcfg, err := config.LoadDefaultConfig(ctx,
-		config.WithRegion(reg),
+		config.WithRegion(region),
 		config.WithEndpointResolverWithOptions(customResolver),
 	)
 	if err != nil {
@@ -114,7 +121,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	ddbcfg, err := config.LoadDefaultConfig(ctx,
-		config.WithRegion(reg),
+		config.WithRegion(region),
 	)
 	if err != nil {
 		return callErr(err)
@@ -128,8 +135,9 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	leadersResults, err := ddbsvc.Query(ctx, &dynamodb.QueryInput{
 		TableName:              aws.String(tableName),
 		KeyConditionExpression: aws.String("pk = :s"),
+		Limit:                  aws.Int32(100),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":s": &types.AttributeValueMemberS{Value: "STAT"},
+			":s": &types.AttributeValueMemberS{Value: stat_},
 		},
 	})
 	if err != nil {
