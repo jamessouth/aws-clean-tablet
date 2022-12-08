@@ -53,6 +53,7 @@ func (stats stats) calcStats() stats {
 		w := float64(s.Wins)
 		g := float64(s.Games)
 		p := float64(s.Points)
+
 		s.WinPct = math.Round((w/g)*100) / 100
 		s.PPG = math.Round((p/g)*100) / 100
 
@@ -96,21 +97,20 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		endpoint  = "https://" + apiid + ".execute-api." + region + ".amazonaws.com/" + stage
 		tableName = req.RequestContext.Authorizer.(map[string]interface{})["tableName"].(string)
 		// id, name  = auth["principalId"].(string), auth["username"].(string)
-	)
+		customResolver = aws.EndpointResolverWithOptionsFunc(func(service, awsRegion string, options ...interface{}) (aws.Endpoint, error) {
+			if service == apigatewaymanagementapi.ServiceID && awsRegion == region {
+				ep := aws.Endpoint{
+					PartitionID:   "aws",
+					URL:           endpoint,
+					SigningRegion: awsRegion,
+				}
 
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, awsRegion string, options ...interface{}) (aws.Endpoint, error) {
-		if service == apigatewaymanagementapi.ServiceID && awsRegion == region {
-			ep := aws.Endpoint{
-				PartitionID:   "aws",
-				URL:           endpoint,
-				SigningRegion: awsRegion,
+				return ep, nil
 			}
 
-			return ep, nil
-		}
-
-		return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested")
-	})
+			return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested")
+		})
+	)
 
 	apigwcfg, err := config.LoadDefaultConfig(ctx,
 		config.WithRegion(region),

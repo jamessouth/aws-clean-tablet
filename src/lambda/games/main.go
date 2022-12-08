@@ -201,24 +201,23 @@ func sortByScoreThenName(players []livePlayer) []livePlayer {
 
 func send(ctx context.Context, reg string, payload []byte, pls ...livePlayer) error {
 	var (
-		apiid    = os.Getenv("CT_APIID")
-		stage    = os.Getenv("CT_STAGE")
-		endpoint = "https://" + apiid + ".execute-api." + reg + ".amazonaws.com/" + stage
-	)
+		apiid          = os.Getenv("CT_APIID")
+		stage          = os.Getenv("CT_STAGE")
+		endpoint       = "https://" + apiid + ".execute-api." + reg + ".amazonaws.com/" + stage
+		customResolver = aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+			if service == apigatewaymanagementapi.ServiceID && region == reg {
+				ep := aws.Endpoint{
+					PartitionID:   "aws",
+					URL:           endpoint,
+					SigningRegion: reg,
+				}
 
-	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-		if service == apigatewaymanagementapi.ServiceID && region == reg {
-			ep := aws.Endpoint{
-				PartitionID:   "aws",
-				URL:           endpoint,
-				SigningRegion: reg,
+				return ep, nil
 			}
 
-			return ep, nil
-		}
-
-		return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested")
-	})
+			return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested")
+		})
+	)
 
 	apigwcfg, err := config.LoadDefaultConfig(ctx,
 		// config.WithLogger(logger),
@@ -316,6 +315,237 @@ func getReturnValue(status int) events.APIGatewayProxyResponse {
 	}
 }
 
+func connectEvent(ctx context.Context, eventName, tableName string, ddbsvc *dynamodb.Client, item map[string]types.AttributeValue) (payload []byte, lp []livePlayer, err error) {
+	var connRecord struct {
+		Game, Name, Color, ConnID, Endtoken string
+		Returning                           bool
+	}
+	err = attributevalue.UnmarshalMap(item, &connRecord)
+	if err != nil {
+		return []byte{}, []livePlayer{}, err
+	}
+
+	if connRecord.Endtoken != "" {
+		connRecord.Endtoken = "a"
+	}
+
+	fmt.Printf("%s%+v\n", "connrecord ", connRecord)
+
+	if eventName == dynamodbstreams.OperationTypeInsert || (eventName == dynamodbstreams.OperationTypeModify && connRecord.Returning) {
+		listGamesResults, err := ddbsvc.Query(ctx, &dynamodb.QueryInput{
+			TableName:              aws.String(tableName),
+			ScanIndexForward:       aws.Bool(false),
+			KeyConditionExpression: aws.String("pk = :g"),
+			Limit:                  aws.Int32(50),
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":g": &types.AttributeValueMemberS{Value: listGame},
+			},
+		})
+		if err != nil {
+			return []byte{}, []livePlayer{}, err
+		}
+
+		var listGames []backListGame
+		err = attributevalue.UnmarshalListOfMaps(listGamesResults.Items, &listGames)
+		if err != nil {
+			return []byte{}, []livePlayer{}, err
+		}
+
+		payload, err = json.Marshal(struct {
+			ListGames []frontListGame `json:"listGms"`
+			Name      string          `json:"name"`
+		}{
+			ListGames: getFrontListGames(listGames),
+			Name:      connRecord.Name,
+		})
+		if err != nil {
+			return []byte{}, []livePlayer{}, err
+		}
+	} else if eventName == dynamodbstreams.OperationTypeModify {
+		payload, err = json.Marshal(struct {
+			ModConnGm string `json:"modConn"`
+			Color     string `json:"color"`
+			Endtoken  string `json:"endtoken"`
+		}{
+			ModConnGm: connRecord.Game,
+			Color:     connRecord.Color,
+			Endtoken:  connRecord.Endtoken,
+		})
+		if err != nil {
+			return []byte{}, []livePlayer{}, err
+		}
+	}
+
+	return payload, []livePlayer{{ConnID: connRecord.ConnID}}, nil
+}
+
+func listGameEvent(ctx context.Context, eventName, tableName string, ddbsvc *dynamodb.Client, item map[string]types.AttributeValue) (payload []byte, conns []livePlayer, err error) {
+	var listGameRecord backListGame
+	err = attributevalue.UnmarshalMap(item, &listGameRecord)
+	if err != nil {
+		return []byte{}, []livePlayer{}, err
+	}
+
+	fmt.Printf("%s%+v\n", "list gammmmme ", listGameRecord)
+
+	gp := listGamePayload{
+		Game: frontListGame{
+			No:        listGameRecord.Sk,
+			TimerCxld: listGameRecord.TimerCxld,
+			Players:   sortByName(getSlice(listGameRecord.Players)),
+		},
+		Tag: modifyListGame,
+	}
+
+	queryParams := dynamodb.QueryInput{
+		TableName:              aws.String(tableName),
+		KeyConditionExpression: aws.String("pk = :c"),
+		FilterExpression:       aws.String("#P = :f"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":c": &types.AttributeValueMemberS{Value: connect},
+			":f": &types.AttributeValueMemberBOOL{Value: false},
+		},
+		ExpressionAttributeNames: map[string]string{
+			"#P": "playing",
+		},
+	}
+
+	switch eventName {
+	case dynamodbstreams.OperationTypeInsert:
+		gp.Tag = addListGame
+	case dynamodbstreams.OperationTypeModify:
+	default:
+		gp.Game.Players = nil
+		gp.Tag = removeListGame
+		queryParams.FilterExpression = nil
+		queryParams.ExpressionAttributeNames = nil
+		delete(queryParams.ExpressionAttributeValues, ":f")
+	}
+
+	payload, err = json.Marshal(gp)
+	if err != nil {
+		return []byte{}, []livePlayer{}, err
+	}
+
+	connResults, err := ddbsvc.Query(ctx, &queryParams)
+	if err != nil {
+		return []byte{}, []livePlayer{}, err
+	}
+
+	err = attributevalue.UnmarshalListOfMaps(connResults.Items, &conns)
+	if err != nil {
+		return []byte{}, []livePlayer{}, err
+	}
+
+	return payload, conns, nil
+}
+
+func liveGameEvent(ctx context.Context, eventName, tableName string, ddbsvc *dynamodb.Client, sfnsvc *sfn.Client, item map[string]types.AttributeValue) (payload []byte, conns []livePlayer, err error) {
+	var gameRecord struct {
+		Sk, Token    string
+		Players      map[string]livePlayer
+		AnswersCount int
+	}
+	err = attributevalue.UnmarshalMap(item, &gameRecord)
+	if err != nil {
+		return []byte{}, []livePlayer{}, err
+	}
+
+	fmt.Printf("%s%+v\n", "live gammmmme ", gameRecord)
+
+	pls := getSlice(gameRecord.Players)
+
+	if eventName == dynamodbstreams.OperationTypeInsert {
+		payload, err = json.Marshal(players{
+			Players:     sortByScoreThenName(pls),
+			Sk:          gameRecord.Sk,
+			ShowAnswers: false,
+			Winner:      "",
+		})
+		if err != nil {
+			return []byte{}, []livePlayer{}, err
+		}
+	} else if eventName == dynamodbstreams.OperationTypeModify {
+		if gameRecord.AnswersCount == len(pls) {
+			pls, scoreMap := prep(pls)
+
+			pls = sortByAnswerThenName(pls)
+
+			payload, err = json.Marshal(players{
+				Players:     showAnswers(pls),
+				Sk:          gameRecord.Sk,
+				ShowAnswers: true,
+				Winner:      "",
+			})
+			if err != nil {
+				return []byte{}, []livePlayer{}, err
+			}
+
+			ui, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+				Key: map[string]types.AttributeValue{
+					"pk": &types.AttributeValueMemberS{Value: liveGame},
+					"sk": &types.AttributeValueMemberS{Value: gameRecord.Sk},
+				},
+				TableName: aws.String(tableName),
+				ExpressionAttributeNames: map[string]string{
+					"#A": "answersCount",
+				},
+				ExpressionAttributeValues: map[string]types.AttributeValue{
+					":z": &types.AttributeValueMemberN{Value: "0"},
+				},
+				UpdateExpression: aws.String("SET #A = :z"),
+				ReturnValues:     types.ReturnValueAllOld,
+			})
+			if err != nil {
+				return []byte{}, []livePlayer{}, err
+			}
+
+			var lw struct {
+				Lastword bool
+			}
+
+			err = attributevalue.UnmarshalMap(ui.Attributes, &lw)
+			if err != nil {
+				return []byte{}, []livePlayer{}, err
+			}
+
+			op := output{
+				Scores:   scoreMap,
+				Players:  gameRecord.Players,
+				Lastword: lw.Lastword,
+			}
+
+			taskOutput, err := json.Marshal(op)
+			if err != nil {
+				return []byte{}, []livePlayer{}, err
+			}
+
+			stsi := sfn.SendTaskSuccessInput{
+				Output:    aws.String(string(taskOutput)),
+				TaskToken: aws.String(gameRecord.Token),
+			}
+
+			_, err = sfnsvc.SendTaskSuccess(ctx, &stsi)
+			if err != nil {
+				return []byte{}, []livePlayer{}, err
+			}
+		} else {
+			pls = sortByScoreThenName(pls)
+			payload, err = json.Marshal(players{
+				Players:     clearAnswers(pls),
+				Sk:          gameRecord.Sk,
+				ShowAnswers: false,
+				Winner:      "",
+			})
+			if err != nil {
+				return []byte{}, []livePlayer{}, err
+			}
+		}
+	}
+
+	return payload, pls, nil
+}
+
 // [
 //     {
 //       "dynamodb": {
@@ -384,9 +614,10 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			tableName = strings.Split(rec.EventSourceArn, "/")[1]
 			region    = rec.AWSRegion
 			rawItem   map[string]events.DynamoDBAttributeValue
+			eventName = rec.EventName
 		)
 
-		if rec.EventName == dynamodbstreams.OperationTypeRemove {
+		if eventName == dynamodbstreams.OperationTypeRemove {
 			rawItem = rec.Change.OldImage
 		} else {
 			rawItem = rec.Change.NewImage
@@ -409,278 +640,41 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			ddbsvc  = dynamodb.NewFromConfig(cfg)
 			sfnsvc  = sfn.NewFromConfig(cfg)
 			recType = item["pk"].(*types.AttributeValueMemberS).Value
+			payload = []byte{}
+			plrs    = []livePlayer{}
 		)
 
-		if recType == connect {
-
-			var connRecord struct {
-				Pk, Sk, Game, Name, Color, ConnID, Endtoken string
-				Playing, Returning                          bool
-			}
-			err = attributevalue.UnmarshalMap(item, &connRecord)
-			if err != nil {
-				return callErr(err)
-			}
-
-			if connRecord.Endtoken != "" {
-				connRecord.Endtoken = "a"
-			}
-
-			fmt.Printf("%s%+v\n", "connrecord ", connRecord)
-
-			var payload []byte
-
-			if rec.EventName == dynamodbstreams.OperationTypeInsert || (rec.EventName == dynamodbstreams.OperationTypeModify && connRecord.Returning) {
-
-				listGamesResults, err := ddbsvc.Query(ctx, &dynamodb.QueryInput{
-					TableName:              aws.String(tableName),
-					ScanIndexForward:       aws.Bool(false),
-					KeyConditionExpression: aws.String("pk = :g"),
-					ExpressionAttributeValues: map[string]types.AttributeValue{
-						":g": &types.AttributeValueMemberS{Value: listGame},
-					},
-				})
-				if err != nil {
-					return callErr(err)
-				}
-
-				var listGames []backListGame
-				err = attributevalue.UnmarshalListOfMaps(listGamesResults.Items, &listGames)
-				if err != nil {
-					return callErr(err)
-				}
-
-				payload, err = json.Marshal(struct {
-					ListGames []frontListGame `json:"listGms"`
-					Name      string          `json:"name"`
-				}{
-					ListGames: getFrontListGames(listGames),
-					Name:      connRecord.Name,
-				})
-				if err != nil {
-					return callErr(err)
-				}
-
-			} else if rec.EventName == dynamodbstreams.OperationTypeModify {
-
-				payload, err = json.Marshal(struct {
-					ModConnGm string `json:"modConn"`
-					Color     string `json:"color"`
-					Endtoken  string `json:"endtoken"`
-				}{
-					ModConnGm: connRecord.Game,
-					Color:     connRecord.Color,
-					Endtoken:  connRecord.Endtoken,
-				})
-				if err != nil {
-					return callErr(err)
-				}
-
-			} else {
-				oi := rec.Change.OldImage
-				fmt.Printf("%s: %+v\n", "remove conn oi", oi)
+		switch recType {
+		case connect:
+			if eventName == dynamodbstreams.OperationTypeRemove {
 				continue
 			}
 
-			err = send(ctx, region, payload, livePlayer{ConnID: connRecord.ConnID})
+			payload, plrs, err = connectEvent(ctx, eventName, tableName, ddbsvc, item)
 			if err != nil {
 				return callErr(err)
 			}
-
-		} else if recType == listGame {
-
-			var listGameRecord backListGame
-			err = attributevalue.UnmarshalMap(item, &listGameRecord)
+		case listGame:
+			payload, plrs, err = listGameEvent(ctx, eventName, tableName, ddbsvc, item)
 			if err != nil {
 				return callErr(err)
 			}
-
-			fmt.Printf("%s%+v\n", "list gammmmme ", listGameRecord)
-
-			gp := listGamePayload{
-				Game: frontListGame{
-					No:        listGameRecord.Sk,
-					TimerCxld: listGameRecord.TimerCxld,
-					Players:   sortByName(getSlice(listGameRecord.Players)),
-				},
-				Tag: modifyListGame,
+		case liveGame:
+			if eventName == dynamodbstreams.OperationTypeRemove {
+				continue
 			}
 
-			queryParams := dynamodb.QueryInput{
-				TableName:              aws.String(tableName),
-				KeyConditionExpression: aws.String("pk = :c"),
-				FilterExpression:       aws.String("#P = :f"),
-				ExpressionAttributeValues: map[string]types.AttributeValue{
-					":c": &types.AttributeValueMemberS{Value: connect},
-					":f": &types.AttributeValueMemberBOOL{Value: false},
-				},
-				ExpressionAttributeNames: map[string]string{
-					"#P": "playing",
-				},
-			}
-
-			switch rec.EventName {
-			case dynamodbstreams.OperationTypeInsert:
-				gp.Tag = addListGame
-			case dynamodbstreams.OperationTypeModify:
-			default:
-				fmt.Printf("%s: %+v\n", "remove list game oi", rec.Change.OldImage)
-				gp.Game.Players = nil
-				gp.Tag = removeListGame
-				queryParams.FilterExpression = nil
-				queryParams.ExpressionAttributeNames = nil
-				delete(queryParams.ExpressionAttributeValues, ":f")
-			}
-
-			payload, err := json.Marshal(gp)
+			payload, plrs, err = liveGameEvent(ctx, eventName, tableName, ddbsvc, sfnsvc, item)
 			if err != nil {
 				return callErr(err)
 			}
-
-			connResults, err := ddbsvc.Query(ctx, &queryParams)
-			if err != nil {
-				return callErr(err)
-			}
-
-			var conns []livePlayer
-			err = attributevalue.UnmarshalListOfMaps(connResults.Items, &conns)
-			if err != nil {
-				return callErr(err)
-			}
-
-			err = send(ctx, region, payload, conns...)
-			if err != nil {
-				return callErr(err)
-			}
-
-		} else if recType == liveGame {
-
-			var gameRecord struct {
-				Sk, Token    string
-				Players      map[string]livePlayer
-				AnswersCount int
-			}
-			err = attributevalue.UnmarshalMap(item, &gameRecord)
-			if err != nil {
-				return callErr(err)
-			}
-
-			fmt.Printf("%s%+v\n", "live gammmmme ", gameRecord)
-
-			pls := getSlice(gameRecord.Players)
-			var payload []byte
-
-			if rec.EventName == dynamodbstreams.OperationTypeInsert {
-
-				payload, err = json.Marshal(players{
-					Players:     sortByScoreThenName(pls),
-					Sk:          gameRecord.Sk,
-					ShowAnswers: false,
-					Winner:      "",
-				})
-				if err != nil {
-					return callErr(err)
-				}
-
-				err = send(ctx, region, payload, pls...)
-				if err != nil {
-					return callErr(err)
-				}
-
-			} else if rec.EventName == dynamodbstreams.OperationTypeModify {
-
-				if gameRecord.AnswersCount == len(pls) {
-					pls, scoreMap := prep(pls)
-
-					pls = sortByAnswerThenName(pls)
-
-					payload, err = json.Marshal(players{
-						Players:     showAnswers(pls),
-						Sk:          gameRecord.Sk,
-						ShowAnswers: true,
-						Winner:      "",
-					})
-					if err != nil {
-						return callErr(err)
-					}
-
-					err = send(ctx, region, payload, pls...)
-					if err != nil {
-						return callErr(err)
-					}
-
-					ui, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-						Key: map[string]types.AttributeValue{
-							"pk": &types.AttributeValueMemberS{Value: liveGame},
-							"sk": &types.AttributeValueMemberS{Value: gameRecord.Sk},
-						},
-						TableName: aws.String(tableName),
-						ExpressionAttributeNames: map[string]string{
-							"#A": "answersCount",
-						},
-						ExpressionAttributeValues: map[string]types.AttributeValue{
-							":z": &types.AttributeValueMemberN{Value: "0"},
-						},
-						UpdateExpression: aws.String("SET #A = :z"),
-						ReturnValues:     types.ReturnValueAllOld,
-					})
-					if err != nil {
-						return callErr(err)
-					}
-
-					var lw struct {
-						Lastword bool
-					}
-
-					err = attributevalue.UnmarshalMap(ui.Attributes, &lw)
-					if err != nil {
-						return callErr(err)
-					}
-
-					op := output{
-						Scores:   scoreMap,
-						Players:  gameRecord.Players,
-						Lastword: lw.Lastword,
-					}
-
-					taskOutput, err := json.Marshal(op)
-					if err != nil {
-						return callErr(err)
-					}
-
-					stsi := sfn.SendTaskSuccessInput{
-						Output:    aws.String(string(taskOutput)),
-						TaskToken: aws.String(gameRecord.Token),
-					}
-
-					_, err = sfnsvc.SendTaskSuccess(ctx, &stsi)
-					if err != nil {
-						return callErr(err)
-					}
-
-				} else {
-
-					pls = sortByScoreThenName(pls)
-					payload, err = json.Marshal(players{
-						Players:     clearAnswers(pls),
-						Sk:          gameRecord.Sk,
-						ShowAnswers: false,
-						Winner:      "",
-					})
-					if err != nil {
-						return callErr(err)
-					}
-
-					err = send(ctx, region, payload, pls...)
-					if err != nil {
-						return callErr(err)
-					}
-				}
-
-			}
-
-		} else {
+		default:
 			fmt.Printf("%s: %+v\n", "other record type", rec)
+		}
+
+		err = send(ctx, region, payload, plrs...)
+		if err != nil {
+			return callErr(err)
 		}
 	}
 
