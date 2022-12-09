@@ -24,13 +24,13 @@ import (
 )
 
 const (
-	connect                      string = "CONNECT"
-	listGame                     string = "LISTGAME"
-	liveGame                     string = "LIVEGAME"
-	modifyListGame               string = "mdLstGm"
-	addListGame                  string = "addGame"
-	removeListGame               string = "rmvGame"
-	maxAllowableStreamRecordSize int64  = 2500
+	connect              string = "CONNECT"
+	listGame             string = "LISTGAME"
+	liveGame             string = "LIVEGAME"
+	modifyListGame       string = "mdLstGm"
+	addListGame          string = "addGame"
+	removeListGame       string = "rmvGame"
+	maxStreamRecordBytes int64  = 2500
 )
 
 type listPlayer struct {
@@ -315,6 +315,59 @@ func getReturnValue(status int) events.APIGatewayProxyResponse {
 	}
 }
 
+func sendSfnTask(ctx context.Context, ddbsvc *dynamodb.Client, sfnsvc *sfn.Client, sk, tableName, token string, scoreMap map[string]int, plrs map[string]livePlayer) error {
+	ui, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		Key: map[string]types.AttributeValue{
+			"pk": &types.AttributeValueMemberS{Value: liveGame},
+			"sk": &types.AttributeValueMemberS{Value: sk},
+		},
+		TableName: aws.String(tableName),
+		ExpressionAttributeNames: map[string]string{
+			"#A": "answersCount",
+		},
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":z": &types.AttributeValueMemberN{Value: "0"},
+		},
+		UpdateExpression: aws.String("SET #A = :z"),
+		ReturnValues:     types.ReturnValueAllOld,
+	})
+	if err != nil {
+		return err
+	}
+
+	var lw struct {
+		Lastword bool
+	}
+
+	err = attributevalue.UnmarshalMap(ui.Attributes, &lw)
+	if err != nil {
+		return err
+	}
+
+	op := output{
+		Scores:   scoreMap,
+		Players:  plrs,
+		Lastword: lw.Lastword,
+	}
+
+	taskOutput, err := json.Marshal(op)
+	if err != nil {
+		return err
+	}
+
+	stsi := sfn.SendTaskSuccessInput{
+		Output:    aws.String(string(taskOutput)),
+		TaskToken: aws.String(token),
+	}
+
+	_, err = sfnsvc.SendTaskSuccess(ctx, &stsi)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func connectEvent(ctx context.Context, eventName, tableName string, ddbsvc *dynamodb.Client, item map[string]types.AttributeValue) (payload []byte, lp []livePlayer, err error) {
 	var connRecord struct {
 		Game, Name, Color, ConnID, Endtoken string
@@ -481,54 +534,11 @@ func liveGameEvent(ctx context.Context, eventName, tableName string, ddbsvc *dyn
 				return []byte{}, []livePlayer{}, err
 			}
 
-			ui, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-				Key: map[string]types.AttributeValue{
-					"pk": &types.AttributeValueMemberS{Value: liveGame},
-					"sk": &types.AttributeValueMemberS{Value: gameRecord.Sk},
-				},
-				TableName: aws.String(tableName),
-				ExpressionAttributeNames: map[string]string{
-					"#A": "answersCount",
-				},
-				ExpressionAttributeValues: map[string]types.AttributeValue{
-					":z": &types.AttributeValueMemberN{Value: "0"},
-				},
-				UpdateExpression: aws.String("SET #A = :z"),
-				ReturnValues:     types.ReturnValueAllOld,
-			})
+			err = sendSfnTask(ctx, ddbsvc, sfnsvc, gameRecord.Sk, tableName, gameRecord.Token, scoreMap, gameRecord.Players)
 			if err != nil {
 				return []byte{}, []livePlayer{}, err
 			}
 
-			var lw struct {
-				Lastword bool
-			}
-
-			err = attributevalue.UnmarshalMap(ui.Attributes, &lw)
-			if err != nil {
-				return []byte{}, []livePlayer{}, err
-			}
-
-			op := output{
-				Scores:   scoreMap,
-				Players:  gameRecord.Players,
-				Lastword: lw.Lastword,
-			}
-
-			taskOutput, err := json.Marshal(op)
-			if err != nil {
-				return []byte{}, []livePlayer{}, err
-			}
-
-			stsi := sfn.SendTaskSuccessInput{
-				Output:    aws.String(string(taskOutput)),
-				TaskToken: aws.String(gameRecord.Token),
-			}
-
-			_, err = sfnsvc.SendTaskSuccess(ctx, &stsi)
-			if err != nil {
-				return []byte{}, []livePlayer{}, err
-			}
 		} else {
 			pls = sortByScoreThenName(pls)
 			payload, err = json.Marshal(players{
@@ -600,7 +610,7 @@ func liveGameEvent(ctx context.Context, eventName, tableName string, ddbsvc *dyn
 
 func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayProxyResponse, error) {
 	for _, rec := range req.Records {
-		if rec.Change.SizeBytes > maxAllowableStreamRecordSize {
+		if rec.Change.SizeBytes > maxStreamRecordBytes {
 			err := fmt.Errorf("too big!\nsize: %+v\nevent name: %+v\ntime: %+v\nkeys: %+v\nseq no: %+v", rec.Change.SizeBytes, rec.EventName, rec.Change.ApproximateCreationDateTime, rec.Change.Keys, rec.Change.SequenceNumber)
 
 			fmt.Println(err.Error())
