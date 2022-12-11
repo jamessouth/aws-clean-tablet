@@ -30,7 +30,6 @@ import (
 const (
 	connect    string = "CONNECT"
 	listGame   string = "LISTGAME"
-	discon     string = "discon"
 	disconnect string = "disconnect"
 	leave      string = "leave"
 	ready      string = "ready"
@@ -55,7 +54,7 @@ func getReturnValue(status int) events.APIGatewayProxyResponse {
 func checkInput(s string) (string, string, error) {
 	var (
 		maxLength = 99
-		gamenoRE  = regexp.MustCompile(`^\d{19}$|^discon$`)
+		gamenoRE  = regexp.MustCompile(`^\d{19}$`)
 		commandRE = regexp.MustCompile(`^disconnect$|^leave$|^ready$`)
 		body      struct{ Gameno, Command string }
 	)
@@ -73,17 +72,8 @@ func checkInput(s string) (string, string, error) {
 		return "", "", err
 	}
 
-	var gameno, command = body.Gameno, body.Command
-
-	switch {
-	case !gamenoRE.MatchString(gameno):
-		return "", "", errors.New("improper json input - bad gameno")
-	case !commandRE.MatchString(command):
-		return "", "", errors.New("improper json input - bad command")
-	case command == leave && gameno == discon:
-		return "", "", errors.New("improper json input - leave/discon mismatch")
-	case command == ready && gameno == discon:
-		return "", "", errors.New("improper json input - ready/discon mismatch")
+	if !gamenoRE.MatchString(body.Gameno) || !commandRE.MatchString(body.Command) {
+		return "", "", errors.New("improper json input - bad gameno|command")
 	}
 
 	return body.Gameno, body.Command, nil
@@ -134,6 +124,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 			return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested")
 		})
+		udInput dynamodb.UpdateItemInput
 	)
 
 	apigwcfg, err := config.LoadDefaultConfig(ctx,
@@ -190,19 +181,21 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			return callErr(err)
 		}
 
-		ui2, err := ddbsvc.UpdateItem(ctx, &removePlayerInput)
-		if err != nil {
-			return callErr(err)
-		} //not using transaction here because return values cannot be retrieved
+		udInput = removePlayerInput
 
-		err = getReadyStartGame(ui2.Attributes, gameItemKey, tableName, ctx, ddbsvc, apigwsvc, req.RequestContext.RequestTimeEpoch, ebsvc)
-		if err != nil {
-			return callErr(err)
-		}
+		// ui2, err := ddbsvc.UpdateItem(ctx, &removePlayerInput)
+		// if err != nil {
+		// 	return callErr(err)
+		// } //not using transaction here because return values cannot be retrieved
+
+		// err = getReadyStartGame(ui2.Attributes, gameItemKey, tableName, ctx, ddbsvc, apigwsvc, req.RequestContext.RequestTimeEpoch, ebsvc)
+		// if err != nil {
+		// 	return callErr(err)
+		// }
 
 	} else if checkedCommand == ready {
 
-		ui2, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		udInput = dynamodb.UpdateItemInput{
 			Key:       gameItemKey,
 			TableName: aws.String(tableName),
 			ExpressionAttributeNames: map[string]string{
@@ -215,31 +208,32 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			},
 			UpdateExpression: aws.String("SET #P.#I.#R = :t"),
 			ReturnValues:     types.ReturnValueAllNew,
-		})
-		if err != nil {
-			return callErr(err)
 		}
 
-		err = getReadyStartGame(ui2.Attributes, gameItemKey, tableName, ctx, ddbsvc, apigwsvc, req.RequestContext.RequestTimeEpoch, ebsvc)
-		if err != nil {
-			return callErr(err)
-		}
+		// ui2, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+		// 	Key:       gameItemKey,
+		// 	TableName: aws.String(tableName),
+		// 	ExpressionAttributeNames: map[string]string{
+		// 		"#P": "players",
+		// 		"#I": id,
+		// 		"#R": ready,
+		// 	},
+		// 	ExpressionAttributeValues: map[string]types.AttributeValue{
+		// 		":t": &types.AttributeValueMemberBOOL{Value: true},
+		// 	},
+		// 	UpdateExpression: aws.String("SET #P.#I.#R = :t"),
+		// 	ReturnValues:     types.ReturnValueAllNew,
+		// })
+		// if err != nil {
+		// 	return callErr(err)
+		// }
+
+		// err = getReadyStartGame(ui2.Attributes, gameItemKey, tableName, ctx, ddbsvc, apigwsvc, req.RequestContext.RequestTimeEpoch, ebsvc)
+		// if err != nil {
+		// 	return callErr(err)
+		// }
 
 	} else if checkedCommand == disconnect {
-		if checkedGameno != discon {
-
-			ui2, err := ddbsvc.UpdateItem(ctx, &removePlayerInput)
-
-			if err != nil {
-				return callErr(err)
-			}
-
-			err = getReadyStartGame(ui2.Attributes, gameItemKey, tableName, ctx, ddbsvc, apigwsvc, req.RequestContext.RequestTimeEpoch, ebsvc)
-			if err != nil {
-				return callErr(err)
-			}
-
-		}
 
 		_, err = ddbsvc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
 			Key:       connKey,
@@ -249,8 +243,25 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			return callErr(err)
 		}
 
+		udInput = removePlayerInput
+
+		// ui2, err := ddbsvc.UpdateItem(ctx, &removePlayerInput)
+		// if err != nil {
+		// 	return callErr(err)
+		// }
+
+		// err = getReadyStartGame(ui2.Attributes, gameItemKey, tableName, ctx, ddbsvc, apigwsvc, req.RequestContext.RequestTimeEpoch, ebsvc)
+		// if err != nil {
+		// 	return callErr(err)
+		// }
+
 	} else {
 		fmt.Println("other lobby")
+	}
+
+	err = getReadyStartGame(udInput, gameItemKey, tableName, ctx, ddbsvc, apigwsvc, req.RequestContext.RequestTimeEpoch, ebsvc)
+	if err != nil {
+		return callErr(err)
 	}
 
 	return getReturnValue(http.StatusOK), nil
@@ -289,7 +300,7 @@ func getTimer(gik map[string]types.AttributeValue, tn string, ctx context.Contex
 	return reqTime == timerData.TimerID && !timerData.TimerCxld, nil
 }
 
-func getReadyStartGame(rv, gik map[string]types.AttributeValue, tn string, ctx context.Context, ddbsvc *dynamodb.Client, apigwsvc *apigatewaymanagementapi.Client, reqTime int64, ebsvc *eventbridge.Client) error {
+func getReadyStartGame(ddd dynamodb.UpdateItemInput, gik map[string]types.AttributeValue, tn string, ctx context.Context, ddbsvc *dynamodb.Client, apigwsvc *apigatewaymanagementapi.Client, reqTime int64, ebsvc *eventbridge.Client) error {
 	var (
 		minPlayers = 3
 		gm         struct {
@@ -297,7 +308,13 @@ func getReadyStartGame(rv, gik map[string]types.AttributeValue, tn string, ctx c
 			Players map[string]listPlayer
 		}
 	)
-	err := attributevalue.UnmarshalMap(rv, &gm)
+
+	rv, err := ddbsvc.UpdateItem(ctx, &ddd)
+	if err != nil {
+		return err
+	}
+
+	err = attributevalue.UnmarshalMap(rv.Attributes, &gm)
 	if err != nil {
 		return err
 	}

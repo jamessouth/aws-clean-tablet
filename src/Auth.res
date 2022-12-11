@@ -142,7 +142,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
     let pl2 = switch playerGame == "" {
     | true =>
       payloadToObj({
-        act: Lobby,
+        act: LobbyNonApigw,
         gn: Discon,
         cmd: Disconnect,
       })

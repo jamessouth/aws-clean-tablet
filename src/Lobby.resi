@@ -3,7 +3,7 @@ type apigwAction =
   | End
   | Leaders
   | Lobby
-  | LobbyJoinUnready
+  | LobbyNonApigw
   | Logging
 
 type lobbyGameno =

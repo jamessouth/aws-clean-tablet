@@ -26,7 +26,9 @@ const (
 	maxPlayersPerGame string = "8"
 	connect           string = "CONNECT"
 	listGame          string = "LISTGAME"
+	discon            string = "discon"
 	newgame           string = "newgame"
+	disconnect        string = "disconnect"
 	join              string = "join"
 	ready             string = "ready"
 	unready           string = "unready"
@@ -51,8 +53,8 @@ func getReturnValue(status int) events.APIGatewayProxyResponse {
 func checkInput(s string) (string, string, error) {
 	var (
 		maxLength = 99
-		gamenoRE  = regexp.MustCompile(`^\d{19}$|^newgame$`)
-		commandRE = regexp.MustCompile(`^join$|^unready$`)
+		gamenoRE  = regexp.MustCompile(`^\d{19}$|^discon$|^newgame$`)
+		commandRE = regexp.MustCompile(`^disconnect$|^join$|^unready$`)
 		body      struct{ Gameno, Command string }
 	)
 
@@ -76,11 +78,15 @@ func checkInput(s string) (string, string, error) {
 		return "", "", errors.New("improper json input - bad gameno")
 	case !commandRE.MatchString(command):
 		return "", "", errors.New("improper json input - bad command")
-	case command == unready && gameno == newgame:
-		return "", "", errors.New("improper json input - unready/newgame mismatch")
+	case command == disconnect && gameno != discon:
+		return "", "", errors.New("improper json input - disconnect/newgame mismatch")
+	case command == join && gameno == discon:
+		return "", "", errors.New("improper json input - join/discon mismatch")
+	case command == unready && (gameno == discon || gameno == newgame):
+		return "", "", errors.New("improper json input - unready/(discon|newgame) mismatch")
 	}
 
-	return body.Gameno, body.Command, nil
+	return gameno, command, nil
 }
 
 func joinEvent(ctx context.Context, connKey, gameItemKey map[string]types.AttributeValue, checkedGameno, connid, id, name, tableName string, ddbsvc *dynamodb.Client) error {
@@ -223,14 +229,11 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	if checkedCommand == join {
-
 		err = joinEvent(ctx, connKey, gameItemKey, checkedGameno, req.RequestContext.ConnectionID, id, name, tableName, ddbsvc)
 		if err != nil {
 			return callErr(err)
 		}
-
 	} else if checkedCommand == unready {
-
 		_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 			Key:       gameItemKey,
 			TableName: aws.String(tableName),
@@ -249,7 +252,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		if err != nil {
 			return callErr(err)
 		}
-
+	} else if checkedCommand == disconnect {
+		_, err = ddbsvc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
+			Key:       connKey,
+			TableName: aws.String(tableName),
+		})
+		if err != nil {
+			return callErr(err)
+		}
 	} else {
 		fmt.Println("other lobby")
 	}
