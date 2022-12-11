@@ -4,7 +4,7 @@ let make: (
   ~oldWord: string,
   ~showAnswers: bool,
   ~winner: string,
-  ~isWinner: bool,
+  ~isGameOver: bool,
   ~onEndClick: (. bool) => unit,
   ~playerName: string,
   ~endtoken: string,

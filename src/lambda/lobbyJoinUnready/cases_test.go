@@ -3,42 +3,31 @@ package main
 var noErrorTests = []struct {
 	input, exp1, exp2, description string
 }{
-
 	{
 		input: `{
 			"gameno": "9156849584651978018",
-			"command": "disconnect"
+			"command": "join"
 		 }`,
 		exp1:        "9156849584651978018",
-		exp2:        "disconnect",
+		exp2:        "join",
 		description: "ok",
 	},
 	{
 		input: `{
-			"gameno": "discon",
-			"command": "disconnect"
+			"gameno": "newgame",
+			"command": "join"
 		 }`,
-		exp1:        "discon",
-		exp2:        "disconnect",
-		description: "ok",
-	},
-
-	{
-		input: `{
-			"gameno": "9156849584651978018",
-			"command": "leave"
-		 }`,
-		exp1:        "9156849584651978018",
-		exp2:        "leave",
+		exp1:        "newgame",
+		exp2:        "join",
 		description: "ok",
 	},
 	{
 		input: `{
 			"gameno": "9156849584651978018",
-			"command": "ready"
+			"command": "unready"
 		 }`,
 		exp1:        "9156849584651978018",
-		exp2:        "ready",
+		exp2:        "unready",
 		description: "ok",
 	},
 }
@@ -146,70 +135,50 @@ var errorTests = []struct {
 	},
 	{
 		input: `{
-			"gameno": "disco",
+			"gameno": "newgamee",
 			"command": "iuiuuhiu"
 		 }`,
 		msg:         "improper json input - bad gameno",
-		description: "gameno not 'discon' exactly",
+		description: "gameno not 'newgame' exactly",
 	},
 	{
 		input: `{
-			"gameno": "discoN",
+			"gameno": "Newgame",
 			"command": "iuiuuhiu"
 		 }`,
 		msg:         "improper json input - bad gameno",
-		description: "gameno not 'discon' exactly",
+		description: "gameno not 'newgame' exactly",
 	},
 	{
 		input: `{
-			"gameno": "discon ",
+			"gameno": " newgame",
 			"command": "iuiuuhiu"
 		 }`,
 		msg:         "improper json input - bad gameno",
-		description: "gameno not 'discon' exactly",
-	},
-
-	{
-		input: `{
-			"gameno": "9156849584651978018",
-			"command": "disconnec"
-		 }`,
-		msg:         "improper json input - bad command",
-		description: "command not 'disconnect|join|leave|ready|unready' exactly",
-	},
-
-	{
-		input: `{
-			"gameno": "9156849584651978018",
-			"command": " leave"
-		 }`,
-		msg:         "improper json input - bad command",
-		description: "command not 'disconnect|join|leave|ready|unready' exactly",
+		description: "gameno not 'newgame' exactly",
 	},
 	{
 		input: `{
 			"gameno": "9156849584651978018",
-			"command": "reaDy"
+			"command": "join "
 		 }`,
 		msg:         "improper json input - bad command",
-		description: "command not 'disconnect|join|leave|ready|unready' exactly",
+		description: "command not 'join|unready' exactly",
 	},
-
 	{
 		input: `{
-			"gameno": "discon",
-			"command": "leave"
+			"gameno": "9156849584651978018",
+			"command": "Unready"
+		 }`,
+		msg:         "improper json input - bad command",
+		description: "command not 'join|unready' exactly",
+	},
+	{
+		input: `{
+			"gameno": "newgame",
+			"command": "unready"
 			}`,
-		msg:         "improper json input - leave/discon mismatch",
-		description: "can only leave existing game",
-	},
-
-	{
-		input: `{
-			"gameno": "discon",
-			"command": "ready"
-			}`,
-		msg:         "improper json input - ready/discon mismatch",
-		description: "can only ready existing game",
+		msg:         "improper json input - unready/newgame mismatch",
+		description: "can only unready existing game",
 	},
 }

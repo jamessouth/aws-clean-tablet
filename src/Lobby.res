@@ -6,6 +6,7 @@ type apigwAction =
   | End
   | Leaders
   | Lobby
+  | LobbyJoinUnready
   | Logging
 
 type lobbyGameno =
@@ -41,6 +42,7 @@ let apigwActionToString = a =>
   | End => "end"
   | Leaders => "leaders"
   | Lobby => "lobby"
+  | LobbyJoinUnready => "lobbyJoinUnready"
   | Logging => "logging"
   }
 
@@ -73,7 +75,7 @@ let payloadToObj = pl => {
     Js.Json.stringifyAny({
       action: apigwActionToString(pl.act),
     })
-  | Lobby =>
+  | Lobby | LobbyJoinUnready =>
     Js.Json.stringifyAny({
       action: apigwActionToString(pl.act),
       gameno: lobbyGamenoToString(pl.gn),
@@ -110,7 +112,7 @@ module Game = {
         })
       | false =>
         payloadToObj({
-          act: Lobby,
+          act: LobbyJoinUnready,
           gn: Gameno({no: no}),
           cmd: Join,
         })
@@ -128,7 +130,7 @@ module Game = {
         })
       | false =>
         payloadToObj({
-          act: Lobby,
+          act: LobbyJoinUnready,
           gn: Gameno({no: no}),
           cmd: Unready,
         })
@@ -240,7 +242,7 @@ let make = (~playerGame, ~games, ~send, ~close, ~count, ~setLeaderData) => {
   let onClick = _ =>
     send(.
       payloadToObj({
-        act: Lobby,
+        act: LobbyJoinUnready,
         gn: Newgame,
         cmd: Join,
       }),
