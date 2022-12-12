@@ -20,8 +20,6 @@ import (
 	"github.com/aws/smithy-go"
 )
 
-// export CGO_ENABLED=0 | go build -o main main.go | zip main.zip main | aws lambda update-function-code --function-name ct-lobby --zip-file fileb://main.zip
-
 const (
 	maxPlayersPerGame string = "8"
 	connect           string = "CONNECT"
@@ -59,7 +57,7 @@ func checkInput(s string) (string, string, error) {
 	)
 
 	if len(s) > maxLength {
-		return "", "", errors.New("improper json input - too long")
+		return "", "", fmt.Errorf("improper json input - too long: %d", len(s))
 	}
 
 	if strings.Count(s, "gameno") != 1 || strings.Count(s, "command") != 1 {
@@ -75,15 +73,15 @@ func checkInput(s string) (string, string, error) {
 
 	switch {
 	case !gamenoRE.MatchString(gameno):
-		return "", "", errors.New("improper json input - bad gameno")
+		return "", "", errors.New("improper json input - bad gameno: " + gameno)
 	case !commandRE.MatchString(command):
-		return "", "", errors.New("improper json input - bad command")
+		return "", "", errors.New("improper json input - bad command: " + command)
 	case command == disconnect && gameno != discon:
-		return "", "", errors.New("improper json input - disconnect/newgame mismatch")
+		return "", "", errors.New("improper json input - disconnect/newgame mismatch: " + gameno)
 	case command == join && gameno == discon:
-		return "", "", errors.New("improper json input - join/discon mismatch")
+		return "", "", errors.New("improper json input - join/discon mismatch: " + gameno)
 	case command == unready && (gameno == discon || gameno == newgame):
-		return "", "", errors.New("improper json input - unready/(discon|newgame) mismatch")
+		return "", "", errors.New("improper json input - unready/(discon|newgame) mismatch: " + gameno)
 	}
 
 	return gameno, command, nil
@@ -189,7 +187,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		region = strings.Split(req.RequestContext.DomainName, ".")[2]
 	)
 
-	fmt.Println("lobby", bod, len(bod))
+	fmt.Println("lobbyNonApigw", bod, len(bod))
 
 	checkedGameno, checkedCommand, err := checkInput(bod)
 	if err != nil {
@@ -260,8 +258,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		if err != nil {
 			return callErr(err)
 		}
-	} else {
-		fmt.Println("other lobby")
 	}
 
 	return getReturnValue(http.StatusOK), nil
