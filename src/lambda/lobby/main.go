@@ -25,8 +25,6 @@ import (
 	"github.com/aws/smithy-go"
 )
 
-// export CGO_ENABLED=0 | go build -o main main.go | zip main.zip main | aws lambda update-function-code --function-name ct-lobby --zip-file fileb://main.zip
-
 const (
 	connect    string = "CONNECT"
 	listGame   string = "LISTGAME"
@@ -60,7 +58,7 @@ func checkInput(s string) (string, string, error) {
 	)
 
 	if len(s) > maxLength {
-		return "", "", errors.New("improper json input - too long")
+		return "", "", fmt.Errorf("improper json input - too long: %d", len(s))
 	}
 
 	if strings.Count(s, "gameno") != 1 || strings.Count(s, "command") != 1 {
@@ -72,11 +70,16 @@ func checkInput(s string) (string, string, error) {
 		return "", "", err
 	}
 
-	if !gamenoRE.MatchString(body.Gameno) || !commandRE.MatchString(body.Command) {
-		return "", "", errors.New("improper json input - bad gameno|command")
+	var gameno, command = body.Gameno, body.Command
+
+	switch {
+	case !gamenoRE.MatchString(gameno):
+		return "", "", errors.New("improper json input - bad gameno: " + gameno)
+	case !commandRE.MatchString(command):
+		return "", "", errors.New("improper json input - bad command: " + command)
 	}
 
-	return body.Gameno, body.Command, nil
+	return gameno, command, nil
 }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -255,8 +258,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		// 	return callErr(err)
 		// }
 
-	} else {
-		fmt.Println("other lobby")
 	}
 
 	err = getReadyStartGame(udInput, gameItemKey, tableName, ctx, ddbsvc, apigwsvc, req.RequestContext.RequestTimeEpoch, ebsvc)
