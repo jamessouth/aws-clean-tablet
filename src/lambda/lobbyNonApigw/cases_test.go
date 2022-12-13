@@ -30,15 +30,6 @@ var noErrorTests = []struct {
 		exp2:        "disconnect",
 		description: "ok",
 	},
-	{
-		input: `{
-			"gameno": "9156849584651978018",
-			"command": "unready"
-		 }`,
-		exp1:        "9156849584651978018",
-		exp2:        "unready",
-		description: "ok",
-	},
 }
 
 var jsonTests = []struct {
@@ -196,7 +187,7 @@ var errorTests = []struct {
 			"command": "disconnec"
 		 }`,
 		msg:         "improper json input - bad command: disconnec",
-		description: "command not 'disconnect|join|unready' exactly",
+		description: "command not 'disconnect|join' exactly",
 	},
 	{
 		input: `{
@@ -204,15 +195,7 @@ var errorTests = []struct {
 			"command": "join "
 		 }`,
 		msg:         "improper json input - bad command: join ",
-		description: "command not 'disconnect|join|unready' exactly",
-	},
-	{
-		input: `{
-			"gameno": "9156849584651978018",
-			"command": "Unready"
-		 }`,
-		msg:         "improper json input - bad command: Unready",
-		description: "command not 'disconnect|join|unready' exactly",
+		description: "command not 'disconnect|join' exactly",
 	},
 	{
 		input: `{
@@ -237,21 +220,5 @@ var errorTests = []struct {
 			}`,
 		msg:         "improper json input - join/discon mismatch: discon",
 		description: "cannot join and disconnect at same time",
-	},
-	{
-		input: `{
-			"gameno": "discon",
-			"command": "unready"
-			}`,
-		msg:         "improper json input - unready/(discon|newgame) mismatch: discon",
-		description: "can only unready existing game",
-	},
-	{
-		input: `{
-			"gameno": "newgame",
-			"command": "unready"
-			}`,
-		msg:         "improper json input - unready/(discon|newgame) mismatch: newgame",
-		description: "can only unready existing game",
 	},
 }

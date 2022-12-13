@@ -16,8 +16,6 @@ type lobbyCommand =
   | Disconnect
   | Join
   | Leave
-  | Ready
-  | Unready
 
 type lobbyPayload = {
   act: apigwAction,

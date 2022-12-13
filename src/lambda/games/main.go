@@ -34,8 +34,7 @@ const (
 )
 
 type listPlayer struct {
-	Name  string `json:"name" dynamodbav:"name"`
-	Ready bool   `json:"ready" dynamodbav:"ready"`
+	Name string `json:"name" dynamodbav:"name"`
 }
 
 type frontListGame struct {

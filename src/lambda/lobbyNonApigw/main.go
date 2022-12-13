@@ -28,14 +28,11 @@ const (
 	newgame           string = "newgame"
 	disconnect        string = "disconnect"
 	join              string = "join"
-	ready             string = "ready"
-	unready           string = "unready"
 )
 
 type listPlayer struct {
 	Name   string `dynamodbav:"name"`
 	ConnID string `dynamodbav:"connid"`
-	Ready  bool   `dynamodbav:"ready"`
 }
 
 func getReturnValue(status int) events.APIGatewayProxyResponse {
@@ -52,7 +49,7 @@ func checkInput(s string) (string, string, error) {
 	var (
 		maxLength = 99
 		gamenoRE  = regexp.MustCompile(`^\d{19}$|^discon$|^newgame$`)
-		commandRE = regexp.MustCompile(`^disconnect$|^join$|^unready$`)
+		commandRE = regexp.MustCompile(`^disconnect$|^join$`)
 		body      struct{ Gameno, Command string }
 	)
 
@@ -80,8 +77,6 @@ func checkInput(s string) (string, string, error) {
 		return "", "", errors.New("improper json input - disconnect/newgame mismatch: " + gameno)
 	case command == join && gameno == discon:
 		return "", "", errors.New("improper json input - join/discon mismatch: " + gameno)
-	case command == unready && (gameno == discon || gameno == newgame):
-		return "", "", errors.New("improper json input - unready/(discon|newgame) mismatch: " + gameno)
 	}
 
 	return gameno, command, nil
@@ -91,7 +86,6 @@ func joinEvent(ctx context.Context, connKey, gameItemKey map[string]types.Attrib
 	player := listPlayer{
 		Name:   name,
 		ConnID: connid,
-		Ready:  false,
 	}
 
 	marshalledPlayersMap, err := attributevalue.Marshal(map[string]listPlayer{
@@ -228,25 +222,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 	if checkedCommand == join {
 		err = joinEvent(ctx, connKey, gameItemKey, checkedGameno, req.RequestContext.ConnectionID, id, name, tableName, ddbsvc)
-		if err != nil {
-			return callErr(err)
-		}
-	} else if checkedCommand == unready {
-		_, err = ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
-			Key:       gameItemKey,
-			TableName: aws.String(tableName),
-			ExpressionAttributeNames: map[string]string{
-				"#P": "players",
-				"#I": id,
-				"#R": ready,
-				"#T": "timerCxld",
-			},
-			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":f": &types.AttributeValueMemberBOOL{Value: false},
-				":t": &types.AttributeValueMemberBOOL{Value: true},
-			},
-			UpdateExpression: aws.String("SET #P.#I.#R = :f, #T = :t"),
-		})
 		if err != nil {
 			return callErr(err)
 		}

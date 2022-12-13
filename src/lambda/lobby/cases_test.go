@@ -22,15 +22,6 @@ var noErrorTests = []struct {
 		exp2:        "leave",
 		description: "ok",
 	},
-	{
-		input: `{
-			"gameno": "9156849584651978018",
-			"command": "ready"
-		 }`,
-		exp1:        "9156849584651978018",
-		exp2:        "ready",
-		description: "ok",
-	},
 }
 
 var jsonTests = []struct {
@@ -140,7 +131,7 @@ var errorTests = []struct {
 			"command": "disconnec"
 		 }`,
 		msg:         "improper json input - bad command: disconnec",
-		description: "command not 'disconnect|join|unready' exactly",
+		description: "command not 'disconnect|join' exactly",
 	},
 	{
 		input: `{
@@ -148,14 +139,6 @@ var errorTests = []struct {
 			"command": " leave"
 		 }`,
 		msg:         "improper json input - bad command:  leave",
-		description: "command not 'disconnect|join|unready' exactly",
-	},
-	{
-		input: `{
-			"gameno": "9156849584651978018",
-			"command": "reaDy"
-		 }`,
-		msg:         "improper json input - bad command: reaDy",
-		description: "command not 'disconnect|join|unready' exactly",
+		description: "command not 'disconnect|join' exactly",
 	},
 }

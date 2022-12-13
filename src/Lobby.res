@@ -19,8 +19,6 @@ type lobbyCommand =
   | Disconnect
   | Join
   | Leave
-  | Ready
-  | Unready
 
 type lobbyPayload = {
   act: apigwAction,
@@ -59,8 +57,6 @@ let lobbyCommandToString = lc =>
   | Disconnect => "disconnect"
   | Join => "join"
   | Leave => "leave"
-  | Ready => "ready"
-  | Unready => "unready"
   }
 
 let payloadToObj = pl => {
@@ -96,15 +92,12 @@ module Game = {
   @react.component
   let make = (~game, ~inThisGame, ~inAGame, ~count, ~send, ~class, ~isOnlyGame) => {
     let liStyle = `<md:mb-16 grid grid-cols-2 grid-rows-6 relative text-xl bg-bottom bg-no-repeat h-200px text-center font-bold text-dark-800 font-anon pb-8 ${class} lg:(max-w-lg w-full)`
-    let (ready, setReady) = React.Uncurried.useState(_ => true)
     let (disabledJoin, setDisabledJoin) = React.Uncurried.useState(_ => false)
-    let (disabledReady, setDisabledReady) = React.Uncurried.useState(_ => true)
     let {no, timerCxld, players}: Reducer.listGame = game
 
     let onClickJoin = _ => {
       let pl = switch inThisGame {
       | true =>
-        setReady(._ => true)
         payloadToObj({
           act: Lobby,
           gn: Gameno({no: no}),
@@ -120,49 +113,21 @@ module Game = {
       send(. pl)
     }
 
-    let onClickReady = _ => {
-      let pl = switch ready {
-      | true =>
-        payloadToObj({
-          act: Lobby,
-          gn: Gameno({no: no}),
-          cmd: Ready,
-        })
-      | false =>
-        payloadToObj({
-          act: LobbyNonApigw,
-          gn: Gameno({no: no}),
-          cmd: Unready,
-        })
-      }
-      send(. pl)
-      setReady(._ => !ready)
-    }
-
     React.useEffect3(() => {
       let size = Js.Array2.length(players)
       switch (inThisGame, inAGame) {
       | (true, _) => {
           //in this game
           setDisabledJoin(._ => false)
-          setDisabledReady(._ =>
-            if size < players_min_threshold {
-              true
-            } else {
-              false
-            }
-          )
         }
 
       | (false, true) => {
           //in another game
           setDisabledJoin(._ => true)
-          setDisabledReady(._ => true)
         }
 
       | (_, false) => {
           //not in a game
-          setDisabledReady(._ => true)
           setDisabledJoin(._ =>
             if size > players_max_threshold {
               true
@@ -195,10 +160,6 @@ module Game = {
       {players
       ->Js.Array2.mapi((p, i) => {
         <p
-          className={switch p.ready {
-          | true => `underline decoration-stone-800 decoration-3 italic`
-          | false => ""
-          }}
           key={j`${p.name}$i`}>
           {React.string(p.name)}
         </p>
@@ -225,12 +186,6 @@ module Game = {
         {switch inThisGame {
         | true => React.string("leave")
         | false => React.string("join")
-        }}
-      </Button>
-      <Button onClick=onClickReady disabled=disabledReady className={"right-0" ++ btnStyle}>
-        {switch ready {
-        | true => React.string("ready")
-        | false => React.string("not ready")
         }}
       </Button>
     </li>

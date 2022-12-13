@@ -1,4 +1,4 @@
-module lobbyJoinUnready
+module lobbyNonApigw
 
 go 1.19
 

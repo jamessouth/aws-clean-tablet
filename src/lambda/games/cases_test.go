@@ -7,9 +7,9 @@ var sortListPlayers = []struct {
 	description     string
 }{
 	{
-		input: []listPlayer{{Name: "bill", Ready: false}, {Name: "artie", Ready: false}, {Name: "wendel", Ready: false}, {Name: "will", Ready: false}, {Name: "mike", Ready: false}},
+		input: []listPlayer{{Name: "bill"}, {Name: "artie"}, {Name: "wendel"}, {Name: "will"}, {Name: "mike"}},
 
-		expected:    []listPlayer{{Name: "artie", Ready: false}, {Name: "bill", Ready: false}, {Name: "mike", Ready: false}, {Name: "wendel", Ready: false}, {Name: "will", Ready: false}},
+		expected:    []listPlayer{{Name: "artie"}, {Name: "bill"}, {Name: "mike"}, {Name: "wendel"}, {Name: "will"}},
 		description: "by name",
 	},
 }

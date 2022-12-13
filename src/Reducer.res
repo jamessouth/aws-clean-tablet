@@ -9,7 +9,6 @@ type stat = {
 
 type listPlayer = {
   name: string,
-  ready: bool,
 }
 
 type livePlayer = {
