@@ -369,8 +369,8 @@ func sendSfnTask(ctx context.Context, ddbsvc *dynamodb.Client, sfnsvc *sfn.Clien
 
 func connectEvent(ctx context.Context, eventName, tableName string, ddbsvc *dynamodb.Client, item map[string]types.AttributeValue) (payload []byte, lp []livePlayer, err error) {
 	var connRecord struct {
-		Game, Name, Color, ConnID, Endtoken string
-		Returning                           bool
+		Name, ConnID, Endtoken string
+		Returning              bool
 	}
 	err = attributevalue.UnmarshalMap(item, &connRecord)
 	if err != nil {
@@ -416,11 +416,9 @@ func connectEvent(ctx context.Context, eventName, tableName string, ddbsvc *dyna
 	} else if eventName == dynamodbstreams.OperationTypeModify {
 		payload, err = json.Marshal(struct {
 			ModConnGm string `json:"modConn"`
-			Color     string `json:"color"`
 			Endtoken  string `json:"endtoken"`
 		}{
-			ModConnGm: connRecord.Game,
-			Color:     connRecord.Color,
+			ModConnGm: "modConn",
 			Endtoken:  connRecord.Endtoken,
 		})
 		if err != nil {

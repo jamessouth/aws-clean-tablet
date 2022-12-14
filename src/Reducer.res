@@ -35,6 +35,8 @@ type state = {
   word: string,
   showAnswers: bool,
   winner: string,
+  playerColor: string,
+  playerGame: string,
 }
 
 type action =
@@ -44,6 +46,9 @@ type action =
   | UpdateListGame(listGame)
   | UpdatePlayers(array<livePlayer>, string, bool, string)
   | UpdateWord(string)
+  | UpdatePlayerColor(string)
+  | UpdatePlayerName(string)
+  | UpdatePlayerGame(string)
   | ResetPlayerState(state)
 
 let init = clean => {
@@ -54,6 +59,9 @@ let init = clean => {
   word: clean.word,
   showAnswers: clean.showAnswers,
   winner: clean.winner,
+  playerColor: clean.playerColor,
+  playerName: clean.playerName,
+  playerGame: clean.playerGame,
 }
 
 let reducer = (state, action) =>

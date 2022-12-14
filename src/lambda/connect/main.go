@@ -47,10 +47,8 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		Item: map[string]types.AttributeValue{
 			"pk":      &types.AttributeValueMemberS{Value: connect},
 			"sk":      &types.AttributeValueMemberS{Value: id},
-			"game":    &types.AttributeValueMemberS{Value: ""},
 			"name":    &types.AttributeValueMemberS{Value: name},
 			"playing": &types.AttributeValueMemberBOOL{Value: false},
-			"color":   &types.AttributeValueMemberS{Value: "transparent"},
 			"connID":  &types.AttributeValueMemberS{Value: req.RequestContext.ConnectionID},
 		},
 		TableName: aws.String(tableName),

@@ -24,7 +24,7 @@ external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => 
 > = "lazy"
 
 type listGamesData = {listGms: array<Reducer.listGame>, name: string}
-type modConnData = {modConn: string, color: string, endtoken: string}
+type modConnData = {modConn: string, endtoken: string}
 type countdownData = {cntdown: string}
 type addGameData = {addGame: Reducer.listGame}
 type modListGameData = {mdLstGm: Reducer.listGame}
@@ -88,6 +88,9 @@ let initialState: Reducer.state = {
   word: "",
   showAnswers: false,
   winner: "",
+  playerColor: "transparent",
+  playerName: "",//TODO reset or keep
+  playerGame: "",
 }
 
 let normalClose = 1000
@@ -102,10 +105,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
   Js.log2("u345876l", route)
 
   let (ws, setWs) = React.Uncurried.useState(_ => Js.Nullable.null)
-  let (playerGame, setPlayerGame) = React.Uncurried.useState(_ => "")
-  let (playerName, setPlayerName) = React.Uncurried.useState(_ => "")
   let (endtoken, setEndtoken) = React.Uncurried.useState(_ => "")
-  let (playerColor, setPlayerColor) = React.Uncurried.useState(_ => "transparent")
   let (count, setCount) = React.Uncurried.useState(_ => "")
   let (wsConnected, setWsConnected) = React.Uncurried.useState(_ => false)
 
@@ -116,7 +116,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
     Reducer.init,
   )
 
-  let {players, sk, showAnswers, winner, oldWord, word, gamesList: games} = state
+  let {players, sk, showAnswers, winner, oldWord, word, gamesList: games, playerColor, playerName, playerGame} = state
 
   let resetConnState = (. ()) => {
     dispatch(. ResetPlayerState(initialState))
@@ -209,15 +209,13 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
         | InsertConn => {
             let {listGms, name} = parseListGames(data)
             Js.log3("parsedlistgames", listGms, name)
-            setPlayerName(. _ => name)
             dispatch(. ListGames(Js.Nullable.return(listGms)))
+            dispatch(. UpdatePlayerName(name))
           }
 
         | ModifyConn => {
-            let {modConn, color, endtoken} = parseModConn(data)
-            Js.log4("parsedmodconn", modConn, color, endtoken)
-            setPlayerGame(. _ => modConn)
-            setPlayerColor(. _ => color)
+            let {modConn, endtoken} = parseModConn(data)
+            Js.log3("parsedmodconn", modConn, endtoken)
             setEndtoken(. _ => endtoken)
           }
 
@@ -244,6 +242,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
             Js.log3("parsedmodplayers", players, sk)
             Js.log3("parsedmodplayers 2", showAnswers, winner)
             dispatch(. UpdatePlayers(players, sk, showAnswers, winner))
+            dispatch(. UpdatePlayerColor(players))
           }
 
         | Word => {
@@ -284,7 +283,6 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
         }
         setCognitoUser(. _ => Js.Nullable.null)
         setWs(. _ => Js.Nullable.null)
-        setPlayerName(. _ => "")
 
         resetConnState(.)
         setToken(. _ => None)
