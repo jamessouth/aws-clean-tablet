@@ -7,15 +7,6 @@ var noErrorTests = []struct {
 	{
 		input: `{
 			"gameno": "9156849584651978018",
-			"command": "disconnect"
-		 }`,
-		exp1:        "9156849584651978018",
-		exp2:        "disconnect",
-		description: "ok",
-	},
-	{
-		input: `{
-			"gameno": "9156849584651978018",
 			"command": "leave"
 		 }`,
 		exp1:        "9156849584651978018",
@@ -125,20 +116,13 @@ var errorTests = []struct {
 		msg:         "improper json input - bad gameno: 915684958465199878018",
 		description: "gameno too long",
 	},
-	{
-		input: `{
-			"gameno": "9156849584651978018",
-			"command": "disconnec"
-		 }`,
-		msg:         "improper json input - bad command: disconnec",
-		description: "command not 'disconnect|join' exactly",
-	},
+
 	{
 		input: `{
 			"gameno": "9156849584651978018",
 			"command": " leave"
 		 }`,
 		msg:         "improper json input - bad command:  leave",
-		description: "command not 'disconnect|join' exactly",
+		description: "command not 'leave|join' exactly",
 	},
 }

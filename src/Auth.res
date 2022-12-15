@@ -128,7 +128,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
   let wsorigin = `wss://${apiid}.execute-api.${region}.amazonaws.com`
 
   open Web
-  let logAndDisconnect = (~msg: string, ~data: string, ~code: int) => {
+  let logAndLeave = (~msg: string, ~data: string, ~code: int) => {
     open Lobby
     switch payloadToObj({
       act: Logging,
@@ -140,17 +140,12 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
     }
 
     let pl2 = switch playerGame == "" {
-    | true =>
-      payloadToObj({
-        act: LobbyNonApigw,
-        gn: Discon,
-        cmd: Disconnect,
-      })
+    | true => None
     | false =>
       payloadToObj({
         act: Lobby,
         gn: Gameno({no: playerGame}),
-        cmd: Disconnect,
+        cmd: Leave,
       })
     }
     switch pl2 {
@@ -184,12 +179,12 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
       ws->onMessage(({data, origin}) => {
         switch origin == wsorigin {
         | true => ()
-        | false => logAndDisconnect(~msg="wrong origin", ~data=origin, ~code=wrongOrigin)
+        | false => logAndLeave(~msg="wrong origin", ~data=origin, ~code=wrongOrigin)
         }
 
         switch Js.String2.length(data) > jsonLimit {
         | true =>
-          logAndDisconnect(
+          logAndLeave(
             ~msg="excessive json data",
             ~data=Js.String2.slice(data, ~from=0, ~to_=jsonLimit),
             ~code=excessiveJson,
@@ -200,7 +195,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
 
         switch Js.String2.match_(data, %re(`/(\"\w+\"\:).+\1/g`)) {
         | None => ()
-        | Some(_) => logAndDisconnect(~msg="duplicate keys", ~data, ~code=duplicateKeys)
+        | Some(_) => logAndLeave(~msg="duplicate keys", ~data, ~code=duplicateKeys)
         }
 
         Js.log3("msg", data, origin)
@@ -266,7 +261,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
         | Other => {
             Js.log2("unknown json data", data)
 
-            logAndDisconnect(~msg="unknown json data", ~data, ~code=unknownJson)
+            logAndLeave(~msg="unknown json data", ~data, ~code=unknownJson)
           }
         }
       })

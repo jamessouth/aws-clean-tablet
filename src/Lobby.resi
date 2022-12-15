@@ -8,12 +8,10 @@ type apigwAction =
 
 type lobbyGameno =
   | Gameno({no: string})
-  | Discon
   | Newgame
 
 type lobbyCommand =
   | Custom({cv: string})
-  | Disconnect
   | Join
   | Leave
 

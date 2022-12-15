@@ -73,7 +73,7 @@ let make = (
       send(.
         Lobby.payloadToObj({
           act: End,
-          gn: Discon, //placeholder
+          gn: Newgame, //placeholder
           cmd: Join, //placeholder
         }),
       )

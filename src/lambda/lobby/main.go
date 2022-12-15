@@ -26,10 +26,9 @@ import (
 )
 
 const (
-	connect    string = "CONNECT"
-	listGame   string = "LISTGAME"
-	disconnect string = "disconnect"
-	leave      string = "leave"
+	connect  string = "CONNECT"
+	listGame string = "LISTGAME"
+	leave    string = "leave"
 )
 
 type listPlayer struct {
@@ -51,7 +50,7 @@ func checkInput(s string) (string, string, error) {
 	var (
 		maxLength = 99
 		gamenoRE  = regexp.MustCompile(`^\d{19}$`)
-		commandRE = regexp.MustCompile(`^disconnect$|^leave$`)
+		commandRE = regexp.MustCompile(`|^leave$`)
 		body      struct{ Gameno, Command string }
 	)
 
@@ -178,25 +177,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 							":g": &types.AttributeValueMemberS{Value: ""},
 						},
 						UpdateExpression: aws.String("SET #G = :g"),
-					},
-				},
-				{
-					Update: &removePlayerInput,
-				},
-			},
-		})
-		if err != nil {
-			return callErr(err)
-		}
-
-	} else if checkedCommand == disconnect {
-
-		_, err = ddbsvc.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{
-			TransactItems: []types.TransactWriteItem{
-				{
-					Delete: &types.Delete{
-						Key:       connKey,
-						TableName: aws.String(tableName),
 					},
 				},
 				{

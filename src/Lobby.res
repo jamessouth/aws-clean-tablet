@@ -11,12 +11,10 @@ type apigwAction =
 
 type lobbyGameno =
   | Gameno({no: string})
-  | Discon
   | Newgame
 
 type lobbyCommand =
   | Custom({cv: string})
-  | Disconnect
   | Join
   | Leave
 
@@ -47,14 +45,12 @@ let apigwActionToString = a =>
 let lobbyGamenoToString = gn =>
   switch gn {
   | Gameno({no}) => no
-  | Discon => "discon"
   | Newgame => "newgame"
   }
 
 let lobbyCommandToString = lc =>
   switch lc {
   | Custom({cv}) => cv
-  | Disconnect => "disconnect"
   | Join => "join"
   | Leave => "leave"
   }
@@ -207,17 +203,12 @@ let make = (~playerGame, ~games, ~send, ~close, ~count, ~setLeaderData) => {
     Js.log("sign out click")
 
     let pl = switch playerGame == "" {
-    | true =>
-      payloadToObj({
-        act: LobbyNonApigw,
-        gn: Discon,
-        cmd: Disconnect,
-      })
+    | true => None
     | false =>
       payloadToObj({
         act: Lobby,
         gn: Gameno({no: playerGame}),
-        cmd: Disconnect,
+        cmd: Leave,
       })
     }
     send(. pl)
@@ -229,7 +220,7 @@ let make = (~playerGame, ~games, ~send, ~close, ~count, ~setLeaderData) => {
     send(.
       payloadToObj({
         act: Leaders,
-        gn: Discon, //placeholder
+        gn: Newgame, //placeholder
         cmd: Join, //placeholder
       }),
     )
