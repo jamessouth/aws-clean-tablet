@@ -26,9 +26,12 @@ import (
 )
 
 const (
-	connect  string = "CONNECT"
-	listGame string = "LISTGAME"
-	leave    string = "leave"
+	connect           string = "CONNECT"
+	listGame          string = "LISTGAME"
+	leave             string = "leave"
+	maxPlayersPerGame string = "8"
+	newgame           string = "newgame"
+	join              string = "join"
 )
 
 type listPlayer struct {
@@ -49,8 +52,8 @@ func getReturnValue(status int) events.APIGatewayProxyResponse {
 func checkInput(s string) (string, string, error) {
 	var (
 		maxLength = 99
-		gamenoRE  = regexp.MustCompile(`^\d{19}$`)
-		commandRE = regexp.MustCompile(`|^leave$`)
+		gamenoRE  = regexp.MustCompile(`^\d{19}$|^newgame$`)
+		commandRE = regexp.MustCompile(`^join$|^leave$`)
 		body      struct{ Gameno, Command string }
 	)
 
@@ -74,6 +77,9 @@ func checkInput(s string) (string, string, error) {
 		return "", "", errors.New("improper json input - bad gameno: " + gameno)
 	case !commandRE.MatchString(command):
 		return "", "", errors.New("improper json input - bad command: " + command)
+	case command == leave && gameno == newgame:
+		return "", "", errors.New("improper json input - leave/newgame mismatch")
+
 	}
 
 	return gameno, command, nil
@@ -100,18 +106,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	var (
-		apiid                   = os.Getenv("CT_APIID")
-		stage                   = os.Getenv("CT_STAGE")
-		endpoint                = "https://" + apiid + ".execute-api." + region + ".amazonaws.com/" + stage
-		ddbsvc                  = dynamodb.NewFromConfig(cfg)
-		auth                    = req.RequestContext.Authorizer.(map[string]interface{})
-		id /*name,*/, tableName = auth["principalId"].(string) /*auth["username"].(string),*/, auth["tableName"].(string)
-		connKey                 = map[string]types.AttributeValue{
-			"pk": &types.AttributeValueMemberS{Value: connect},
-			"sk": &types.AttributeValueMemberS{Value: id},
-		}
-		ebsvc          = eventbridge.NewFromConfig(cfg)
-		customResolver = aws.EndpointResolverWithOptionsFunc(func(service, awsRegion string, options ...interface{}) (aws.Endpoint, error) {
+		apiid               = os.Getenv("CT_APIID")
+		stage               = os.Getenv("CT_STAGE")
+		endpoint            = "https://" + apiid + ".execute-api." + region + ".amazonaws.com/" + stage
+		ddbsvc              = dynamodb.NewFromConfig(cfg)
+		auth                = req.RequestContext.Authorizer.(map[string]interface{})
+		id, name, tableName = auth["principalId"].(string), auth["username"].(string), auth["tableName"].(string)
+		ebsvc               = eventbridge.NewFromConfig(cfg)
+		customResolver      = aws.EndpointResolverWithOptionsFunc(func(service, awsRegion string, options ...interface{}) (aws.Endpoint, error) {
 			if service == apigatewaymanagementapi.ServiceID && awsRegion == region {
 				ep := aws.Endpoint{
 					PartitionID:   "aws",
@@ -125,6 +127,23 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested")
 		})
 	)
+
+	player := listPlayer{
+		Name:   name,
+		ConnID: req.RequestContext.ConnectionID,
+	}
+
+	marshalledPlayersMap, err := attributevalue.Marshal(map[string]listPlayer{
+		id: player,
+	})
+	if err != nil {
+		return callErr(err)
+	}
+
+	marshalledPlayer, err := attributevalue.Marshal(player)
+	if err != nil {
+		return callErr(err)
+	}
 
 	apigwcfg, err := config.LoadDefaultConfig(ctx,
 		// config.WithLogger(logger),
@@ -148,41 +167,68 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		return callErr(err)
 	}
 
-	removePlayerInput := types.Update{
-		Key:       gameItemKey,
-		TableName: aws.String(tableName),
-		ExpressionAttributeNames: map[string]string{
-			"#P": "players",
-			"#I": id,
-			"#T": "timerCxld",
-		},
-		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":t": &types.AttributeValueMemberBOOL{Value: true},
-		},
-		UpdateExpression: aws.String("REMOVE #P.#I SET #T = :t"),
-	}
+	if checkedCommand == join && checkedGameno == newgame {
 
-	if checkedCommand == leave {
-
-		_, err = ddbsvc.TransactWriteItems(ctx, &dynamodb.TransactWriteItemsInput{
-			TransactItems: []types.TransactWriteItem{
-				{
-					Update: &types.Update{
-						Key:       connKey,
-						TableName: aws.String(tableName),
-						ExpressionAttributeNames: map[string]string{
-							"#G": "game",
-						},
-						ExpressionAttributeValues: map[string]types.AttributeValue{
-							":g": &types.AttributeValueMemberS{Value: ""},
-						},
-						UpdateExpression: aws.String("SET #G = :g"),
-					},
-				},
-				{
-					Update: &removePlayerInput,
-				},
+		_, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+			Key: map[string]types.AttributeValue{
+				"pk": &types.AttributeValueMemberS{Value: "LISTGAME"},
+				"sk": &types.AttributeValueMemberS{Value: fmt.Sprintf("%d", time.Now().UnixNano())},
 			},
+			TableName:           aws.String(tableName),
+			ConditionExpression: aws.String("attribute_not_exists(#P)"),
+			ExpressionAttributeNames: map[string]string{
+				"#P": "players",
+				"#T": "timerCxld",
+			},
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":p": marshalledPlayersMap,
+				":t": &types.AttributeValueMemberBOOL{Value: true},
+			},
+			UpdateExpression: aws.String("SET #P = :p, #T = :t"),
+		})
+		if err != nil {
+			return callErr(err)
+		}
+
+	} else if checkedCommand == join {
+
+		_, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+			Key: map[string]types.AttributeValue{
+				"pk": &types.AttributeValueMemberS{Value: "LISTGAME"},
+				"sk": &types.AttributeValueMemberS{Value: checkedGameno},
+			},
+			TableName:           aws.String(tableName),
+			ConditionExpression: aws.String("attribute_exists(#P) AND size (#P) < :m"),
+			ExpressionAttributeNames: map[string]string{
+				"#P": "players",
+				"#I": id,
+				"#T": "timerCxld",
+			},
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":t": &types.AttributeValueMemberBOOL{Value: true},
+				":m": &types.AttributeValueMemberN{Value: maxPlayersPerGame},
+				":p": marshalledPlayer,
+			},
+			UpdateExpression: aws.String("SET #P.#I = :p, #T = :t"),
+		})
+		if err != nil {
+			return callErr(err)
+		}
+
+	} else if checkedCommand == leave {
+
+		_, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
+			Key:       gameItemKey,
+			TableName: aws.String(tableName),
+			ExpressionAttributeNames: map[string]string{
+				"#P": "players",
+				"#I": id,
+				"#T": "timerCxld",
+			},
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":t": &types.AttributeValueMemberBOOL{Value: true},
+			},
+			UpdateExpression: aws.String("REMOVE #P.#I SET #T = :t"),
 		})
 		if err != nil {
 			return callErr(err)

@@ -13,6 +13,24 @@ var noErrorTests = []struct {
 		exp2:        "leave",
 		description: "ok",
 	},
+	{
+		input: `{
+			"gameno": "9156849584651978018",
+			"command": "join"
+		 }`,
+		exp1:        "9156849584651978018",
+		exp2:        "join",
+		description: "ok",
+	},
+	{
+		input: `{
+			"gameno": "newgame",
+			"command": "join"
+		 }`,
+		exp1:        "newgame",
+		exp2:        "join",
+		description: "ok",
+	},
 }
 
 var jsonTests = []struct {
@@ -123,6 +141,38 @@ var errorTests = []struct {
 			"command": " leave"
 		 }`,
 		msg:         "improper json input - bad command:  leave",
+		description: "command not 'leave|join' exactly",
+	},
+	{
+		input: `{
+			"gameno": "newgamee",
+			"command": "iuiuuhiu"
+		 }`,
+		msg:         "improper json input - bad gameno: newgamee",
+		description: "gameno not 'newgame' exactly",
+	},
+	{
+		input: `{
+			"gameno": "Newgame",
+			"command": "iuiuuhiu"
+		 }`,
+		msg:         "improper json input - bad gameno: Newgame",
+		description: "gameno not 'newgame' exactly",
+	},
+	{
+		input: `{
+			"gameno": " newgame",
+			"command": "iuiuuhiu"
+		 }`,
+		msg:         "improper json input - bad gameno:  newgame",
+		description: "gameno not 'newgame' exactly",
+	},
+	{
+		input: `{
+			"gameno": "9156849584651978018",
+			"command": "join "
+		 }`,
+		msg:         "improper json input - bad command: join ",
 		description: "command not 'leave|join' exactly",
 	},
 }
