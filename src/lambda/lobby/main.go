@@ -105,43 +105,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	}
 
 	var (
-		apiid               = os.Getenv("CT_APIID")
-		stage               = os.Getenv("CT_STAGE")
-		endpoint            = "https://" + apiid + ".execute-api." + region + ".amazonaws.com/" + stage
 		ddbsvc              = dynamodb.NewFromConfig(cfg)
 		auth                = req.RequestContext.Authorizer.(map[string]interface{})
 		id, name, tableName = auth["principalId"].(string), auth["username"].(string), auth["tableName"].(string)
-		ebsvc               = eventbridge.NewFromConfig(cfg)
-		customResolver      = aws.EndpointResolverWithOptionsFunc(func(service, awsRegion string, options ...interface{}) (aws.Endpoint, error) {
-			if service == apigatewaymanagementapi.ServiceID && awsRegion == region {
-				ep := aws.Endpoint{
-					PartitionID:   "aws",
-					URL:           endpoint,
-					SigningRegion: awsRegion,
-				}
-
-				return ep, nil
-			}
-
-			return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested")
-		})
+		player              = listPlayer{
+			Name:   name,
+			ConnID: req.RequestContext.ConnectionID,
+		}
 	)
-
-	player := listPlayer{
-		Name:   name,
-		ConnID: req.RequestContext.ConnectionID,
-	}
-
-	apigwcfg, err := config.LoadDefaultConfig(ctx,
-		// config.WithLogger(logger),
-		config.WithRegion(region),
-		config.WithEndpointResolverWithOptions(customResolver),
-	)
-	if err != nil {
-		return callErr(err)
-	}
-
-	var apigwsvc = apigatewaymanagementapi.NewFromConfig(apigwcfg)
 
 	if checkedGameno == newgame {
 		marshalledPlayersMap, err := attributevalue.Marshal(map[string]listPlayer{
@@ -207,21 +178,52 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			updateParams.UpdateExpression = aws.String("REMOVE #P.#I SET #T = :t")
 
 		}
+
 		ui, err := ddbsvc.UpdateItem(ctx, &updateParams)
 		if err != nil {
 			return callErr(err)
 		}
 
-		var gm struct {
-			Sk      string
-			Players map[string]listPlayer
-		}
+		var (
+			gm struct {
+				Sk      string
+				Players map[string]listPlayer
+			}
+			apiid    = os.Getenv("CT_APIID")
+			stage    = os.Getenv("CT_STAGE")
+			endpoint = "https://" + apiid + ".execute-api." + region + ".amazonaws.com/" + stage
+			ebsvc    = eventbridge.NewFromConfig(cfg)
+		)
+
 		err = attributevalue.UnmarshalMap(ui.Attributes, &gm)
 		if err != nil {
 			return callErr(err)
 		}
 
-		err = getStartGame(gameItemKey, gm.Players, gm.Sk, tableName, ctx, ddbsvc, apigwsvc, req.RequestContext.RequestTimeEpoch, ebsvc)
+		apigwcfg, err := config.LoadDefaultConfig(ctx,
+			// config.WithLogger(logger),
+			config.WithRegion(region),
+			config.WithEndpointResolverWithOptions(aws.EndpointResolverWithOptionsFunc(func(service, awsRegion string, options ...interface{}) (aws.Endpoint, error) {
+				if service == apigatewaymanagementapi.ServiceID && awsRegion == region {
+					ep := aws.Endpoint{
+						PartitionID:   "aws",
+						URL:           endpoint,
+						SigningRegion: awsRegion,
+					}
+
+					return ep, nil
+				}
+
+				return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested")
+			})),
+		)
+		if err != nil {
+			return callErr(err)
+		}
+
+		var apigwsvc = apigatewaymanagementapi.NewFromConfig(apigwcfg)
+
+		err = getStartGame(ctx, gameItemKey, gm.Players, gm.Sk, tableName, req.RequestContext.RequestTimeEpoch, ddbsvc, apigwsvc, ebsvc)
 		if err != nil {
 			return callErr(err)
 		}
@@ -254,7 +256,6 @@ func getTimer(gik map[string]types.AttributeValue, tn string, ctx context.Contex
 		TimerID   int64
 		TimerCxld bool
 	}
-
 	err = attributevalue.UnmarshalMap(gi.Item, &timerData)
 	if err != nil {
 		return false, err
@@ -263,10 +264,21 @@ func getTimer(gik map[string]types.AttributeValue, tn string, ctx context.Contex
 	return reqTime == timerData.TimerID && !timerData.TimerCxld, nil
 }
 
-func getStartGame(gik map[string]types.AttributeValue, players map[string]listPlayer, sk, tn string, ctx context.Context, ddbsvc *dynamodb.Client, apigwsvc *apigatewaymanagementapi.Client, reqTime int64, ebsvc *eventbridge.Client) error {
-	var minPlayers = 3
+func sendCount(ctx context.Context, players map[string]listPlayer, apigwsvc *apigatewaymanagementapi.Client, data []byte) error {
+	for _, p := range players {
+		conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(p.ConnID), Data: append([]byte{123, 34, 99, 110, 116, 100, 111, 119, 110, 34, 58}, data...)} //{"cntdown":
 
-	if len(players) < minPlayers {
+		_, err := apigwsvc.PostToConnection(ctx, &conn)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func getStartGame(ctx context.Context, gik map[string]types.AttributeValue, players map[string]listPlayer, sk, tn string, reqTime int64, ddbsvc *dynamodb.Client, apigwsvc *apigatewaymanagementapi.Client, ebsvc *eventbridge.Client) error {
+	if len(players) < 3 { //minPlayers
 		return nil
 	}
 
@@ -292,10 +304,12 @@ func getStartGame(gik map[string]types.AttributeValue, players map[string]listPl
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 	done := make(chan bool)
+
 	go func() {
-		time.Sleep(6 * time.Second)
+		time.Sleep(9 * time.Second)
 		done <- true
 	}()
+
 	for {
 		select {
 		case <-done:
@@ -303,19 +317,13 @@ func getStartGame(gik map[string]types.AttributeValue, players map[string]listPl
 			if err != nil {
 				return err
 			}
-			if timeToGo {
-				//kick off game
+
+			if timeToGo { //kick off game
 				fmt.Println("starting game...", reqTime)
 
-				for _, p := range players {
-					conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(p.ConnID), Data: []byte{123, 34, 99, 110, 116, 100, 111, 119, 110, 34, 58, 34, 115, 116, 97, 114, 116, 34, 125}} //{"cntdown": "start"}
-
-					_, err := apigwsvc.PostToConnection(ctx, &conn)
-
-					if err != nil {
-						return err
-					}
-
+				err = sendCount(ctx, players, apigwsvc, []byte{34, 115, 116, 97, 114, 116, 34, 125}) // "start"}
+				if err != nil {
+					return err
 				}
 
 				po, err := ebsvc.PutEvents(ctx, &eventbridge.PutEventsInput{
@@ -338,47 +346,29 @@ func getStartGame(gik map[string]types.AttributeValue, players map[string]listPl
 				if putResults.FailedEntryCount > 0 {
 					return fmt.Errorf("put event failed with msg %s, error code: %s", *ev.ErrorMessage, *ev.ErrorCode)
 				}
-
 			}
+
 			return nil
 		case <-ticker.C:
-
 			timeToGo, err := getTimer(gik, tn, ctx, ddbsvc, reqTime)
 			if err != nil {
 				return err
 			}
-			if timeToGo {
 
+			if timeToGo {
 				count -= 1
 
-				for _, p := range players {
-
-					conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(p.ConnID), Data: []byte{123, 34, 99, 110, 116, 100, 111, 119, 110, 34, 58, count, 125}} //{"cntdown": 4}
-
-					_, err := apigwsvc.PostToConnection(ctx, &conn)
-					if err != nil {
-						return err
-					}
-
+				err = sendCount(ctx, players, apigwsvc, []byte{count, 125}) // 7}
+				if err != nil {
+					return err
 				}
 			} else {
 				ticker.Stop()
-				for _, p := range players {
-
-					conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(p.ConnID), Data: []byte{123, 34, 99, 110, 116, 100, 111, 119, 110, 34, 58, 34, 34, 125}} //{"cntdown": ""}
-
-					_, err := apigwsvc.PostToConnection(ctx, &conn)
-					if err != nil {
-						return err
-					}
-
-				}
 			}
 
 			return nil
 		}
 	}
-
 }
 
 func callErr(err error) (events.APIGatewayProxyResponse, error) {

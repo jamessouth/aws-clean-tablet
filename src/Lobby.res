@@ -112,26 +112,23 @@ module Game = {
     React.useEffect3(() => {
       let size = Js.Array2.length(players)
       switch (inThisGame, inAGame) {
-      | (true, _) => {
-          //in this game
-          setDisabledJoin(._ => false)
-        }
+      | (true, _) =>
+        //in this game
+        setDisabledJoin(._ => false)
 
-      | (false, true) => {
-          //in another game
-          setDisabledJoin(._ => true)
-        }
+      | (false, true) =>
+        //in another game
+        setDisabledJoin(._ => true)
 
-      | (_, false) => {
-          //not in a game
-          setDisabledJoin(._ =>
-            if size > players_max_threshold {
-              true
-            } else {
-              false
-            }
-          )
-        }
+      | (_, false) =>
+        //not in a game
+        setDisabledJoin(._ =>
+          if size > players_max_threshold {
+            true
+          } else {
+            false
+          }
+        )
       }
       None
     }, (inThisGame, inAGame, players))
@@ -155,10 +152,7 @@ module Game = {
       <p className="col-span-2" />
       {players
       ->Js.Array2.mapi((p, i) => {
-        <p
-          key={j`${p.name}$i`}>
-          {React.string(p.name)}
-        </p>
+        <p key={j`${p.name}$i`}> {React.string(p.name)} </p>
       })
       ->React.array}
       {switch (timerCxld, inThisGame) {
@@ -168,14 +162,10 @@ module Game = {
           {React.string("Starting soon...")}
         </p>
       | (false, true) =>
-        switch count != "" {
-        | true =>
-          <p
-            className="absolute text-4xl animate-ping1 font-perm left-1/2 top-1/4 transform -translate-x-2/4">
-            {React.string(count)}
-          </p>
-        | false => React.null
-        }
+        <p
+          className="absolute text-4xl animate-ping1 font-perm left-1/2 top-1/4 transform -translate-x-2/4">
+          {React.string(count)}
+        </p>
       | (true, false) | (true, true) => React.null
       }}
       <Button onClick=onClickJoin disabled=disabledJoin className={"left-0" ++ btnStyle}>
