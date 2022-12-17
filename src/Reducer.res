@@ -40,15 +40,13 @@ type state = {
 }
 
 type action =
-  | ListGames(Js.Nullable.t<array<listGame>>)
+  | ListGames(Js.Nullable.t<array<listGame>>, string)
   | AddGame(listGame)
   | RemoveGame(listGame)
   | UpdateListGame(listGame)
   | UpdatePlayers(array<livePlayer>, string, bool, string)
   | UpdateWord(string)
   | UpdatePlayerColor(string)
-  | UpdatePlayerName(string)
-  | UpdatePlayerGame(string)
   | ResetPlayerState(state)
 
 let init = clean => {
@@ -64,19 +62,32 @@ let init = clean => {
   playerGame: clean.playerGame,
 }
 
+// let findName = (game: listGame, name: string) => {
+
+// }
+
 let reducer = (state, action) =>
   switch (Js.Nullable.toOption(state.gamesList), action) {
   | (_, ResetPlayerState(st)) => init(st)
-  | (None, ListGames(games)) => {...state, gamesList: games}
+  
+  | (None, ListGames(games, name)) => {...state, gamesList: games, playerName: name}
   | (None, _) | (Some(_), ListGames(_)) => state
+
+
+
+
   | (Some(gl), AddGame(game)) => {
       ...state,
       gamesList: Js.Nullable.return([game]->Js.Array2.concat(gl)),
     }
+
+
   | (Some(gl), RemoveGame(game)) => {
       ...state,
       gamesList: Js.Nullable.return(gl->Js.Array2.filter(gm => gm.no !== game.no)),
     }
+
+
   | (Some(gl), UpdateListGame(game)) => {
       ...state,
       gamesList: Js.Nullable.return(
@@ -88,6 +99,9 @@ let reducer = (state, action) =>
         ),
       ),
     }
+
+
+
   | (Some(_), UpdatePlayers(players, sk, showAnswers, winner)) => {
       let ow = switch showAnswers {
       | true => state.word

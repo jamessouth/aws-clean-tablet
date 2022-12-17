@@ -204,8 +204,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
         | InsertConn => {
             let {listGms, name} = parseListGames(data)
             Js.log3("parsedlistgames", listGms, name)
-            dispatch(. ListGames(Js.Nullable.return(listGms)))
-            dispatch(. UpdatePlayerName(name))
+            dispatch(. ListGames(Js.Nullable.return(listGms), name))
           }
 
         | ModifyConn => {

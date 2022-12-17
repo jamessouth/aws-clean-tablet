@@ -6,7 +6,6 @@ type apigwAction =
   | End
   | Leaders
   | Lobby
-  | LobbyNonApigw
   | Logging
 
 type lobbyGameno =
@@ -38,7 +37,6 @@ let apigwActionToString = a =>
   | End => "end"
   | Leaders => "leaders"
   | Lobby => "lobby"
-  | LobbyNonApigw => "lobbyNonApigw"
   | Logging => "logging"
   }
 
@@ -67,7 +65,7 @@ let payloadToObj = pl => {
     Js.Json.stringifyAny({
       action: apigwActionToString(pl.act),
     })
-  | Lobby | LobbyNonApigw =>
+  | Lobby =>
     Js.Json.stringifyAny({
       action: apigwActionToString(pl.act),
       gameno: lobbyGamenoToString(pl.gn),
@@ -92,21 +90,16 @@ module Game = {
     let {no, timerCxld, players}: Reducer.listGame = game
 
     let onClickJoin = _ => {
-      let pl = switch inThisGame {
-      | true =>
+      send(.
         payloadToObj({
           act: Lobby,
           gn: Gameno({no: no}),
-          cmd: Leave,
-        })
-      | false =>
-        payloadToObj({
-          act: LobbyNonApigw,
-          gn: Gameno({no: no}),
-          cmd: Join,
-        })
-      }
-      send(. pl)
+          cmd: switch inThisGame {
+          | true => Leave
+          | false => Join
+          },
+        }),
+      )
     }
 
     React.useEffect3(() => {
@@ -115,11 +108,9 @@ module Game = {
       | (true, _) =>
         //in this game
         setDisabledJoin(._ => false)
-
       | (false, true) =>
         //in another game
         setDisabledJoin(._ => true)
-
       | (_, false) =>
         //not in a game
         setDisabledJoin(._ =>
@@ -183,7 +174,7 @@ let make = (~playerGame, ~games, ~send, ~close, ~count, ~setLeaderData) => {
   let onClick = _ =>
     send(.
       payloadToObj({
-        act: LobbyNonApigw,
+        act: Lobby,
         gn: Newgame,
         cmd: Join,
       }),
