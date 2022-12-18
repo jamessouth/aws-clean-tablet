@@ -237,7 +237,6 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
             Js.log3("parsedmodplayers", players, sk)
             Js.log3("parsedmodplayers 2", showAnswers, winner)
             dispatch(. UpdatePlayers(players, sk, showAnswers, winner))
-            dispatch(. UpdatePlayerColor(players))
           }
 
         | Word => {

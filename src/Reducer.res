@@ -13,7 +13,7 @@ type listPlayer = {
 }
 
 type livePlayer = {
-  // playerid: string,
+  connid: string,
   name: string,
   color: string,
   score: string, //sent as int
@@ -43,13 +43,12 @@ type state = {
 }
 
 type action =
-  | ListGames(Js.Nullable.t<array<listGame>>, string)
+  | ListGames(Js.Nullable.t<array<listGame>>, string, string)
   | AddGame(listGame)
   | RemoveGame(listGame)
   | UpdateListGame(listGame)
   | UpdatePlayers(array<livePlayer>, string, bool, string)
   | UpdateWord(string)
-  | UpdatePlayerColor(string)
   | ResetPlayerState(state)
 
 let init = clean => {
@@ -66,29 +65,28 @@ let init = clean => {
   playerConnID: clean.playerConnID,
 }
 
-let findName = (game: listGame, name: string, connid: string) => {
-  switch game.players->Js.Array2.find(p => p.name == name && p.connid == connid) {
-  | Some(_) => game.no
-  | None => ""
-  }
-}
+let reducer = (state, action) => {
+  let predFunc = (p:listPlayer) => p.name == state.playerName && p.connid == state.playerConnID
 
-let reducer = (state, action) =>
   switch (Js.Nullable.toOption(state.gamesList), action) {
   | (_, ResetPlayerState(st)) => init(st)
-  
-  | (None, ListGames(games, name, connid)) => {...state, gamesList: games, playerName: name, playerConnID: connid}
+
+  | (None, ListGames(games, name, connid)) => {
+      ...state,
+      gamesList: games,
+      playerName: name,
+      playerConnID: connid,
+    }
   | (None, _) | (Some(_), ListGames(_)) => state
-
-
-
 
   | (Some(gl), AddGame(game)) => {
       ...state,
       gamesList: Js.Nullable.return([game]->Js.Array2.concat(gl)),
-      playerGame: game->findName(state.playerName, state.playerConnID),
+      playerGame: switch game.players->Js.Array2.find(predFunc) {
+      | Some(_) => game.no
+      | None => ""
+      },
     }
-
 
   | (Some(gl), RemoveGame(game)) => {
       ...state,
@@ -96,9 +94,8 @@ let reducer = (state, action) =>
       playerGame: switch game.no == state.playerGame {
       | true => ""
       | false => game.no
-      }
+      },
     }
-
 
   | (Some(gl), UpdateListGame(game)) => {
       ...state,
@@ -110,33 +107,42 @@ let reducer = (state, action) =>
           }
         ),
       ),
-      playerGame: game->findName(state.playerName, state.playerConnID),
+      playerGame: switch game.players->Js.Array2.find(predFunc) {
+      | Some(_) => game.no
+      | None => ""
+      },
     }
 
-
-
   | (Some(_), UpdatePlayers(players, sk, showAnswers, winner)) => {
-      let ow = switch showAnswers {
-      | true => state.word
-      | false => ""
+      let pc = switch state.playerColor == "transparent" {
+      | true =>
+        switch players->Js.Array2.find(p => p.name == state.playerName && p.connid == state.playerConnID) {
+        | Some(p) => p.color
+        | None => "black"
+        }
+      | false => state.playerColor
       }
-      let nw = switch showAnswers {
-      | true => ""
-      | false => state.word
+
+      let (ow, nw) = switch showAnswers {
+      | true => (state.word, "")
+      | false => ("", state.word)
       }
+
       {
         ...state,
-        players: players,
-        sk: sk,
-        showAnswers: showAnswers,
-        winner: winner,
+        players,
+        sk,
+        showAnswers,
+        winner,
         oldWord: ow,
         word: nw,
+        playerColor: pc,
       }
     }
 
   | (Some(_), UpdateWord(word)) => {
       ...state,
-      word: word,
+      word,
     }
   }
+}

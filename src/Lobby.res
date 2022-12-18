@@ -1,4 +1,3 @@
-let players_min_threshold = 3
 let players_max_threshold = 7
 
 type apigwAction =
