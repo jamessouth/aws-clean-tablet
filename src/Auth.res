@@ -23,7 +23,7 @@ external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => 
   propShape,
 > = "lazy"
 
-type listGamesData = {listGms: array<Reducer.listGame>, name: string}
+type listGamesData = {listGms: array<Reducer.listGame>, name: string, connid: string}
 type modConnData = {modConn: string, endtoken: string}
 type countdownData = {cntdown: string}
 type addGameData = {addGame: Reducer.listGame}
@@ -91,6 +91,7 @@ let initialState: Reducer.state = {
   playerColor: "transparent",
   playerName: "",//TODO reset or keep
   playerGame: "",
+  playerConnID: "",//TODO reset or keep
 }
 
 let normalClose = 1000
@@ -202,9 +203,9 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
 
         switch getMsgType(data) {
         | InsertConn => {
-            let {listGms, name} = parseListGames(data)
-            Js.log3("parsedlistgames", listGms, name)
-            dispatch(. ListGames(Js.Nullable.return(listGms), name))
+            let {listGms, name, connid} = parseListGames(data)
+            Js.log4("parsedlistgames", listGms, name, connid)
+            dispatch(. ListGames(Js.Nullable.return(listGms), name, connid))
           }
 
         | ModifyConn => {

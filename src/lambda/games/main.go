@@ -34,7 +34,8 @@ const (
 )
 
 type listPlayer struct {
-	Name string `json:"name" dynamodbav:"name"`
+	Name   string `json:"name" dynamodbav:"name"`
+	ConnID string `json:"connid" dynamodbav:"connid"`
 }
 
 type frontListGame struct {
@@ -79,8 +80,6 @@ type output struct {
 }
 
 func getSlice[Key string, Val listPlayer | livePlayer](m map[Key]Val) (res []Val) {
-	res = []Val{}
-
 	for _, v := range m {
 		res = append(res, v)
 	}
@@ -406,9 +405,11 @@ func connectEvent(ctx context.Context, eventName, tableName string, ddbsvc *dyna
 		payload, err = json.Marshal(struct {
 			ListGames []frontListGame `json:"listGms"`
 			Name      string          `json:"name"`
+			ConnID    string          `json:"connid"`
 		}{
 			ListGames: getFrontListGames(listGames),
 			Name:      connRecord.Name,
+			ConnID:    connRecord.ConnID,
 		})
 		if err != nil {
 			return []byte{}, []livePlayer{}, err

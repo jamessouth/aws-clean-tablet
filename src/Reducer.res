@@ -9,6 +9,7 @@ type stat = {
 
 type listPlayer = {
   name: string,
+  connid: string,
 }
 
 type livePlayer = {
@@ -37,6 +38,8 @@ type state = {
   winner: string,
   playerColor: string,
   playerGame: string,
+  playerName: string,
+  playerConnID: string,
 }
 
 type action =
@@ -60,17 +63,21 @@ let init = clean => {
   playerColor: clean.playerColor,
   playerName: clean.playerName,
   playerGame: clean.playerGame,
+  playerConnID: clean.playerConnID,
 }
 
-// let findName = (game: listGame, name: string) => {
-
-// }
+let findName = (game: listGame, name: string, connid: string) => {
+  switch game.players->Js.Array2.find(p => p.name == name && p.connid == connid) {
+  | Some(_) => game.no
+  | None => ""
+  }
+}
 
 let reducer = (state, action) =>
   switch (Js.Nullable.toOption(state.gamesList), action) {
   | (_, ResetPlayerState(st)) => init(st)
   
-  | (None, ListGames(games, name)) => {...state, gamesList: games, playerName: name}
+  | (None, ListGames(games, name, connid)) => {...state, gamesList: games, playerName: name, playerConnID: connid}
   | (None, _) | (Some(_), ListGames(_)) => state
 
 
@@ -79,12 +86,17 @@ let reducer = (state, action) =>
   | (Some(gl), AddGame(game)) => {
       ...state,
       gamesList: Js.Nullable.return([game]->Js.Array2.concat(gl)),
+      playerGame: game->findName(state.playerName, state.playerConnID),
     }
 
 
   | (Some(gl), RemoveGame(game)) => {
       ...state,
       gamesList: Js.Nullable.return(gl->Js.Array2.filter(gm => gm.no !== game.no)),
+      playerGame: switch game.no == state.playerGame {
+      | true => ""
+      | false => game.no
+      }
     }
 
 
@@ -98,6 +110,7 @@ let reducer = (state, action) =>
           }
         ),
       ),
+      playerGame: game->findName(state.playerName, state.playerConnID),
     }
 
 
