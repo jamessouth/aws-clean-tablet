@@ -3,7 +3,7 @@ let answer_max_length = 12
 @react.component
 let make = (
   ~players,
-  ~sk,
+  ~playerLiveGame,
   ~showAnswers,
   ~winner,
   ~isGameOver,
@@ -45,7 +45,7 @@ let make = (
     send(.
       Lobby.payloadToObj({
         act: Answer,
-        gn: Gameno({no: sk}),
+        gn: Gameno({no: playerLiveGame}),
         cmd: Custom({cv: ans}),
       }),
     )

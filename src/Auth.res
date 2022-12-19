@@ -29,7 +29,7 @@ type countdownData = {cntdown: string}
 type addGameData = {addGame: Reducer.listGame}
 type modListGameData = {mdLstGm: Reducer.listGame}
 type modPlayersData = {
-  players: array<Reducer.livePlayer>,
+  players: array<Reducer.player>,
   sk: string,
   showAnswers: bool,
   winner: string,
@@ -83,15 +83,15 @@ let getMsgType = tag =>
 let initialState: Reducer.state = {
   gamesList: Js.Nullable.null,
   players: [],
-  sk: "",
+  playerLiveGame: "",
   oldWord: "",
   word: "",
   showAnswers: false,
   winner: "",
   playerColor: "transparent",
-  playerName: "",//TODO reset or keep
-  playerGame: "",
-  playerConnID: "",//TODO reset or keep
+  playerName: "", //TODO reset or keep
+  playerListGame: "",
+  playerConnID: "", //TODO reset or keep
 }
 
 let normalClose = 1000
@@ -117,7 +117,18 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
     Reducer.init,
   )
 
-  let {players, sk, showAnswers, winner, oldWord, word, gamesList: games, playerColor, playerName, playerGame} = state
+  let {
+    players,
+    playerLiveGame,
+    showAnswers,
+    winner,
+    oldWord,
+    word,
+    gamesList: games,
+    playerColor,
+    playerName,
+    playerListGame,
+  } = state
 
   let resetConnState = (. ()) => {
     dispatch(. ResetPlayerState(initialState))
@@ -140,12 +151,12 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
     | Some(s) => ws->sendString(s)
     }
 
-    let pl2 = switch playerGame == "" {
+    let pl2 = switch playerListGame == "" {
     | true => None
     | false =>
       payloadToObj({
         act: Lobby,
-        gn: Gameno({no: playerGame}),
+        gn: Gameno({no: playerListGame}),
         cmd: Leave,
       })
     }
@@ -233,10 +244,10 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
           }
 
         | ModifyPlayers => {
-            let {players, sk, showAnswers, winner} = parseModPlayers(data)
-            Js.log3("parsedmodplayers", players, sk)
+            let {players, sk: playerLiveGame, showAnswers, winner} = parseModPlayers(data)
+            Js.log3("parsedmodplayers", players, playerLiveGame)
             Js.log3("parsedmodplayers 2", showAnswers, winner)
-            dispatch(. UpdatePlayers(players, sk, showAnswers, winner))
+            dispatch(. UpdatePlayers(players, playerLiveGame, showAnswers, winner))
           }
 
         | Word => {
@@ -338,17 +349,17 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
 
       | true => {
           body(document)->classList->removeClassList3("bodleadmob", "bodleadtab", "bodleadbig")
-          <Lobby playerGame games send close count setLeaderData />
+          <Lobby playerListGame games send close count setLeaderData />
         }
       }
     | Play({play}) =>
       switch wsConnected {
       | true =>
-        switch Js.Array2.length(players) > 0 && play == sk {
+        switch Js.Array2.length(players) > 0 && play == playerLiveGame {
         | true =>
           <Play
             players
-            sk
+            playerLiveGame
             showAnswers
             winner
             isGameOver={winner != ""}

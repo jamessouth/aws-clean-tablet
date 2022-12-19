@@ -1,6 +1,6 @@
 @react.component
 let make: (
-  ~players: array<Reducer.livePlayer>,
+  ~players: array<Reducer.player>,
   ~oldWord: string,
   ~showAnswers: bool,
   ~winner: string,

@@ -169,7 +169,7 @@ module Game = {
 }
 
 @react.component
-let make = (~playerGame, ~games, ~send, ~close, ~count, ~setLeaderData) => {
+let make = (~playerListGame, ~games, ~send, ~close, ~count, ~setLeaderData) => {
   let onClick = _ =>
     send(.
       payloadToObj({
@@ -182,12 +182,12 @@ let make = (~playerGame, ~games, ~send, ~close, ~count, ~setLeaderData) => {
   let signOut = _ => {
     Js.log("sign out click")
 
-    let pl = switch playerGame == "" {
+    let pl = switch playerListGame == "" {
     | true => None
     | false =>
       payloadToObj({
         act: Lobby,
-        gn: Gameno({no: playerGame}),
+        gn: Gameno({no: playerListGame}),
         cmd: Leave,
       })
     }
@@ -227,7 +227,7 @@ let make = (~playerGame, ~games, ~send, ~close, ~count, ~setLeaderData) => {
             width="421"
             height="80"
           />
-          {switch playerGame == "" {
+          {switch playerListGame == "" {
           | true =>
             <Button
               onClick
@@ -251,8 +251,8 @@ let make = (~playerGame, ~games, ~send, ~close, ~count, ~setLeaderData) => {
               <Game
                 key=game.no
                 game
-                inThisGame={playerGame == game.no}
-                inAGame={playerGame != ""}
+                inThisGame={playerListGame == game.no}
+                inAGame={playerListGame != ""}
                 count
                 send
                 class

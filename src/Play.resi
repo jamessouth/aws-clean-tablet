@@ -1,7 +1,7 @@
 @react.component
 let make: (
-  ~players: array<Reducer.livePlayer>,
-  ~sk: string,
+  ~players: array<Reducer.player>,
+  ~playerLiveGame: string,
   ~showAnswers: bool,
   ~winner: string,
   ~isGameOver: bool,

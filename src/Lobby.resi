@@ -32,7 +32,7 @@ let payloadToObj: lobbyPayload => option<string>
 
 @react.component
 let make: (
-  ~playerGame: string,
+  ~playerListGame: string,
   ~games: Js.Nullable.t<Js.Array2.t<Reducer.listGame>>,
   ~send: (. option<string>) => unit,
   ~close: (. int, string) => unit,

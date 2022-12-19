@@ -7,14 +7,9 @@ type stat = {
   ppg: float,
 }
 
-type listPlayer = {
+type player = {
   name: string,
   connid: string,
-}
-
-type livePlayer = {
-  connid: string,
-  name: string,
   color: string,
   score: string, //sent as int
   answer: string,
@@ -25,21 +20,21 @@ type livePlayer = {
 type listGame = {
   no: string,
   timerCxld: bool,
-  players: array<listPlayer>,
+  players: array<player>,
 }
 
 type state = {
   gamesList: Js.Nullable.t<array<listGame>>,
-  players: array<livePlayer>,
-  sk: string, //game no
+  players: array<player>,
+  playerLiveGame: string,
   oldWord: string,
   word: string,
   showAnswers: bool,
   winner: string,
   playerColor: string,
-  playerGame: string,
-  playerName: string,
   playerConnID: string,
+  playerListGame: string,
+  playerName: string,
 }
 
 type action =
@@ -47,26 +42,26 @@ type action =
   | AddGame(listGame)
   | RemoveGame(listGame)
   | UpdateListGame(listGame)
-  | UpdatePlayers(array<livePlayer>, string, bool, string)
+  | UpdatePlayers(array<player>, string, bool, string)
   | UpdateWord(string)
   | ResetPlayerState(state)
 
 let init = clean => {
   gamesList: clean.gamesList,
   players: clean.players,
-  sk: clean.sk,
+  playerLiveGame: clean.playerLiveGame,
   oldWord: clean.oldWord,
   word: clean.word,
   showAnswers: clean.showAnswers,
   winner: clean.winner,
   playerColor: clean.playerColor,
-  playerName: clean.playerName,
-  playerGame: clean.playerGame,
   playerConnID: clean.playerConnID,
+  playerListGame: clean.playerListGame,
+  playerName: clean.playerName,
 }
 
 let reducer = (state, action) => {
-  let predFunc = (p:listPlayer) => p.name == state.playerName && p.connid == state.playerConnID
+  let predFunc = p => p.name == state.playerName && p.connid == state.playerConnID
 
   switch (Js.Nullable.toOption(state.gamesList), action) {
   | (_, ResetPlayerState(st)) => init(st)
@@ -82,7 +77,7 @@ let reducer = (state, action) => {
   | (Some(gl), AddGame(game)) => {
       ...state,
       gamesList: Js.Nullable.return([game]->Js.Array2.concat(gl)),
-      playerGame: switch game.players->Js.Array2.find(predFunc) {
+      playerListGame: switch game.players->Js.Array2.find(predFunc) {
       | Some(_) => game.no
       | None => ""
       },
@@ -91,7 +86,7 @@ let reducer = (state, action) => {
   | (Some(gl), RemoveGame(game)) => {
       ...state,
       gamesList: Js.Nullable.return(gl->Js.Array2.filter(gm => gm.no !== game.no)),
-      playerGame: switch game.no == state.playerGame {
+      playerListGame: switch game.no == state.playerListGame {
       | true => ""
       | false => game.no
       },
@@ -107,16 +102,16 @@ let reducer = (state, action) => {
           }
         ),
       ),
-      playerGame: switch game.players->Js.Array2.find(predFunc) {
+      playerListGame: switch game.players->Js.Array2.find(predFunc) {
       | Some(_) => game.no
       | None => ""
       },
     }
 
-  | (Some(_), UpdatePlayers(players, sk, showAnswers, winner)) => {
+  | (Some(_), UpdatePlayers(players, playerLiveGame, showAnswers, winner)) => {
       let pc = switch state.playerColor == "transparent" {
       | true =>
-        switch players->Js.Array2.find(p => p.name == state.playerName && p.connid == state.playerConnID) {
+        switch players->Js.Array2.find(predFunc) {
         | Some(p) => p.color
         | None => "black"
         }
@@ -131,7 +126,7 @@ let reducer = (state, action) => {
       {
         ...state,
         players,
-        sk,
+        playerLiveGame,
         showAnswers,
         winner,
         oldWord: ow,

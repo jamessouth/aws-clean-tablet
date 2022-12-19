@@ -78,7 +78,7 @@ let make = (
           }}>
           {switch !isGameOver {
           | false => {
-              let hiScore: Reducer.livePlayer = players->Js.Array2.unsafe_get(0)
+              let hiScore: Reducer.player = players->Js.Array2.unsafe_get(0)
               React.string(winner ++ " wins with " ++ hiScore.score ++ " points!")
             }
 
