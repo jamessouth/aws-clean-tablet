@@ -104,21 +104,16 @@ module Game = {
     React.useEffect3(() => {
       let size = Js.Array2.length(players)
       switch (inThisGame, inAGame) {
-      | (true, _) =>
-        //in this game
-        setDisabledJoin(._ => false)
-      | (false, true) =>
-        //in another game
-        setDisabledJoin(._ => true)
+      | (true, _) => setDisabledJoin(._ => false) //in this game
+      | (false, true) => setDisabledJoin(._ => true) //in another game
       | (_, false) =>
-        //not in a game
         setDisabledJoin(._ =>
           if size > players_max_threshold {
             true
           } else {
             false
           }
-        )
+        ) //not in a game
       }
       None
     }, (inThisGame, inAGame, players))
@@ -168,6 +163,8 @@ module Game = {
   }
 }
 
+let normalClose = 1000
+
 @react.component
 let make = (~playerListGame, ~games, ~send, ~close, ~count, ~setLeaderData) => {
   let onClick = _ =>
@@ -192,7 +189,7 @@ let make = (~playerListGame, ~games, ~send, ~close, ~count, ~setLeaderData) => {
       })
     }
     send(. pl)
-    close(. 1000, "user sign-out")
+    close(. normalClose, "user sign-out")
   }
 
   let leaderboard = _ => {

@@ -26,7 +26,6 @@ import (
 )
 
 const (
-	connect           string = "CONNECT"
 	listGame          string = "LISTGAME"
 	leave             string = "leave"
 	maxPlayersPerGame string = "8"
@@ -90,12 +89,12 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		region = strings.Split(req.RequestContext.DomainName, ".")[2]
 	)
 
-	fmt.Println("lobby", bod, len(bod))
-
 	checkedGameno, checkedCommand, err := checkInput(bod)
 	if err != nil {
 		return callErr(err)
 	}
+
+	fmt.Println("lobby", bod, len(bod))
 
 	cfg, err := config.LoadDefaultConfig(ctx,
 		config.WithRegion(region),
@@ -372,12 +371,6 @@ func getStartGame(ctx context.Context, gik map[string]types.AttributeValue, play
 }
 
 func callErr(err error) (events.APIGatewayProxyResponse, error) {
-	var transCxldErr *types.TransactionCanceledException
-	if errors.As(err, &transCxldErr) {
-		fmt.Printf("put item error777, %v\n",
-			transCxldErr.CancellationReasons)
-	}
-
 	var intServErr *types.InternalServerError
 	if errors.As(err, &intServErr) {
 		fmt.Printf("get item error, %v",

@@ -53,6 +53,16 @@ func getWord(b io.ReadCloser) string {
 	return string(words[1])
 }
 
+func getReturnValue(status int) events.APIGatewayProxyResponse {
+	return events.APIGatewayProxyResponse{
+		StatusCode:        status,
+		Headers:           map[string]string{"Content-Type": "application/json"},
+		MultiValueHeaders: map[string][]string{},
+		Body:              "",
+		IsBase64Encoded:   false,
+	}
+}
+
 func checkInput(s string) (string, string, error) {
 	var (
 		maxLength       = 99
@@ -63,7 +73,7 @@ func checkInput(s string) (string, string, error) {
 	)
 
 	if len(s) > maxLength {
-		return "", "", errors.New("improper json input - too long")
+		return "", "", fmt.Errorf("improper json input - too long: %d", len(s))
 	}
 
 	if strings.Count(s, "gameno") != 1 || strings.Count(s, "aW5mb3Jt") != 1 {
@@ -75,15 +85,17 @@ func checkInput(s string) (string, string, error) {
 		return "", "", err
 	}
 
-	if !gamenoRE.MatchString(body.Gameno) {
-		return "", "", errors.New("improper json input - bad gameno")
+	var gameno, aW5mb3Jt = body.Gameno, body.AW5mb3Jt
+
+	if !gamenoRE.MatchString(gameno) {
+		return "", "", errors.New("improper json input - bad gameno: " + gameno)
 	}
 
-	if aW5mb3JtRE.MatchString(body.AW5mb3Jt) {
-		checkedAW5mb3Jt = body.AW5mb3Jt
+	if aW5mb3JtRE.MatchString(aW5mb3Jt) {
+		checkedAW5mb3Jt = aW5mb3Jt
 	}
 
-	return body.Gameno, checkedAW5mb3Jt, nil
+	return gameno, checkedAW5mb3Jt, nil
 }
 
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -160,13 +172,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		return callErr(err)
 	}
 
-	return events.APIGatewayProxyResponse{
-		StatusCode:        http.StatusOK,
-		Headers:           map[string]string{"Content-Type": "application/json"},
-		MultiValueHeaders: map[string][]string{},
-		Body:              "",
-		IsBase64Encoded:   false,
-	}, nil
+	return getReturnValue(http.StatusOK), nil
 }
 
 func main() {
@@ -187,11 +193,5 @@ func callErr(err error) (events.APIGatewayProxyResponse, error) {
 			apiErr.ErrorCode(), apiErr.ErrorMessage())
 	}
 
-	return events.APIGatewayProxyResponse{
-		StatusCode:        http.StatusBadRequest,
-		Headers:           map[string]string{"Content-Type": "application/json"},
-		MultiValueHeaders: map[string][]string{},
-		Body:              "",
-		IsBase64Encoded:   false,
-	}, err
+	return getReturnValue(http.StatusBadRequest), err
 }
