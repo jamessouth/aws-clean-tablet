@@ -135,25 +135,26 @@ let make = (
     </ul>
     {switch isGameOver {
     | true =>
-      <>
-        <div className={`w-64 h-96 bg-no-repeat opacity-0 m-auto animate-fadein ${bgimg}`} />
-        {switch endtoken == "a" {
-        | false => React.null
-        | true =>
-          <Button
-            onClick={_ => onEndClick(. true)}
-            className="mt-1.5 mb-4 block cursor-pointer text-stone-800 font-perm mx-auto px-8 py-2 text-2xl">
-            {React.string("Return to lobby")}
-          </Button>
-        }}
-        {switch count < 6 {
-        | true =>
-          <p className="font-perm text-center mb-14 text-stone-100 text-2xl">
-            {React.string(j`Returning to lobby in: $count`)}
-          </p>
-        | false => React.null
-        }}
-      </>
+      
+        <div className={`w-64 h-96 bg-no-repeat opacity-0 m-auto animate-fadein ${bgimg}`}>
+          {switch endtoken == "a" {
+          | false => React.null
+          | true =>
+            <Button
+              onClick={_ => onEndClick(. true)}
+              className="mt-1.5 mb-4 block cursor-pointer text-stone-800 font-perm mx-auto px-8 py-2 text-2xl">
+              {React.string("Return to lobby")}
+            </Button>
+          }}
+          {switch count < 6 {
+          | true =>
+            <p className="font-perm text-center mb-14 text-stone-100 text-2xl">
+              {React.string(j`Returning to lobby in: $count`)}
+            </p>
+          | false => React.null
+          }}
+        </div>
+      
     | false => React.null
     }}
   </div>

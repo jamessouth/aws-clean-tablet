@@ -20,6 +20,16 @@ import (
 
 const connect string = "CONNECT"
 
+func getReturnValue(status int) events.APIGatewayProxyResponse {
+	return events.APIGatewayProxyResponse{
+		StatusCode:        status,
+		Headers:           map[string]string{"Content-Type": "application/json"},
+		MultiValueHeaders: map[string][]string{},
+		Body:              "",
+		IsBase64Encoded:   false,
+	}
+}
+
 func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 	var (
 		bod    = req.Body
@@ -61,7 +71,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		ExpressionAttributeValues: map[string]types.AttributeValue{
 			":t": &types.AttributeValueMemberS{Value: ""},
 		},
-		UpdateExpression: aws.String("SET #T = :t"),
+		UpdateExpression: aws.String("SET #T = :t"), //TODO - use remove?
 		ReturnValues:     types.ReturnValueAllOld,
 	})
 	if err != nil {
@@ -83,13 +93,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		return callErr(err)
 	}
 
-	return events.APIGatewayProxyResponse{
-		StatusCode:        http.StatusOK,
-		Headers:           map[string]string{"Content-Type": "application/json"},
-		MultiValueHeaders: map[string][]string{},
-		Body:              "",
-		IsBase64Encoded:   false,
-	}, nil
+	return getReturnValue(http.StatusOK), nil
 }
 
 func main() {
@@ -110,11 +114,5 @@ func callErr(err error) (events.APIGatewayProxyResponse, error) {
 			apiErr.ErrorCode(), apiErr.ErrorMessage())
 	}
 
-	return events.APIGatewayProxyResponse{
-		StatusCode:        http.StatusBadRequest,
-		Headers:           map[string]string{"Content-Type": "application/json"},
-		MultiValueHeaders: map[string][]string{},
-		Body:              "",
-		IsBase64Encoded:   false,
-	}, err
+	return getReturnValue(http.StatusBadRequest), err
 }
