@@ -7,6 +7,5 @@ let make: (
   ~isGameOver: bool,
   ~onEndClick: (. bool) => unit,
   ~playerName: string,
-  ~endtoken: string,
   ~noplrs: int,
 ) => React.element

@@ -10,6 +10,5 @@ let make: (
   ~playerColor: string,
   ~send: (. option<string>) => unit,
   ~playerName: string,
-  ~endtoken: string,
   ~resetConnState: (. unit) => unit,
 ) => React.element

@@ -14,6 +14,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
+const (
+	slope     int = 0
+	intercept int = 2
+)
+
 type livePlayer struct {
 	Name   string `json:"name"`
 	ConnID string `json:"connid"`
@@ -39,39 +44,24 @@ func (list stringSlice) shuffleList(length int) stringSlice {
 	return list[:length]
 }
 
-func getSliceAssignColor(pm map[string]struct{ Name, ConnID string }) (plrsList []struct{ PlayerID, Color string }, plrs map[string]livePlayer) {
+func getSliceAssignColor(pm map[string]struct{ Name, ConnID string }) (plrs map[string]livePlayer) {
 	plrs = map[string]livePlayer{}
 	count := 0
 	clrs := colors.shuffleList(len(colors))
 
 	for k, v := range pm {
-		c := clrs[count]
-
-		plrsList = append(plrsList, struct {
-			PlayerID, Color string
-		}{
-			PlayerID: k,
-			Color:    c,
-		})
-		count++
-
 		plrs[k] = livePlayer{
 			Name:   v.Name,
 			ConnID: v.ConnID,
-			Color:  c,
+			Color:  clrs[count],
 			Answer: "",
 			Score:  aws.Int(0),
 		}
-
+		count++
 	}
 
 	return
 }
-
-const (
-	slope     int = 0
-	intercept int = 2
-)
 
 func handler(ctx context.Context, req struct {
 	Payload struct {
@@ -116,38 +106,36 @@ func handler(ctx context.Context, req struct {
 		return output{}, err
 	}
 
-	playersList, players := getSliceAssignColor(game.Players)
+	players := getSliceAssignColor(game.Players)
 
 	marshalledPlayers, err := attributevalue.Marshal(players)
 	if err != nil {
 		return output{}, err
 	}
 
-	wordList := append(words.shuffleList(slope*len(game.Players)+intercept), "game over")
+	wordList := append(words.shuffleList(slope*len(players)+intercept), "game over")
 
 	marshalledWordList, err := attributevalue.Marshal(wordList)
 	if err != nil {
 		return output{}, err
 	}
 
-	for _, p := range playersList {
+	for k := range players {
 
 		_, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 			Key: map[string]types.AttributeValue{
 				"pk": &types.AttributeValueMemberS{Value: "CONNECT"},
-				"sk": &types.AttributeValueMemberS{Value: p.PlayerID},
+				"sk": &types.AttributeValueMemberS{Value: k},
 			},
 			TableName: tableName,
 
 			ExpressionAttributeNames: map[string]string{
 				"#P": "playing",
-				"#C": "color",
 			},
 			ExpressionAttributeValues: map[string]types.AttributeValue{
 				":p": &types.AttributeValueMemberBOOL{Value: true},
-				":c": &types.AttributeValueMemberS{Value: p.Color},
 			},
-			UpdateExpression: aws.String("set #P = :p, #C = :c"),
+			UpdateExpression: aws.String("set #P = :p"),
 		})
 		if err != nil {
 			return output{}, err

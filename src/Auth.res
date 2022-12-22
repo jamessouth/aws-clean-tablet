@@ -24,7 +24,6 @@ external lazy_: (unit => Promise.t<{"default": React.component<propShape>}>) => 
 > = "lazy"
 
 type listGamesData = {listGms: array<Reducer.listGame>, name: string, connid: string}
-type modConnData = {modConn: string, endtoken: string}
 type countdownData = {cntdown: string}
 type addGameData = {addGame: Reducer.listGame}
 type modListGameData = {mdLstGm: Reducer.listGame}
@@ -39,7 +38,6 @@ type rmvGameData = {rmvGame: Reducer.listGame}
 type leadersData = {leaders: array<Reducer.stat>}
 type msgType =
   | InsertConn
-  | ModifyConn
   | InsertGame
   | ModifyListGame
   | Countdown
@@ -50,8 +48,6 @@ type msgType =
   | Other
 @scope("JSON") @val
 external parseListGames: string => listGamesData = "parse"
-@scope("JSON") @val
-external parseModConn: string => modConnData = "parse"
 @scope("JSON") @val
 external parseCountdown: string => countdownData = "parse"
 @scope("JSON") @val
@@ -69,7 +65,6 @@ external parseLeaders: string => leadersData = "parse"
 let getMsgType = tag =>
   switch tag->Js.String2.slice(~from=2, ~to_=9) {
   | "listGms" => InsertConn
-  | "modConn" => ModifyConn
   | "addGame" => InsertGame
   | "mdLstGm" => ModifyListGame
   | "cntdown" => Countdown
@@ -106,7 +101,6 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
   Js.log2("u345876l", route)
 
   let (ws, setWs) = React.Uncurried.useState(_ => Js.Nullable.null)
-  let (endtoken, setEndtoken) = React.Uncurried.useState(_ => "")
   let (count, setCount) = React.Uncurried.useState(_ => "")
   let (wsConnected, setWsConnected) = React.Uncurried.useState(_ => false)
 
@@ -133,7 +127,6 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
   let resetConnState = (. ()) => {
     dispatch(. ResetPlayerState(initialState))
     setLeaderData(._ => [])
-    setEndtoken(._ => "")
     setCount(._ => "")
   }
 
@@ -205,10 +198,10 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
         | false => ()
         }
 
-        switch Js.String2.match_(data, %re(`/(\"\w+\"\:).+\1/g`)) {
-        | None => ()
-        | Some(_) => logAndLeave(~msg="duplicate keys", ~data, ~code=duplicateKeys)
-        }
+        // switch Js.String2.match_(data, %re(`/(\"\w+\"\:).+\1/g`)) {
+        // | None => ()
+        // | Some(_) => logAndLeave(~msg="duplicate keys", ~data, ~code=duplicateKeys)
+        // }
 
         Js.log3("msg", data, origin)
 
@@ -217,12 +210,6 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
             let {listGms, name, connid} = parseListGames(data)
             Js.log4("parsedlistgames", listGms, name, connid)
             dispatch(. ListGames(Js.Nullable.return(listGms), name, connid))
-          }
-
-        | ModifyConn => {
-            let {modConn, endtoken} = parseModConn(data)
-            Js.log3("parsedmodconn", modConn, endtoken)
-            setEndtoken(. _ => endtoken)
           }
 
         | Countdown => {
@@ -368,7 +355,6 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
             playerColor
             send
             playerName
-            endtoken
             resetConnState
           />
 

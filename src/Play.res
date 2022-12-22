@@ -12,7 +12,6 @@ let make = (
   ~playerColor,
   ~send,
   ~playerName,
-  ~endtoken,
   ~resetConnState,
 ) => {
   let (answered, setAnswered) = React.Uncurried.useState(_ => false)
@@ -118,7 +117,6 @@ let make = (
       isGameOver
       onEndClick
       playerName
-      endtoken
       noplrs={Js.Array2.length(players)}
     />
     {switch isGameOver {

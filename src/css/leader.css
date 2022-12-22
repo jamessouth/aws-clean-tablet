@@ -1,49 +1,49 @@
 @import url('https://fonts.googleapis.com/css2?family=Overpass:wght@600&display=swap&text=%E2%86%90%E2%86%91%E2%86%93');
 
 .leader {
-    -webkit-mask-size: cover;
-    mask-size: cover;
-    -webkit-mask-position: center;
-    mask-position: center;
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
-  }
+  -webkit-mask-size: cover;
+  mask-size: cover;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
 
-  .downArrow:after{
-    content: '↓';
-  }
-  
-  .upArrow:after{
-    content: '↑';
-  }
-  
+.downArrow:after {
+  content: '↓';
+}
+
+.upArrow:after {
+  content: '↑';
+}
+
 .leadermobbg {
-    background: -webkit-image-set(url("/assets/leadermobbg1x.webp") 1x, url("/assets/leadermobbg2x.webp") 2x) no-repeat center/cover;
-    background: image-set(url("/assets/leadermobbg1x.webp") 1x, url("/assets/leadermobbg2x.webp") 2x) no-repeat center/cover;
-    -webkit-mask-image: -webkit-image-set(url("/assets/leadermobbgmask1x.webp") 1x, url("/assets/leadermobbgmask2x.webp") 2x);
-    mask-image: -webkit-image-set(url("/assets/leadermobbgmask1x.webp") 1x, url("/assets/leadermobbgmask2x.webp") 2x);
-    -webkit-mask-image: image-set(url("/assets/leadermobbgmask1x.webp") 1x, url("/assets/leadermobbgmask2x.webp") 2x);
-    mask-image: image-set(url("/assets/leadermobbgmask1x.webp") 1x, url("/assets/leadermobbgmask2x.webp") 2x);
+  background: -webkit-image-set(url("/assets/leadermobbg1x.webp") 1x, url("/assets/leadermobbg2x.webp") 2x) no-repeat center/cover;
+  background: image-set(url("/assets/leadermobbg1x.webp") 1x, url("/assets/leadermobbg2x.webp") 2x) no-repeat center/cover;
+  -webkit-mask-image: -webkit-image-set(url("/assets/leadermobbgmask1x.webp") 1x, url("/assets/leadermobbgmask2x.webp") 2x);
+  mask-image: -webkit-image-set(url("/assets/leadermobbgmask1x.webp") 1x, url("/assets/leadermobbgmask2x.webp") 2x);
+  -webkit-mask-image: image-set(url("/assets/leadermobbgmask1x.webp") 1x, url("/assets/leadermobbgmask2x.webp") 2x);
+  mask-image: image-set(url("/assets/leadermobbgmask1x.webp") 1x, url("/assets/leadermobbgmask2x.webp") 2x);
 }
 
 @media screen and (min-width: 768px) {
-    .leadertabbg {
-      background: -webkit-image-set(url("/assets/leadertabbg1x.webp") 1x, url("/assets/leadertabbg2x.webp") 2x) no-repeat center/cover;
-      background: image-set(url("/assets/leadertabbg1x.webp") 1x, url("/assets/leadertabbg2x.webp") 2x) no-repeat center/cover;
-      -webkit-mask-image: -webkit-image-set(url("/assets/leadertabbgmask1x.webp") 1x, url("/assets/leadertabbgmask2x.webp") 2x);
-      mask-image: -webkit-image-set(url("/assets/leadertabbgmask1x.webp") 1x, url("/assets/leadertabbgmask2x.webp") 2x);
-      -webkit-mask-image: image-set(url("/assets/leadertabbgmask1x.webp") 1x, url("/assets/leadertabbgmask2x.webp") 2x);
-      mask-image: image-set(url("/assets/leadertabbgmask1x.webp") 1x, url("/assets/leadertabbgmask2x.webp") 2x);
-    }
+  .leadertabbg {
+    background: -webkit-image-set(url("/assets/leadertabbg1x.webp") 1x, url("/assets/leadertabbg2x.webp") 2x) no-repeat center/cover;
+    background: image-set(url("/assets/leadertabbg1x.webp") 1x, url("/assets/leadertabbg2x.webp") 2x) no-repeat center/cover;
+    -webkit-mask-image: -webkit-image-set(url("/assets/leadertabbgmask1x.webp") 1x, url("/assets/leadertabbgmask2x.webp") 2x);
+    mask-image: -webkit-image-set(url("/assets/leadertabbgmask1x.webp") 1x, url("/assets/leadertabbgmask2x.webp") 2x);
+    -webkit-mask-image: image-set(url("/assets/leadertabbgmask1x.webp") 1x, url("/assets/leadertabbgmask2x.webp") 2x);
+    mask-image: image-set(url("/assets/leadertabbgmask1x.webp") 1x, url("/assets/leadertabbgmask2x.webp") 2x);
   }
+}
 
-  @media screen and (min-width: 1440px) {
-    .leaderbigbg {
-      background: -webkit-image-set(url("/assets/leaderbigbg1x.webp") 1x, url("/assets/leaderbigbg2x.webp") 2x) no-repeat center/cover;
-      background: image-set(url("/assets/leaderbigbg1x.webp") 1x, url("/assets/leaderbigbg2x.webp") 2x) no-repeat center/cover;
-      -webkit-mask-image: -webkit-image-set(url("/assets/leaderbigbgmask1x.webp") 1x, url("/assets/leaderbigbgmask2x.webp") 2x);
-      mask-image: -webkit-image-set(url("/assets/leaderbigbgmask1x.webp") 1x, url("/assets/leaderbigbgmask2x.webp") 2x);
-      -webkit-mask-image: image-set(url("/assets/leaderbigbgmask1x.webp") 1x, url("/assets/leaderbigbgmask2x.webp") 2x);
-      mask-image: image-set(url("/assets/leaderbigbgmask1x.webp") 1x, url("/assets/leaderbigbgmask2x.webp") 2x);
-    }
+@media screen and (min-width: 1440px) {
+  .leaderbigbg {
+    background: -webkit-image-set(url("/assets/leaderbigbg1x.webp") 1x, url("/assets/leaderbigbg2x.webp") 2x) no-repeat center/cover;
+    background: image-set(url("/assets/leaderbigbg1x.webp") 1x, url("/assets/leaderbigbg2x.webp") 2x) no-repeat center/cover;
+    -webkit-mask-image: -webkit-image-set(url("/assets/leaderbigbgmask1x.webp") 1x, url("/assets/leaderbigbgmask2x.webp") 2x);
+    mask-image: -webkit-image-set(url("/assets/leaderbigbgmask1x.webp") 1x, url("/assets/leaderbigbgmask2x.webp") 2x);
+    -webkit-mask-image: image-set(url("/assets/leaderbigbgmask1x.webp") 1x, url("/assets/leaderbigbgmask2x.webp") 2x);
+    mask-image: image-set(url("/assets/leaderbigbgmask1x.webp") 1x, url("/assets/leaderbigbgmask2x.webp") 2x);
   }
+}

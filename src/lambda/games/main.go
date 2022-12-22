@@ -87,21 +87,6 @@ func getSlice[Key string, Val listPlayer | livePlayer](m map[Key]Val) (res []Val
 	return
 }
 
-func getFrontListGames(gl []backListGame) (res []frontListGame) {
-	res = []frontListGame{}
-
-	for _, g := range gl {
-		pls := sortByName(getSlice(g.Players))
-		res = append(res, frontListGame{
-			No:        g.Sk,
-			TimerCxld: g.TimerCxld,
-			Players:   pls,
-		})
-	}
-
-	return
-}
-
 // https://go.dev/play/p/P_Z4JabiTvH
 func (p listGamePayload) MarshalJSON() ([]byte, error) {
 	m, err := json.Marshal(p.Game)
@@ -366,70 +351,6 @@ func sendSfnTask(ctx context.Context, ddbsvc *dynamodb.Client, sfnsvc *sfn.Clien
 	return nil
 }
 
-func connectEvent(ctx context.Context, eventName, tableName string, ddbsvc *dynamodb.Client, item map[string]types.AttributeValue) (payload []byte, lp []livePlayer, err error) {
-	var connRecord struct {
-		Name, ConnID, Endtoken string
-		Returning              bool
-	}
-	err = attributevalue.UnmarshalMap(item, &connRecord)
-	if err != nil {
-		return []byte{}, []livePlayer{}, err
-	}
-
-	if connRecord.Endtoken != "" {
-		connRecord.Endtoken = "a"
-	}
-
-	fmt.Printf("%s%+v\n", "connrecord ", connRecord)
-
-	if eventName == dynamodbstreams.OperationTypeInsert || (eventName == dynamodbstreams.OperationTypeModify && connRecord.Returning) {
-		listGamesResults, err := ddbsvc.Query(ctx, &dynamodb.QueryInput{
-			TableName:              aws.String(tableName),
-			ScanIndexForward:       aws.Bool(false),
-			KeyConditionExpression: aws.String("pk = :g"),
-			Limit:                  aws.Int32(50),
-			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":g": &types.AttributeValueMemberS{Value: listGame},
-			},
-		})
-		if err != nil {
-			return []byte{}, []livePlayer{}, err
-		}
-
-		var listGames []backListGame
-		err = attributevalue.UnmarshalListOfMaps(listGamesResults.Items, &listGames)
-		if err != nil {
-			return []byte{}, []livePlayer{}, err
-		}
-
-		payload, err = json.Marshal(struct {
-			ListGames []frontListGame `json:"listGms"`
-			Name      string          `json:"name"`
-			ConnID    string          `json:"connid"`
-		}{
-			ListGames: getFrontListGames(listGames),
-			Name:      connRecord.Name,
-			ConnID:    connRecord.ConnID,
-		})
-		if err != nil {
-			return []byte{}, []livePlayer{}, err
-		}
-	} else if eventName == dynamodbstreams.OperationTypeModify {
-		payload, err = json.Marshal(struct {
-			ModConnGm string `json:"modConn"`
-			Endtoken  string `json:"endtoken"`
-		}{
-			ModConnGm: "modConn",
-			Endtoken:  connRecord.Endtoken,
-		})
-		if err != nil {
-			return []byte{}, []livePlayer{}, err
-		}
-	}
-
-	return payload, []livePlayer{{ConnID: connRecord.ConnID}}, nil
-}
-
 func listGameEvent(ctx context.Context, eventName, tableName string, ddbsvc *dynamodb.Client, item map[string]types.AttributeValue) (payload []byte, conns []livePlayer, err error) {
 	var listGameRecord backListGame
 	err = attributevalue.UnmarshalMap(item, &listGameRecord)
@@ -560,7 +481,6 @@ func liveGameEvent(ctx context.Context, eventName, tableName string, ddbsvc *dyn
 //         "Keys": {
 //           "pk": {
 //             "S": [
-//               "CONNECT",
 //               "LISTGAME"
 //             ]
 //           }
@@ -653,31 +573,15 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 		)
 
 		switch recType {
-		case connect:
-			if eventName == dynamodbstreams.OperationTypeRemove {
-				continue
-			}
-
-			payload, plrs, err = connectEvent(ctx, eventName, tableName, ddbsvc, item)
-			if err != nil {
-				return callErr(err)
-			}
 		case listGame:
 			payload, plrs, err = listGameEvent(ctx, eventName, tableName, ddbsvc, item)
-			if err != nil {
-				return callErr(err)
-			}
 		case liveGame:
-			if eventName == dynamodbstreams.OperationTypeRemove {
-				continue
-			}
-
 			payload, plrs, err = liveGameEvent(ctx, eventName, tableName, ddbsvc, sfnsvc, item)
-			if err != nil {
-				return callErr(err)
-			}
 		default:
 			fmt.Printf("%s: %+v\n", "other record type", rec)
+		}
+		if err != nil {
+			return callErr(err)
 		}
 
 		err = send(ctx, region, payload, plrs...)
