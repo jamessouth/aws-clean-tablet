@@ -5,7 +5,7 @@ let make: (
   ~showAnswers: bool,
   ~winner: string,
   ~isGameOver: bool,
-  ~onEndClick: (. bool) => unit,
+  ~resetConnState: (. unit) => unit,
   ~playerName: string,
   ~noplrs: int,
 ) => React.element

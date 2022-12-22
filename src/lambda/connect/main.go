@@ -28,7 +28,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		return callErr(errors.New("improper json input - too long"))
 	}
 
-	fmt.Println("end", bod, len(bod))
+	fmt.Println("connect", bod, len(bod))
 
 	cfg, err := config.LoadDefaultConfig(ctx,
 		config.WithRegion(region),

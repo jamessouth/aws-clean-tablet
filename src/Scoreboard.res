@@ -7,13 +7,12 @@ let make = (
   ~showAnswers,
   ~winner,
   ~isGameOver,
-  ~onEndClick,
+  ~resetConnState,
   ~playerName,
   ~noplrs,
 ) => {
   Js.log2("score", players)
 
-  let (count, setCount) = React.Uncurried.useState(_ => 30)
   let (bgimg, setBgimg) = React.Uncurried.useState(_ => "")
 
   React.useEffect3(() => {
@@ -32,31 +31,6 @@ let make = (
 
     None
   }, (isGameOver, winner, playerName))
-
-  React.useEffect1(() => {
-    Js.log("useff run")
-    let id = if isGameOver {
-      Js.Global.setInterval(() => {
-        setCount(. c => c - 1)
-      }, 1000)
-    } else {
-      Js.Global.setInterval(() => (), 3600000)
-    }
-
-    Some(
-      () => {
-        Js.Global.clearInterval(id)
-      },
-    )
-  }, [isGameOver])
-
-  React.useEffect1(() => {
-    switch count == 0 {
-    | true => onEndClick(. false)
-    | false => ()
-    }
-    None
-  }, [count])
 
   <div className="w-full" style={ReactDOM.Style.make(~height=j`calc(82px + (28px * $noplrs))`, ())}>
     {switch showAnswers {
@@ -134,29 +108,17 @@ let make = (
     </ul>
     {switch isGameOver {
     | true =>
-      
-        <div className={`w-64 h-96 bg-no-repeat opacity-0 m-auto animate-fadein ${bgimg}`}>
-
-
-
-            <Button
-              onClick={_ => onEndClick(. true)}
-              className="mt-1.5 mb-4 block cursor-pointer text-stone-800 font-perm mx-auto px-8 py-2 text-2xl">
-              {React.string("Return to lobby")}
-            </Button>
-        
-
-
-
-          {switch count < 6 {
-          | true =>
-            <p className="font-perm text-center mb-14 text-stone-100 text-2xl">
-              {React.string(j`Returning to lobby in: $count`)}
-            </p>
-          | false => React.null
+      <div className={`w-64 h-96 bg-no-repeat opacity-0 m-auto animate-fadein ${bgimg}`}>
+        <Button
+          onClick={_ => {
+            resetConnState(.)
+            Route.push(Lobby)
           }}
-        </div>
-      
+          className="mt-1.5 mb-4 block cursor-pointer text-stone-800 font-perm mx-auto px-8 py-2 text-2xl">
+          {React.string("Return to lobby")}
+        </Button>
+      </div>
+
     | false => React.null
     }}
   </div>

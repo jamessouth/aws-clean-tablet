@@ -1,6 +1,5 @@
 type apigwAction =
   | Answer
-  | End
   | Leaders
   | Lobby
   | Logging

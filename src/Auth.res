@@ -91,7 +91,7 @@ let initialState: Reducer.state = {
 
 let normalClose = 1000
 let wrongOrigin = 4002
-let duplicateKeys = 4003
+// let duplicateKeys = 4003
 let excessiveJson = 4004
 let unknownJson = 4005
 let jsonLimit = 3000

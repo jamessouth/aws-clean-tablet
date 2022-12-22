@@ -2,7 +2,6 @@ let players_max_threshold = 7
 
 type apigwAction =
   | Answer
-  | End
   | Leaders
   | Lobby
   | Logging
@@ -33,7 +32,6 @@ type payloadOutput = {
 let apigwActionToString = a =>
   switch a {
   | Answer => "answer"
-  | End => "end"
   | Leaders => "leaders"
   | Lobby => "lobby"
   | Logging => "logging"
@@ -60,7 +58,7 @@ let payloadToObj = pl => {
       gameno: lobbyGamenoToString(pl.gn),
       aW5mb3Jt: lobbyCommandToString(pl.cmd),
     })
-  | End | Leaders =>
+  | Leaders =>
     Js.Json.stringifyAny({
       action: apigwActionToString(pl.act),
     })

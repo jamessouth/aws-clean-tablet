@@ -66,23 +66,6 @@ let make = (
     Js.log("onenter")
   }
 
-  let onEndClick = (. sendPayload) => {
-    switch sendPayload {
-    | true =>
-      send(.
-        Lobby.payloadToObj({
-          act: End,
-          gn: Newgame, //placeholder
-          cmd: Join, //placeholder
-        }),
-      )
-
-    | false => ()
-    }
-    resetConnState(.)
-    Route.push(Lobby)
-  }
-
   let onClick2 = (. ()) => {
     switch validationError {
     | None => onEnter(. ignore())
@@ -115,7 +98,7 @@ let make = (
       showAnswers
       winner
       isGameOver
-      onEndClick
+      resetConnState
       playerName
       noplrs={Js.Array2.length(players)}
     />
