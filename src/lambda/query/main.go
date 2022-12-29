@@ -24,10 +24,10 @@ import (
 )
 
 const (
-	stat_     string = "STAT"
 	leaders   string = "leaders"
 	listGames string = "listGames"
 	listGame  string = "LISTGAME"
+	stat_     string = "STAT"
 )
 
 type stat struct {

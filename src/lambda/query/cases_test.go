@@ -281,3 +281,82 @@ var calcStatsTests = []struct {
 		description: "get stats",
 	},
 }
+
+var noErrorTests = []struct {
+	input, exp1, description string
+}{
+	{
+		input: `{
+			"command": "leaders"
+		 }`,
+		exp1:        "leaders",
+		description: "ok",
+	},
+	{
+		input: `{
+			"command": "listGames"
+		 }`,
+		exp1:        "listGames",
+		description: "ok",
+	},
+}
+
+var jsonTests = []struct {
+	input, description string
+}{
+	{
+		input: `{
+			"command": "iuiuuhiu"
+		 }]]]]]`,
+		description: "malformed input",
+	},
+}
+
+var errorTests = []struct {
+	input, msg, description string
+}{
+	{
+		input: `{
+			"gameno": "9156855555555555555555555555555555549584651018",
+			"aW5mhb3Jt": "iuiuu55555555555555555555555555555555555555555hiu",
+			"aW5mkb3Jt": "iuiuu55555555555555555555555555555555555555555hiu",
+			"aW5m3b3Jt": "iuiuu55555555555555555555555555555555555555555hiu"
+		 }`,
+		msg:         "improper json input - too long: 275",
+		description: "input too long",
+	},
+	{
+		input: `{
+			"gameno": "9156849584651978018"
+		 }`,
+		msg:         "improper json input - duplicate/missing key",
+		description: "missing command key",
+	},
+	{
+		input:       `{ }`,
+		msg:         "improper json input - duplicate/missing key",
+		description: "containing no keys",
+	},
+	{
+		input: `{ 
+		"command": "iuiuuhiu",
+		"command": "iuiu55uhiu"
+		}`,
+		msg:         "improper json input - duplicate/missing key",
+		description: "duplicate command key",
+	},
+	{
+		input: `{
+			"command": " leaders"
+		 }`,
+		msg:         "improper json input - bad command:  leaders",
+		description: "command not 'leaders|listGames' exactly",
+	},
+	{
+		input: `{
+			"command": "listGames "
+		 }`,
+		msg:         "improper json input - bad command: listGames ",
+		description: "command not 'leaders|listGames' exactly",
+	},
+}
