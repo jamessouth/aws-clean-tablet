@@ -1,8 +1,8 @@
 type apigwAction =
   | Answer
-  | Leaders
   | Lobby
   | Logging
+  | Query
 
 type lobbyGameno =
   | Gameno({no: string})
@@ -11,7 +11,9 @@ type lobbyGameno =
 type lobbyCommand =
   | Custom({cv: string})
   | Join
+  | Leaders
   | Leave
+  | ListGames
 
 type lobbyPayload = {
   act: apigwAction,

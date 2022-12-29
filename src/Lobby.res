@@ -2,9 +2,9 @@ let players_max_threshold = 7
 
 type apigwAction =
   | Answer
-  | Leaders
   | Lobby
   | Logging
+  | Query
 
 type lobbyGameno =
   | Gameno({no: string})
@@ -13,7 +13,9 @@ type lobbyGameno =
 type lobbyCommand =
   | Custom({cv: string})
   | Join
+  | Leaders
   | Leave
+  | ListGames
 
 type lobbyPayload = {
   act: apigwAction,
@@ -32,9 +34,9 @@ type payloadOutput = {
 let apigwActionToString = a =>
   switch a {
   | Answer => "answer"
-  | Leaders => "leaders"
   | Lobby => "lobby"
   | Logging => "logging"
+  | Query => "query"
   }
 
 let lobbyGamenoToString = gn =>
@@ -47,7 +49,9 @@ let lobbyCommandToString = lc =>
   switch lc {
   | Custom({cv}) => cv
   | Join => "join"
+  | Leaders => "leaders"
   | Leave => "leave"
+  | ListGames => "listGames"
   }
 
 let payloadToObj = pl => {
@@ -58,9 +62,10 @@ let payloadToObj = pl => {
       gameno: lobbyGamenoToString(pl.gn),
       aW5mb3Jt: lobbyCommandToString(pl.cmd),
     })
-  | Leaders =>
+  | Query =>
     Js.Json.stringifyAny({
       action: apigwActionToString(pl.act),
+      command: lobbyCommandToString(pl.cmd),
     })
   | Lobby =>
     Js.Json.stringifyAny({
@@ -194,9 +199,9 @@ let make = (~playerListGame, ~games, ~send, ~close, ~count, ~setLeaderData) => {
     setLeaderData(._ => [])
     send(.
       payloadToObj({
-        act: Leaders,
+        act: Query,
         gn: Newgame, //placeholder
-        cmd: Join, //placeholder
+        cmd: Leaders,
       }),
     )
     Route.push(Leaderboard)
