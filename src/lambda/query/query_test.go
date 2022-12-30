@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-
 	"github.com/stretchr/testify/assert"
 )
 
@@ -47,5 +46,14 @@ func TestCheckInput(t *testing.T) {
 		if act1, err := checkInput(test.input); assert.Errorf(t, err, "FAIL - checkInput - %s\n err: %+v\n", test.description, err) {
 			assert.Equalf(t, act1, "", "FAIL - checkInput - %s\n act1: %s\n exp1: \n", test.description, act1)
 		}
+	}
+}
+
+func TestGetFrontListGames(t *testing.T) {
+	// t.Skip()
+	for _, ref := range getFrontListGamesTests {
+		act := getFrontListGames(ref.input)
+
+		assert.Equalf(t, ref.expected, act, "FAIL - getFrontListGames - %s\n act: %v\n exp: %v\n", ref.description, act, ref.expected)
 	}
 }

@@ -360,3 +360,143 @@ var errorTests = []struct {
 		description: "command not 'leaders|listGames' exactly",
 	},
 }
+
+var getFrontListGamesTests = []struct {
+	input       []backListGame
+	expected    []frontListGame
+	description string
+}{
+	{
+		input: []backListGame{
+			{
+				Pk:        "LISTGAME",
+				Sk:        "3",
+				TimerCxld: true,
+				Players: map[string]listPlayer{
+					"x8u3": {Name: "will", ConnID: "098"},
+					"n38c": {Name: "bill", ConnID: "987"},
+					"a9i3": {Name: "carl", ConnID: "876"},
+					"km28": {Name: "lisa", ConnID: "765"},
+				},
+			},
+			{
+				Pk:        "LISTGAME",
+				Sk:        "0",
+				TimerCxld: true,
+				Players: map[string]listPlayer{
+					"x8u3": {Name: "will", ConnID: "098"},
+					"n38c": {Name: "bill", ConnID: "987"},
+					"a9i3": {Name: "carl", ConnID: "876"},
+					"km28": {Name: "lisa", ConnID: "765"},
+				},
+			},
+			{
+				Pk:        "LISTGAME",
+				Sk:        "10",
+				TimerCxld: true,
+				Players: map[string]listPlayer{
+					"x8u3": {Name: "will", ConnID: "098"},
+					"n38c": {Name: "bill", ConnID: "987"},
+					"a9i3": {Name: "carl", ConnID: "876"},
+					"km28": {Name: "lisa", ConnID: "765"},
+				},
+			},
+			{
+				Pk:        "LISTGAME",
+				Sk:        "13",
+				TimerCxld: true,
+				Players: map[string]listPlayer{
+					"x8u3": {Name: "will", ConnID: "098"},
+					"n38c": {Name: "bill", ConnID: "987"},
+					"a9i3": {Name: "carl", ConnID: "876"},
+					"km28": {Name: "lisa", ConnID: "765"},
+				},
+			},
+			{
+				Pk:        "LISTGAME",
+				Sk:        "32",
+				TimerCxld: true,
+				Players: map[string]listPlayer{
+					"x8u3": {Name: "will", ConnID: "098"},
+					"n38c": {Name: "bill", ConnID: "987"},
+					"a9i3": {Name: "carl", ConnID: "876"},
+					"km28": {Name: "lisa", ConnID: "765"},
+				},
+			},
+			{
+				Pk:        "LISTGAME",
+				Sk:        "7",
+				TimerCxld: true,
+				Players: map[string]listPlayer{
+					"x8u3": {Name: "will", ConnID: "098"},
+					"n38c": {Name: "bill", ConnID: "987"},
+					"a9i3": {Name: "carl", ConnID: "876"},
+					"km28": {Name: "lisa", ConnID: "765"},
+				},
+			},
+		},
+		expected: []frontListGame{
+			{
+				No:        "3",
+				TimerCxld: true,
+				Players: []listPlayer{
+					{Name: "bill", ConnID: "987"},
+					{Name: "carl", ConnID: "876"},
+					{Name: "lisa", ConnID: "765"},
+					{Name: "will", ConnID: "098"},
+				},
+			},
+			{
+				No:        "0",
+				TimerCxld: true,
+				Players: []listPlayer{
+					{Name: "bill", ConnID: "987"},
+					{Name: "carl", ConnID: "876"},
+					{Name: "lisa", ConnID: "765"},
+					{Name: "will", ConnID: "098"},
+				},
+			},
+			{
+				No:        "10",
+				TimerCxld: true,
+				Players: []listPlayer{
+					{Name: "bill", ConnID: "987"},
+					{Name: "carl", ConnID: "876"},
+					{Name: "lisa", ConnID: "765"},
+					{Name: "will", ConnID: "098"},
+				},
+			},
+			{
+				No:        "13",
+				TimerCxld: true,
+				Players: []listPlayer{
+					{Name: "bill", ConnID: "987"},
+					{Name: "carl", ConnID: "876"},
+					{Name: "lisa", ConnID: "765"},
+					{Name: "will", ConnID: "098"},
+				},
+			},
+			{
+				No:        "32",
+				TimerCxld: true,
+				Players: []listPlayer{
+					{Name: "bill", ConnID: "987"},
+					{Name: "carl", ConnID: "876"},
+					{Name: "lisa", ConnID: "765"},
+					{Name: "will", ConnID: "098"},
+				},
+			},
+			{
+				No:        "7",
+				TimerCxld: true,
+				Players: []listPlayer{
+					{Name: "bill", ConnID: "987"},
+					{Name: "carl", ConnID: "876"},
+					{Name: "lisa", ConnID: "765"},
+					{Name: "will", ConnID: "098"},
+				},
+			},
+		},
+		description: "convert list of back end games to front end games",
+	},
+}

@@ -111,8 +111,6 @@ func sortByName(players []listPlayer) []listPlayer {
 }
 
 func getFrontListGames(gl []backListGame) (res []frontListGame) {
-	res = []frontListGame{}
-
 	for _, g := range gl {
 		pls := sortByName(getSlice(g.Players))
 		res = append(res, frontListGame{
@@ -148,7 +146,6 @@ func checkInput(s string) (string, error) {
 	var command = body.Command
 
 	if !commandRE.MatchString(command) {
-
 		return "", errors.New("improper json input - bad command: " + command)
 	}
 
@@ -176,16 +173,14 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	fmt.Println("query", bod, len(bod))
 
 	var (
-		region   = strings.Split(req.RequestContext.DomainName, ".")[2]
-		connID   = req.RequestContext.ConnectionID
-		apiid    = os.Getenv("CT_APIID")
-		stage    = os.Getenv("CT_STAGE")
-		endpoint = "https://" + apiid + ".execute-api." + region + ".amazonaws.com/" + stage
-		auth     = req.RequestContext.Authorizer.(map[string]interface{})
-
+		region          = strings.Split(req.RequestContext.DomainName, ".")[2]
+		connID          = req.RequestContext.ConnectionID
+		apiid           = os.Getenv("CT_APIID")
+		stage           = os.Getenv("CT_STAGE")
+		endpoint        = "https://" + apiid + ".execute-api." + region + ".amazonaws.com/" + stage
+		auth            = req.RequestContext.Authorizer.(map[string]interface{})
 		name, tableName = auth["username"].(string), auth["tableName"].(string)
-
-		customResolver = aws.EndpointResolverWithOptionsFunc(func(service, awsRegion string, options ...interface{}) (aws.Endpoint, error) {
+		customResolver  = aws.EndpointResolverWithOptionsFunc(func(service, awsRegion string, options ...interface{}) (aws.Endpoint, error) {
 			if service == apigatewaymanagementapi.ServiceID && awsRegion == region {
 				ep := aws.Endpoint{
 					PartitionID:   "aws",
@@ -198,7 +193,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 
 			return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested")
 		})
-		payload []byte
 	)
 
 	apigwcfg, err := config.LoadDefaultConfig(ctx,
@@ -219,18 +213,24 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 	var (
 		apigwsvc = apigatewaymanagementapi.NewFromConfig(apigwcfg)
 		ddbsvc   = dynamodb.NewFromConfig(ddbcfg)
+		payload  []byte
+		qi       = dynamodb.QueryInput{
+			TableName:              aws.String(tableName),
+			ScanIndexForward:       aws.Bool(false),
+			KeyConditionExpression: aws.String("pk = :e"),
+			Limit:                  aws.Int32(50),
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":e": &types.AttributeValueMemberS{Value: listGame},
+			},
+		}
 	)
 
 	if checkedCommand == leaders {
+		qi.ScanIndexForward = aws.Bool(true)
+		qi.Limit = aws.Int32(100)
+		qi.ExpressionAttributeValues[":e"] = &types.AttributeValueMemberS{Value: stat_}
 
-		leadersResults, err := ddbsvc.Query(ctx, &dynamodb.QueryInput{
-			TableName:              aws.String(tableName),
-			KeyConditionExpression: aws.String("pk = :s"),
-			Limit:                  aws.Int32(100),
-			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":s": &types.AttributeValueMemberS{Value: stat_},
-			},
-		})
+		leadersResults, err := ddbsvc.Query(ctx, &qi)
 		if err != nil {
 			return callErr(err)
 		}
@@ -241,8 +241,6 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			return callErr(err)
 		}
 
-		fmt.Printf("%s%+v\n", "res ", leaders)
-
 		payload, err = json.Marshal(struct {
 			Leaders []stat `json:"leaders"`
 		}{
@@ -252,26 +250,15 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			return callErr(err)
 		}
 	} else if checkedCommand == listGames {
-
-		listGamesResults, err := ddbsvc.Query(ctx, &dynamodb.QueryInput{
-			TableName:              aws.String(tableName),
-			ScanIndexForward:       aws.Bool(false),
-			KeyConditionExpression: aws.String("pk = :g"),
-			Limit:                  aws.Int32(50),
-			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":g": &types.AttributeValueMemberS{Value: listGame},
-			},
-		})
+		listGamesResults, err := ddbsvc.Query(ctx, &qi)
 		if err != nil {
 			return callErr(err)
-
 		}
 
 		var listGames []backListGame
 		err = attributevalue.UnmarshalListOfMaps(listGamesResults.Items, &listGames)
 		if err != nil {
 			return callErr(err)
-
 		}
 
 		payload, err = json.Marshal(struct {
@@ -285,9 +272,7 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		})
 		if err != nil {
 			return callErr(err)
-
 		}
-
 	}
 
 	conn := apigatewaymanagementapi.PostToConnectionInput{ConnectionId: aws.String(connID), Data: payload}
