@@ -37,7 +37,7 @@ type wordData = {newword: string}
 type rmvGameData = {rmvGame: Reducer.listGame}
 type leadersData = {leaders: array<Reducer.stat>}
 type msgType =
-  | InsertConn
+  | ListGames
   | InsertGame
   | ModifyListGame
   | Countdown
@@ -64,7 +64,7 @@ external parseRmvGame: string => rmvGameData = "parse"
 external parseLeaders: string => leadersData = "parse"
 let getMsgType = tag =>
   switch tag->Js.String2.slice(~from=2, ~to_=9) {
-  | "listGms" => InsertConn
+  | "listGms" => ListGames
   | "addGame" => InsertGame
   | "mdLstGm" => ModifyListGame
   | "cntdown" => Countdown
@@ -206,7 +206,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
         Js.log3("msg", data, origin)
 
         switch getMsgType(data) {
-        | InsertConn => {
+        | ListGames => {
             let {listGms, name, connid} = parseListGames(data)
             Js.log4("parsedlistgames", listGms, name, connid)
             dispatch(. ListGames(Js.Nullable.return(listGms), name, connid))
@@ -330,7 +330,6 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
       switch wsConnected {
       | false => {
           body(document)->setClassName("bodchmob bodchtab bodchbig")
-
           <Loading label="games..." />
         }
 
