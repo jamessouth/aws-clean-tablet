@@ -25,10 +25,23 @@ let make = (~userpool, ~setCognitoUser, ~setToken, ~cognitoUser, ~retrievedUsern
     "USERNAME: 3-10 length; PASSWORD: 8-98 length; at least 1 symbol; at least 1 number; at least 1 uppercase letter; at least 1 lowercase letter; ",
   ))
   let (cognitoError, setCognitoError) = React.Uncurried.useState(_ => None)
+
   React.useEffect2(() => {
     ErrorHook.useMultiError([(username, Username), (password, Password)], setValidationError)
     None
   }, (username, password))
+
+  React.useEffect0(() => {
+    Js.log("signin use effect")
+
+    ImageLoad.import_("./ImageLoad.bs")->Promise.then(func => {
+      Promise.resolve(func["bghand"](.))
+    })
+
+    // ->ignore
+
+    None
+  })
 
   open Cognito
   let on_Click = (. ()) => {

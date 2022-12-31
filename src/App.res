@@ -3,6 +3,8 @@ external upid: string = "VITE_UPID"
 @val @scope(("import", "meta", "env"))
 external cid: string = "VITE_CID"
 
+let signInSignUpLinkStyles = "w-3/5 border border-stone-100 bg-stone-800/40 text-center text-stone-100 decay-mask text-3xl p-2 max-w-80 font-fred col-span-full justify-self-center"
+
 module Link = {
   open Route
   @react.component
@@ -10,15 +12,6 @@ module Link = {
     let onClick = e => {
       ReactEvent.Mouse.preventDefault(e)
       push(route)
-      switch route {
-      | SignIn =>
-        ImageLoad.import_("./ImageLoad.bs")
-        ->Promise.then(func => {
-          Promise.resolve(func["bghand"](.))
-        })
-        ->ignore
-      | Home | SignUp | GetInfo(_) | Confirm(_) | Lobby | Leaderboard | Play(_) | Other => ()
-      }
     }
 
     <a onClick className href={typeToUrlString(route)}> {React.string(content)} </a>
@@ -84,8 +77,8 @@ let make = () => {
 
   <>
     {switch route {
-    | Leaderboard => React.null
-    | Home | SignIn | SignUp | GetInfo(_) | Confirm(_) | Lobby | Play(_) | Other =>
+    | Auth({subroute: Leaderboard}) => React.null
+    | Home | SignIn | SignUp | GetInfo(_) | Confirm(_) | Auth(_) | Other =>
       switch token {
       | None =>
         <header className="mb-10 newgmimg:mb-12">
@@ -99,8 +92,8 @@ let make = () => {
     }}
     <main
       className={switch route {
-      | Leaderboard => ""
-      | Home | SignIn | SignUp | GetInfo(_) | Confirm(_) | Lobby | Play(_) | Other => "mb-14"
+      | Auth({subroute: Leaderboard}) => ""
+      | Home | SignIn | SignUp | GetInfo(_) | Confirm(_) | Auth(_) | Other => "mb-14"
       }}>
       {switch (route, token) {
       | (Home, None) => {
@@ -108,15 +101,9 @@ let make = () => {
           Web.body(Web.document)->Web.setClassName("bodmob bodtab bodbig")
           <nav
             className="relative font-anon text-sm grid grid-cols-2 grid-rows-[16fr,10fr,16fr,10fr,8fr,4fr,6fr]">
+            <Link route=SignIn className=signInSignUpLinkStyles content="SIGN IN" />
             <Link
-              route=SignIn
-              className={"w-3/5 border border-stone-100 bg-stone-800/40 text-center text-stone-100 " ++ "decay-mask text-3xl p-2 max-w-80 font-fred col-span-full justify-self-center"}
-              content="SIGN IN"
-            />
-            <Link
-              route=SignUp
-              className={"w-3/5 border border-stone-100 bg-stone-800/40 text-center text-stone-100 " ++ "decay-mask text-3xl p-2 max-w-80 font-fred col-span-full justify-self-center row-start-3"}
-              content="SIGN UP"
+              route=SignUp className={signInSignUpLinkStyles ++ " row-start-3"} content="SIGN UP"
             />
             <Link
               route=GetInfo({search: ForgotPassword})
@@ -173,18 +160,17 @@ let make = () => {
             Confirm.makeProps(~cognitoUser, ~search, ()),
           )}
         </React.Suspense>
-      | (Lobby | Play(_) | Leaderboard, None) => {
+      | (Auth(_), None) => {
           Route.replace(Home)
           React.null
         }
 
       | (Home | SignIn | SignUp | GetInfo(_) | Confirm(_), Some(_)) => {
-          Route.replace(Lobby)
+          Route.replace(Auth({subroute: Lobby}))
           React.null
         }
 
-      | (Lobby | Play(_) | Leaderboard, Some(_)) =>
-        <React.Suspense fallback=React.null> auth </React.Suspense>
+      | (Auth(_), Some(_)) => <React.Suspense fallback=React.null> auth </React.Suspense>
       | (Other, _) =>
         <div className="text-center text-stone-100 text-4xl">
           {React.string("page not found")}
@@ -208,10 +194,7 @@ let make = () => {
           </svg>
         </a>
       </footer>
-    | (
-      Leaderboard | SignIn | SignUp | GetInfo(_) | Confirm(_) | Lobby | Play(_) | Other,
-      None | Some(_),
-    )
+    | (SignIn | SignUp | GetInfo(_) | Confirm(_) | Auth(_) | Other, None | Some(_))
     | (Home, Some(_)) => React.null
     }}
   </>
