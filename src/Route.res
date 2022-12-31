@@ -4,12 +4,42 @@ type query =
   | ForgotUsername
   | Other
 
-let stringToQuery = s =>
+type authSubroute =
+  | Leaderboard
+  | Lobby
+  | Play({play: string})
+  | Other
+
+type t =
+  | Home
+  | SignIn
+  | SignUp
+  | GetInfo({search: query})
+  | Confirm({search: query})
+  | Auth({subroute: authSubroute})
+  | Other
+
+let stringToGetInfo = s =>
   switch s {
-  | "cd_un" => VerificationCode
-  | "pw_un" => ForgotPassword
-  | "un_em" => ForgotUsername
+  | "cd_un" => GetInfo({search: VerificationCode})
+  | "pw_un" => GetInfo({search: ForgotPassword})
+  | "un_em" => GetInfo({search: ForgotUsername})
   | _ => Other
+  }
+
+let stringToConfirm = s =>
+  switch s {
+  | "cd_un" => Confirm({search: VerificationCode})
+  | "pw_un" => Confirm({search: ForgotPassword})
+  | _ => Other
+  }
+
+let stringToAuthSubroute = l =>
+  switch l {
+  | list{"leaderboard"} => Auth({subroute: Leaderboard})
+  | list{"lobby"} => Auth({subroute: Lobby})
+  | list{"play", gameno} => Auth({subroute: Play({play: gameno})})
+  | _ => Auth({subroute: Other})
   }
 
 let queryToString = q =>
@@ -20,42 +50,22 @@ let queryToString = q =>
   | Other => ""
   }
 
-type t =
-  | Home
-  | SignIn
-  | SignUp
-  | GetInfo({search: query})
-  | Confirm({search: query})
-  | Lobby
-  | Leaderboard
-  | Play({play: string})
-  | Other
+let authSubrouteToString = a =>
+  switch a {
+  | Leaderboard => "leaderboard"
+  | Lobby => "lobby"
+  | Play({play}) => `play/${play}`
+  | Other => ""
+  }
 
 let urlStringToType = (url: RescriptReactRouter.url) =>
   switch url.path {
   | list{} => Home
   | list{"signin"} => SignIn
   | list{"signup"} => SignUp
-  | list{"getinfo"} =>
-    switch stringToQuery(url.search) {
-    | VerificationCode => GetInfo({search: VerificationCode})
-    | ForgotPassword => GetInfo({search: ForgotPassword})
-    | ForgotUsername => GetInfo({search: ForgotUsername})
-    | Other => Other
-    }
-  | list{"confirm"} =>
-    switch stringToQuery(url.search) {
-    | VerificationCode => Confirm({search: VerificationCode})
-    | ForgotPassword => Confirm({search: ForgotPassword})
-    | ForgotUsername | Other => Other
-    }
-  | list{"auth", ...subroutes} =>
-    switch subroutes {
-    | list{"lobby"} => Lobby
-    | list{"leaderboard"} => Leaderboard
-    | list{"play", gameno} => Play({play: gameno})
-    | _ => Other
-    }
+  | list{"getinfo"} => stringToGetInfo(url.search)
+  | list{"confirm"} => stringToConfirm(url.search)
+  | list{"auth", ...subroutes} => stringToAuthSubroute(subroutes)
   | _ => Other
   }
 
@@ -66,9 +76,7 @@ let typeToUrlString = t =>
   | SignUp => "/signup"
   | GetInfo({search}) => `/getinfo?${queryToString(search)}`
   | Confirm({search}) => `/confirm?${queryToString(search)}`
-  | Lobby => "/auth/lobby"
-  | Leaderboard => "/auth/leaderboard"
-  | Play({play}) => `/auth/play/${play}`
+  | Auth({subroute}) => `/auth/${authSubrouteToString(subroute)}`
   | Other => ""
   }
 

@@ -4,15 +4,19 @@ type query =
   | ForgotUsername
   | Other
 
+type authSubroute =
+  | Leaderboard
+  | Lobby
+  | Play({play: string})
+  | Other
+
 type t =
   | Home
   | SignIn
   | SignUp
   | GetInfo({search: query})
   | Confirm({search: query})
-  | Lobby
-  | Leaderboard
-  | Play({play: string})
+  | Auth({subroute: authSubroute})
   | Other
 
 let typeToUrlString: t => string
