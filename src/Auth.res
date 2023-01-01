@@ -105,14 +105,6 @@ module LobbyButtons = {
   @react.component
   let make = (~playerListGame, ~send, ~close) => {
     let leaderboard = _ => {
-      // setLeaderData(._ => [])
-      // send(.
-      //   payloadToObj({
-      //     act: Query,
-      //     gn: Newgame, //placeholder
-      //     cmd: Leaders,
-      //   }),
-      // )
       Route.push(Auth({subroute: Leaderboard}))
     }
 
@@ -353,7 +345,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
         Promise.resolve({"default": comp["make"]})
       })
     ),
-    Leaders.makeProps(~leaderData, ~playerName, ()),
+    Leaders.makeProps(~leaderData, ~playerName, ~send, ~setLeaderData, ()),
   )
 
   <>

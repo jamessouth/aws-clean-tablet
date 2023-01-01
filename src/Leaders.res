@@ -1,6 +1,11 @@
 %%raw(`import './css/leader.css'`)
 
-type propShape = {"leaderData": array<Reducer.stat>, "playerName": string}
+type propShape = {
+  "leaderData": array<Reducer.stat>,
+  "playerName": string,
+  "send": (. option<string>) => unit,
+  "setLeaderData": (. array<Reducer.stat> => array<Reducer.stat>) => unit,
+}
 
 @val
 external import_: string => Promise.t<{"make": React.component<propShape>}> = "import"
@@ -37,7 +42,7 @@ let sortData = (field, dir, a: Reducer.stat, b: Reducer.stat) => {
 }
 
 @react.component
-let make = (~leaderData, ~playerName) => {
+let make = (~leaderData, ~playerName, ~send, ~setLeaderData) => {
   let (nameDir, setNameDir) = React.Uncurried.useState(_ => Down)
   let (winDir, setWinDir) = React.Uncurried.useState(_ => Down)
   let (ptsDir, setPtsDir) = React.Uncurried.useState(_ => Up)
@@ -51,7 +56,21 @@ let make = (~leaderData, ~playerName) => {
   let (data, setData) = React.Uncurried.useState(_ => [])
 
   React.useEffect1(() => {
-    setData(._ => leaderData->Js.Array2.copy)
+    Js.log("leaders useeff")
+
+    switch Js.Array2.length(leaderData) == 0 {
+    | true =>
+      send(.
+        Lobby.payloadToObj({
+          act: Query,
+          gn: Newgame, //placeholder
+          cmd: Leaders,
+        }),
+      )
+
+    | false => setData(._ => leaderData->Js.Array2.copy)
+    }
+
     None
   }, [leaderData])
 
@@ -85,7 +104,10 @@ let make = (~leaderData, ~playerName) => {
         <caption
           className="my-6 relative text-4xl md:(my-12 text-5xl) desk:(my-18 text-6xl) font-fred font-bold text-shadow-lead">
           <Button
-            onClick={_ => Route.push(Auth({subroute: Lobby}))}
+            onClick={_ => {
+              setLeaderData(._ => [])
+              Route.push(Auth({subroute: Lobby}))
+            }}
             className="cursor-pointer font-over text-5xl bg-transparent absolute left-10">
             {React.string("←")}
           </Button>
