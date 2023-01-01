@@ -34,11 +34,11 @@ let make = (~userpool, ~setCognitoUser, ~setToken, ~cognitoUser, ~retrievedUsern
   React.useEffect0(() => {
     Js.log("signin use effect")
 
-    ImageLoad.import_("./ImageLoad.bs")->Promise.then(func => {
+    ImageLoad.import_("./ImageLoad.bs")
+    ->Promise.then(func => {
       Promise.resolve(func["bghand"](.))
     })
-
-    // ->ignore
+    ->ignore
 
     None
   })

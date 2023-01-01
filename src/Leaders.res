@@ -85,7 +85,7 @@ let make = (~leaderData, ~playerName) => {
         <caption
           className="my-6 relative text-4xl md:(my-12 text-5xl) desk:(my-18 text-6xl) font-fred font-bold text-shadow-lead">
           <Button
-            onClick={_ => Route.push(Lobby)}
+            onClick={_ => Route.push(Auth({subroute: Lobby}))}
             className="cursor-pointer font-over text-5xl bg-transparent absolute left-10">
             {React.string("←")}
           </Button>

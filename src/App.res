@@ -28,7 +28,7 @@ let make = () => {
     advancedSecurityDataCollectionFlag: false,
   })
 
-  let route = Route.useRouter()
+  let route = Route.useRouter() //TODO don't pass down to auth
   let (cognitoUser: Js.Nullable.t<Cognito.usr>, setCognitoUser) = React.Uncurried.useState(_ =>
     Js.Nullable.null
   )

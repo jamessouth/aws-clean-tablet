@@ -123,7 +123,7 @@ module Game = {
 
     React.useEffect3(() => {
       switch inThisGame && count == "start" {
-      | true => Route.push(Play({play: no}))
+      | true => Route.push(Auth({subroute: Play({play: no})}))
       | false => ()
       }
       None
@@ -166,10 +166,8 @@ module Game = {
   }
 }
 
-let normalClose = 1000
-
 @react.component
-let make = (~playerListGame, ~games, ~send, ~close, ~count, ~setLeaderData) => {
+let make = (~playerListGame, ~games, ~send, ~count) => {
   let onClick = _ =>
     send(.
       payloadToObj({
@@ -179,42 +177,8 @@ let make = (~playerListGame, ~games, ~send, ~close, ~count, ~setLeaderData) => {
       }),
     )
 
-  let signOut = _ => {
-    Js.log("sign out click")
-
-    let pl = switch playerListGame == "" {
-    | true => None
-    | false =>
-      payloadToObj({
-        act: Lobby,
-        gn: Gameno({no: playerListGame}),
-        cmd: Leave,
-      })
-    }
-    send(. pl)
-    close(. normalClose, "user sign-out")
-  }
-
-  let leaderboard = _ => {
-    setLeaderData(._ => [])
-    send(.
-      payloadToObj({
-        act: Query,
-        gn: Newgame, //placeholder
-        cmd: Leaders,
-      }),
-    )
-    Route.push(Leaderboard)
-  }
-
-  <>
-    <Button onClick=leaderboard className="absolute top-1 left-1 bg-transparent cursor-pointer">
-      <img className="block" src="../../assets/leader.png" />
-    </Button>
-    <Button onClick=signOut className="absolute top-1 right-1 bg-transparent cursor-pointer">
-      <img className="block" src="../../assets/signout.png" />
-    </Button>
-    {switch Js.Nullable.toOption(games) {
+  {
+    switch Js.Nullable.toOption(games) {
     | None => <Loading label="games..." />
     | Some(gs: Js.Array2.t<Reducer.listGame>) =>
       <div className="flex flex-col items-center">
@@ -263,6 +227,6 @@ let make = (~playerListGame, ~games, ~send, ~close, ~count, ~setLeaderData) => {
           </ul>
         }}
       </div>
-    }}
-  </>
+    }
+  }
 }

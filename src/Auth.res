@@ -96,6 +96,53 @@ let excessiveJson = 4004
 let unknownJson = 4005
 let jsonLimit = 3000
 
+module LobbyButtons = {
+  // open Route
+  let normalClose = 1000
+
+  let btnStyles = "absolute top-1 bg-transparent cursor-pointer "
+
+  @react.component
+  let make = (~playerListGame, ~send, ~close) => {
+    let leaderboard = _ => {
+      // setLeaderData(._ => [])
+      // send(.
+      //   payloadToObj({
+      //     act: Query,
+      //     gn: Newgame, //placeholder
+      //     cmd: Leaders,
+      //   }),
+      // )
+      Route.push(Auth({subroute: Leaderboard}))
+    }
+
+    let signOut = _ => {
+      Js.log("sign out click")
+
+      let pl = switch playerListGame == "" {
+      | true => None
+      | false =>
+        Lobby.payloadToObj({
+          act: Lobby,
+          gn: Gameno({no: playerListGame}),
+          cmd: Leave,
+        })
+      }
+      send(. pl)
+      close(. normalClose, "user sign-out")
+    }
+
+    <>
+      <Button onClick=leaderboard className={btnStyles ++ "left-1"}>
+        <img className="block" src="../../assets/leader.png" />
+      </Button>
+      <Button onClick=signOut className={btnStyles ++ "right-1"}>
+        <img className="block" src="../../assets/signout.png" />
+      </Button>
+    </>
+  }
+}
+
 @react.component
 let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~route) => {
   Js.log2("u345876l", route)
@@ -311,8 +358,8 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
 
   <>
     {switch route {
-    | Route.Leaderboard => React.null
-    | Home | SignIn | SignUp | GetInfo(_) | Confirm(_) | Lobby | Play(_) | Other =>
+    | Route.Auth({subroute: Leaderboard}) => React.null
+    | Home | SignIn | SignUp | GetInfo(_) | Confirm(_) | Auth(_) | Other =>
       <header className="mb-10 newgmimg:mb-12">
         <p
           className="font-flow text-stone-100 text-2xl newgmimg:text-4xl h-10 font-bold text-center">
@@ -326,19 +373,23 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
       </header>
     }}
     {switch route {
-    | Lobby =>
-      switch wsConnected {
-      | false => {
-          body(document)->setClassName("bodchmob bodchtab bodchbig")
-          <Loading label="games..." />
-        }
+    | Auth({subroute: Other}) => <LobbyButtons playerListGame send close />
+    | Auth({subroute: Lobby}) =>
+      <>
+        <LobbyButtons playerListGame send close />
+        {switch wsConnected {
+        | false => {
+            body(document)->setClassName("bodchmob bodchtab bodchbig")
+            <Loading label="games..." />
+          }
 
-      | true => {
-          body(document)->classList->removeClassList3("bodleadmob", "bodleadtab", "bodleadbig")
-          <Lobby playerListGame games send close count setLeaderData />
-        }
-      }
-    | Play({play}) =>
+        | true => {
+            body(document)->classList->removeClassList3("bodleadmob", "bodleadtab", "bodleadbig")
+            <Lobby playerListGame games send count />
+          }
+        }}
+      </>
+    | Auth({subroute: Play({play})}) =>
       switch wsConnected {
       | true =>
         switch Js.Array2.length(players) > 0 && play == playerLiveGame {
@@ -366,7 +417,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
         </p>
       }
 
-    | Leaderboard => {
+    | Auth({subroute: Leaderboard}) => {
         body(document)->classList->addClassList3("bodleadmob", "bodleadtab", "bodleadbig")
 
         <React.Suspense fallback=React.null> leaders </React.Suspense>

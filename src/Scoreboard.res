@@ -112,7 +112,7 @@ let make = (
         <Button
           onClick={_ => {
             resetConnState(.)
-            Route.push(Lobby)
+            Route.push(Auth({subroute: Lobby}))
           }}
           className="mt-1.5 mb-4 block cursor-pointer text-stone-800 font-perm mx-auto px-8 py-2 text-2xl">
           {React.string("Return to lobby")}
