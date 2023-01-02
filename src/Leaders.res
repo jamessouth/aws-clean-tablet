@@ -55,6 +55,7 @@ let make = (~leaderData, ~playerName, ~send, ~setLeaderData) => {
 
   let (data, setData) = React.Uncurried.useState(_ => [])
 
+  Js.log("leadersssss")
   React.useEffect1(() => {
     Js.log("leaders useeff")
 
@@ -72,7 +73,7 @@ let make = (~leaderData, ~playerName, ~send, ~setLeaderData) => {
     }
 
     None
-  }, [leaderData])
+  }, [leaderData]) //TODO remove as unneeded
 
   let onClick = (field, dir, func, _e) => {
     setSortedField(._ => field)

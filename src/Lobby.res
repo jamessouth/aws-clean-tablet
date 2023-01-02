@@ -82,6 +82,10 @@ let payloadToObj = pl => {
   }
 }
 
+let normalClose = 1000
+
+let btnStyles = "absolute top-1 bg-transparent cursor-pointer "
+
 module Game = {
   let btnStyle = " cursor-pointer text-base font-bold text-stone-100 font-anon w-1/2 bottom-0 h-8 absolute bg-stone-700 bg-opacity-70 filter disabled:(cursor-not-allowed contrast-25)"
 
@@ -167,7 +171,27 @@ module Game = {
 }
 
 @react.component
-let make = (~playerListGame, ~games, ~send, ~count) => {
+let make = (~wsConnected, ~playerListGame, ~games, ~send, ~close, ~count) => {
+  Js.log("lobbyyyyyy")
+  React.useEffect2(() => {
+    Js.log3("lobby useeff", wsConnected, games)
+
+    switch (wsConnected, Js.Nullable.toOption(games)) {
+    | (true, None) =>
+      send(.
+        payloadToObj({
+          act: Query,
+          gn: Newgame, //placeholder
+          cmd: ListGames,
+        }),
+      )
+
+    | (false, _) | (true, Some(_)) => ()
+    }
+
+    None
+  }, (wsConnected, games))
+
   let onClick = _ =>
     send(.
       payloadToObj({
@@ -177,56 +201,91 @@ let make = (~playerListGame, ~games, ~send, ~count) => {
       }),
     )
 
-  {
-    switch Js.Nullable.toOption(games) {
-    | None => <Loading label="games..." />
-    | Some(gs: Js.Array2.t<Reducer.listGame>) =>
-      <div className="flex flex-col items-center">
-        <div className="relative m-auto <newgmimg:w-11/12 w-max">
-          <img
-            srcSet="../../assets/ekko1x.webp, ../../assets/ekko2x.webp 2x"
-            src="../../assets/ekko1x.webp"
-            alt=""
-            className="block <newgmimg:max-w-full"
-            width="421"
-            height="80"
-          />
-          {switch playerListGame == "" {
+  let leaderboard = _ => {
+    Route.push(Auth({subroute: Leaderboard}))
+  }
+
+  let signOut = _ => {
+    Js.log("sign out click")
+
+    let pl = switch playerListGame == "" {
+    | true => None
+    | false =>
+      payloadToObj({
+        act: Lobby,
+        gn: Gameno({no: playerListGame}),
+        cmd: Leave,
+      })
+    }
+    send(. pl)
+    close(. normalClose, "user sign-out")
+  }
+
+  <>
+    <Button onClick=leaderboard className={btnStyles ++ "left-1"}>
+      <img className="block" src="../../assets/leader.png" />
+    </Button>
+    <Button onClick=signOut className={btnStyles ++ "right-1"}>
+      <img className="block" src="../../assets/signout.png" />
+    </Button>
+    {switch Js.Nullable.toOption(games) {
+    | None => {
+        Web.body(Web.document)->Web.setClassName("bodchmob bodchtab bodchbig")
+        <Loading label="games..." />
+      }
+
+    | Some(gs: Js.Array2.t<Reducer.listGame>) => {
+        Web.body(Web.document)
+        ->Web.classList
+        ->Web.removeClassList3("bodleadmob", "bodleadtab", "bodleadbig")
+
+        <div className="flex flex-col items-center">
+          <div className="relative m-auto <newgmimg:w-11/12 w-max">
+            <img
+              srcSet="../../assets/ekko1x.webp, ../../assets/ekko2x.webp 2x"
+              src="../../assets/ekko1x.webp"
+              alt=""
+              className="block <newgmimg:max-w-full"
+              width="421"
+              height="80"
+            />
+            {switch playerListGame == "" {
+            | true =>
+              <Button
+                onClick
+                className="h-full right-0 top-0 w-1/2 bg-transparent text-stone-100 text-2xl font-flow cursor-pointer absolute border-l-2 border-gray-500/50">
+                {React.string("start a new game")}
+              </Button>
+            | false => React.null
+            }}
+          </div>
+          {switch Js.Array2.length(gs) < 1 {
           | true =>
-            <Button
-              onClick
-              className="h-full right-0 top-0 w-1/2 bg-transparent text-stone-100 text-2xl font-flow cursor-pointer absolute border-l-2 border-gray-500/50">
-              {React.string("start a new game")}
-            </Button>
-          | false => React.null
+            <p className="text-stone-100 font-anon text-lg mt-8">
+              {React.string("no games found.")}
+            </p>
+          | false =>
+            <ul
+              className="m-12 newgmimg:mt-14 w-11/12 <md:(flex max-w-lg flex-col) md:(grid grid-cols-2 gap-8) lg:(gap-10 justify-items-center) xl:(grid-cols-3 gap-12 max-w-1688px)">
+              {gs
+              ->Js.Array2.map(game => {
+                let class = "game" ++ Js.String2.sliceToEnd(game.no, ~from=18)
+                <Game
+                  key=game.no
+                  game
+                  inThisGame={playerListGame == game.no}
+                  inAGame={playerListGame != ""}
+                  count
+                  send
+                  class
+                  isOnlyGame={Js.Array2.length(gs) == 1}
+                />
+              })
+              ->React.array}
+            </ul>
           }}
         </div>
-        {switch Js.Array2.length(gs) < 1 {
-        | true =>
-          <p className="text-stone-100 font-anon text-lg mt-8">
-            {React.string("no games found.")}
-          </p>
-        | false =>
-          <ul
-            className="m-12 newgmimg:mt-14 w-11/12 <md:(flex max-w-lg flex-col) md:(grid grid-cols-2 gap-8) lg:(gap-10 justify-items-center) xl:(grid-cols-3 gap-12 max-w-1688px)">
-            {gs
-            ->Js.Array2.map(game => {
-              let class = "game" ++ Js.String2.sliceToEnd(game.no, ~from=18)
-              <Game
-                key=game.no
-                game
-                inThisGame={playerListGame == game.no}
-                inAGame={playerListGame != ""}
-                count
-                send
-                class
-                isOnlyGame={Js.Array2.length(gs) == 1}
-              />
-            })
-            ->React.array}
-          </ul>
-        }}
-      </div>
-    }
-  }
+      }
+    }}
+  </>
 }
