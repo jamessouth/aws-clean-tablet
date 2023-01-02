@@ -29,7 +29,6 @@ const (
 	listGame          string = "LISTGAME"
 	leave             string = "leave"
 	maxPlayersPerGame string = "8"
-	newgame           string = "newgame"
 	join              string = "join"
 )
 
@@ -51,7 +50,7 @@ func getReturnValue(status int) events.APIGatewayProxyResponse {
 func checkInput(s string) (string, string, error) {
 	var (
 		maxLength = 99
-		gamenoRE  = regexp.MustCompile(`^\d{19}$|^newgame$`)
+		gamenoRE  = regexp.MustCompile(`^\d{19}$`)
 		commandRE = regexp.MustCompile(`^join$|^leave$`)
 		body      struct{ Gameno, Command string }
 	)
@@ -76,8 +75,6 @@ func checkInput(s string) (string, string, error) {
 		return "", "", errors.New("improper json input - bad gameno: " + gameno)
 	case !commandRE.MatchString(command):
 		return "", "", errors.New("improper json input - bad command: " + command)
-	case command == leave && gameno == newgame:
-		return "", "", errors.New("improper json input - leave/newgame mismatch")
 	}
 
 	return gameno, command, nil
@@ -103,6 +100,17 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 		return callErr(err)
 	}
 
+	gameItemKey, err := attributevalue.MarshalMap(struct {
+		Pk string `dynamodbav:"pk"`
+		Sk string `dynamodbav:"sk"`
+	}{
+		Pk: listGame,
+		Sk: checkedGameno,
+	})
+	if err != nil {
+		return callErr(err)
+	}
+
 	var (
 		ddbsvc              = dynamodb.NewFromConfig(cfg)
 		auth                = req.RequestContext.Authorizer.(map[string]interface{})
@@ -111,47 +119,12 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			Name:   name,
 			ConnID: req.RequestContext.ConnectionID,
 		}
-	)
-
-	if checkedGameno == newgame {
-		marshalledPlayersMap, err := attributevalue.Marshal(map[string]listPlayer{
-			id: player,
-		})
-		if err != nil {
-			return callErr(err)
-		}
-
-		_, err = ddbsvc.PutItem(ctx, &dynamodb.PutItemInput{
-			Item: map[string]types.AttributeValue{
-				"pk":        &types.AttributeValueMemberS{Value: listGame},
-				"sk":        &types.AttributeValueMemberS{Value: fmt.Sprintf("%d", time.Now().UnixNano())},
-				"players":   marshalledPlayersMap,
-				"timerCxld": &types.AttributeValueMemberBOOL{Value: true},
-			},
-			TableName: aws.String(tableName),
-		})
-		if err != nil {
-			return callErr(err)
-		}
-	} else {
-		gameItemKey, err := attributevalue.MarshalMap(struct {
-			Pk string `dynamodbav:"pk"`
-			Sk string `dynamodbav:"sk"`
-		}{
-			Pk: listGame,
-			Sk: checkedGameno,
-		})
-		if err != nil {
-			return callErr(err)
-		}
-
-		ean := map[string]string{
+		ean = map[string]string{
 			"#P": "players",
 			"#I": id,
 			"#T": "timerCxld",
 		}
-
-		updateParams := dynamodb.UpdateItemInput{
+		updateParams = dynamodb.UpdateItemInput{
 			Key:                      gameItemKey,
 			TableName:                aws.String(tableName),
 			ExpressionAttributeNames: ean,
@@ -160,72 +133,71 @@ func handler(ctx context.Context, req events.APIGatewayWebsocketProxyRequest) (e
 			},
 			ReturnValues: types.ReturnValueUpdatedNew,
 		}
+	)
 
-		if checkedCommand == join {
-			marshalledPlayer, err := attributevalue.Marshal(player)
-			if err != nil {
-				return callErr(err)
-			}
-
-			updateParams.ConditionExpression = aws.String("attribute_exists(sk) AND size (#P) < :m")
-			updateParams.ExpressionAttributeValues[":m"] = &types.AttributeValueMemberN{Value: maxPlayersPerGame}
-			updateParams.ExpressionAttributeValues[":p"] = marshalledPlayer
-			updateParams.UpdateExpression = aws.String("SET #P.#I = :p, #T = :t")
-
-		} else if checkedCommand == leave {
-			updateParams.ConditionExpression = aws.String("attribute_exists(sk)")
-			updateParams.UpdateExpression = aws.String("REMOVE #P.#I SET #T = :t")
-
-		}
-
-		ui, err := ddbsvc.UpdateItem(ctx, &updateParams)
+	if checkedCommand == join {
+		marshalledPlayer, err := attributevalue.Marshal(player)
 		if err != nil {
 			return callErr(err)
 		}
 
-		var (
-			gm struct {
-				Sk      string
-				Players map[string]listPlayer
-			}
-			apiid    = os.Getenv("CT_APIID")
-			stage    = os.Getenv("CT_STAGE")
-			endpoint = "https://" + apiid + ".execute-api." + region + ".amazonaws.com/" + stage
-			ebsvc    = eventbridge.NewFromConfig(cfg)
-		)
+		updateParams.ConditionExpression = aws.String("attribute_exists(sk) AND size (#P) < :m")
+		updateParams.ExpressionAttributeValues[":m"] = &types.AttributeValueMemberN{Value: maxPlayersPerGame}
+		updateParams.ExpressionAttributeValues[":p"] = marshalledPlayer
+		updateParams.UpdateExpression = aws.String("SET #P.#I = :p, #T = :t")
 
-		err = attributevalue.UnmarshalMap(ui.Attributes, &gm)
-		if err != nil {
-			return callErr(err)
+	} else if checkedCommand == leave {
+		updateParams.ConditionExpression = aws.String("attribute_exists(sk)")
+		updateParams.UpdateExpression = aws.String("REMOVE #P.#I SET #T = :t")
+	}
+
+	ui, err := ddbsvc.UpdateItem(ctx, &updateParams)
+	if err != nil {
+		return callErr(err)
+	}
+
+	var (
+		gm struct {
+			Sk      string
+			Players map[string]listPlayer
 		}
+		apiid    = os.Getenv("CT_APIID")
+		stage    = os.Getenv("CT_STAGE")
+		endpoint = "https://" + apiid + ".execute-api." + region + ".amazonaws.com/" + stage
+		ebsvc    = eventbridge.NewFromConfig(cfg)
+	)
 
-		apigwcfg, err := config.LoadDefaultConfig(ctx,
-			// config.WithLogger(logger),
-			config.WithRegion(region),
-			config.WithEndpointResolverWithOptions(aws.EndpointResolverWithOptionsFunc(func(service, awsRegion string, options ...interface{}) (aws.Endpoint, error) {
-				if service == apigatewaymanagementapi.ServiceID && awsRegion == region {
-					ep := aws.Endpoint{
-						PartitionID:   "aws",
-						URL:           endpoint,
-						SigningRegion: awsRegion,
-					}
+	err = attributevalue.UnmarshalMap(ui.Attributes, &gm)
+	if err != nil {
+		return callErr(err)
+	}
 
-					return ep, nil
+	apigwcfg, err := config.LoadDefaultConfig(ctx,
+		// config.WithLogger(logger),
+		config.WithRegion(region),
+		config.WithEndpointResolverWithOptions(aws.EndpointResolverWithOptionsFunc(func(service, awsRegion string, options ...interface{}) (aws.Endpoint, error) {
+			if service == apigatewaymanagementapi.ServiceID && awsRegion == region {
+				ep := aws.Endpoint{
+					PartitionID:   "aws",
+					URL:           endpoint,
+					SigningRegion: awsRegion,
 				}
 
-				return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested")
-			})),
-		)
-		if err != nil {
-			return callErr(err)
-		}
+				return ep, nil
+			}
 
-		var apigwsvc = apigatewaymanagementapi.NewFromConfig(apigwcfg)
+			return aws.Endpoint{}, fmt.Errorf("unknown endpoint requested")
+		})),
+	)
+	if err != nil {
+		return callErr(err)
+	}
 
-		err = getStartGame(ctx, gameItemKey, gm.Players, gm.Sk, tableName, req.RequestContext.RequestTimeEpoch, ddbsvc, apigwsvc, ebsvc)
-		if err != nil {
-			return callErr(err)
-		}
+	var apigwsvc = apigatewaymanagementapi.NewFromConfig(apigwcfg)
+
+	err = getStartGame(ctx, gameItemKey, gm.Players, gm.Sk, tableName, req.RequestContext.RequestTimeEpoch, ddbsvc, apigwsvc, ebsvc)
+	if err != nil {
+		return callErr(err)
 	}
 
 	return getReturnValue(http.StatusOK), nil

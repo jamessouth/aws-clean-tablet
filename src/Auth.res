@@ -137,7 +137,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
     open Lobby
     switch payloadToObj({
       act: Logging,
-      gn: Gameno({no: msg}),
+      gn: msg,
       cmd: Custom({cv: data}),
     }) {
     | None => ()
@@ -149,7 +149,7 @@ let make = (~token, ~setToken, ~cognitoUser, ~setCognitoUser, ~setWsError, ~rout
     | false =>
       payloadToObj({
         act: Lobby,
-        gn: Gameno({no: playerListGame}),
+        gn: playerListGame,
         cmd: Leave,
       })
     }

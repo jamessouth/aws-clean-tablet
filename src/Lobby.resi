@@ -4,10 +4,6 @@ type apigwAction =
   | Logging
   | Query
 
-type lobbyGameno =
-  | Gameno({no: string})
-  | Newgame
-
 type lobbyCommand =
   | Custom({cv: string})
   | Join
@@ -17,7 +13,7 @@ type lobbyCommand =
 
 type lobbyPayload = {
   act: apigwAction,
-  gn: lobbyGameno,
+  gn?: string,
   cmd: lobbyCommand,
 }
 

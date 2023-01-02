@@ -1,14 +1,12 @@
+let normalClose = 1000
 let players_max_threshold = 7
+let btnStyles = "absolute top-1 bg-transparent cursor-pointer "
 
 type apigwAction =
   | Answer
   | Lobby
   | Logging
   | Query
-
-type lobbyGameno =
-  | Gameno({no: string})
-  | Newgame
 
 type lobbyCommand =
   | Custom({cv: string})
@@ -19,7 +17,7 @@ type lobbyCommand =
 
 type lobbyPayload = {
   act: apigwAction,
-  gn: lobbyGameno,
+  gn?: string,
   cmd: lobbyCommand,
 }
 
@@ -39,12 +37,6 @@ let apigwActionToString = a =>
   | Query => "query"
   }
 
-let lobbyGamenoToString = gn =>
-  switch gn {
-  | Gameno({no}) => no
-  | Newgame => "newgame"
-  }
-
 let lobbyCommandToString = lc =>
   switch lc {
   | Custom({cv}) => cv
@@ -59,7 +51,10 @@ let payloadToObj = pl => {
   | Answer =>
     Js.Json.stringifyAny({
       action: apigwActionToString(pl.act),
-      gameno: lobbyGamenoToString(pl.gn),
+      gameno: switch pl.gn {
+      | None => ""
+      | Some(v) => v
+      },
       aW5mb3Jt: lobbyCommandToString(pl.cmd),
     })
   | Query =>
@@ -70,21 +65,23 @@ let payloadToObj = pl => {
   | Lobby =>
     Js.Json.stringifyAny({
       action: apigwActionToString(pl.act),
-      gameno: lobbyGamenoToString(pl.gn),
+      gameno: switch pl.gn {
+      | None => ""
+      | Some(v) => v
+      },
       command: lobbyCommandToString(pl.cmd),
     })
   | Logging =>
     Js.Json.stringifyAny({
       action: apigwActionToString(pl.act),
-      gameno: lobbyGamenoToString(pl.gn),
+      gameno: switch pl.gn {
+      | None => ""
+      | Some(v) => v
+      },
       log: lobbyCommandToString(pl.cmd),
     })
   }
 }
-
-let normalClose = 1000
-
-let btnStyles = "absolute top-1 bg-transparent cursor-pointer "
 
 module Game = {
   let btnStyle = " cursor-pointer text-base font-bold text-stone-100 font-anon w-1/2 bottom-0 h-8 absolute bg-stone-700 bg-opacity-70 filter disabled:(cursor-not-allowed contrast-25)"
@@ -99,7 +96,7 @@ module Game = {
       send(.
         payloadToObj({
           act: Lobby,
-          gn: Gameno({no: no}),
+          gn: no,
           cmd: switch inThisGame {
           | true => Leave
           | false => Join
@@ -181,7 +178,6 @@ let make = (~wsConnected, ~playerListGame, ~games, ~send, ~close, ~count) => {
       send(.
         payloadToObj({
           act: Query,
-          gn: Newgame, //placeholder
           cmd: ListGames,
         }),
       )
@@ -191,15 +187,6 @@ let make = (~wsConnected, ~playerListGame, ~games, ~send, ~close, ~count) => {
 
     None
   }, (wsConnected, games))
-
-  let onClick = _ =>
-    send(.
-      payloadToObj({
-        act: Lobby,
-        gn: Newgame,
-        cmd: Join,
-      }),
-    )
 
   let leaderboard = _ => {
     Route.push(Auth({subroute: Leaderboard}))
@@ -213,7 +200,7 @@ let make = (~wsConnected, ~playerListGame, ~games, ~send, ~close, ~count) => {
     | false =>
       payloadToObj({
         act: Lobby,
-        gn: Gameno({no: playerListGame}),
+        gn: playerListGame,
         cmd: Leave,
       })
     }
@@ -249,15 +236,6 @@ let make = (~wsConnected, ~playerListGame, ~games, ~send, ~close, ~count) => {
               width="421"
               height="80"
             />
-            {switch playerListGame == "" {
-            | true =>
-              <Button
-                onClick
-                className="h-full right-0 top-0 w-1/2 bg-transparent text-stone-100 text-2xl font-flow cursor-pointer absolute border-l-2 border-gray-500/50">
-                {React.string("start a new game")}
-              </Button>
-            | false => React.null
-            }}
           </div>
           {switch Js.Array2.length(gs) < 1 {
           | true =>

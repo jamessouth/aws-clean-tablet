@@ -44,7 +44,7 @@ let make = (
     send(.
       Lobby.payloadToObj({
         act: Answer,
-        gn: Gameno({no: playerLiveGame}),
+        gn: playerLiveGame,
         cmd: Custom({cv: ans}),
       }),
     )

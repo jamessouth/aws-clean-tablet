@@ -15,9 +15,15 @@ import (
 )
 
 const (
-	slope     int = 0
-	intercept int = 2
+	slope     int    = 0
+	intercept int    = 2
+	listGame  string = "LISTGAME"
 )
+
+type listPlayer struct {
+	Name   string `dynamodbav:"name"`
+	ConnID string `dynamodbav:"connid"`
+}
 
 type livePlayer struct {
 	Name   string `json:"name"`
@@ -121,7 +127,6 @@ func handler(ctx context.Context, req struct {
 	}
 
 	for k := range players {
-
 		_, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 			Key: map[string]types.AttributeValue{
 				"pk": &types.AttributeValueMemberS{Value: "CONNECT"},
@@ -140,7 +145,24 @@ func handler(ctx context.Context, req struct {
 		if err != nil {
 			return output{}, err
 		}
+	}
 
+	emptyPlayersMap, err := attributevalue.Marshal(map[string]listPlayer{})
+	if err != nil {
+		return output{}, err
+	}
+
+	_, err = ddbsvc.PutItem(ctx, &dynamodb.PutItemInput{
+		Item: map[string]types.AttributeValue{
+			"pk":        &types.AttributeValueMemberS{Value: listGame},
+			"sk":        &types.AttributeValueMemberS{Value: fmt.Sprintf("%d", time.Now().UnixNano())},
+			"players":   emptyPlayersMap,
+			"timerCxld": &types.AttributeValueMemberBOOL{Value: true},
+		},
+		TableName: tableName,
+	})
+	if err != nil {
+		return output{}, err
 	}
 
 	_, err = ddbsvc.PutItem(ctx, &dynamodb.PutItemInput{

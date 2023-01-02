@@ -64,7 +64,6 @@ let make = (~leaderData, ~playerName, ~send, ~setLeaderData) => {
       send(.
         Lobby.payloadToObj({
           act: Query,
-          gn: Newgame, //placeholder
           cmd: Leaders,
         }),
       )
