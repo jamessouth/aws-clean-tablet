@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/rand"
 	"time"
@@ -87,7 +88,7 @@ func handler(ctx context.Context, req struct {
 	var (
 		ddbsvc    = dynamodb.NewFromConfig(cfg)
 		gameno    = req.Payload.Gameno
-		tableName = aws.String(req.Payload.TableName)
+		tableName = req.Payload.TableName
 	)
 
 	di, err := ddbsvc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
@@ -95,7 +96,7 @@ func handler(ctx context.Context, req struct {
 			"pk": &types.AttributeValueMemberS{Value: "LISTGAME"},
 			"sk": &types.AttributeValueMemberS{Value: gameno},
 		},
-		TableName:    tableName,
+		TableName:    aws.String(tableName),
 		ReturnValues: types.ReturnValueAllOld,
 	})
 	if err != nil {
@@ -132,8 +133,7 @@ func handler(ctx context.Context, req struct {
 				"pk": &types.AttributeValueMemberS{Value: "CONNECT"},
 				"sk": &types.AttributeValueMemberS{Value: k},
 			},
-			TableName: tableName,
-
+			TableName: aws.String(tableName),
 			ExpressionAttributeNames: map[string]string{
 				"#P": "playing",
 			},
@@ -152,35 +152,65 @@ func handler(ctx context.Context, req struct {
 		return output{}, err
 	}
 
-	_, err = ddbsvc.PutItem(ctx, &dynamodb.PutItemInput{
-		Item: map[string]types.AttributeValue{
-			"pk":        &types.AttributeValueMemberS{Value: listGame},
-			"sk":        &types.AttributeValueMemberS{Value: fmt.Sprintf("%d", time.Now().UnixNano())},
-			"players":   emptyPlayersMap,
-			"timerCxld": &types.AttributeValueMemberBOOL{Value: true},
+	bwo, err := ddbsvc.BatchWriteItem(ctx, &dynamodb.BatchWriteItemInput{
+		RequestItems: map[string][]types.WriteRequest{
+			tableName: {
+				types.WriteRequest{
+					PutRequest: &types.PutRequest{
+						Item: map[string]types.AttributeValue{
+							"pk":        &types.AttributeValueMemberS{Value: listGame},
+							"sk":        &types.AttributeValueMemberS{Value: fmt.Sprintf("%d", time.Now().UnixNano())},
+							"players":   emptyPlayersMap,
+							"timerCxld": &types.AttributeValueMemberBOOL{Value: true},
+						},
+					},
+				},
+				types.WriteRequest{
+					PutRequest: &types.PutRequest{
+						Item: map[string]types.AttributeValue{
+							"pk":           &types.AttributeValueMemberS{Value: "LIVEGAME"},
+							"sk":           &types.AttributeValueMemberS{Value: gameno},
+							"answersCount": &types.AttributeValueMemberN{Value: "0"},
+							"players":      marshalledPlayers,
+							"wordList":     marshalledWordList,
+						},
+					},
+				},
+			},
 		},
-		TableName: tableName,
+		ReturnConsumedCapacity:      types.ReturnConsumedCapacityNone,
+		ReturnItemCollectionMetrics: types.ReturnItemCollectionMetricsNone,
 	})
 	if err != nil {
 		return output{}, err
 	}
 
-	_, err = ddbsvc.PutItem(ctx, &dynamodb.PutItemInput{
-		Item: map[string]types.AttributeValue{
-			"pk":           &types.AttributeValueMemberS{Value: "LIVEGAME"},
-			"sk":           &types.AttributeValueMemberS{Value: gameno},
-			"answersCount": &types.AttributeValueMemberN{Value: "0"},
-			"players":      marshalledPlayers,
-			"wordList":     marshalledWordList,
-		},
-		TableName: tableName,
-	})
-	if err != nil {
-		return output{}, err
+	batchWriteOutput := *bwo
+	unprocessedItems := batchWriteOutput.UnprocessedItems
+	var ret time.Duration = 500
+	for len(unprocessedItems[tableName]) > 0 && ret < 5000 {
+		fmt.Println("ret", ret)
+		time.Sleep(ret * time.Millisecond)
+
+		bwo2, err := ddbsvc.BatchWriteItem(ctx, &dynamodb.BatchWriteItemInput{
+			RequestItems:                unprocessedItems,
+			ReturnConsumedCapacity:      types.ReturnConsumedCapacityNone,
+			ReturnItemCollectionMetrics: types.ReturnItemCollectionMetricsNone,
+		})
+		if err != nil {
+			return output{}, err
+		}
+
+		batchWriteOutput2 := *bwo2
+		unprocessedItems = batchWriteOutput2.UnprocessedItems
+
+		ret *= 2
+	}
+	if len(unprocessedItems[tableName]) > 0 {
+		return output{}, errors.New("")
 	}
 
 	return output{Gameno: gameno}, nil
-
 }
 
 func main() {
