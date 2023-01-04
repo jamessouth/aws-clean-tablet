@@ -1,57 +1,29 @@
 package main
 
 import (
-	"regexp"
+	"context"
+	"strconv"
 	"testing"
+
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 )
 
-var (
-	re = regexp.MustCompile(`^____ [a-z]{2,9}$|^[a-z]{2,9} ____$`)
-	m  = map[string]bool{}
-)
+type mockBatchWriteItemAPI func(ctx context.Context, params *dynamodb.BatchWriteItemInput, optFns ...func(*dynamodb.Options)) (*dynamodb.BatchWriteItemOutput, error)
 
-func TestWords(t *testing.T) {
-	loop := func(w stringSlice, t string) func() (bool, string, int) {
-		if t == "word" {
-			return func() (bool, string, int) {
-				for i, j := range w {
-					if !re.MatchString(j) {
-						return false, j, i + 5
-					}
-				}
-				return true, "", 0
-			}
-		}
-		if t == "duplicate" {
-			return func() (bool, string, int) {
-				for i, j := range w {
-					if m[j] {
-						return false, j, i + 5
-					}
-					m[j] = true
-				}
-				return true, "", 0
-			}
-		}
-		return func() (bool, string, int) {
-			return false, "", 0
-		}
-	}
+func (m mockBatchWriteItemAPI) BatchWriteItem(ctx context.Context, params *dynamodb.BatchWriteItemInput, optFns ...func(*dynamodb.Options)) (*dynamodb.BatchWriteItemOutput, error) {
+	return m(ctx, params, optFns...)
+}
 
-	tests := map[string]struct {
-		words stringSlice
-		test  string
-	}{
-		"each word has: 4 _, 1 space, 2-9 lower-case letters, OR 2-9 lower-case letters, 1 space, 4 _": {words: words, test: "word"},
-		"there are no duplicate words in the list":                                                     {words: words, test: "duplicate"},
-	}
+func TestBatchWriteItem(t *testing.T) {
 
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			got, word, ind := loop(tc.words, tc.test)()
-			if !got {
-				t.Fatalf("the %s test failed on word: %s, line: %d", name, word, ind+236)
+	for i, tt := range batchWriteItemTests {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			ctx := context.TODO()
+			err := batchWriteItem(ctx, tt.client(t), tt.requestItems, tt.tableName)
+			if err != nil {
+				t.Fatalf("expect no error, got %v", err)
 			}
+
 		})
 	}
 }

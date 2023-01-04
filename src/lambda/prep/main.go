@@ -21,6 +21,10 @@ const (
 	listGame  string = "LISTGAME"
 )
 
+type DdbBatchWriteItemAPI interface {
+	BatchWriteItem(ctx context.Context, params *dynamodb.BatchWriteItemInput, optFns ...func(*dynamodb.Options)) (*dynamodb.BatchWriteItemOutput, error)
+}
+
 type listPlayer struct {
 	Name   string `dynamodbav:"name"`
 	ConnID string `dynamodbav:"connid"`
@@ -68,6 +72,47 @@ func getSliceAssignColor(pm map[string]struct{ Name, ConnID string }) (plrs map[
 	}
 
 	return
+}
+
+func batchWriteItem(ctx context.Context, api DdbBatchWriteItemAPI, items []types.WriteRequest, tableName string) error {
+
+	bwo, err := api.BatchWriteItem(ctx, &dynamodb.BatchWriteItemInput{
+		RequestItems:                map[string][]types.WriteRequest{tableName: items},
+		ReturnConsumedCapacity:      types.ReturnConsumedCapacityNone,
+		ReturnItemCollectionMetrics: types.ReturnItemCollectionMetricsNone,
+	})
+	if err != nil {
+		return err
+	}
+
+	batchWriteOutput := *bwo
+	unprocessedItems := batchWriteOutput.UnprocessedItems
+	var ret time.Duration = 500
+	for len(unprocessedItems[tableName]) > 0 && ret < 5000 {
+		fmt.Println("ret", ret, unprocessedItems)
+		time.Sleep(ret * time.Millisecond)
+
+		bwo2, err := api.BatchWriteItem(ctx, &dynamodb.BatchWriteItemInput{
+			RequestItems:                unprocessedItems,
+			ReturnConsumedCapacity:      types.ReturnConsumedCapacityNone,
+			ReturnItemCollectionMetrics: types.ReturnItemCollectionMetricsNone,
+		})
+		if err != nil {
+			return err
+		}
+
+		batchWriteOutput2 := *bwo2
+		unprocessedItems = batchWriteOutput2.UnprocessedItems
+
+		ret *= 2
+	}
+	if len(unprocessedItems[tableName]) > 0 {
+		fmt.Println("error: ", unprocessedItems)
+		return errors.New("unable to write all items")
+	}
+
+	return nil
+
 }
 
 func handler(ctx context.Context, req struct {
@@ -152,62 +197,33 @@ func handler(ctx context.Context, req struct {
 		return output{}, err
 	}
 
-	bwo, err := ddbsvc.BatchWriteItem(ctx, &dynamodb.BatchWriteItemInput{
-		RequestItems: map[string][]types.WriteRequest{
-			tableName: {
-				types.WriteRequest{
-					PutRequest: &types.PutRequest{
-						Item: map[string]types.AttributeValue{
-							"pk":        &types.AttributeValueMemberS{Value: listGame},
-							"sk":        &types.AttributeValueMemberS{Value: fmt.Sprintf("%d", time.Now().UnixNano())},
-							"players":   emptyPlayersMap,
-							"timerCxld": &types.AttributeValueMemberBOOL{Value: true},
-						},
-					},
-				},
-				types.WriteRequest{
-					PutRequest: &types.PutRequest{
-						Item: map[string]types.AttributeValue{
-							"pk":           &types.AttributeValueMemberS{Value: "LIVEGAME"},
-							"sk":           &types.AttributeValueMemberS{Value: gameno},
-							"answersCount": &types.AttributeValueMemberN{Value: "0"},
-							"players":      marshalledPlayers,
-							"wordList":     marshalledWordList,
-						},
-					},
+	items := []types.WriteRequest{
+		{
+			PutRequest: &types.PutRequest{
+				Item: map[string]types.AttributeValue{
+					"pk":        &types.AttributeValueMemberS{Value: listGame},
+					"sk":        &types.AttributeValueMemberS{Value: fmt.Sprintf("%d", time.Now().UnixNano())},
+					"players":   emptyPlayersMap,
+					"timerCxld": &types.AttributeValueMemberBOOL{Value: true},
 				},
 			},
 		},
-		ReturnConsumedCapacity:      types.ReturnConsumedCapacityNone,
-		ReturnItemCollectionMetrics: types.ReturnItemCollectionMetricsNone,
-	})
+		{
+			PutRequest: &types.PutRequest{
+				Item: map[string]types.AttributeValue{
+					"pk":           &types.AttributeValueMemberS{Value: "LIVEGAME"},
+					"sk":           &types.AttributeValueMemberS{Value: gameno},
+					"answersCount": &types.AttributeValueMemberN{Value: "0"},
+					"players":      marshalledPlayers,
+					"wordList":     marshalledWordList,
+				},
+			},
+		},
+	}
+
+	err = batchWriteItem(ctx, ddbsvc, items, tableName)
 	if err != nil {
 		return output{}, err
-	}
-
-	batchWriteOutput := *bwo
-	unprocessedItems := batchWriteOutput.UnprocessedItems
-	var ret time.Duration = 500
-	for len(unprocessedItems[tableName]) > 0 && ret < 5000 {
-		fmt.Println("ret", ret)
-		time.Sleep(ret * time.Millisecond)
-
-		bwo2, err := ddbsvc.BatchWriteItem(ctx, &dynamodb.BatchWriteItemInput{
-			RequestItems:                unprocessedItems,
-			ReturnConsumedCapacity:      types.ReturnConsumedCapacityNone,
-			ReturnItemCollectionMetrics: types.ReturnItemCollectionMetricsNone,
-		})
-		if err != nil {
-			return output{}, err
-		}
-
-		batchWriteOutput2 := *bwo2
-		unprocessedItems = batchWriteOutput2.UnprocessedItems
-
-		ret *= 2
-	}
-	if len(unprocessedItems[tableName]) > 0 {
-		return output{}, errors.New("")
 	}
 
 	return output{Gameno: gameno}, nil
