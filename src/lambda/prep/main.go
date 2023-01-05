@@ -17,7 +17,10 @@ import (
 const (
 	slope     int    = 0
 	intercept int    = 2
+	connect   string = "CONNECT"
 	listGame  string = "LISTGAME"
+	liveGame  string = "LIVEGAME"
+	sentinel  string = "game over"
 )
 
 // uncomment for test
@@ -139,7 +142,7 @@ func handler(ctx context.Context, req struct {
 
 	di, err := ddbsvc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
 		Key: map[string]types.AttributeValue{
-			"pk": &types.AttributeValueMemberS{Value: "LISTGAME"},
+			"pk": &types.AttributeValueMemberS{Value: listGame},
 			"sk": &types.AttributeValueMemberS{Value: gameno},
 		},
 		TableName:    aws.String(tableName),
@@ -166,7 +169,7 @@ func handler(ctx context.Context, req struct {
 		return output{}, err
 	}
 
-	wordList := append(words.shuffleList(slope*len(players)+intercept), "game over")
+	wordList := append(words.shuffleList(slope*len(players)+intercept), sentinel)
 
 	marshalledWordList, err := attributevalue.Marshal(wordList)
 	if err != nil {
@@ -176,7 +179,7 @@ func handler(ctx context.Context, req struct {
 	for k := range players {
 		_, err := ddbsvc.UpdateItem(ctx, &dynamodb.UpdateItemInput{
 			Key: map[string]types.AttributeValue{
-				"pk": &types.AttributeValueMemberS{Value: "CONNECT"},
+				"pk": &types.AttributeValueMemberS{Value: connect},
 				"sk": &types.AttributeValueMemberS{Value: k},
 			},
 			TableName: aws.String(tableName),
@@ -212,7 +215,7 @@ func handler(ctx context.Context, req struct {
 		{
 			PutRequest: &types.PutRequest{
 				Item: map[string]types.AttributeValue{
-					"pk":           &types.AttributeValueMemberS{Value: "LIVEGAME"},
+					"pk":           &types.AttributeValueMemberS{Value: liveGame},
 					"sk":           &types.AttributeValueMemberS{Value: gameno},
 					"answersCount": &types.AttributeValueMemberN{Value: "0"},
 					"players":      marshalledPlayers,
@@ -240,14 +243,14 @@ func main() {
 }
 
 var colors = stringSlice{
-	"#dc2626", //red 600
-	"#0c4a6e", //light blue 900
-	"#16a34a", //green 600
-	"#7c2d12", //orange 900
-	"#c026d3", //fuchsia 600
-	"#365314", //lime 900
-	"#0891b2", //cyan 600
-	"#581c87", //purple 900
+	"#dc2626",
+	"#0c4a6e",
+	"#16a34a",
+	"#7c2d12",
+	"#c026d3",
+	"#365314",
+	"#0891b2",
+	"#581c87",
 }
 
 var words = stringSlice{

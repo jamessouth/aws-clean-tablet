@@ -33,7 +33,7 @@ func TestBatchWriteItem(t *testing.T) {
 		{
 			PutRequest: &types.PutRequest{
 				Item: map[string]types.AttributeValue{
-					"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
+					"pk": &types.AttributeValueMemberS{Value: liveGame},
 					"sk": &types.AttributeValueMemberS{Value: "234"},
 				},
 			},
@@ -73,7 +73,7 @@ func TestHandleUnprocessedItems(t *testing.T) {
 			{
 				PutRequest: &types.PutRequest{
 					Item: map[string]types.AttributeValue{
-						"pk": &types.AttributeValueMemberS{Value: "LIVEGAME"},
+						"pk": &types.AttributeValueMemberS{Value: liveGame},
 						"sk": &types.AttributeValueMemberS{Value: "234"},
 					},
 				},
