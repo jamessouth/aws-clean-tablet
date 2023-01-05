@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"math/rand"
 	"time"
@@ -20,6 +19,9 @@ const (
 	intercept int    = 2
 	listGame  string = "LISTGAME"
 )
+
+// uncomment for test
+// type ctxKey string
 
 type DdbBatchWriteItemAPI interface {
 	BatchWriteItem(ctx context.Context, params *dynamodb.BatchWriteItemInput, optFns ...func(*dynamodb.Options)) (*dynamodb.BatchWriteItemOutput, error)
@@ -74,45 +76,44 @@ func getSliceAssignColor(pm map[string]struct{ Name, ConnID string }) (plrs map[
 	return
 }
 
-func batchWriteItem(ctx context.Context, api DdbBatchWriteItemAPI, items []types.WriteRequest, tableName string) error {
-
+func batchWriteItem(ctx context.Context, api DdbBatchWriteItemAPI, items []types.WriteRequest, tableName string) (dynamodb.BatchWriteItemOutput, error) {
 	bwo, err := api.BatchWriteItem(ctx, &dynamodb.BatchWriteItemInput{
 		RequestItems:                map[string][]types.WriteRequest{tableName: items},
 		ReturnConsumedCapacity:      types.ReturnConsumedCapacityNone,
 		ReturnItemCollectionMetrics: types.ReturnItemCollectionMetricsNone,
 	})
 	if err != nil {
-		return err
+		return dynamodb.BatchWriteItemOutput{}, err
 	}
 
-	batchWriteOutput := *bwo
-	unprocessedItems := batchWriteOutput.UnprocessedItems
-	var ret time.Duration = 500
-	for len(unprocessedItems[tableName]) > 0 && ret < 5000 {
-		fmt.Println("ret", ret, unprocessedItems)
-		time.Sleep(ret * time.Millisecond)
+	return *bwo, nil
+}
 
-		bwo2, err := api.BatchWriteItem(ctx, &dynamodb.BatchWriteItemInput{
-			RequestItems:                unprocessedItems,
-			ReturnConsumedCapacity:      types.ReturnConsumedCapacityNone,
-			ReturnItemCollectionMetrics: types.ReturnItemCollectionMetricsNone,
-		})
+func handleUnprocessedItems(ctx context.Context, api DdbBatchWriteItemAPI, batchWriteOutput dynamodb.BatchWriteItemOutput, tableName string) error {
+	var (
+		ret, maxDelay, factor time.Duration = 500, 5000, 2
+		unprocessedItems                    = batchWriteOutput.UnprocessedItems
+	)
+
+	for len(unprocessedItems[tableName]) > 0 && ret < maxDelay {
+		// uncomment 2 lines to test
+		// var mk ctxKey = "cKey"
+		// ctx = context.WithValue(ctx, mk, ret.Nanoseconds())
+		time.Sleep(ret * time.Millisecond)
+		batchWriteOutput2, err := batchWriteItem(ctx, api, unprocessedItems[tableName], tableName)
 		if err != nil {
 			return err
 		}
 
-		batchWriteOutput2 := *bwo2
 		unprocessedItems = batchWriteOutput2.UnprocessedItems
 
-		ret *= 2
+		ret *= factor
 	}
 	if len(unprocessedItems[tableName]) > 0 {
-		fmt.Println("error: ", unprocessedItems)
-		return errors.New("unable to write all items")
+		return fmt.Errorf("error: unable to write %d items", len(unprocessedItems[tableName]))
 	}
 
 	return nil
-
 }
 
 func handler(ctx context.Context, req struct {
@@ -221,7 +222,12 @@ func handler(ctx context.Context, req struct {
 		},
 	}
 
-	err = batchWriteItem(ctx, ddbsvc, items, tableName)
+	unwrittenItems, err := batchWriteItem(ctx, ddbsvc, items, tableName)
+	if err != nil {
+		return output{}, err
+	}
+
+	err = handleUnprocessedItems(ctx, ddbsvc, unwrittenItems, tableName)
 	if err != nil {
 		return output{}, err
 	}
