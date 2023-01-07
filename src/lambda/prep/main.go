@@ -30,6 +30,10 @@ type DdbBatchWriteItemAPI interface {
 	BatchWriteItem(ctx context.Context, params *dynamodb.BatchWriteItemInput, optFns ...func(*dynamodb.Options)) (*dynamodb.BatchWriteItemOutput, error)
 }
 
+type DdbDeleteItemAPI interface {
+	DeleteItem(ctx context.Context, params *dynamodb.DeleteItemInput, optFns ...func(*dynamodb.Options)) (*dynamodb.DeleteItemOutput, error)
+}
+
 type listPlayer struct {
 	Name   string `dynamodbav:"name"`
 	ConnID string `dynamodbav:"connid"`
@@ -76,6 +80,26 @@ func getLivePlayerMap(pm map[string]listPlayer, colors stringSlice) (plrs map[st
 	}
 
 	return
+}
+
+func deleteItem(ctx context.Context, api DdbDeleteItemAPI, pk, sk, tableName string) (dynamodb.DeleteItemOutput, error) {
+	di, err := api.DeleteItem(ctx, &dynamodb.DeleteItemInput{
+		Key: map[string]types.AttributeValue{
+			"pk": &types.AttributeValueMemberS{Value: pk},
+			"sk": &types.AttributeValueMemberS{Value: sk},
+		},
+		TableName:    aws.String(tableName),
+		ReturnValues: types.ReturnValueAllOld,
+	})
+	if err != nil {
+		return dynamodb.DeleteItemOutput{}, err
+	}
+
+	if res := *di; len(res.Attributes) == 0 {
+		return dynamodb.DeleteItemOutput{}, fmt.Errorf("error: item with pk %s and sk %s not found", pk, sk)
+	} else {
+		return res, nil
+	}
 }
 
 func batchWriteItem(ctx context.Context, api DdbBatchWriteItemAPI, items []types.WriteRequest, tableName string) (dynamodb.BatchWriteItemOutput, error) {
@@ -139,14 +163,7 @@ func handler(ctx context.Context, req struct {
 		tableName = req.Payload.TableName
 	)
 
-	di, err := ddbsvc.DeleteItem(ctx, &dynamodb.DeleteItemInput{
-		Key: map[string]types.AttributeValue{
-			"pk": &types.AttributeValueMemberS{Value: listGame},
-			"sk": &types.AttributeValueMemberS{Value: gameno},
-		},
-		TableName:    aws.String(tableName),
-		ReturnValues: types.ReturnValueAllOld,
-	})
+	di, err := deleteItem(ctx, ddbsvc, listGame, gameno, tableName)
 	if err != nil {
 		return output{}, err
 	}
