@@ -17,11 +17,8 @@ func (m mockBatchWriteItemAPI) BatchWriteItem(ctx context.Context, params *dynam
 	return m(ctx, params, optFns...)
 }
 
-func TestBatchWriteItem(t *testing.T) {
-	// t.Skip()
-	ctx := context.TODO()
-	tableName := "myTable"
-	requestItems := []types.WriteRequest{
+var (
+	writeItems = []types.WriteRequest{
 		{
 			PutRequest: &types.PutRequest{
 				Item: map[string]types.AttributeValue{
@@ -38,6 +35,13 @@ func TestBatchWriteItem(t *testing.T) {
 				},
 			},
 		}}
+	tableName = "myTable"
+)
+
+func TestBatchWriteItem(t *testing.T) {
+	// t.Skip()
+	ctx := context.TODO()
+	requestItems := writeItems
 
 	for i, tt := range batchWriteItemNoErrorTests {
 		t.Run(fmt.Sprintf("no error test %d", i), func(t *testing.T) {
@@ -57,28 +61,12 @@ func TestBatchWriteItem(t *testing.T) {
 }
 
 func TestHandleUnprocessedItems(t *testing.T) {
-	tableName := "myTable"
+	// t.Skip()
 	batchWriteOutput := dynamodb.BatchWriteItemOutput{
 		ConsumedCapacity:      []types.ConsumedCapacity{},
 		ItemCollectionMetrics: map[string][]types.ItemCollectionMetrics{},
-		UnprocessedItems: map[string][]types.WriteRequest{tableName: {
-			{
-				PutRequest: &types.PutRequest{
-					Item: map[string]types.AttributeValue{
-						"pk": &types.AttributeValueMemberS{Value: listGame},
-						"sk": &types.AttributeValueMemberS{Value: "123"},
-					},
-				},
-			},
-			{
-				PutRequest: &types.PutRequest{
-					Item: map[string]types.AttributeValue{
-						"pk": &types.AttributeValueMemberS{Value: liveGame},
-						"sk": &types.AttributeValueMemberS{Value: "234"},
-					},
-				},
-			}}},
-		ResultMetadata: middleware.Metadata{},
+		UnprocessedItems:      map[string][]types.WriteRequest{tableName: writeItems},
+		ResultMetadata:        middleware.Metadata{},
 	}
 
 	for i, tt := range handleUnprocessedItemsNoErrorTests {
@@ -93,5 +81,14 @@ func TestHandleUnprocessedItems(t *testing.T) {
 			err := handleUnprocessedItems(context.TODO(), tt.client(t), batchWriteOutput, tableName)
 			assert.EqualErrorf(t, err, tt.msg, "FAIL - handleUnprocessedItems - %s\n err: %+v\n", tt.description, err)
 		})
+	}
+}
+
+func TestGetLivePlayerMap(t *testing.T) {
+	// t.Skip()
+	for _, test := range getLivePlayerMapTests {
+		act := getLivePlayerMap(test.input1, test.input2)
+		assert.Equalf(t, act, test.exp, "FAIL - getLivePlayerMap - %s\n act: %s\n exp: %s\n", test.description, act, test.exp)
+
 	}
 }

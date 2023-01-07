@@ -60,16 +60,15 @@ func (list stringSlice) shuffleList(length int) stringSlice {
 	return list[:length]
 }
 
-func getSliceAssignColor(pm map[string]struct{ Name, ConnID string }) (plrs map[string]livePlayer) {
+func getLivePlayerMap(pm map[string]listPlayer, colors stringSlice) (plrs map[string]livePlayer) {
 	plrs = map[string]livePlayer{}
 	count := 0
-	clrs := colors.shuffleList(len(colors))
 
 	for k, v := range pm {
 		plrs[k] = livePlayer{
 			Name:   v.Name,
 			ConnID: v.ConnID,
-			Color:  clrs[count],
+			Color:  colors[count],
 			Answer: "",
 			Score:  aws.Int(0),
 		}
@@ -99,7 +98,7 @@ func handleUnprocessedItems(ctx context.Context, api DdbBatchWriteItemAPI, batch
 	)
 
 	for len(unprocessedItems[tableName]) > 0 && ret < maxDelay {
-		// uncomment 2 lines to test
+		// uncomment to test
 		// var mk ctxKey = "cKey"
 		// ctx = context.WithValue(ctx, mk, ret.Nanoseconds())
 		time.Sleep(ret * time.Millisecond)
@@ -153,16 +152,14 @@ func handler(ctx context.Context, req struct {
 	}
 
 	var game struct {
-		Players map[string]struct {
-			Name, ConnID string
-		}
+		Players map[string]listPlayer
 	}
 	err = attributevalue.UnmarshalMap(di.Attributes, &game)
 	if err != nil {
 		return output{}, err
 	}
 
-	players := getSliceAssignColor(game.Players)
+	players := getLivePlayerMap(game.Players, colors.shuffleList(len(game.Players)))
 
 	marshalledPlayers, err := attributevalue.Marshal(players)
 	if err != nil {
@@ -243,14 +240,38 @@ func main() {
 }
 
 var colors = stringSlice{
-	"#dc2626",
-	"#0c4a6e",
-	"#16a34a",
-	"#7c2d12",
-	"#c026d3",
+	"#007d5e",
+	"#00591c",
+	"#004528",
+	"#064e3b",
+	"#003200",
 	"#365314",
-	"#0891b2",
-	"#581c87",
+	"#2b704b",
+	"#00596d",
+	"#2f4858",
+	"#344a71",
+	"#000058",
+	"#1e3a8a",
+	"#192a84",
+	"#3d5988",
+	"#423040",
+	"#4b4737",
+	"#5a447e",
+	"#650001",
+	"#701a75",
+	"#893273",
+	"#564516",
+	"#8d814d",
+	"#78350f",
+	"#872c1a",
+	"#b91c1c",
+	"#ae652c",
+	"#894f5e",
+	"#cb4956",
+	"#990046",
+	"#ad1351",
+	"#77005e",
+	"#b2286e",
 }
 
 var words = stringSlice{
