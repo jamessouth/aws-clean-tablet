@@ -18,8 +18,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	st "github.com/aws/aws-sdk-go-v2/service/dynamodbstreams/types"
 	"github.com/aws/aws-sdk-go-v2/service/sfn"
-	"github.com/aws/aws-sdk-go/service/dynamodbstreams"
 	"github.com/aws/smithy-go"
 )
 
@@ -351,7 +351,7 @@ func sendSfnTask(ctx context.Context, ddbsvc *dynamodb.Client, sfnsvc *sfn.Clien
 	return nil
 }
 
-func listGameEvent(ctx context.Context, eventName, tableName string, ddbsvc *dynamodb.Client, item map[string]types.AttributeValue) (payload []byte, conns []livePlayer, err error) {
+func listGameEvent(ctx context.Context, eventName st.OperationType, tableName string, ddbsvc *dynamodb.Client, item map[string]types.AttributeValue) (payload []byte, conns []livePlayer, err error) {
 	var listGameRecord backListGame
 	err = attributevalue.UnmarshalMap(item, &listGameRecord)
 	if err != nil {
@@ -383,9 +383,9 @@ func listGameEvent(ctx context.Context, eventName, tableName string, ddbsvc *dyn
 	}
 
 	switch eventName {
-	case dynamodbstreams.OperationTypeInsert:
+	case st.OperationTypeInsert:
 		gp.Tag = addListGame
-	case dynamodbstreams.OperationTypeModify:
+	case st.OperationTypeModify:
 	default:
 		gp.Game.Players = nil
 		gp.Tag = removeListGame
@@ -412,7 +412,7 @@ func listGameEvent(ctx context.Context, eventName, tableName string, ddbsvc *dyn
 	return payload, conns, nil
 }
 
-func liveGameEvent(ctx context.Context, eventName, tableName string, ddbsvc *dynamodb.Client, sfnsvc *sfn.Client, item map[string]types.AttributeValue) (payload []byte, conns []livePlayer, err error) {
+func liveGameEvent(ctx context.Context, eventName st.OperationType, tableName string, ddbsvc *dynamodb.Client, sfnsvc *sfn.Client, item map[string]types.AttributeValue) (payload []byte, conns []livePlayer, err error) {
 	var gameRecord struct {
 		Sk, Token    string
 		Players      map[string]livePlayer
@@ -427,7 +427,7 @@ func liveGameEvent(ctx context.Context, eventName, tableName string, ddbsvc *dyn
 
 	pls := getSlice(gameRecord.Players)
 
-	if eventName == dynamodbstreams.OperationTypeInsert {
+	if eventName == st.OperationTypeInsert {
 		payload, err = json.Marshal(players{
 			Players:     sortByScoreThenName(pls),
 			Sk:          gameRecord.Sk,
@@ -437,7 +437,7 @@ func liveGameEvent(ctx context.Context, eventName, tableName string, ddbsvc *dyn
 		if err != nil {
 			return []byte{}, []livePlayer{}, err
 		}
-	} else if eventName == dynamodbstreams.OperationTypeModify {
+	} else if eventName == st.OperationTypeModify {
 		if gameRecord.AnswersCount == len(pls) {
 			pls, scoreMap := prep(pls)
 
@@ -542,10 +542,11 @@ func handler(ctx context.Context, req events.DynamoDBEvent) (events.APIGatewayPr
 			tableName = strings.Split(rec.EventSourceArn, "/")[1]
 			region    = rec.AWSRegion
 			rawItem   map[string]events.DynamoDBAttributeValue
-			eventName = rec.EventName
+			en        = rec.EventName
+			eventName = st.OperationType(en)
 		)
 
-		if eventName == dynamodbstreams.OperationTypeRemove {
+		if eventName == st.OperationTypeRemove {
 			rawItem = rec.Change.OldImage
 		} else {
 			rawItem = rec.Change.NewImage
